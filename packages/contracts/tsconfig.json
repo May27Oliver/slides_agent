@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["packages/contracts/src/*"],
+      "@slides-agent/contracts": ["packages/contracts/src/index.ts"],
+      "@slides-agent/contracts/*": ["packages/contracts/src/*"],
+      "@slides-agent/domain": ["packages/domain/src/index.ts"],
+      "@slides-agent/domain/*": ["packages/domain/src/*"]
+    }
+  },
+  "include": ["src"]
+}

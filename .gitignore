@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+.agents/
+.claude/
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+playwright-report/
+test-results/
+.vite/
+*.tsbuildinfo
+.npmrc.local
+.pnpm-store/

@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["apps/web/src/*"],
+      "@slides-agent/contracts": ["packages/contracts/src/index.ts"],
+      "@slides-agent/contracts/*": ["packages/contracts/src/*"],
+      "@slides-agent/domain": ["packages/domain/src/index.ts"],
+      "@slides-agent/domain/*": ["packages/domain/src/*"]
+    }
+  },
+  "include": ["src", "tests"]
+}

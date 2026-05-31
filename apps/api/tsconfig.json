@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noEmit": true,
+    "paths": {
+      "@/*": ["apps/api/src/*"],
+      "@slides-agent/contracts": ["packages/contracts/src/index.ts"],
+      "@slides-agent/contracts/*": ["packages/contracts/src/*"],
+      "@slides-agent/domain": ["packages/domain/src/index.ts"],
+      "@slides-agent/domain/*": ["packages/domain/src/*"]
+    }
+  },
+  "include": ["src", "test"]
+}

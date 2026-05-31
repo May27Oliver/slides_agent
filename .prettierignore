@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+pnpm-lock.yaml
+.agents
+.claude
+.specify
+docs
+specs
+AGENTS.md
+packages/contracts/schemas/slide-generation.schema.json

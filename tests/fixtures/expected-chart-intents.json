@@ -1,0 +1,28 @@
+{
+  "chartIntents": [
+    {
+      "id": "conversion-before-after",
+      "sourceFacts": ["18%", "25%"],
+      "recommendedVisuals": ["metric_card", "comparison"],
+      "rationale": "Conversion has before/after values that should be easy to compare."
+    },
+    {
+      "id": "response-time-before-after",
+      "sourceFacts": ["12 小時", "4 小時"],
+      "recommendedVisuals": ["metric_card", "comparison"],
+      "rationale": "Response time has before/after values that should be easy to compare."
+    },
+    {
+      "id": "dashboard-mvp-deadline",
+      "sourceFacts": ["2026-08-15"],
+      "recommendedVisuals": ["timeline", "milestone"],
+      "rationale": "Deadline should be represented as a time-bound milestone."
+    },
+    {
+      "id": "design-resource-risk",
+      "sourceFacts": ["0.5 FTE"],
+      "recommendedVisuals": ["callout", "table"],
+      "rationale": "Resource risk should be visible without inventing capacity numbers."
+    }
+  ]
+}

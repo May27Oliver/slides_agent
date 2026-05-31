@@ -1,0 +1,299 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slides-agent.local/contracts/slide-generation.schema.json",
+  "title": "Slide Generation Preview Contract",
+  "type": "object",
+  "required": ["request", "response"],
+  "properties": {
+    "request": {
+      "$ref": "#/$defs/GeneratePreviewRequest"
+    },
+    "response": {
+      "$ref": "#/$defs/GeneratePreviewResponse"
+    }
+  },
+  "$defs": {
+    "GeneratePreviewRequest": {
+      "type": "object",
+      "required": ["sourceContent", "deckBrief"],
+      "properties": {
+        "sourceContent": {
+          "type": "string",
+          "minLength": 1
+        },
+        "deckBrief": {
+          "$ref": "#/$defs/DeckBrief"
+        },
+        "options": {
+          "$ref": "#/$defs/GenerationOptions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "DeckBrief": {
+      "type": "object",
+      "required": ["purpose", "audience"],
+      "properties": {
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "audience": {
+          "type": "string",
+          "minLength": 1
+        },
+        "styleDirection": {
+          "type": "string"
+        },
+        "chartEmphasis": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "tone": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "GenerationOptions": {
+      "type": "object",
+      "properties": {
+        "useExternalProvider": {
+          "type": "boolean",
+          "default": false
+        },
+        "enableUiUxProMax": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "GeneratePreviewResponse": {
+      "type": "object",
+      "required": ["slideDeck", "previewArtifact"],
+      "properties": {
+        "slideDeck": {
+          "$ref": "#/$defs/SlideDeck"
+        },
+        "previewArtifact": {
+          "$ref": "#/$defs/PreviewArtifact"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SlideDeck": {
+      "type": "object",
+      "required": ["id", "title", "purpose", "audience", "designSystem", "slides", "reviewReport"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "audience": {
+          "type": "string"
+        },
+        "designSystem": {
+          "$ref": "#/$defs/DesignSystem"
+        },
+        "slides": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Slide"
+          }
+        },
+        "reviewReport": {
+          "$ref": "#/$defs/ReviewReport"
+        }
+      },
+      "additionalProperties": false
+    },
+    "DesignSystem": {
+      "type": "object",
+      "required": ["themeName", "palette", "typography", "spacing", "visualDensity", "layoutGrid", "slidePatterns", "chartStyle"],
+      "properties": {
+        "themeName": {
+          "type": "string"
+        },
+        "palette": {
+          "type": "object"
+        },
+        "typography": {
+          "type": "object"
+        },
+        "spacing": {
+          "type": "object"
+        },
+        "visualDensity": {
+          "enum": ["low", "medium", "high"]
+        },
+        "layoutGrid": {
+          "type": "string"
+        },
+        "slidePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "chartStyle": {
+          "type": "string"
+        },
+        "uiUxProMaxNotes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Slide": {
+      "type": "object",
+      "required": ["id", "type", "title", "message", "layout", "contentBlocks", "sourceTrace"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": ["title", "section", "content", "comparison", "timeline", "table", "metrics", "quote", "action"]
+        },
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "layout": {
+          "type": "string"
+        },
+        "contentBlocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContentBlock"
+          }
+        },
+        "sourceTrace": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "speakerNotes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ContentBlock": {
+      "type": "object",
+      "required": ["kind", "content"],
+      "properties": {
+        "kind": {
+          "enum": ["paragraph", "bullets", "metric", "table", "timeline", "callout", "quote", "chart_placeholder", "fallback_text"]
+        },
+        "content": {
+          "type": "object"
+        },
+        "chartIntentId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ReviewReport": {
+      "type": "object",
+      "required": ["assumptions", "omittedOrCompressedContent", "uncertainClaims", "chartingDecisions", "humanReviewNotes", "providerBoundary"],
+      "properties": {
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "omittedOrCompressedContent": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "uncertainClaims": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "chartingDecisions": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "humanReviewNotes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "providerBoundary": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PreviewArtifact": {
+      "type": "object",
+      "required": ["html", "generationSummary"],
+      "properties": {
+        "html": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generationSummary": {
+          "$ref": "#/$defs/GenerationSummary"
+        }
+      },
+      "additionalProperties": false
+    },
+    "GenerationSummary": {
+      "type": "object",
+      "required": ["slideCount", "sourceFactCount", "chartIntentCount", "uncertainClaimCount", "usedUiUxProMax", "usedExternalProvider"],
+      "properties": {
+        "slideCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sourceFactCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "chartIntentCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "uncertainClaimCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "usedUiUxProMax": {
+          "type": "boolean"
+        },
+        "usedExternalProvider": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
