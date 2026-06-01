@@ -61,10 +61,13 @@ Implementation should provide commands for:
 3. Semantic segmentation source quote grounding and fallback validation.
 4. Domain test for source fact extraction.
 5. Domain test for layered chart intent decision.
-6. Domain test for review report fields.
-7. Renderer test for self-contained HTML output.
-8. Browser test for keyboard next/previous navigation.
-9. Browser test for basic responsive behavior.
+6. Domain test for deterministic deck plan proposal.
+7. Domain test for deck compiler reference validation.
+8. Domain test for slide outline source trace and conservative speaker notes draft.
+9. Domain test for review report fields.
+10. Renderer test for self-contained HTML output.
+11. Browser test for keyboard next/previous navigation.
+12. Browser test for basic responsive behavior.
 
 Expected semantic segmentation behavior:
 
@@ -95,6 +98,16 @@ Expected chart decisions:
 - Response time before/after can become metric card or comparison visual.
 - Deadline can become timeline or milestone visual.
 - Resource risk can become callout/table; no invented capacity numbers.
+
+Expected deck planning behavior:
+
+- Deck planning v1 must not call LLM.
+- `DeckPlanner` produces deterministic `DeckPlanProposal` from validated sections, facts, chart intents, and deck brief.
+- `DeckCompiler` validates every `sourceSectionId`, `sourceFactId`, and `chartIntentId` before producing `SlideDeck`.
+- Invalid proposal references must fail validation or trigger deterministic fallback planning.
+- Every slide contains an `outline` array with at least one item.
+- Every outline item includes `text`, `emphasis`, and non-empty `sourceTrace`.
+- `speakerNotesDraft`, when present, uses only outline/source facts and remains conservative.
 
 ## Manual Verification Path
 
@@ -132,6 +145,9 @@ After T028-T036 implementation:
 5. Inspect the generated slide JSON and confirm it includes:
    - Deck metadata with purpose and audience
    - Semantic slide titles grounded in source content
+   - Deterministic deck plan proposal evidence
+   - Slide outlines with source trace for every slide
+   - Conservative `speakerNotesDraft` when present
    - Source facts for `18%`, `25%`, `12 小時`, `4 小時`, `2026-08-15`, `dashboard MVP`, `full CRM integration`, and `0.5 FTE`
    - Chart intents for conversion, response time, deadline, and resource risk where supported by source data
 6. Inspect the review report and confirm it includes:
@@ -141,6 +157,33 @@ After T028-T036 implementation:
    - `chartingDecisions`
    - `humanReviewNotes`
 7. Confirm the US1 demo does not require HTML preview, publishing, persistence, file upload, PPTX export, or a revision loop.
+
+## Deterministic Deck Planning Review Path
+
+Before implementing deck planner/compiler revision:
+
+1. Review `contracts/slide-generation.schema.json` and confirm each slide requires `outline`.
+2. Confirm v1 deck planning does not call LLM and does not use provider/model configuration.
+3. Use validated source artifacts from `tests/fixtures/planning-brief.md`.
+4. Confirm deterministic `DeckPlanProposal` includes:
+   - stable slide order
+   - slide role
+   - title and message candidate
+   - source section references
+   - source fact references
+   - chart intent references where applicable
+   - layout intent
+   - outline candidate
+5. Confirm `DeckCompiler` rejects or fallback-handles:
+   - unknown source section id
+   - unknown source fact id
+   - unknown chart intent id
+   - empty slide outline
+6. Confirm `speakerNotesDraft`, when present:
+   - is visibly a draft field
+   - does not add unsupported claim
+   - can be traced back to outline/source facts
+7. Preserve deck proposal, compiler validation result, slide outline trace result, and speaker notes draft review notes in `evidence.md`.
 
 ## Semantic Segmentation Prompt Review Path
 
@@ -189,6 +232,9 @@ After T078-T082 red tests are created and before T083 implementation:
 - Semantic segmentation output sample and validation result.
 - Format repair input errors, repaired output validation result, and repair/fallback decision when applicable.
 - Source quote grounding validation result.
+- Deterministic deck plan proposal sample and compiler validation result.
+- Slide outline source trace validation result.
+- Speaker notes draft sample and unsupported-claim review result.
 - Generated slide JSON for sample input.
 - Generated review report for sample input.
 - Downloaded self-contained HTML artifact or a documented checksum/path.

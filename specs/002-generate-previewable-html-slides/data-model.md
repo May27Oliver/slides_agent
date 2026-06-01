@@ -13,6 +13,8 @@
 - `DeckBrief`: 使用者對簡報目的、受眾、風格與圖表重點的描述。
 - `SourceFact`: 從來源內容抽出的重要事實。
 - `ChartIntent`: 是否將數字視覺化，以及用何種方式視覺化的可審查決策。
+- `DeckPlanProposal`: deterministic deck planner 產生的中間規劃 artifact。
+- `SlideOutlineItem`: 每張 slide 的 source-grounded 大綱項目。
 - `SlideDeck`: 可 render 的 structured slide artifact。
 - `ReviewReport`: generation 的審查與追溯報告。
 - `DesignSystem`: deck-level 視覺規則。
@@ -192,6 +194,83 @@ Validation:
 - MUST preserve original numbers, units, periods, denominators, and context.
 - MUST use `fallback_text` or `review_note` when data is insufficient.
 
+### DeckPlanProposal
+
+Represents deterministic deck planning output before final `SlideDeck` compilation.
+
+Fields:
+
+- `id: string`
+- `title: string`
+- `subtitle?: string`
+- `narrativeType: "status_update" | "proposal" | "planning" | "decision_memo" | "report"`
+- `slides: DeckSlideProposal[]`
+- `planningNotes: string[]`
+
+Validation:
+
+- v1 MUST be produced by deterministic rules and MUST NOT call LLM.
+- MUST reference existing `SourceSection`, `SourceFact`, and `ChartIntent` identifiers.
+- MUST NOT copy, rewrite, or invent source facts outside referenced artifacts.
+- MUST be stable for the same validated source artifacts and `DeckBrief`.
+- Future LLM assistance MAY propose this shape, but `DeckCompiler` MUST still validate and compile final `SlideDeck`.
+
+### DeckSlideProposal
+
+Represents one planned slide before compilation.
+
+Fields:
+
+- `id: string`
+- `role: "opening" | "context" | "insight" | "evidence" | "comparison" | "risk" | "decision" | "next_steps" | "appendix"`
+- `title: string`
+- `message: string`
+- `sourceSectionIds: string[]`
+- `sourceFactIds: string[]`
+- `chartIntentIds: string[]`
+- `outline: SlideOutlineItem[]`
+- `layoutIntent: LayoutIntent`
+- `speakerNotesDraft?: string`
+- `reviewNotes: string[]`
+
+Validation:
+
+- `sourceSectionIds`, `sourceFactIds`, and `chartIntentIds` MUST reference existing validated artifacts.
+- `outline` MUST contain at least one source-grounded item.
+- `speakerNotesDraft`, when present, MUST be conservative and derived from outline/source trace.
+- Invalid references MUST fail proposal validation or trigger deterministic fallback planning.
+
+### SlideOutlineItem
+
+Represents one source-grounded point for a slide.
+
+Fields:
+
+- `text: string`
+- `sourceTrace: string[]`
+- `emphasis: "main_point" | "evidence" | "risk" | "decision" | "action" | "context"`
+
+Validation:
+
+- `text` MUST be grounded in referenced source sections or source facts.
+- `sourceTrace` MUST contain at least one source section or source fact identifier.
+- Outline text MAY compress source wording but MUST NOT add unsupported claims.
+
+### LayoutIntent
+
+Represents deck-level planning intent passed to design/rendering.
+
+Fields:
+
+- `priority: "message_first" | "metrics_first" | "comparison" | "timeline" | "risk_matrix" | "table_dense"`
+- `density: "low" | "medium" | "high"`
+- `emphasis: "narrative" | "numbers" | "risks" | "decisions" | "actions"`
+
+Validation:
+
+- `LayoutIntent` is not final visual styling.
+- Design layer MAY use it for visual hierarchy and pattern selection, but MUST NOT alter source facts or outline meaning.
+
 ### DesignSystem
 
 Represents deck-level visual rules.
@@ -233,6 +312,7 @@ Validation:
 - MUST contain at least one slide.
 - MUST include design system and review report.
 - Slide order MUST be stable for the same deterministic input.
+- MUST be produced by `DeckCompiler`, not directly by LLM.
 
 ### Slide
 
@@ -244,15 +324,19 @@ Fields:
 - `type: "title" | "section" | "content" | "comparison" | "timeline" | "table" | "metrics" | "quote" | "action"`
 - `title: string`
 - `message: string`
+- `outline: SlideOutlineItem[]`
 - `layout: string`
+- `layoutIntent: LayoutIntent`
 - `contentBlocks: ContentBlock[]`
 - `sourceTrace: string[]`
-- `speakerNotes?: string`
+- `speakerNotesDraft?: string`
 
 Validation:
 
 - `title` SHOULD summarize slide meaning and MUST remain source-grounded.
+- `outline` MUST include at least one item and each item MUST include source trace.
 - `sourceTrace` SHOULD reference source sections or source facts when slide content derives from source.
+- `speakerNotesDraft`, when present, MUST be conservative and MUST NOT add unsupported claims.
 
 ### ContentBlock
 
@@ -317,6 +401,24 @@ Responsibilities:
 - Produce semantic titles conservatively.
 - Generate review report facts and warnings.
 
+### DeckPlanner
+
+Responsibilities:
+
+- Produce deterministic `DeckPlanProposal` from validated `SourceSection`, `SourceFact`, `ChartIntent`, and `DeckBrief`.
+- Decide slide grouping, slide role, title/message candidate, outline, layout intent, and optional speaker notes draft.
+- Keep v1 free of LLM calls.
+- Preserve stable output for the same inputs.
+
+### DeckCompiler
+
+Responsibilities:
+
+- Validate all `DeckPlanProposal` references against source sections, source facts, and chart intents.
+- Compile valid proposal into final `SlideDeck`.
+- Reject or deterministic-fallback invalid proposals.
+- Ensure every slide has source-grounded outline and source trace.
+
 ### ChartIntentPlanner
 
 Responsibilities:
@@ -347,6 +449,7 @@ Responsibilities:
 ```text
 DraftInput
 -> ParsedSourceContent
+-> ProposedDeckPlan
 -> PlannedSlideDeck
 -> DesignedSlideDeck
 -> RenderedPreviewArtifact

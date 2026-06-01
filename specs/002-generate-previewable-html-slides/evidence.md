@@ -95,3 +95,11 @@ This file records implementation and verification evidence for feature 002.
 - Repair is limited to JSON/schema correction and must not reinterpret, summarize, expand, delete, or alter source meaning.
 - Repair failure, grounding/order/coverage failure, or fallback must produce user-readable review notes while preserving raw validation details in internal evidence.
 - Added US1R2 tasks T092-T101 and kept the revision blocking before US2 implementation.
+
+### 2026-06-02 - Deterministic Deck Planning Spec Decision
+
+- Added requirement that deck planning v1 does not call LLM.
+- Added `DeckPlanner` / `DeckCompiler` split: planner produces deterministic `DeckPlanProposal`; compiler validates references and emits final `SlideDeck`.
+- Added required slide `outline` with source trace and optional conservative `speakerNotesDraft`.
+- Updated slide-generation contract schema to require `outline` and `layoutIntent`, and to use `speakerNotesDraft` instead of `speakerNotes`.
+- Added US1R3 tasks T102-T112 and kept the revision blocking before US2 implementation.

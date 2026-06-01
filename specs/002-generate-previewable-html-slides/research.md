@@ -50,6 +50,16 @@
 - Unlimited or multi-step LLM retry: 可能提高成功率，但成本與延遲不可控，也增加 LLM 在修格式過程中改寫或重解釋來源內容的風險。
 - Show raw schema errors to users: 對工程 debug 有用，但對使用者不可操作，且會讓 review report 混入低階 implementation detail；raw errors 應保存在 internal evidence。
 
+## Decision: Deck planning v1 is deterministic and split into planner/compiler
+
+**Rationale**: Deck layer 要把 validated source sections、source facts、chart intents 與 deck brief 組成可 render、可 review、可交給 design layer 的簡報結構。v1 先不導入 LLM，避免在 slide grouping、title/message、outline 或 speaker notes draft 中加入 unsupported claims。`DeckPlanner` deterministic 產生 `DeckPlanProposal`；`DeckCompiler` 驗證所有 source/chart references 後產出 final `SlideDeck`。這個分層讓 v1 保持可測與可審查，也保留未來讓 LLM 輔助 proposal 的擴充點，但 final `SlideDeck` 仍由 compiler 產出。
+
+**Alternatives considered**:
+
+- Direct deterministic `SlideDeck` builder only: 最簡單，但會把 proposal、reference validation、compilation 與 evidence 混在一起，後續若要加入 LLM proposal 會難以維持邊界。
+- LLM-generated `SlideDeck`: 可能產生更自然的故事線與講稿，但 v1 會降低 schema 穩定性與 source fidelity，且 speaker notes 最容易補入來源未支持的語氣或推論。
+- LLM-generated speaker notes only: 使用者體驗可能較好，但在 outline/source trace 尚未穩定前容易把推論寫成講稿；v1 先以 conservative deterministic draft 為主。
+
 ## Decision: Session-only preview
 
 **Rationale**: 第一個 implementation slice 只需要讓使用者在 local web app 看到 preview、review report、slide JSON、generation summary，並下載 self-contained HTML。不做 persistence、deck history、automatic artifact storage 可以讓 scope 保持小而清楚。

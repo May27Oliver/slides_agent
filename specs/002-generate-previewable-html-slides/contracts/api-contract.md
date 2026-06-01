@@ -52,9 +52,22 @@
         "type": "title",
         "title": "Q3 planning focuses on KPI improvement and delivery risk",
         "message": "Planning summary",
+        "outline": [
+          {
+            "text": "Review KPI improvement goals and delivery risks for Q3 planning.",
+            "sourceTrace": ["section_001", "fact_001"],
+            "emphasis": "main_point"
+          }
+        ],
         "layout": "title-summary",
+        "layoutIntent": {
+          "priority": "message_first",
+          "density": "medium",
+          "emphasis": "narrative"
+        },
         "contentBlocks": [],
-        "sourceTrace": []
+        "sourceTrace": ["section_001", "fact_001"],
+        "speakerNotesDraft": "Use this opening slide to frame the Q3 planning discussion around the source-supported KPI goals and delivery risks."
       }
     ],
     "reviewReport": {
@@ -117,5 +130,7 @@ Content-Type: `text/html; charset=utf-8`
 - `segmentationGuidance` 是 free text，只能作為 semantic segmentation 偏好，不能被視為 source truth。
 - LLM provider、model 與 design-planning skill usage 由 backend flow 配置，不是使用者 request/response contract。
 - Design planning 與 critique 是固定 flow 能力，不提供使用者 opt-in/opt-out 欄位，且不得改寫來源事實。
+- Deck planning v1 不呼叫 LLM；`DeckPlanner` 產生 deterministic `DeckPlanProposal`，`DeckCompiler` 驗證 references 後產出 `SlideDeck`。
+- 每張 slide 必須包含 source-grounded `outline`；`speakerNotesDraft` 若存在，必須保守且不得新增 unsupported claim。
 - Response 必須包含 `slideDeck`、`slideDeck.reviewReport`、self-contained HTML 與 `generationSummary`。
 - Generated preview 是 session-only，不得暗示 persistence。

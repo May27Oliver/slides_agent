@@ -141,6 +141,35 @@
 
 ---
 
+## Phase 3C: User Story 1 Revision - Deterministic Deck Planning and Slide Outlines
+
+**Goal**: 將 deck layer 明確拆成 deterministic `DeckPlanner` 與 `DeckCompiler`。Planner 產生 `DeckPlanProposal`；Compiler 驗證 source/chart references 後產出 `SlideDeck`。每張 slide 必須包含 source-grounded outline，並可產生保守 `speakerNotesDraft`。
+
+**Independent Test**: 使用固定 source sections、source facts、chart intents 與 deck brief fixture，驗證 deterministic proposal、compiler reference validation、每頁 outline source trace、保守 speaker notes draft，以及 v1 deck planning 不呼叫 LLM。
+
+**Blocking**: 完成此 revision 前，不得進入 US2 implementation。US2 renderer 必須依賴含 outline/source trace 的有效 `SlideDeck`。
+
+### Tests for US1 Deck Planning Revision (REQUIRED - write first)
+
+- [ ] T102 [P] [US1R3] Write failing domain test for deterministic `DeckPlanProposal` in `packages/domain/test/deck/deck-plan-proposal.test.ts`
+- [ ] T103 [P] [US1R3] Write failing domain test for `DeckCompiler` rejecting unknown source section, source fact, or chart intent references in `packages/domain/test/deck/deck-compiler-validation.test.ts`
+- [ ] T104 [P] [US1R3] Write failing domain test that every slide has source-grounded `outline` items with emphasis and source trace in `packages/domain/test/deck/slide-outline.test.ts`
+- [ ] T105 [P] [US1R3] Write failing domain test for conservative `speakerNotesDraft` that does not add unsupported claims in `packages/domain/test/deck/speaker-notes-draft.test.ts`
+- [ ] T106 [P] [US1R3] Write failing contract/schema test that `Slide` requires `outline` and uses `speakerNotesDraft` instead of final-sounding `speakerNotes` in `packages/contracts/test/slide-generation-schema.test.ts`
+
+### Implementation for US1 Deck Planning Revision
+
+- [ ] T107 [US1R3] Define `DeckPlanProposal`, `DeckSlideProposal`, `SlideOutlineItem`, and `LayoutIntent` types in `packages/domain/src/deck/types.ts`
+- [ ] T108 [US1R3] Implement deterministic deck planner in `packages/domain/src/deck/deck-planner.ts`
+- [ ] T109 [US1R3] Implement deck compiler reference validation in `packages/domain/src/deck/deck-compiler.ts`
+- [ ] T110 [US1R3] Wire deck planner/compiler into preview generation flow and remove direct slide construction from `packages/domain/src/deck/slide-deck-planner.ts`
+- [ ] T111 [US1R3] Update slide-generation schema and contract package schema to require slide outline and `speakerNotesDraft`
+- [ ] T112 [US1R3] Capture deck proposal, compiler validation, outline trace, speaker notes draft, and focused test evidence in `specs/002-generate-previewable-html-slides/evidence.md`
+
+**Checkpoint**: US1 produces `SlideDeck` through deterministic planner/compiler, every slide has source-grounded outline, and speaker notes draft remains conservative and reviewable.
+
+---
+
 ## Phase 4: User Story 2 - Render Self-Contained HTML Slides (Priority: P2)
 
 **Goal**: 使用有效 slide JSON 產生 self-contained HTML，並在 local web app session 中 preview、顯示 review report/JSON/summary、下載 HTML。
@@ -229,8 +258,9 @@
 - **Phase 2 Foundational**: Depends on Phase 1.
 - **US1**: Depends on Phase 2. MVP behavior.
 - **US1 Semantic Segmentation Revision**: Depends on US1 and blocks US2 implementation.
-- **US2**: Depends on US1 Semantic Segmentation Revision and US1 Segmentation Repair Revision because renderer and API need validated `SlideDeck` built from valid, repaired, or fallback source sections with user-readable review notes.
-- **US3**: Depends on US1 Semantic Segmentation Revision and can partially run in parallel with late US2 renderer work after `DesignSystem` exists.
+- **US1 Deterministic Deck Planning Revision**: Depends on US1 segmentation revisions and blocks US2 implementation.
+- **US2**: Depends on US1 Semantic Segmentation Revision, US1 Segmentation Repair Revision, and US1 Deterministic Deck Planning Revision because renderer and API need validated `SlideDeck` built from valid, repaired, or fallback source sections with source-grounded outlines and user-readable review notes.
+- **US3**: Depends on US1 Deterministic Deck Planning Revision and can partially run in parallel with late US2 renderer work after `DesignSystem` exists.
 - **Phase 6 Polish**: Depends on selected user stories being complete.
 
 ### User Story Dependencies
@@ -238,6 +268,7 @@
 - **US1**: Independent generation artifact; can be demonstrated with JSON/report only.
 - **US1 Semantic Segmentation Revision**: Revises source sectioning before downstream rendering; can be demonstrated with segmentation validation evidence and JSON/report only.
 - **US1 Segmentation Repair Revision**: Revises invalid LLM output handling before downstream rendering; can be demonstrated with malformed segmentation fixture, repair/fallback evidence, and JSON/report only.
+- **US1 Deterministic Deck Planning Revision**: Revises deck construction before downstream rendering; can be demonstrated with deck proposal, compiler validation, slide outline/source trace, speaker notes draft, and JSON/report only.
 - **US2**: Requires valid slide JSON from revised US1 or fixture.
 - **US3**: Requires baseline design system and renderer boundary; validates design layer without changing source facts or segmentation grounding.
 
@@ -261,6 +292,7 @@
 - T068-T069 can run in parallel during final polish.
 - T078-T081 can run in parallel before US1 semantic segmentation implementation.
 - T092-T095 can run in parallel before US1 segmentation repair implementation.
+- T102-T106 can run in parallel before US1 deterministic deck planning implementation.
 
 ---
 
@@ -283,16 +315,18 @@ Task: "T026 [US1] Write failing domain test for review report required fields"
 2. Complete US1.
 3. Complete US1 semantic segmentation revision.
 4. Complete US1 segmentation repair revision.
-5. Stop and demo segmentation validation/repair/fallback evidence + slide JSON + review report from fixture input.
-6. Only then proceed to US2 renderer/preview.
+5. Complete US1 deterministic deck planning revision.
+6. Stop and demo segmentation validation/repair/fallback evidence + deck proposal/compiler evidence + slide JSON + review report from fixture input.
+7. Only then proceed to US2 renderer/preview.
 
 ### Incremental Delivery
 
 1. US1: reviewable content core and reviewability.
 2. US1 revision: LLM-assisted semantic segmentation with deterministic validation/fallback.
 3. US1 repair revision: one format repair attempt before conservative fallback and user-readable review notes.
-4. US2: self-contained HTML and session-only preview.
-5. US3: ui-ux-pro-max design layer and visual consistency.
+4. US1 deck revision: deterministic deck planner/compiler, source-grounded outline, and conservative speaker notes draft.
+5. US2: self-contained HTML and session-only preview.
+6. US3: ui-ux-pro-max design layer and visual consistency.
 
 ### Quality Bar
 
@@ -300,5 +334,7 @@ Task: "T026 [US1] Write failing domain test for review report required fields"
 - Do not introduce persistence or publishing.
 - Do not let ui-ux-pro-max add source facts.
 - Do not let LLM segmentation or format repair rewrite source text; use exact source quotes, allow at most one repair attempt, and fallback on failed repair/validation.
+- Do not use LLM for deck planning v1; keep `DeckPlanProposal` deterministic and compile final `SlideDeck` through validated references.
+- Do not let `speakerNotesDraft` add unsupported claims; it must be grounded in outline/source trace.
 - Do not show raw schema validation paths/messages as the main user-facing explanation; preserve them in evidence and give users a plain-language review note.
 - Preserve evidence in `evidence.md`.
