@@ -20,15 +20,35 @@
 - Domain logic inside frontend only: 無法形成穩定 provider/API boundary，也不利後續 publishing。
 - One package only: 最簡單，但容易把 domain、renderer、API、UI 混在一起。
 
-## Decision: Deterministic content core + ui-ux-pro-max design layer
+## Decision: LLM-assisted semantic segmentation + deterministic validation/content core + ui-ux-pro-max design layer
 
-**Rationale**: 內容事實、chart decisions、source trace 與 review report 必須可測、可追溯、可審查。ui-ux-pro-max 用於 summary presentation、design planning、layout selection、visual hierarchy 與 critique，讓第一版輸出不要只有可測但缺少設計感。
+**Rationale**: 內部報告、提案與 PM planning 的 source content 不一定有穩定 heading 或格式。只靠 regex 切段會讓段落意義、slide grouping 與 source trace 變粗或錯位。第一版改採 backend-configured LLM-assisted semantic segmentation，由 LLM 判斷語意段落、命名 section，並輸出 exact source quotes；程式端必須用 schema validation、exact quote grounding、source order 與 coverage check 驗證後才能進入 downstream content core。內容事實、chart decisions、source trace 與 review report 仍由 deterministic 或 validation-backed core 保持可測、可追溯、可審查。ui-ux-pro-max 用於 summary presentation、design planning、layout selection、visual hierarchy 與 critique，讓第一版輸出不要只有可測但缺少設計感。
 
 **Alternatives considered**:
 
-- Deterministic only: 最可測，但使用者第一次看到成果可能缺少吸引力。
-- Real LLM first: 生成表現可能更好，但測試、隱私、provider failure 與 source fidelity 風險太早進入第一個 slice。
-- Full hybrid LLM + design skill: 過早引入 provider complexity，違反 KISS。
+- Regex-only deterministic parser: 最簡單、最可測，也保留為 fallback；但無法可靠處理 markdown heading、英文冒號、inline heading、混合 bullet、無 heading 與多主題長段落。
+- LLM end-to-end content planning: 生成表現可能更好，但會讓 fact extraction、charting 與 review report 變成黑箱，source fidelity 風險太高。
+- Full hybrid LLM + design skill without validation: 視覺與語意可能更好，但缺少 exact quote grounding 與 schema gate，無法符合可審查要求。
+
+## Decision: LLM segmentation output must be schema-bound and quote-grounded
+
+**Rationale**: LLM 可以判斷語意，但不能成為 source truth。Semantic segmentation output 必須只包含可驗證結構：section heading、exact source quotes、order、confidence、rationale 與 warnings。每個 source quote 必須能在原文中 exact match；程式端根據 quote 位置重建 section source trace，而不是相信 LLM 自行產生的 offsets 或改寫文字。
+
+**Alternatives considered**:
+
+- Ask LLM for rewritten section body: 可讀性較好，但會產生 source rewrite 風險。
+- Ask LLM for character offsets only: 結構漂亮，但 LLM offset 容易錯；應由程式端從 exact quotes 計算位置。
+- Allow free-form explanation: 人類易讀，但無法作為 quality gate；應改成 strict JSON schema。
+
+## Decision: Use one bounded format repair attempt before deterministic fallback
+
+**Rationale**: LLM segmentation 可能已正確理解 source content，但輸出 JSON 少欄位、多欄位或格式不符合 schema。若直接 fallback，使用者可能感覺產品沒有嘗試修復可修的格式問題；若無限 retry，成本、延遲與語意漂移風險會升高。第一版只允許一次 format repair：將 validation errors 與原始 LLM output 提供給 backend-configured LLM，要求只修 JSON/schema 結構，不得重新理解、摘要、擴寫、刪除或改變來源語意。repair 後仍未通過 schema、exact quote grounding、source order 或 coverage validation 時，必須 deterministic fallback，並在 review/evidence 記錄原因。
+
+**Alternatives considered**:
+
+- Direct deterministic fallback on first invalid schema: 最簡單、最穩定，但會犧牲可修復格式錯誤的使用者體驗，容易讓輸出看起來過度保守。
+- Unlimited or multi-step LLM retry: 可能提高成功率，但成本與延遲不可控，也增加 LLM 在修格式過程中改寫或重解釋來源內容的風險。
+- Show raw schema errors to users: 對工程 debug 有用，但對使用者不可操作，且會讓 review report 混入低階 implementation detail；raw errors 應保存在 internal evidence。
 
 ## Decision: Session-only preview
 
@@ -68,4 +88,3 @@
 - Unit tests only: 無法驗證 browser preview 與 keyboard navigation。
 - Full screenshot regression: 第一版過重且容易 brittle。
 - Manual only: 不符合 TDD 與 regression needs。
-

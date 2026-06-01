@@ -43,22 +43,40 @@ Deck brief:
   "audience": "Product and engineering leads",
   "styleDirection": "高密度 PM planning deck，強調風險、里程碑與 KPI",
   "chartEmphasis": "把 conversion、回覆時間、deadline 和 resource risk 做成容易比較的視覺重點",
+  "segmentationGuidance": "請優先依照目標、決策、風險、限制、下一步切段",
   "language": "zh-TW",
   "tone": "direct"
 }
 ```
+
+Provider, model, and design-skill toggles are backend-configured in this feature slice.
+Do not include those settings in the request.
 
 ## Automated Verification Targets
 
 Implementation should provide commands for:
 
 1. Contract validation for `/api/slides/preview`.
-2. Domain test for source fact extraction.
-3. Domain test for layered chart intent decision.
-4. Domain test for review report fields.
-5. Renderer test for self-contained HTML output.
-6. Browser test for keyboard next/previous navigation.
-7. Browser test for basic responsive behavior.
+2. Semantic segmentation schema validation.
+3. Semantic segmentation source quote grounding and fallback validation.
+4. Domain test for source fact extraction.
+5. Domain test for layered chart intent decision.
+6. Domain test for review report fields.
+7. Renderer test for self-contained HTML output.
+8. Browser test for keyboard next/previous navigation.
+9. Browser test for basic responsive behavior.
+
+Expected semantic segmentation behavior:
+
+- LLM output must match `contracts/semantic-segmentation.schema.json`.
+- Each `sourceQuotes[].text` must exactly match the pasted source content after newline normalization.
+- Segment order must follow source order.
+- Invalid initial schema must trigger at most one format repair attempt before fallback.
+- Format repair must only correct JSON/schema structure and must not reinterpret, summarize, expand, delete, or alter source meaning.
+- Repaired output that still has invalid schema, missing quote grounding, impossible ordering, or important coverage gaps must trigger deterministic fallback.
+- `segmentationGuidance` may influence grouping but must not be treated as source truth.
+- Conflicting or fact-changing guidance must be ignored and recorded in `globalWarnings`, review notes, or evidence.
+- Format repair, fallback use, or low-confidence segmentation should be preserved in evidence or human review notes.
 
 Expected source facts include:
 
@@ -101,9 +119,76 @@ After implementation:
 10. Open the downloaded HTML directly in a browser without backend running.
 11. Confirm downloaded HTML still supports slide navigation.
 
+## US1 Manual Demo Path
+
+After T028-T036 implementation:
+
+1. Run the US1 domain and contract tests:
+   - `pnpm --filter @slides-agent/contracts test`
+   - `pnpm --filter @slides-agent/domain test`
+2. Use `tests/fixtures/planning-brief.md` as the pasted source content.
+3. Use the deck brief JSON from this quickstart.
+4. Generate the deterministic slide deck through the US1 use case or local API boundary once it is wired.
+5. Inspect the generated slide JSON and confirm it includes:
+   - Deck metadata with purpose and audience
+   - Semantic slide titles grounded in source content
+   - Source facts for `18%`, `25%`, `12 小時`, `4 小時`, `2026-08-15`, `dashboard MVP`, `full CRM integration`, and `0.5 FTE`
+   - Chart intents for conversion, response time, deadline, and resource risk where supported by source data
+6. Inspect the review report and confirm it includes:
+   - `assumptions`
+   - `omittedOrCompressedContent`
+   - `uncertainClaims`
+   - `chartingDecisions`
+   - `humanReviewNotes`
+7. Confirm the US1 demo does not require HTML preview, publishing, persistence, file upload, PPTX export, or a revision loop.
+
+## Semantic Segmentation Prompt Review Path
+
+Before implementing LLM segmentation:
+
+1. Review `contracts/semantic-segmentation.schema.json`.
+2. Confirm the prompt instructs the LLM to:
+   - segment by meaning, not only formatting
+   - use `segmentationGuidance` only as grouping preference
+   - preserve exact source quotes
+   - avoid rewriting source text
+   - ignore guidance that conflicts with source content or asks to alter facts
+   - avoid adding facts not present in source content
+   - output JSON only, matching the schema
+   - attempt format repair only when given invalid prior JSON plus validation errors
+   - repair JSON/schema shape only, without reinterpreting or changing source meaning
+3. Run the prompt against:
+   - the planning brief fixture
+   - a markdown-heading fixture
+   - an inline-heading fixture
+   - an unstructured paragraph fixture
+4. Preserve output samples, schema validation result, repair attempt result when applicable, quote grounding result, fallback result when applicable, and review notes in `evidence.md`.
+
+## US1R Manual Demo Path
+
+After T078-T082 red tests are created and before T083 implementation:
+
+1. Run the focused red tests:
+   - `pnpm --filter @slides-agent/contracts test -- semantic-segmentation.contract.test.ts`
+   - `pnpm --filter @slides-agent/domain test -- semantic-segmentation`
+   - `pnpm --filter @slides-agent/api test -- semantic-segmentation`
+2. Confirm the tests fail because semantic segmentation contract helpers, validator, fallback wiring, and API prompt adapter are not implemented yet.
+3. Review the failing assertions and confirm they cover:
+   - schema-bound LLM JSON output
+   - exact source quote grounding
+   - deterministic fallback on invalid segmentation
+   - one bounded format repair attempt before deterministic fallback
+   - prompt instructions for exact quotes and JSON-only output
+   - `segmentationGuidance` as preference-only
+   - warning/evidence path for ignored or conflicting guidance
+4. Preserve the red test output summary in `evidence.md` when T083-T091 implementation begins.
+
 ## Evidence To Preserve
 
 - Test output summary.
+- Semantic segmentation output sample and validation result.
+- Format repair input errors, repaired output validation result, and repair/fallback decision when applicable.
+- Source quote grounding validation result.
 - Generated slide JSON for sample input.
 - Generated review report for sample input.
 - Downloaded self-contained HTML artifact or a documented checksum/path.

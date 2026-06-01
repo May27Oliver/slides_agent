@@ -20,12 +20,9 @@
     "audience": "Product and engineering leads",
     "styleDirection": "High-density PM planning deck",
     "chartEmphasis": "Highlight KPI changes and schedule risks",
+    "segmentationGuidance": "Group by goals, decisions, risks, constraints, and next steps",
     "language": "zh-TW",
     "tone": "direct"
-  },
-  "options": {
-    "useExternalProvider": false,
-    "enableUiUxProMax": true
   }
 }
 ```
@@ -65,10 +62,7 @@
       "omittedOrCompressedContent": [],
       "uncertainClaims": [],
       "chartingDecisions": [],
-      "humanReviewNotes": [],
-      "providerBoundary": {
-        "usedExternalProvider": false
-      }
+      "humanReviewNotes": []
     }
   },
   "previewArtifact": {
@@ -77,9 +71,7 @@
       "slideCount": 5,
       "sourceFactCount": 8,
       "chartIntentCount": 2,
-      "uncertainClaimCount": 1,
-      "usedUiUxProMax": true,
-      "usedExternalProvider": false
+      "uncertainClaimCount": 1
     }
   }
 }
@@ -93,18 +85,6 @@
     "code": "INVALID_INPUT",
     "message": "sourceContent, purpose, and audience are required",
     "fields": ["sourceContent", "deckBrief.purpose", "deckBrief.audience"]
-  }
-}
-```
-
-### Response: 422
-
-```json
-{
-  "error": {
-    "code": "UNSAFE_PROVIDER_CONFIGURATION",
-    "message": "External provider use was requested but no explicit provider configuration is available",
-    "fields": ["options.useExternalProvider"]
   }
 }
 ```
@@ -134,7 +114,8 @@ Content-Type: `text/html; charset=utf-8`
 
 - `sourceContent`、`deckBrief.purpose`、`deckBrief.audience` 必填。
 - `chartEmphasis` 是 free text，不能被視為 source truth。
-- `useExternalProvider` 預設為 false。
-- `enableUiUxProMax` 預設為 true，用於 design planning/critique。
+- `segmentationGuidance` 是 free text，只能作為 semantic segmentation 偏好，不能被視為 source truth。
+- LLM provider、model 與 design-planning skill usage 由 backend flow 配置，不是使用者 request/response contract。
+- Design planning 與 critique 是固定 flow 能力，不提供使用者 opt-in/opt-out 欄位，且不得改寫來源事實。
 - Response 必須包含 `slideDeck`、`slideDeck.reviewReport`、self-contained HTML 與 `generationSummary`。
 - Generated preview 是 session-only，不得暗示 persistence。

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://slides-agent.local/contracts/slide-generation.schema.json",
+  "$id": "urn:slides-agent:contracts:slide-generation",
   "title": "Slide Generation Preview Contract",
   "type": "object",
   "required": ["request", "response"],
@@ -16,19 +16,16 @@
     "GeneratePreviewRequest": {
       "type": "object",
       "required": ["sourceContent", "deckBrief"],
-      "properties": {
-        "sourceContent": {
-          "type": "string",
-          "minLength": 1
+        "properties": {
+          "sourceContent": {
+            "type": "string",
+            "minLength": 1
+          },
+          "deckBrief": {
+            "$ref": "#/$defs/DeckBrief"
+          }
         },
-        "deckBrief": {
-          "$ref": "#/$defs/DeckBrief"
-        },
-        "options": {
-          "$ref": "#/$defs/GenerationOptions"
-        }
-      },
-      "additionalProperties": false
+        "additionalProperties": false
     },
     "DeckBrief": {
       "type": "object",
@@ -48,25 +45,14 @@
         "chartEmphasis": {
           "type": "string"
         },
+        "segmentationGuidance": {
+          "type": "string"
+        },
         "language": {
           "type": "string"
         },
         "tone": {
           "type": "string"
-        }
-      },
-      "additionalProperties": false
-    },
-    "GenerationOptions": {
-      "type": "object",
-      "properties": {
-        "useExternalProvider": {
-          "type": "boolean",
-          "default": false
-        },
-        "enableUiUxProMax": {
-          "type": "boolean",
-          "default": true
         }
       },
       "additionalProperties": false
@@ -214,7 +200,7 @@
     },
     "ReviewReport": {
       "type": "object",
-      "required": ["assumptions", "omittedOrCompressedContent", "uncertainClaims", "chartingDecisions", "humanReviewNotes", "providerBoundary"],
+      "required": ["assumptions", "omittedOrCompressedContent", "uncertainClaims", "chartingDecisions", "humanReviewNotes"],
       "properties": {
         "assumptions": {
           "type": "array",
@@ -245,9 +231,6 @@
           "items": {
             "type": "string"
           }
-        },
-        "providerBoundary": {
-          "type": "object"
         }
       },
       "additionalProperties": false
@@ -268,7 +251,7 @@
     },
     "GenerationSummary": {
       "type": "object",
-      "required": ["slideCount", "sourceFactCount", "chartIntentCount", "uncertainClaimCount", "usedUiUxProMax", "usedExternalProvider"],
+      "required": ["slideCount", "sourceFactCount", "chartIntentCount", "uncertainClaimCount"],
       "properties": {
         "slideCount": {
           "type": "integer",
@@ -285,12 +268,6 @@
         "uncertainClaimCount": {
           "type": "integer",
           "minimum": 0
-        },
-        "usedUiUxProMax": {
-          "type": "boolean"
-        },
-        "usedExternalProvider": {
-          "type": "boolean"
         }
       },
       "additionalProperties": false

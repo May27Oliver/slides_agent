@@ -7,6 +7,9 @@
 ## Ubiquitous Language
 
 - `SourceContent`: 使用者貼上的原始內容。
+- `SemanticSegment`: LLM-assisted segmentation output 中的語意段落候選。
+- `SegmentationValidation`: 程式端對 LLM segmentation output 的 schema、quote grounding、順序與 coverage 驗證結果。
+- `SegmentationRepairAttempt`: 初次 LLM segmentation schema validation 失敗時的一次性格式修復嘗試。
 - `DeckBrief`: 使用者對簡報目的、受眾、風格與圖表重點的描述。
 - `SourceFact`: 從來源內容抽出的重要事實。
 - `ChartIntent`: 是否將數字視覺化，以及用何種方式視覺化的可審查決策。
@@ -35,20 +38,98 @@ Validation:
 
 ### SourceSection
 
-Represents parsed source structure.
+Represents validated source structure used by downstream content core.
 
 Fields:
 
 - `id: string`
 - `heading?: string`
-- `body: string`
-- `bullets: string[]`
+- `text: string`
+- `sourceQuotes: SourceQuote[]`
 - `order: number`
+- `segmentationSource: "llm" | "deterministic_fallback"`
 
 Validation:
 
 - `order` MUST preserve source order.
+- `sourceQuotes` MUST exact-match source content.
 - Empty sections SHOULD be ignored.
+
+### SemanticSegment
+
+Represents one section candidate returned by LLM-assisted semantic segmentation.
+
+Fields:
+
+- `id: string`
+- `heading: string`
+- `sourceQuotes: SourceQuote[]`
+- `summary: string`
+- `order: number`
+- `rationale: string`
+- `confidence: "high" | "medium" | "low"`
+- `warnings: string[]`
+
+Validation:
+
+- `heading` MAY summarize meaning but MUST NOT add unsupported facts.
+- `summary` is for planning/evidence only and MUST NOT replace source quotes.
+- `sourceQuotes` MUST contain exact copied snippets from `SourceContent.rawText`.
+- `order` MUST match the first matched quote position in the source.
+- Low confidence or warnings SHOULD produce review/evidence notes.
+
+### SourceQuote
+
+Represents exact source text selected by segmentation.
+
+Fields:
+
+- `text: string`
+- `role: "heading" | "body" | "bullet" | "table" | "quote"`
+
+Validation:
+
+- `text` MUST be an exact substring of `SourceContent.rawText` after newline normalization.
+- Character offsets SHOULD be computed by application code after exact-match validation; LLM SHOULD NOT be trusted as the source of offsets.
+
+### SegmentationValidation
+
+Represents deterministic validation result for LLM segmentation output.
+
+Fields:
+
+- `schemaValid: boolean`
+- `quoteGroundingValid: boolean`
+- `sourceOrderValid: boolean`
+- `importantContentCoverageValid: boolean`
+- `repairAttempted: boolean`
+- `repairSucceeded: boolean`
+- `fallbackUsed: boolean`
+- `issues: string[]`
+
+Validation:
+
+- Failed initial schema validation MUST trigger at most one `SegmentationRepairAttempt` before deterministic fallback.
+- Failed repaired schema, quote grounding, or source order validation MUST trigger deterministic fallback segmentation.
+- Coverage issues SHOULD trigger review/evidence notes and MAY trigger fallback when important content would be omitted.
+
+### SegmentationRepairAttempt
+
+Represents a bounded LLM format repair request after initial segmentation schema validation fails.
+
+Fields:
+
+- `attemptNumber: 1`
+- `inputValidationErrors: string[]`
+- `repairedSchemaValid: boolean`
+- `repairNotes: string[]`
+
+Validation:
+
+- Only one repair attempt is allowed per generation.
+- Repair MUST be constrained to JSON/schema correction.
+- Repair MUST NOT reinterpret source content, rewrite exact source quotes, add unsupported facts, remove important content, or change segment meaning.
+- Raw validation errors are internal evidence; user-facing review notes should explain repair/fallback in plain language.
 
 ### DeckBrief
 
@@ -60,6 +141,7 @@ Fields:
 - `audience: string`
 - `styleDirection?: string`
 - `chartEmphasis?: string`
+- `segmentationGuidance?: string`
 - `language?: string`
 - `tone?: string`
 
@@ -67,6 +149,8 @@ Validation:
 
 - `purpose` and `audience` MUST be non-empty.
 - `chartEmphasis` is free text and MUST NOT be interpreted as source truth.
+- `segmentationGuidance` is free text and MUST be treated only as segmentation preference, not source truth.
+- Conflicting or fact-changing segmentation guidance MUST be ignored and surfaced in warnings/evidence.
 
 ### SourceFact
 
@@ -196,13 +280,12 @@ Fields:
 - `uncertainClaims: string[]`
 - `chartingDecisions: ChartingDecisionNote[]`
 - `humanReviewNotes: string[]`
-- `providerBoundary: ProviderBoundaryNote`
 
 Validation:
 
 - MUST exist for every generation.
 - MUST include charting decisions, including no-chart rationale.
-- MUST disclose external provider use or confirm local/deterministic path.
+- MUST NOT expose backend provider/model selection as a user-facing review-report field.
 
 ### PreviewArtifact
 
@@ -226,7 +309,9 @@ Validation:
 
 Responsibilities:
 
-- Parse source content.
+- Request or receive semantic segmentation result from the API/application layer.
+- Validate semantic segmentation schema, exact source quote grounding, source order, and important-content coverage.
+- Fallback to deterministic source parsing when segmentation validation fails.
 - Extract source facts.
 - Generate baseline slide architecture.
 - Produce semantic titles conservatively.
@@ -269,4 +354,3 @@ DraftInput
 ```
 
 No persisted deck state exists in this slice.
-

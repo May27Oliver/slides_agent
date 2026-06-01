@@ -37,3 +37,61 @@ This file records implementation and verification evidence for feature 002.
 - Local workspace imports use `@/*` to point to that workspace package's own `src/*`.
 - Cross-package imports remain explicit as `@slides-agent/contracts` and `@slides-agent/domain`.
 - Vite is configured with the same `@` alias for the web app.
+
+### 2026-05-31 - US1 Green Slice
+
+- Completed US1 minimal implementation for request validation, deterministic source parsing, source fact extraction, semantic title planning, layered chart intent planning, review report building, slide deck planning, and `generatePreviewDeck`.
+- `pnpm --filter @slides-agent/contracts test` passed: 1 file, 3 tests.
+- `pnpm --filter @slides-agent/domain test` passed: 5 files, 5 tests.
+- `pnpm run test` passed. API and web packages currently use `--passWithNoTests` because US2/API/UI behavior tests have not started.
+- `pnpm --filter @slides-agent/contracts build` passed.
+- `pnpm --filter @slides-agent/domain build` passed.
+- `pnpm --filter @slides-agent/api build` passed.
+- `pnpm --filter @slides-agent/web build` passed.
+- `pnpm run lint` passed.
+- `pnpm run format` passed.
+- US1 fixture preserves source facts for `18%`, `25%`, `12 小時`, `4 小時`, `2026-08-15`, `dashboard MVP`, `full CRM integration`, and `0.5 FTE`.
+- US1 fixture produces chart intents for conversion, response time, dashboard MVP deadline, and design resource risk.
+- No US2 renderer, browser preview, download behavior, persistence, publishing, upload, PPTX export, full editor, or revision loop was introduced.
+
+### 2026-06-01 - Schema Identifier Clarification
+
+- Schema `$id` changed from a fake URL to `urn:slides-agent:contracts:slide-generation`.
+- `SLIDE_GENERATION_SCHEMA_ID` now uses the same URN to avoid implying that the identifier is a reachable HTTP endpoint.
+
+### 2026-06-01 - LLM Provider Contract Change
+
+- Removed `useExternalProvider`, `usedExternalProvider`, and `providerBoundary` from the 002 contract language.
+- Removed request-level provider/model selection and generated response provider disclosure.
+- Removed the design-skill toggle because design planning and critique are fixed generation-flow capabilities, not user toggles.
+- Removed the legacy `GenerationOptionsContract`, request `options` field, and schema `GenerationOptions` definition.
+- Review report remains focused on assumptions, omitted/compressed content, uncertain claims, charting decisions, and human review notes.
+- Constitution updated to version `3.0.0` with Backend-Configured LLM Boundary replacing user-facing provider selection/disclosure.
+
+### 2026-06-01 - Semantic Segmentation Spec Change
+
+- Spec updated to require backend-configured LLM-assisted semantic segmentation before downstream deck planning.
+- Added internal `contracts/semantic-segmentation.schema.json` for LLM output shape.
+- Added deterministic validation requirements for schema, exact source quote grounding, source order, and important-content coverage.
+- Added optional `deckBrief.segmentationGuidance` as a user-provided segmentation preference, explicitly not source truth.
+- Added deterministic fallback requirement when segmentation validation fails.
+- Added US1 revision tasks T078-T091 and marked the revision as blocking before US2 implementation.
+
+### 2026-06-01 - US1R Semantic Segmentation Green Slice
+
+- Added `packages/contracts/schemas/semantic-segmentation.schema.json` with URN id `urn:slides-agent:contracts:semantic-segmentation`.
+- Added `packages/contracts/src/semantic-segmentation.ts` with schema id export and focused runtime validation helper for LLM segmentation output.
+- Added domain semantic segmentation types, validator, semantic segmenter port, deterministic fallback path, and preview generation wiring before source fact extraction.
+- Added API prompt adapter boundary at `apps/api/src/adapters/llm/semantic-segmentation.adapter.ts`; automated tests do not call external LLM APIs.
+- Prompt adapter treats `segmentationGuidance` as preference-only, isolates it from source content, and instructs LLM output to record ignored/conflicting guidance in `globalWarnings`.
+- Focused validation passed:
+  - `pnpm --filter @slides-agent/contracts test -- semantic-segmentation.contract.test.ts`
+  - `pnpm --filter @slides-agent/domain test -- semantic-segmentation`
+  - `pnpm --filter @slides-agent/api test -- semantic-segmentation`
+
+### 2026-06-01 - Segmentation Repair/Fallback Spec Decision
+
+- Added requirement that invalid initial LLM segmentation schema output may trigger at most one format repair attempt before deterministic fallback.
+- Repair is limited to JSON/schema correction and must not reinterpret, summarize, expand, delete, or alter source meaning.
+- Repair failure, grounding/order/coverage failure, or fallback must produce user-readable review notes while preserving raw validation details in internal evidence.
+- Added US1R2 tasks T092-T101 and kept the revision blocking before US2 implementation.

@@ -57,26 +57,87 @@
 
 ### Tests for User Story 1 (REQUIRED - write first)
 
-- [ ] T022 [P] [US1] Write failing contract validation test for preview request in `packages/contracts/test/preview-request.contract.test.ts`
-- [ ] T023 [P] [US1] Write failing domain test for source fact extraction in `packages/domain/test/content-core/source-facts.test.ts`
-- [ ] T024 [P] [US1] Write failing domain test for semantic title generation in `packages/domain/test/content-core/semantic-titles.test.ts`
-- [ ] T025 [P] [US1] Write failing domain test for layered chart intent decisions in `packages/domain/test/content-core/chart-intents.test.ts`
-- [ ] T026 [P] [US1] Write failing domain test for review report required fields in `packages/domain/test/review/review-report.test.ts`
-- [ ] T027 [US1] Document manual demo path for slide JSON and review report in `specs/002-generate-previewable-html-slides/quickstart.md`
+- [X] T022 [P] [US1] Write failing contract validation test for preview request in `packages/contracts/test/preview-request.contract.test.ts`
+- [X] T023 [P] [US1] Write failing domain test for source fact extraction in `packages/domain/test/content-core/source-facts.test.ts`
+- [X] T024 [P] [US1] Write failing domain test for semantic title generation in `packages/domain/test/content-core/semantic-titles.test.ts`
+- [X] T025 [P] [US1] Write failing domain test for layered chart intent decisions in `packages/domain/test/content-core/chart-intents.test.ts`
+- [X] T026 [P] [US1] Write failing domain test for review report required fields in `packages/domain/test/review/review-report.test.ts`
+- [X] T027 [US1] Document manual demo path for slide JSON and review report in `specs/002-generate-previewable-html-slides/quickstart.md`
 
 ### Implementation for User Story 1
 
-- [ ] T028 [US1] Implement request schema validation in `packages/contracts/src/preview-request.ts`
-- [ ] T029 [US1] Implement source section parsing in `packages/domain/src/content-core/source-parser.ts`
-- [ ] T030 [US1] Implement source fact extraction in `packages/domain/src/content-core/source-fact-extractor.ts`
-- [ ] T031 [US1] Implement semantic title generation in `packages/domain/src/content-core/semantic-title-planner.ts`
-- [ ] T032 [US1] Implement layered chart intent planner in `packages/domain/src/content-core/chart-intent-planner.ts`
-- [ ] T033 [US1] Implement review report builder in `packages/domain/src/review/review-report-builder.ts`
-- [ ] T034 [US1] Implement slide deck planner in `packages/domain/src/deck/slide-deck-planner.ts`
-- [ ] T035 [US1] Wire deterministic preview generation use case in `packages/domain/src/deck/generate-preview-deck.ts`
-- [ ] T036 [US1] Capture US1 evidence in `specs/002-generate-previewable-html-slides/evidence.md`
+- [X] T028 [US1] Implement request schema validation in `packages/contracts/src/preview-request.ts`
+- [X] T029 [US1] Implement source section parsing in `packages/domain/src/content-core/source-parser.ts`
+- [X] T030 [US1] Implement source fact extraction in `packages/domain/src/content-core/source-fact-extractor.ts`
+- [X] T031 [US1] Implement semantic title generation in `packages/domain/src/content-core/semantic-title-planner.ts`
+- [X] T032 [US1] Implement layered chart intent planner in `packages/domain/src/content-core/chart-intent-planner.ts`
+- [X] T033 [US1] Implement review report builder in `packages/domain/src/review/review-report-builder.ts`
+- [X] T034 [US1] Implement slide deck planner in `packages/domain/src/deck/slide-deck-planner.ts`
+- [X] T035 [US1] Wire deterministic preview generation use case in `packages/domain/src/deck/generate-preview-deck.ts`
+- [X] T036 [US1] Capture US1 evidence in `specs/002-generate-previewable-html-slides/evidence.md`
 
 **Checkpoint**: US1 independently produces reviewable `SlideDeck` and `ReviewReport` from fixture input.
+
+---
+
+## Phase 3A: User Story 1 Revision - LLM-Assisted Semantic Segmentation
+
+**Goal**: 在進入 HTML rendering 前，將 source section parsing 從 regex-only parser 升級為 backend-configured LLM-assisted semantic segmentation，並用 deterministic schema/quote/order/coverage validation 保護 source fidelity。
+
+**Independent Test**: 使用不規則格式 fixture 驗證 LLM segmentation output schema、exact source quote grounding、source order validation 與 deterministic fallback；不需要 HTML preview 或 UI。
+
+**Blocking**: 完成此 revision 前，不得進入 US2 implementation。US1 既有 deterministic parser 保留為 fallback。
+
+### Tests for US1 Semantic Segmentation Revision (REQUIRED - write first)
+
+- [X] T078 [P] [US1R] Write failing internal schema contract test for LLM segmentation output in `packages/contracts/test/semantic-segmentation.contract.test.ts`
+- [X] T079 [P] [US1R] Write failing domain test for source quote grounding validation in `packages/domain/test/content-core/semantic-segmentation-validation.test.ts`
+- [X] T080 [P] [US1R] Write failing domain test for deterministic fallback when LLM segmentation is invalid in `packages/domain/test/content-core/semantic-segmentation-fallback.test.ts`
+- [X] T081 [P] [US1R] Write failing API adapter prompt contract test in `apps/api/test/semantic-segmentation-prompt.test.ts`
+- [X] T081a [P] [US1R] Write failing API adapter prompt test that treats `segmentationGuidance` as preference-only and ignores fact-changing guidance in `apps/api/test/semantic-segmentation-guidance.test.ts`
+- [X] T082 [US1R] Document prompt review and segmentation evidence path in `specs/002-generate-previewable-html-slides/quickstart.md`
+
+### Implementation for US1 Semantic Segmentation Revision
+
+- [X] T083 [US1R] Copy internal semantic segmentation schema into `packages/contracts/schemas/semantic-segmentation.schema.json`
+- [X] T084 [US1R] Export semantic segmentation schema id and contract helpers from `packages/contracts/src/semantic-segmentation.ts`
+- [X] T085 [US1R] Define `SemanticSegment`, `SourceQuote`, and `SegmentationValidation` domain types in `packages/domain/src/content-core/semantic-segmentation.ts`
+- [X] T086 [US1R] Implement semantic segmentation validator for schema result, exact source quote grounding, source order, and important-content coverage in `packages/domain/src/content-core/semantic-segmentation-validator.ts`
+- [X] T087 [US1R] Keep deterministic parser as fallback segmenter in `packages/domain/src/content-core/source-parser.ts`
+- [X] T088 [US1R] Define semantic segmenter port/interface in `packages/domain/src/content-core/semantic-segmenter.ts`
+- [X] T089 [US1R] Implement backend LLM semantic segmentation prompt builder and adapter boundary in `apps/api/src/adapters/llm/semantic-segmentation.adapter.ts`
+- [X] T090 [US1R] Wire semantic segmentation + validation + fallback before source fact extraction in the preview generation flow
+- [X] T091 [US1R] Capture segmentation schema, prompt, quote-grounding, fallback, and review evidence in `specs/002-generate-previewable-html-slides/evidence.md`
+
+**Checkpoint**: US1 produces reviewable `SlideDeck` and `ReviewReport` from LLM-assisted semantic sections when valid, and from deterministic fallback when validation fails.
+
+---
+
+## Phase 3B: User Story 1 Revision - Segmentation Format Repair and Conservative Fallback UX
+
+**Goal**: 初次 LLM semantic segmentation schema validation 失敗時，系統最多嘗試一次格式修復；修復仍失敗或 grounding/order/coverage validation 失敗時，使用 deterministic fallback，並輸出人能理解的 review note 與可追溯 internal evidence。
+
+**Independent Test**: 使用 malformed LLM segmentation fixture 驗證一次 format repair、禁止多次 retry、repair prompt 不得改寫來源語意、repair 失敗後 deterministic fallback，以及 review/evidence 不直接暴露 raw schema error 給使用者。
+
+**Blocking**: 完成此 revision 前，不得進入 US2 implementation。US1R 既有 deterministic fallback 保留，但需補上 bounded repair 與使用者可理解的 fallback 說明。
+
+### Tests for US1 Segmentation Repair Revision (REQUIRED - write first)
+
+- [ ] T092 [P] [US1R2] Write failing contract/domain test for one format repair attempt after invalid initial segmentation schema in `packages/domain/test/content-core/semantic-segmentation-repair.test.ts`
+- [ ] T093 [P] [US1R2] Write failing domain test that repair failure triggers deterministic fallback and records repair/fallback issue in `packages/domain/test/content-core/semantic-segmentation-fallback.test.ts`
+- [ ] T094 [P] [US1R2] Write failing API adapter prompt test for repair-only instructions that forbid reinterpretation, summarization, expansion, deletion, or source quote rewriting in `apps/api/test/semantic-segmentation-repair-prompt.test.ts`
+- [ ] T095 [P] [US1R2] Write failing review report/evidence test that user-facing notes explain repair/fallback plainly and do not expose raw schema paths as the primary message in `packages/domain/test/review/segmentation-review-notes.test.ts`
+
+### Implementation for US1 Segmentation Repair Revision
+
+- [ ] T096 [US1R2] Define segmentation repair attempt types and result fields in `packages/domain/src/content-core/semantic-segmentation.ts`
+- [ ] T097 [US1R2] Implement semantic segmentation repair coordinator that allows at most one repair attempt before deterministic fallback in `packages/domain/src/content-core/semantic-segmenter.ts`
+- [ ] T098 [US1R2] Implement backend LLM repair prompt builder in `apps/api/src/adapters/llm/semantic-segmentation.adapter.ts`
+- [ ] T099 [US1R2] Wire repair success/failure, fallback reason, and user-readable review notes into preview generation flow before source fact extraction
+- [ ] T100 [US1R2] Update quickstart/evidence examples with malformed initial output, repaired output, fallback case, and review note sample in `specs/002-generate-previewable-html-slides/evidence.md`
+- [ ] T101 [US1R2] Run focused contract/domain/API tests for segmentation repair and record results in `specs/002-generate-previewable-html-slides/evidence.md`
+
+**Checkpoint**: US1 handles invalid initial LLM segmentation output without raw user-facing schema errors: one repair attempt if possible, deterministic fallback if needed, and review/evidence that explains what happened.
 
 ---
 
@@ -167,15 +228,18 @@
 - **Phase 1 Setup**: No dependencies.
 - **Phase 2 Foundational**: Depends on Phase 1.
 - **US1**: Depends on Phase 2. MVP behavior.
-- **US2**: Depends on US1 because renderer and API need valid `SlideDeck`.
-- **US3**: Depends on US1 and can partially run in parallel with late US2 renderer work after `DesignSystem` exists.
+- **US1 Semantic Segmentation Revision**: Depends on US1 and blocks US2 implementation.
+- **US2**: Depends on US1 Semantic Segmentation Revision and US1 Segmentation Repair Revision because renderer and API need validated `SlideDeck` built from valid, repaired, or fallback source sections with user-readable review notes.
+- **US3**: Depends on US1 Semantic Segmentation Revision and can partially run in parallel with late US2 renderer work after `DesignSystem` exists.
 - **Phase 6 Polish**: Depends on selected user stories being complete.
 
 ### User Story Dependencies
 
 - **US1**: Independent generation artifact; can be demonstrated with JSON/report only.
-- **US2**: Requires valid slide JSON from US1 or fixture.
-- **US3**: Requires baseline design system and renderer boundary; validates design layer without changing source facts.
+- **US1 Semantic Segmentation Revision**: Revises source sectioning before downstream rendering; can be demonstrated with segmentation validation evidence and JSON/report only.
+- **US1 Segmentation Repair Revision**: Revises invalid LLM output handling before downstream rendering; can be demonstrated with malformed segmentation fixture, repair/fallback evidence, and JSON/report only.
+- **US2**: Requires valid slide JSON from revised US1 or fixture.
+- **US3**: Requires baseline design system and renderer boundary; validates design layer without changing source facts or segmentation grounding.
 
 ### Within Each User Story
 
@@ -195,6 +259,8 @@
 - T037-T041 can run in parallel after renderer/API/web skeleton exists.
 - T056-T059 can run in parallel after design boundary exists.
 - T068-T069 can run in parallel during final polish.
+- T078-T081 can run in parallel before US1 semantic segmentation implementation.
+- T092-T095 can run in parallel before US1 segmentation repair implementation.
 
 ---
 
@@ -215,18 +281,24 @@ Task: "T026 [US1] Write failing domain test for review report required fields"
 
 1. Complete Phase 1 and Phase 2.
 2. Complete US1.
-3. Stop and demo slide JSON + review report from fixture input.
-4. Only then proceed to US2 renderer/preview.
+3. Complete US1 semantic segmentation revision.
+4. Complete US1 segmentation repair revision.
+5. Stop and demo segmentation validation/repair/fallback evidence + slide JSON + review report from fixture input.
+6. Only then proceed to US2 renderer/preview.
 
 ### Incremental Delivery
 
-1. US1: deterministic content core and reviewability.
-2. US2: self-contained HTML and session-only preview.
-3. US3: ui-ux-pro-max design layer and visual consistency.
+1. US1: reviewable content core and reviewability.
+2. US1 revision: LLM-assisted semantic segmentation with deterministic validation/fallback.
+3. US1 repair revision: one format repair attempt before conservative fallback and user-readable review notes.
+4. US2: self-contained HTML and session-only preview.
+5. US3: ui-ux-pro-max design layer and visual consistency.
 
 ### Quality Bar
 
 - Keep tests concise and behavior-focused.
 - Do not introduce persistence or publishing.
 - Do not let ui-ux-pro-max add source facts.
+- Do not let LLM segmentation or format repair rewrite source text; use exact source quotes, allow at most one repair attempt, and fallback on failed repair/validation.
+- Do not show raw schema validation paths/messages as the main user-facing explanation; preserve them in evidence and give users a plain-language review note.
 - Preserve evidence in `evidence.md`.
