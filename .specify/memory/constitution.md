@@ -1,20 +1,14 @@
 <!--
 Sync Impact Report
-Version change: 1.2.0 -> 1.3.0
+Version change: 2.0.0 -> 3.0.0
 Modified principles:
-- Rewritten constitution in English per project language policy
-- Added: Code Quality and Simplicity
-- Expanded: Test-First Engineering with strict red-green-refactor
-- Added: Behavior-Driven User Value
-- Added: Consistent User Experience and Language
-- Added: Performance and Operational Evidence
-- Clarified: all feature work must pass Constitution Check before planning proceeds
-- Clarified: every user story must be independently demonstrable and testable
-- Clarified: added complexity requires rejected simpler alternative
-- Clarified: non-automatable behavior requires a manual verification path
-- Clarified: decisions and outputs must be traceable through artifacts or evidence
+- Changed: prior provider boundary -> Backend-Configured LLM Boundary
+- Removed: provider/model selection from user request and response contracts
+- Removed: provider disclosure from generated review reports by default
+- Clarified: provider/model usage is backend-owned operational configuration with internal evidence
+- Clarified: ui-ux-pro-max is a fixed generation-flow design layer, not a user option
 Added sections:
-- Artifact Language Policy
+- None
 Removed sections:
 - None
 Templates requiring updates:
@@ -86,16 +80,25 @@ export is out of scope for version 1 unless this constitution is amended.
 Rationale: The project goal is to make slide communication web-native first, not to
 recreate traditional slide tooling.
 
-### V. Privacy-First Provider Boundary
+### V. Backend-Configured LLM Boundary
 
-Company-internal content and personal data MUST NOT be sent to external services by
-default. Any LLM or remote provider integration MUST be explicitly configured,
-replaceable, and isolated behind a provider boundary. Feature plans MUST document when
-content leaves the local runtime and MUST support a local or deterministic fallback path
-for development and testing when practical.
+Version 1 uses backend-configured LLM APIs as part of the product path. Provider and
+model selection are backend runtime configuration, not user-facing request fields,
+response fields, or generated review-report fields, unless a future accepted feature spec
+explicitly changes that contract.
+
+Provider integration MUST be replaceable and isolated behind a provider boundary. Feature
+plans MUST document internally which backend provider/model configuration is used, what
+content is sent, what purpose the provider serves, and what operational evidence is
+preserved for reviewers. Provider output MUST NOT become source truth: source fidelity,
+charting decisions, and review notes still require traceability to the supplied source
+content.
 
 Rationale: Expected inputs include internal reports, proposals, and planning documents
-that may contain sensitive company information.
+that may contain sensitive company information. The project currently does not have
+self-hosted model capacity, so trust must come from backend-owned provider configuration,
+source-fidelity controls, reviewability, and internal operational evidence rather than
+user-tunable model settings.
 
 ### VI. Consistent User Experience and Language
 
@@ -162,7 +165,8 @@ Any charting transformation MUST preserve original numbers, units, periods,
 denominators, and context. If the source data is insufficient for charting, the system
 MUST keep the content as text, table, or review note rather than invent missing data.
 
-The `ui-ux-pro-max` skill MAY be used for design planning and critique. It MAY improve
+The `ui-ux-pro-max` skill MUST be part of the generation flow for design planning and
+critique. It MAY improve
 visual hierarchy, layout selection, density, chart treatment, and design consistency, but
 it MUST NOT invent facts, alter source meaning, or override review notes.
 
@@ -196,7 +200,8 @@ Version 1 scope is intentionally narrow:
 - PPTX export, real-time collaborative editing, account systems, persistence, and full
   drag-and-drop slide editing are out of scope unless a feature spec explicitly amends
   the milestone.
-- External research or fact checking MUST be opt-in and separately specified.
+- Research or fact checking beyond the supplied source content MUST be opt-in and
+  separately specified.
 - Output language SHOULD follow the input language unless the user specifies otherwise.
 - Chinese, English, and mixed-language source content SHOULD be supported when doing so
   does not weaken the required gates.
@@ -256,4 +261,4 @@ Compliance review is required during planning and before feature completion. If 
 deferred, the deferral MUST include a specific follow-up task and cannot be hidden in
 general prose.
 
-**Version**: 1.3.0 | **Ratified**: 2026-05-29 | **Last Amended**: 2026-05-30
+**Version**: 2.0.0 | **Ratified**: 2026-05-29 | **Last Amended**: 2026-06-01

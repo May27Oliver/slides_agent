@@ -56,8 +56,9 @@ The plan MUST explicitly answer each gate below:
   omitted or compressed content, uncertain claims, and review notes.
 - **Web-First Deliverable**: Confirm self-contained HTML slides are the primary v1
   artifact and document any approved exception.
-- **Privacy-First Provider Boundary**: State whether any external provider receives
-  source content. If yes, document explicit configuration and fallback behavior.
+- **Backend-Configured LLM Boundary**: State that provider/model selection is backend
+  runtime configuration, not user request/response contract. Document internally what
+  content is sent and what operational evidence is preserved.
 - **Coherent Deck Design System**: Define how palette, typography, spacing, density,
   layout grid, and reusable slide patterns will remain consistent.
 - **Semantic Titles and Data Visualization**: Define how paragraph meaning becomes
@@ -74,8 +75,8 @@ The plan MUST explicitly answer each gate below:
   reports, CLI output, docs, and decision rationale.
 - **Performance and Operational Evidence**: Define performance/resource/response targets,
   or state N/A with rationale. Define evidence artifacts that let reviewers understand
-  safety, privacy, provider, publishing, and operational decisions without rerunning a
-  demo.
+  safety, privacy, backend provider configuration, publishing, and operational decisions
+  without rerunning a demo.
 - **Manual Verification Path**: Identify behavior that cannot be automated and document
   the manual verification path.
 - **Release Verification**: Define how slide JSON schema, HTML rendering, keyboard
@@ -158,4 +159,4 @@ List artifacts that will preserve decisions and outputs for review:
 - **Automated Evidence**: [tests, contracts, generated sample artifacts, logs, reports]
 - **Manual Verification**: [inspection path for behavior that cannot be automated]
 - **Operational Evidence**: [performance/resource results, publishing proof, screenshots]
-- **Decision Evidence**: [privacy/provider/safety rationale and rejected alternatives]
+- **Decision Evidence**: [privacy/backend-provider/safety rationale and rejected alternatives]

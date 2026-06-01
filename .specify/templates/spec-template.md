@@ -110,8 +110,9 @@
   content, uncertain claims, and review notes as visible generation outputs.
 - **CR-003 Web-First Output**: Specification MUST treat self-contained HTML slides as
   the primary v1 deliverable unless an approved exception is documented.
-- **CR-004 Privacy Boundary**: Specification MUST state whether source content may leave
-  the local runtime and how any external provider is explicitly configured.
+- **CR-004 Backend-Configured LLM Boundary**: Specification MUST state that provider and
+  model selection are backend runtime configuration, not user request/response fields,
+  and define what internal evidence is required.
 - **CR-005 Design System**: Specification MUST define expected deck-level design
   constraints, including palette, typography, spacing, visual density, and reusable slide
   patterns.
@@ -185,8 +186,8 @@
 - **Omitted or Compressed Content Policy**: [How omitted/compressed source content is
   selected and reported]
 - **Uncertain Claims Policy**: [How unsupported or ambiguous claims are identified]
-- **Sensitive Content Handling**: [Whether content stays local, uses configured providers,
-  or requires user approval]
+- **Sensitive Content Handling**: [What content may be sent to backend-configured LLM
+  providers, what is never sent, and what internal evidence is preserved]
 - **Evidence and Traceability**: [Artifacts or evidence that make decisions and outputs
   reviewable without rerunning a demo]
 - **Manual Verification Path**: [Manual inspection path for behavior that cannot be

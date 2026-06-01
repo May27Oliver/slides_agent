@@ -29,7 +29,7 @@
 
 ### User Story 2 - Apply Coherent Design Direction (Priority: P2)
 
-使用者描述想要的簡報風格後，系統將風格轉換成 deck-level design system，並可使用 ui-ux-pro-max skill 輔助規劃與 critique，讓 slides 視覺一致且適合 presentation。
+使用者描述想要的簡報風格後，系統將風格轉換成 deck-level design system，並使用 ui-ux-pro-max skill 輔助規劃與 critique，讓 slides 視覺一致且適合 presentation。
 
 **Why this priority**: 產出若只是文字切頁，無法達成本產品要加速理解與提升會議同步的目標。設計系統讓生成結果更接近可直接使用的工作簡報。
 
@@ -65,7 +65,7 @@
 - 數字沒有單位、期間、分母或比較基準，無法安全圖表化。
 - 使用者風格描述與內容目的衝突，例如要求高密度 board report 但內容只有簡短公告。
 - Source content 包含中英混合內容。
-- External provider 未設定或不可用。
+- 使用者嘗試在 request 中指定 backend-owned provider/model 或 generation option。
 - Publish 時 URL slug 衝突或 artifact 儲存失敗。
 - Preview HTML 可生成，但 keyboard navigation 或 responsive behavior 失效。
 
@@ -87,10 +87,10 @@
 - **FR-012**: System MUST preserve original numbers, units, periods, denominators, and context when converting numeric content into visual structures.
 - **FR-013**: System MUST NOT invent missing data for charts or strengthen unsupported claims.
 - **FR-014**: System MUST use a deck-level design system for each generated deck.
-- **FR-015**: System MAY use ui-ux-pro-max during design planning and critique.
+- **FR-015**: System MUST use ui-ux-pro-max during design planning and critique.
 - **FR-016**: ui-ux-pro-max usage MUST be limited to visual hierarchy, layout selection, visual density, chart treatment, and design consistency; it MUST NOT alter source meaning or invent facts.
-- **FR-017**: System MUST document whether source content leaves the local runtime and how external providers are configured.
-- **FR-018**: System MUST support a local or deterministic fallback path when external providers are not configured, at least for development and verification.
+- **FR-017**: System MUST keep LLM provider and model selection backend-configured and outside user-facing request/response contracts.
+- **FR-018**: System MUST reject request-level generation options that try to override backend-owned provider/model or design-skill usage.
 - **FR-019**: System MUST allow generation behavior to be verified through concise tests or executable verification tasks that correspond to this spec.
 - **FR-020**: System MUST model core generation rules with clear domain concepts rather than embedding them only in UI, provider adapters, or rendering code.
 
@@ -99,7 +99,7 @@
 - **CR-001 Source Fidelity**: This feature preserves source facts through slide JSON fields, source trace references, and review report notes for important facts.
 - **CR-002 Review Report**: The generated review report includes assumptions, omitted or compressed content, uncertain claims, charting decisions, and human review notes.
 - **CR-003 Web-First Output**: The primary deliverable is a self-contained HTML slide deck and a shareable URL for presentation.
-- **CR-004 Privacy Boundary**: Source content remains local unless the user or organization explicitly configures an external provider.
+- **CR-004 Backend-Configured LLM Boundary**: Source content may be processed by backend-configured LLM providers, and provider/model details must remain outside user request/response contracts unless a future spec changes the boundary.
 - **CR-005 Design System**: Each deck has a design system covering palette, typography, spacing, visual density, layout grid, reusable slide patterns, and chart style.
 - **CR-006 Semantic Titles**: Slide titles summarize the core meaning of the slide and must remain grounded in source content.
 - **CR-007 Data Visualization**: Numeric content becomes chart, metric card, table, or text depending on source data completeness and comprehension value.
@@ -139,7 +139,7 @@
 - Published decks may be unlisted in the first milestone unless a later spec requires authentication or password protection.
 - Preview revision can be handled by regenerating the deck; full per-slide drag-and-drop editing is out of scope.
 - The first milestone prioritizes practical internal slides over highly polished external brand decks.
-- External LLM providers are optional and must be explicitly configured.
+- LLM provider/model are backend-owned runtime configuration; user-facing selection is out of scope.
 - The output language follows the input language unless the user specifies otherwise.
 
 ## Review and Safety Notes *(mandatory for generated-content features)*
@@ -147,5 +147,4 @@
 - **Assumptions to Surface**: The review report must disclose inferred audience needs, inferred deck purpose, design assumptions, charting assumptions, and any fallback behavior used.
 - **Omitted or Compressed Content Policy**: The review report must list material content that was omitted or significantly compressed, especially decisions, risks, deadlines, metrics, and constraints.
 - **Uncertain Claims Policy**: Unsupported or ambiguous claims must be marked as uncertain and must not be presented as verified facts.
-- **Sensitive Content Handling**: Source content must stay local unless an external provider is explicitly configured. Any provider boundary must be visible in the plan and reviewable before implementation.
-
+- **Sensitive Content Handling**: Source content may be sent to backend-configured LLM providers. Provider/model selection is not user-facing, but internal evidence must make the sensitive-content boundary reviewable before implementation.

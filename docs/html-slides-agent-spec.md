@@ -260,7 +260,7 @@ The system must surface:
 - Claims that may need verification.
 - Missing information that would improve the deck.
 
-For company-internal usage, the system should avoid sending sensitive content to external services unless the runtime and provider are explicitly configured by the user or organization.
+For company-internal usage, provider and model selection should stay backend-configured and outside the user request/response contract. Internal evidence should still record what content can be sent and how sensitive-content boundaries are reviewed.
 
 ## 14. Acceptance Criteria
 
@@ -272,7 +272,7 @@ The spec is ready for implementation when the following are agreed:
 - Slide JSON schema is accepted.
 - HTML deck requirements are accepted.
 - UI requirements are accepted.
-- LLM provider and fallback behavior are decided.
+- Backend LLM provider/model configuration and operational evidence behavior are decided.
 - First milestone scope is decided.
 
 The first coded milestone is accepted when:
@@ -293,7 +293,7 @@ The first coded milestone is accepted when:
 6. Should generated slides include speaker notes?
 7. Should the system support Chinese, English, and mixed-language decks from the beginning?
 8. What level of visual sophistication is required for v1: practical internal slides or polished client-facing proposals?
-9. Should sensitive content remain fully local unless the user opts into external LLM calls?
+9. How should backend provider/model evidence be preserved internally without exposing it in generated user artifacts?
 10. What is the target first use case: PM planning, internal report, proposal, or executive update?
 
 ## 16. Suggested First Milestone
@@ -312,4 +312,3 @@ Recommended constraints:
 - No persistence.
 - No PPTX export.
 - LLM integration behind a clear provider boundary.
-

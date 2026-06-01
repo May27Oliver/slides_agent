@@ -79,8 +79,8 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T010 Define or update slide JSON schema validation for generated decks
 - [ ] T011 Define review report structure for assumptions, omitted content, uncertain
   claims, and review notes
-- [ ] T012 Define provider boundary and local fallback behavior for sensitive source
-  content
+- [ ] T012 Define backend-configured provider boundary and sensitive source-content
+  evidence
 - [ ] T013 Define domain concepts, bounded context, and domain service boundaries from the
   accepted spec
 - [ ] T014 Define concise test strategy that maps each spec requirement to focused tests or

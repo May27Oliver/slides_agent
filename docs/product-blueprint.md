@@ -114,5 +114,4 @@ MVP 不包含：
 2. Preview 後的 revision 是重新生成整份 deck，還是支援單頁局部修改？
 3. 第一版部署應該保留 deck versions，還是每次發布覆蓋最新 artifact？
 4. 是否需要在 v1 支援 speaker notes？
-5. 是否允許外部 LLM provider 處理公司內部內容，或預設必須走 local/deterministic fallback？
-
+5. Backend provider/model 設定要如何在內部 evidence 中保存，且不進入使用者 request/response contract？
