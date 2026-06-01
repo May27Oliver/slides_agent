@@ -1,24 +1,31 @@
-export const SLIDE_GENERATION_SCHEMA_ID =
-  "https://slides-agent.local/contracts/slide-generation.schema.json";
+export const SLIDE_GENERATION_SCHEMA_ID = "urn:slides-agent:contracts:slide-generation";
+
+export {
+  SEMANTIC_SEGMENTATION_SCHEMA_ID,
+  validateSemanticSegmentationOutput,
+  type ContractValidationError,
+  type SemanticSegmentationValidationResult
+} from "@/semantic-segmentation";
+
+export {
+  validateGeneratePreviewRequest,
+  type ContractError,
+  type PreviewRequestValidationResult
+} from "@/preview-request";
 
 export interface DeckBriefContract {
   purpose: string;
   audience: string;
   styleDirection?: string;
   chartEmphasis?: string;
+  segmentationGuidance?: string;
   language?: string;
   tone?: string;
-}
-
-export interface GenerationOptionsContract {
-  useExternalProvider?: boolean;
-  enableUiUxProMax?: boolean;
 }
 
 export interface GeneratePreviewRequestContract {
   sourceContent: string;
   deckBrief: DeckBriefContract;
-  options?: GenerationOptionsContract;
 }
 
 export interface PreviewArtifactContract {
@@ -31,8 +38,6 @@ export interface GenerationSummaryContract {
   sourceFactCount: number;
   chartIntentCount: number;
   uncertainClaimCount: number;
-  usedUiUxProMax: boolean;
-  usedExternalProvider: boolean;
 }
 
 export interface GeneratePreviewResponseContract {

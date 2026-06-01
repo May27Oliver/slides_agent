@@ -1,9 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://slides-agent.local/contracts/slide-generation.schema.json",
+  "$id": "urn:slides-agent:contracts:slide-generation",
   "title": "Slide Generation Preview Contract",
   "type": "object",
-  "required": ["request", "response"],
+  "required": [
+    "request",
+    "response"
+  ],
   "properties": {
     "request": {
       "$ref": "#/$defs/GeneratePreviewRequest"
@@ -15,7 +18,10 @@
   "$defs": {
     "GeneratePreviewRequest": {
       "type": "object",
-      "required": ["sourceContent", "deckBrief"],
+      "required": [
+        "sourceContent",
+        "deckBrief"
+      ],
       "properties": {
         "sourceContent": {
           "type": "string",
@@ -23,16 +29,16 @@
         },
         "deckBrief": {
           "$ref": "#/$defs/DeckBrief"
-        },
-        "options": {
-          "$ref": "#/$defs/GenerationOptions"
         }
       },
       "additionalProperties": false
     },
     "DeckBrief": {
       "type": "object",
-      "required": ["purpose", "audience"],
+      "required": [
+        "purpose",
+        "audience"
+      ],
       "properties": {
         "purpose": {
           "type": "string",
@@ -48,6 +54,9 @@
         "chartEmphasis": {
           "type": "string"
         },
+        "segmentationGuidance": {
+          "type": "string"
+        },
         "language": {
           "type": "string"
         },
@@ -57,23 +66,12 @@
       },
       "additionalProperties": false
     },
-    "GenerationOptions": {
-      "type": "object",
-      "properties": {
-        "useExternalProvider": {
-          "type": "boolean",
-          "default": false
-        },
-        "enableUiUxProMax": {
-          "type": "boolean",
-          "default": true
-        }
-      },
-      "additionalProperties": false
-    },
     "GeneratePreviewResponse": {
       "type": "object",
-      "required": ["slideDeck", "previewArtifact"],
+      "required": [
+        "slideDeck",
+        "previewArtifact"
+      ],
       "properties": {
         "slideDeck": {
           "$ref": "#/$defs/SlideDeck"
@@ -86,7 +84,15 @@
     },
     "SlideDeck": {
       "type": "object",
-      "required": ["id", "title", "purpose", "audience", "designSystem", "slides", "reviewReport"],
+      "required": [
+        "id",
+        "title",
+        "purpose",
+        "audience",
+        "designSystem",
+        "slides",
+        "reviewReport"
+      ],
       "properties": {
         "id": {
           "type": "string"
@@ -121,7 +127,16 @@
     },
     "DesignSystem": {
       "type": "object",
-      "required": ["themeName", "palette", "typography", "spacing", "visualDensity", "layoutGrid", "slidePatterns", "chartStyle"],
+      "required": [
+        "themeName",
+        "palette",
+        "typography",
+        "spacing",
+        "visualDensity",
+        "layoutGrid",
+        "slidePatterns",
+        "chartStyle"
+      ],
       "properties": {
         "themeName": {
           "type": "string"
@@ -136,7 +151,11 @@
           "type": "object"
         },
         "visualDensity": {
-          "enum": ["low", "medium", "high"]
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
         },
         "layoutGrid": {
           "type": "string"
@@ -161,13 +180,31 @@
     },
     "Slide": {
       "type": "object",
-      "required": ["id", "type", "title", "message", "layout", "contentBlocks", "sourceTrace"],
+      "required": [
+        "id",
+        "type",
+        "title",
+        "message",
+        "layout",
+        "contentBlocks",
+        "sourceTrace"
+      ],
       "properties": {
         "id": {
           "type": "string"
         },
         "type": {
-          "enum": ["title", "section", "content", "comparison", "timeline", "table", "metrics", "quote", "action"]
+          "enum": [
+            "title",
+            "section",
+            "content",
+            "comparison",
+            "timeline",
+            "table",
+            "metrics",
+            "quote",
+            "action"
+          ]
         },
         "title": {
           "type": "string"
@@ -198,10 +235,23 @@
     },
     "ContentBlock": {
       "type": "object",
-      "required": ["kind", "content"],
+      "required": [
+        "kind",
+        "content"
+      ],
       "properties": {
         "kind": {
-          "enum": ["paragraph", "bullets", "metric", "table", "timeline", "callout", "quote", "chart_placeholder", "fallback_text"]
+          "enum": [
+            "paragraph",
+            "bullets",
+            "metric",
+            "table",
+            "timeline",
+            "callout",
+            "quote",
+            "chart_placeholder",
+            "fallback_text"
+          ]
         },
         "content": {
           "type": "object"
@@ -214,7 +264,13 @@
     },
     "ReviewReport": {
       "type": "object",
-      "required": ["assumptions", "omittedOrCompressedContent", "uncertainClaims", "chartingDecisions", "humanReviewNotes", "providerBoundary"],
+      "required": [
+        "assumptions",
+        "omittedOrCompressedContent",
+        "uncertainClaims",
+        "chartingDecisions",
+        "humanReviewNotes"
+      ],
       "properties": {
         "assumptions": {
           "type": "array",
@@ -245,16 +301,16 @@
           "items": {
             "type": "string"
           }
-        },
-        "providerBoundary": {
-          "type": "object"
         }
       },
       "additionalProperties": false
     },
     "PreviewArtifact": {
       "type": "object",
-      "required": ["html", "generationSummary"],
+      "required": [
+        "html",
+        "generationSummary"
+      ],
       "properties": {
         "html": {
           "type": "string",
@@ -268,7 +324,12 @@
     },
     "GenerationSummary": {
       "type": "object",
-      "required": ["slideCount", "sourceFactCount", "chartIntentCount", "uncertainClaimCount", "usedUiUxProMax", "usedExternalProvider"],
+      "required": [
+        "slideCount",
+        "sourceFactCount",
+        "chartIntentCount",
+        "uncertainClaimCount"
+      ],
       "properties": {
         "slideCount": {
           "type": "integer",
@@ -285,12 +346,6 @@
         "uncertainClaimCount": {
           "type": "integer",
           "minimum": 0
-        },
-        "usedUiUxProMax": {
-          "type": "boolean"
-        },
-        "usedExternalProvider": {
-          "type": "boolean"
         }
       },
       "additionalProperties": false

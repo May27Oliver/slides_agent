@@ -44,15 +44,16 @@ Request 的核心語意：
 - `sourceContent` 是使用者貼上的來源內容。
 - `deckBrief` 是使用者對簡報目的、觀眾、風格與圖表重點的描述。
 - `chartEmphasis` 是使用者偏好，不是 source truth。
-- `options.useExternalProvider` 預設必須是 false。
-- `options.enableUiUxProMax` 只影響 design planning/critique，不得改寫來源事實。
+- `options` 不屬於 002 public request contract；不要新增空 options type 或 legacy options 欄位。
+- LLM provider、model 與 design-planning skill usage 由 backend flow 配置，不屬於 public request contract。
+- Design planning/critique 是固定 flow 能力，不得改寫來源事實。
 
 Response 的核心語意：
 
 - `slideDeck` 是可審查的簡報 JSON。
 - `previewArtifact.html` 是 self-contained HTML。
 - `generationSummary` 是使用者與測試可觀察的生成摘要。
-- `reviewReport` 必須存在，並包含 assumptions、omitted/compressed content、uncertain claims、charting decisions、human review notes、provider boundary。
+- `reviewReport` 必須存在，並包含 assumptions、omitted/compressed content、uncertain claims、charting decisions、human review notes。
 
 ## Schema Rules
 
@@ -65,7 +66,7 @@ Response 的核心語意：
 ## Testing Expectations
 
 - contract behavior 必須先有 focused failing test，再做 validator/helper 實作。
-- contract tests 應驗證 observable behavior：required fields、default-sensitive options、error shape、response shape。
+- contract tests 應驗證 observable behavior：required fields、unsupported request fields、error shape、response shape。
 - 測試應精簡，不測 implementation detail。
 - schema validation evidence 要能追溯到 feature evidence。
 
