@@ -8,7 +8,7 @@
 
 ## 核心原則
 
-- `packages/domain` 不依賴 React、NestJS、browser runtime 或外部 LLM provider。
+- `packages/domain` 不依賴 React、NestJS、browser runtime 或 LLM provider SDK。
 - 所有可自動化的 domain behavior 必須 TDD：先寫 failing test，確認 red，再做最小實作。
 - 每個 user-facing 行為與 agent decision flow 必須能被 Given/When/Then 或 focused test 獨立展示。
 - domain code 必須保留來源內容的重要事實、數字、決策、風險與限制，不得為了設計效果新增 unsupported facts。
@@ -23,6 +23,8 @@
 可包含：
 
 - source content parsing
+- LLM-assisted semantic segmentation validation
+- deterministic fallback segmentation
 - source section detection
 - source fact extraction
 - semantic slide title planning
@@ -30,7 +32,7 @@
 - chart intent planning
 - source trace preparation
 
-這層是 deterministic core。它回答：「來源內容有哪些事實、數字、決策、風險、限制？哪些內容適合被圖表化？」測試應聚焦在輸入內容與 deterministic output。
+這層是 validation-backed content core。LLM 可以輔助 source semantic segmentation，但 segmentation output 必須通過 schema、exact source quote grounding、source order 與 coverage validation；失敗時使用 deterministic fallback。後續 source facts、chart intent、source trace 與 review report 行為仍應保持 deterministic 或可驗證。它回答：「來源內容應如何按語意切段？有哪些事實、數字、決策、風險、限制？哪些內容適合被圖表化？」測試應聚焦在輸入內容、validation result、fallback behavior 與 deterministic output。
 
 ### `deck`
 
@@ -76,9 +78,9 @@
 - uncertain claims
 - charting decisions
 - human review notes
-- provider boundary evidence
+- internal evidence references when needed
 
-`review` 是使用者信任機制。每次生成都要讓使用者能追溯 agent 做了哪些假設、壓縮了哪些內容、哪些 claim 不確定、哪些數字被圖表化，以及是否使用外部 provider。
+`review` 是使用者信任機制。每次生成都要讓使用者能追溯 agent 做了哪些假設、壓縮了哪些內容、哪些 claim 不確定、哪些數字被圖表化。LLM provider、model 與 design-planning skill usage 是 backend-owned flow 設定，不屬於 `ReviewReport` 的 user-facing 欄位。
 
 ### `rendering`
 
@@ -117,7 +119,7 @@ rendering
 - `content-core` 不依賴 `design` 或 `rendering`。
 - `design` 不修改 `SourceFact` 或 `ChartIntent`。
 - `rendering` 不呼叫 source parser、fact extractor 或 planner。
-- `review` 可以引用 chart/design/provider decisions，但不能成為隱藏的內容生成器。
+- `review` 可以引用 chart/design decisions，但不能成為隱藏的內容生成器，也不能把 backend provider/model 設定暴露成 user-facing review 欄位。
 
 若需要新增跨子領域協作，先在 spec/plan/tasks 說清楚責任，再寫測試。
 

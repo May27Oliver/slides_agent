@@ -11,5 +11,5 @@
       "@slides-agent/domain/*": ["packages/domain/src/*"]
     }
   },
-  "include": ["src", "test"]
+  "include": ["src"]
 }

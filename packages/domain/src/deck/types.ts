@@ -13,6 +13,7 @@ export interface SourceSection {
   id: string;
   heading: string;
   text: string;
+  segmentationSource?: "llm" | "deterministic_fallback";
 }
 
 export interface SourceFact {
@@ -83,6 +84,4 @@ export interface GenerationSummary {
   sourceFactCount: number;
   chartIntentCount: number;
   uncertainClaimCount: number;
-  usedUiUxProMax: boolean;
-  usedExternalProvider: boolean;
 }

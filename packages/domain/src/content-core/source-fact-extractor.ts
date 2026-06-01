@@ -1,0 +1,92 @@
+import type { SourceFact, SourceFactKind, SourceSection } from "@/deck/types";
+import { parseSourceSections } from "@/content-core/source-parser";
+
+interface FactCandidate {
+  kind: SourceFactKind;
+  value: string;
+}
+
+export function extractSourceFacts(
+  sourceContent: string,
+  sections: SourceSection[] = parseSourceSections(sourceContent)
+): SourceFact[] {
+  const facts: SourceFact[] = [];
+
+  for (const section of sections) {
+    for (const sourceText of section.text.split("\n")) {
+      const candidates = factCandidatesForLine(section.heading, sourceText);
+
+      for (const candidate of candidates) {
+        facts.push({
+          id: `fact_${facts.length + 1}`,
+          kind: candidate.kind,
+          value: candidate.value,
+          sourceText,
+          sourceSectionId: section.id
+        });
+      }
+    }
+  }
+
+  return facts;
+}
+
+function factCandidatesForLine(sectionHeading: string, sourceText: string): FactCandidate[] {
+  const candidates: FactCandidate[] = [];
+  const sectionKind = kindForSection(sectionHeading);
+
+  for (const value of sourceText.match(/\d+(?:\.\d+)?%/gu) ?? []) {
+    candidates.push({ kind: "metric", value });
+  }
+
+  for (const value of sourceText.match(/\d+(?:\.\d+)?\s*小時/gu) ?? []) {
+    candidates.push({ kind: "metric", value: value.replace(/\s+/gu, " ") });
+  }
+
+  for (const value of sourceText.match(/\d+(?:\.\d+)?\s*FTE/giu) ?? []) {
+    candidates.push({ kind: "constraint", value: value.replace(/\s+/gu, " ") });
+  }
+
+  for (const value of sourceText.match(/\d{4}-\d{2}-\d{2}/gu) ?? []) {
+    candidates.push({ kind: "date", value });
+  }
+
+  if (sectionKind === "decision" && /dashboard MVP/u.test(sourceText)) {
+    candidates.push({ kind: sectionKind, value: "dashboard MVP" });
+  }
+
+  if (sectionKind === "decision" && /full CRM integration/u.test(sourceText)) {
+    candidates.push({ kind: sectionKind, value: "full CRM integration" });
+  }
+
+  return dedupeCandidates(candidates);
+}
+
+function kindForSection(sectionHeading: string): SourceFactKind {
+  if (/決策/u.test(sectionHeading)) {
+    return "decision";
+  }
+
+  if (/風險/u.test(sectionHeading)) {
+    return "risk";
+  }
+
+  if (/限制/u.test(sectionHeading)) {
+    return "constraint";
+  }
+
+  return "claim";
+}
+
+function dedupeCandidates(candidates: FactCandidate[]): FactCandidate[] {
+  const seen = new Set<string>();
+
+  return candidates.filter((candidate) => {
+    const key = `${candidate.kind}:${candidate.value}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
