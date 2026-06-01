@@ -3,6 +3,8 @@ dist/
 coverage/
 .agents/
 .claude/
+.coding_agent_tasks/
+.mcp.json
 .DS_Store
 .env
 .env.*
