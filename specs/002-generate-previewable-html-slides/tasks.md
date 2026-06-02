@@ -143,28 +143,28 @@
 
 ## Phase 3C: User Story 1 Revision - Deterministic Deck Planning and Slide Outlines
 
-**Goal**: 將 deck layer 明確拆成 deterministic `DeckPlanner` 與 `DeckCompiler`。Planner 產生 `DeckPlanProposal`；Compiler 驗證 source/chart references 後產出 `SlideDeck`。每張 slide 必須包含 source-grounded outline，並可產生保守 `speakerNotesDraft`。
+**Goal**: 將 deck layer 明確拆成 deterministic `DeckPlanner` 與 `DeckCompiler`。Planner 產生 source-order-preserving `DeckPlanProposal`；Compiler 驗證 source/chart references 後產出 `SlideDeck`。每張 slide 必須包含 `slideKind`、source-grounded outline，並產生保守 `speakerNotesDraft`。v1 不使用 LLM、`narrativeType`、complex role、appendix 或自動重排來源內容。
 
-**Independent Test**: 使用固定 source sections、source facts、chart intents 與 deck brief fixture，驗證 deterministic proposal、compiler reference validation、每頁 outline source trace、保守 speaker notes draft，以及 v1 deck planning 不呼叫 LLM。
+**Independent Test**: 使用固定 source sections、source facts、chart intents 與 deck brief fixture，驗證 deterministic proposal、3-8 slide target、opening/source-order/conditional-closing order、compiler reference validation、每頁 outline source trace、保守 speaker notes draft，以及 v1 deck planning 不呼叫 LLM。
 
 **Blocking**: 完成此 revision 前，不得進入 US2 implementation。US2 renderer 必須依賴含 outline/source trace 的有效 `SlideDeck`。
 
 ### Tests for US1 Deck Planning Revision (REQUIRED - write first)
 
-- [ ] T102 [P] [US1R3] Write failing domain test for deterministic `DeckPlanProposal` in `packages/domain/test/deck/deck-plan-proposal.test.ts`
+- [ ] T102 [P] [US1R3] Write failing domain test for deterministic source-order `DeckPlanProposal` with opening slide, 3-8 target, merge/split behavior, and conditional closing in `packages/domain/test/deck/deck-plan-proposal.test.ts`
 - [ ] T103 [P] [US1R3] Write failing domain test for `DeckCompiler` rejecting unknown source section, source fact, or chart intent references in `packages/domain/test/deck/deck-compiler-validation.test.ts`
-- [ ] T104 [P] [US1R3] Write failing domain test that every slide has source-grounded `outline` items with emphasis and source trace in `packages/domain/test/deck/slide-outline.test.ts`
-- [ ] T105 [P] [US1R3] Write failing domain test for conservative `speakerNotesDraft` that does not add unsupported claims in `packages/domain/test/deck/speaker-notes-draft.test.ts`
-- [ ] T106 [P] [US1R3] Write failing contract/schema test that `Slide` requires `outline` and uses `speakerNotesDraft` instead of final-sounding `speakerNotes` in `packages/contracts/test/slide-generation-schema.test.ts`
+- [ ] T104 [P] [US1R3] Write failing domain test that every slide has `slideKind` and source-grounded `outline` items with emphasis and source trace in `packages/domain/test/deck/slide-outline.test.ts`
+- [ ] T105 [P] [US1R3] Write failing domain test for required conservative `speakerNotesDraft` that is at most 400 characters and does not add unsupported claims in `packages/domain/test/deck/speaker-notes-draft.test.ts`
+- [ ] T106 [P] [US1R3] Write failing contract/schema test that `Slide` requires `slideKind`, `outline`, `layoutIntent`, and `speakerNotesDraft` instead of final-sounding `speakerNotes` in `packages/contracts/test/slide-generation-schema.test.ts`
 
 ### Implementation for US1 Deck Planning Revision
 
-- [ ] T107 [US1R3] Define `DeckPlanProposal`, `DeckSlideProposal`, `SlideOutlineItem`, and `LayoutIntent` types in `packages/domain/src/deck/types.ts`
-- [ ] T108 [US1R3] Implement deterministic deck planner in `packages/domain/src/deck/deck-planner.ts`
-- [ ] T109 [US1R3] Implement deck compiler reference validation in `packages/domain/src/deck/deck-compiler.ts`
+- [ ] T107 [US1R3] Define `DeckPlanProposal`, `DeckSlideProposal`, `SlideOutlineItem`, and `LayoutIntent` types with `slideKind` and no `narrativeType`/complex role in `packages/domain/src/deck/types.ts`
+- [ ] T108 [US1R3] Implement deterministic source-order deck planner with opening slide, short-section merge, long-section conservative split, conditional closing, 3-8 target, and 8-slide hard cap in `packages/domain/src/deck/deck-planner.ts`
+- [ ] T109 [US1R3] Implement deck compiler reference validation, deterministic fallback trigger, and stable sourceTrace dedupe/sort in `packages/domain/src/deck/deck-compiler.ts`
 - [ ] T110 [US1R3] Wire deck planner/compiler into preview generation flow and remove direct slide construction from `packages/domain/src/deck/slide-deck-planner.ts`
-- [ ] T111 [US1R3] Update slide-generation schema and contract package schema to require slide outline and `speakerNotesDraft`
-- [ ] T112 [US1R3] Capture deck proposal, compiler validation, outline trace, speaker notes draft, and focused test evidence in `specs/002-generate-previewable-html-slides/evidence.md`
+- [ ] T111 [US1R3] Update slide-generation schema and contract package schema to require `slideKind`, slide outline, `layoutIntent`, and `speakerNotesDraft`
+- [ ] T112 [US1R3] Capture deck proposal, compiler validation, source-order/slide-count check, outline trace, speaker notes draft, and focused test evidence in `specs/002-generate-previewable-html-slides/evidence.md`
 
 **Checkpoint**: US1 produces `SlideDeck` through deterministic planner/compiler, every slide has source-grounded outline, and speaker notes draft remains conservative and reviewable.
 
@@ -180,6 +180,7 @@
 
 - [ ] T037 [P] [US2] Write failing renderer test for self-contained HTML output in `packages/domain/test/rendering/html-deck-renderer.test.ts`
 - [ ] T038 [P] [US2] Write failing renderer test for keyboard navigation script presence in `packages/domain/test/rendering/keyboard-navigation.test.ts`
+- [ ] T038a [P] [US2] Write failing renderer test that self-contained HTML does not render `speakerNotesDraft` in presentation view in `packages/domain/test/rendering/speaker-notes-visibility.test.ts`
 - [ ] T039 [P] [US2] Write failing API contract test for `POST /api/slides/preview` in `apps/api/test/slides-preview.contract.test.ts`
 - [ ] T040 [P] [US2] Write failing web component test for generated artifact display in `apps/web/src/features/slide-generation/slide-generation-view.test.tsx`
 - [ ] T041 [P] [US2] Write failing Playwright test for preview route keyboard navigation in `apps/web/tests/e2e/preview-navigation.spec.ts`
@@ -187,7 +188,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T043 [US2] Implement self-contained HTML renderer in `packages/domain/src/rendering/html-deck-renderer.ts`
+- [ ] T043 [US2] Implement self-contained HTML renderer in `packages/domain/src/rendering/html-deck-renderer.ts`, excluding `speakerNotesDraft` from presentation view
 - [ ] T044 [US2] Implement scoped deck CSS generation in `packages/domain/src/rendering/deck-css.ts`
 - [ ] T045 [US2] Implement keyboard navigation script generation in `packages/domain/src/rendering/deck-navigation-script.ts`
 - [ ] T046 [US2] Implement generation summary builder in `packages/domain/src/deck/generation-summary.ts`
@@ -207,21 +208,22 @@
 
 ## Phase 5: User Story 3 - Apply Design Planning and Critique (Priority: P3)
 
-**Goal**: 使用 deterministic content core 保護來源事實，同時讓 ui-ux-pro-max design layer 影響 summary presentation、design planning、layout selection 與 critique，但不得新增或改寫來源事實。
+**Goal**: 使用 deterministic content core 和 valid `SlideDeck` 保護來源事實，同時讓 ui-ux-pro-max design layer 影響 design system、slide pattern mapping、layout selection、chart treatment 與 critique，但不得新增、改寫或重排來源內容。
 
-**Independent Test**: 使用同一 slide JSON 與 style direction，驗證 design system、layout decisions、ui-ux-pro-max notes 與 source fidelity boundary。
+**Independent Test**: 使用同一 valid `SlideDeck` 與 style direction，驗證 design system、layout decisions、ui-ux-pro-max notes 與 source fidelity boundary；並確認 design layer 不改變 deck order、title/message wording、outline meaning 或 speaker notes factual content。
 
 ### Tests for User Story 3 (REQUIRED - write first)
 
 - [ ] T056 [P] [US3] Write failing design planner test for style direction to design system in `packages/domain/test/design/design-planner.test.ts`
 - [ ] T057 [P] [US3] Write failing ui-ux-pro-max boundary test in `packages/domain/test/design/ui-ux-pro-max-boundary.test.ts`
 - [ ] T058 [P] [US3] Write failing test that design layer cannot add unsupported source facts in `packages/domain/test/design/source-fidelity-boundary.test.ts`
+- [ ] T058a [P] [US3] Write failing test that design layer cannot change deck order, title/message wording, outline meaning, or speaker notes factual content in `packages/domain/test/design/deck-design-boundary.test.ts`
 - [ ] T059 [P] [US3] Write failing Playwright responsive smoke test in `apps/web/tests/e2e/responsive-preview.spec.ts`
 - [ ] T060 [US3] Document manual visual consistency verification path in `specs/002-generate-previewable-html-slides/quickstart.md`
 
 ### Implementation for User Story 3
 
-- [ ] T061 [US3] Implement design planner defaults in `packages/domain/src/design/design-planner.ts`
+- [ ] T061 [US3] Implement design planner defaults from valid `SlideDeck` and `DeckBrief.styleDirection` in `packages/domain/src/design/design-planner.ts`
 - [ ] T062 [US3] Implement ui-ux-pro-max adapter boundary in `apps/api/src/adapters/ui-ux-pro-max/ui-ux-pro-max.adapter.ts`
 - [ ] T063 [US3] Implement design critique note mapping in `packages/domain/src/design/design-critique.ts`
 - [ ] T064 [US3] Apply design system to HTML renderer layouts in `packages/domain/src/rendering/html-deck-renderer.ts`
@@ -245,7 +247,7 @@
 - [ ] T073 Run quickstart manual verification and record notes/screenshots path in `specs/002-generate-previewable-html-slides/evidence.md`
 - [ ] T074 Verify performance goals from `plan.md` and record generation/render/preview timings in `specs/002-generate-previewable-html-slides/evidence.md`
 - [ ] T075 Verify no persistence, publishing, file upload, PPTX export, full editor, or revision loop was introduced in `apps/` and `packages/`
-- [ ] T076 Verify ui-ux-pro-max usage remains presentation/design-only and cannot modify source facts in `packages/domain/test/design/source-fidelity-boundary.test.ts`
+- [ ] T076 Verify ui-ux-pro-max usage remains design-planning/critique-only and cannot modify source facts, deck order, title/message wording, outline meaning, speaker notes factual content, or review warnings in `packages/domain/test/design/source-fidelity-boundary.test.ts`
 - [ ] T077 Update `specs/002-generate-previewable-html-slides/quickstart.md` with final run commands and evidence paths
 
 ---
@@ -258,6 +260,7 @@
 - **Phase 2 Foundational**: Depends on Phase 1.
 - **US1**: Depends on Phase 2. MVP behavior.
 - **US1 Semantic Segmentation Revision**: Depends on US1 and blocks US2 implementation.
+- **US1 Segmentation Repair Revision**: Depends on US1 Semantic Segmentation Revision and blocks US2 implementation.
 - **US1 Deterministic Deck Planning Revision**: Depends on US1 segmentation revisions and blocks US2 implementation.
 - **US2**: Depends on US1 Semantic Segmentation Revision, US1 Segmentation Repair Revision, and US1 Deterministic Deck Planning Revision because renderer and API need validated `SlideDeck` built from valid, repaired, or fallback source sections with source-grounded outlines and user-readable review notes.
 - **US3**: Depends on US1 Deterministic Deck Planning Revision and can partially run in parallel with late US2 renderer work after `DesignSystem` exists.
@@ -270,7 +273,7 @@
 - **US1 Segmentation Repair Revision**: Revises invalid LLM output handling before downstream rendering; can be demonstrated with malformed segmentation fixture, repair/fallback evidence, and JSON/report only.
 - **US1 Deterministic Deck Planning Revision**: Revises deck construction before downstream rendering; can be demonstrated with deck proposal, compiler validation, slide outline/source trace, speaker notes draft, and JSON/report only.
 - **US2**: Requires valid slide JSON from revised US1 or fixture.
-- **US3**: Requires baseline design system and renderer boundary; validates design layer without changing source facts or segmentation grounding.
+- **US3**: Requires valid `SlideDeck`, baseline design system, and renderer boundary; validates design layer without changing source facts, deck order, title/message wording, outline meaning, speaker notes factual content, or segmentation grounding.
 
 ### Within Each User Story
 
@@ -287,8 +290,8 @@
 - T003-T007 can run in parallel after T001-T002.
 - T008-T013 can run in parallel after setup.
 - T022-T026 can run in parallel before US1 implementation.
-- T037-T041 can run in parallel after renderer/API/web skeleton exists.
-- T056-T059 can run in parallel after design boundary exists.
+- T037-T041, including T038a, can run in parallel after renderer/API/web skeleton exists.
+- T056-T059, including T058a, can run in parallel after design boundary exists.
 - T068-T069 can run in parallel during final polish.
 - T078-T081 can run in parallel before US1 semantic segmentation implementation.
 - T092-T095 can run in parallel before US1 segmentation repair implementation.
@@ -326,15 +329,19 @@ Task: "T026 [US1] Write failing domain test for review report required fields"
 3. US1 repair revision: one format repair attempt before conservative fallback and user-readable review notes.
 4. US1 deck revision: deterministic deck planner/compiler, source-grounded outline, and conservative speaker notes draft.
 5. US2: self-contained HTML and session-only preview.
-6. US3: ui-ux-pro-max design layer and visual consistency.
+6. US3: ui-ux-pro-max design handoff/critique layer and visual consistency.
 
 ### Quality Bar
 
 - Keep tests concise and behavior-focused.
 - Do not introduce persistence or publishing.
 - Do not let ui-ux-pro-max add source facts.
+- Do not put ui-ux-pro-max inside DeckPlanner; use it after `DeckCompiler` for design planning and after HTML rendering for critique.
+- Do not let design planning change deck order, title/message wording, outline meaning, speaker notes factual content, or review warnings.
 - Do not let LLM segmentation or format repair rewrite source text; use exact source quotes, allow at most one repair attempt, and fallback on failed repair/validation.
 - Do not use LLM for deck planning v1; keep `DeckPlanProposal` deterministic and compile final `SlideDeck` through validated references.
+- Do not use `narrativeType`, complex slide role, appendix, or automatic metrics/risk/decision reordering in deck planning v1.
 - Do not let `speakerNotesDraft` add unsupported claims; it must be grounded in outline/source trace.
+- Do not render `speakerNotesDraft` in HTML presentation view for v1.
 - Do not show raw schema validation paths/messages as the main user-facing explanation; preserve them in evidence and give users a plain-language review note.
 - Preserve evidence in `evidence.md`.

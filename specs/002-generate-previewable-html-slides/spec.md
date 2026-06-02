@@ -16,7 +16,7 @@
 
 ### Session 2026-05-31
 
-- Q: 第一版 agent generation 要採用哪種策略？ → A: Deterministic content core + ui-ux-pro-max design layer：內容事實、chart decisions 與 review report 維持可測與可追溯；summary presentation、visual hierarchy、layout/design critique 由 ui-ux-pro-max 參與。2026-06-01 補充：source sectioning 改由 LLM-assisted semantic segmentation + deterministic validation/fallback 處理；downstream facts/chart/review 仍維持可測與可追溯。
+- Q: 第一版 agent generation 要採用哪種策略？ → A: Deterministic content core + ui-ux-pro-max design layer：內容事實、chart decisions 與 review report 維持可測與可追溯；visual hierarchy、layout/design planning 與 critique 由 ui-ux-pro-max 參與。2026-06-01 補充：source sectioning 改由 LLM-assisted semantic segmentation + deterministic validation/fallback 處理；downstream facts/chart/review 仍維持可測與可追溯。2026-06-02 補充：ui-ux-pro-max 不進 DeckPlanner，也不在 v1 改寫 title/message wording。
 - Q: `chart emphasis` 的輸入形式第一版要怎麼設計？ → A: 分層處理：content core 先檢查 source content 是否有數字描述與可視覺化邏輯；若有，必須針對可支持的數字內容產生 chart intent。接著再結合使用者自由文字 chart emphasis 與自動偵測結果，統一轉成 `ChartIntent`。
 - Q: local preview 的產物生命週期要怎麼處理？ → A: Session-only preview：本次生成結果只存在 local web app session/browser state，使用者可在同一頁看到 preview、review report、slide JSON、generation summary，並下載 self-contained HTML；不做 persistence、歷史紀錄或自動 artifact storage。
 - Q: 第一版技術架構要偏哪個 stack 方向？ → A: Preferred stack 為 React + TypeScript frontend 搭配 NestJS backend，因為新公司技術線以此為主；Next.js 不作為第一選擇，因為此 feature 不需要 SEO/SSR 作為核心能力。
@@ -30,7 +30,11 @@
 ### Session 2026-06-02
 
 - Q: Deck planning v1 是否需要導入 LLM？ → A: 不導入。第一版 deck planning 必須採 deterministic rules，並拆成 `DeckPlanner` 與 `DeckCompiler`。`DeckPlanner` 由 validated `SourceSection`、`SourceFact`、`ChartIntent` 與 `DeckBrief` 產生 `DeckPlanProposal`；`DeckCompiler` 驗證 proposal references 後產出 final `SlideDeck`。未來可以讓 LLM 輔助產生 `DeckPlanProposal`，但 v1 不呼叫 LLM，且 `SlideDeck` 必須始終由 deterministic compiler 產出。
-- Q: Deck 是否要產出每頁 slides 的大綱或講稿？ → A: 要。第一版每張 slide 必須包含 source-grounded `outline`，用於表示該頁要講的重點、證據、風險、決策或行動；可選的 `speakerNotesDraft` 可作為 presenter 參考，但必須是保守 draft、不得新增來源未支持內容，並且必須可由 outline/source trace 追溯。
+- Q: Deck 結構第一版要怎麼限制？ → A: v1 目標輸出 3-8 張 slides；內容太短時可少於 3 張但仍需可展示，8 張是 hard cap。Deck 必須有 opening slide；closing slide 只在來源內容包含 next steps、action、owner 或 deadline 時產生。短 source sections 可以合併，長 source sections 可以保守拆分；v1 不產生 appendix，省略或壓縮的重要內容進 review report。
+- Q: Deck 是否需要 narrative type 或複雜 slide role？ → A: 不需要。因 v1 deck planning 不導入 LLM，且重點是忠實呈現 user source content，DeckPlanner 不使用 `narrativeType` 或複雜 role 分類。v1 只使用 `slideKind: "opening" | "content" | "closing"`。Slide 順序必須維持 opening -> 來源順序 content slides -> conditional closing；不得自動把 metrics、risk 或 decision 移到前面，除非使用者明確要求。
+- Q: Deck 是否要產出每頁 slides 的大綱或講稿？ → A: 要。第一版每張 slide 必須包含 source-grounded `outline`，用於表示該頁要講的重點、證據、風險、決策或行動。每張 slide 的 outline 目標為 2-4 個 items，來源太薄時至少 1 個 item；每個 item 必須有 `emphasis` 與 source trace。每張 slide 也必須包含 `speakerNotesDraft`，作為 2-4 句、最多 400 字元的 presenter cue；notes 必須保守、不得新增來源未支持內容，並且必須可由 outline/source trace 追溯。HTML rendering v1 不呈現 `speakerNotesDraft`。
+- Q: DeckCompiler 驗證失敗時怎麼處理？ → A: Compiler 不補齊 missing fields；它只驗證並編譯。若 `DeckPlanProposal` reference invalid，compiler 回傳 validation failure，application flow 改用 deterministic fallback plan。Fallback 使用 opening -> source-order content -> conditional closing，並在 review report 寫入人能理解的 fallback note；raw validation errors 保留在 evidence。空 `chartIntentIds` 合法；content slide 必須至少 trace 到 source section。
+- Q: ui-ux-pro-max 應放在 agent flow 哪一層？ → A: 不放在 DeckPlanner。`ui-ux-pro-max` 是 design planning / critique advisor，不是 deck source truth。它應在 `DeckCompiler` 產出 valid `SlideDeck` 後、HTML renderer 前產生 design planning；HTML renderer 後再用於 design critique/verification。它只能影響 `DesignSystem`、slide pattern mapping、chart treatment、visual hierarchy、density、accessibility/critique notes，不得改變 deck order、source facts、outline meaning、title/message wording、speakerNotesDraft factual content 或 review warnings。
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -55,10 +59,11 @@
 7. **Given** source content 有可摘要的段落，**When** 系統產生 slides，**Then** slide title 會總結該 slide 或段落的核心意思，而不是只複製原文 heading。
 8. **Given** source content 包含數字描述與可視覺化邏輯，**When** 系統分析內容，**Then** content core 會先自動偵測可圖表化的數字內容，再結合使用者自由文字 chart emphasis 產生 chart intent，並保留原始數字與上下文。
 9. **Given** 使用者指定 chart emphasis 但來源資料不足，**When** 系統產生 review report，**Then** 系統不得捏造資料，並說明改以文字、表格或 review note 呈現的原因。
-10. **Given** validated source sections、source facts、chart intents 與 deck brief，**When** 系統進行 deck planning，**Then** `DeckPlanner` 必須 deterministic 產生 `DeckPlanProposal`，且 v1 不呼叫 LLM。
-11. **Given** `DeckPlanProposal` 引用 source section、source fact 或 chart intent，**When** `DeckCompiler` 產生 `SlideDeck`，**Then** compiler 必須驗證所有 reference 存在，並拒絕或 fallback 任何引用不存在 artifact 的 proposal。
-12. **Given** 系統產生每張 slide，**When** 使用者 review slide JSON，**Then** 每張 slide 必須包含 source-grounded `outline`，每個 outline item 必須標示 emphasis 與 source trace。
-13. **Given** 系統產生 `speakerNotesDraft`，**When** 使用者 review notes，**Then** notes 必須保守描述該頁 outline 與來源事實，不得新增 unsupported claim，且必須標示為 draft。
+10. **Given** validated source sections、source facts、chart intents 與 deck brief，**When** 系統進行 deck planning，**Then** `DeckPlanner` 必須 deterministic 產生 `DeckPlanProposal`，v1 不呼叫 LLM，且輸出目標為 3-8 張 slides。
+11. **Given** 系統產生 deck plan，**When** 使用者 review slide order，**Then** deck 必須以 opening slide 開始，content slides 必須維持來源順序，且 closing slide 只在來源包含 next steps、action、owner 或 deadline 時產生。
+12. **Given** `DeckPlanProposal` 引用 source section、source fact 或 chart intent，**When** `DeckCompiler` 產生 `SlideDeck`，**Then** compiler 必須驗證所有 reference 存在，invalid proposal 必須回傳 validation failure 並觸發 deterministic fallback planning。
+13. **Given** 系統產生每張 slide，**When** 使用者 review slide JSON，**Then** 每張 slide 必須包含 `slideKind`、source-grounded `outline`、`layoutIntent` 與 source trace；每個 outline item 必須標示 emphasis 與 source trace。
+14. **Given** 系統產生 `speakerNotesDraft`，**When** 使用者 review notes，**Then** notes 必須保守描述該頁 outline 與來源事實，不得新增 unsupported claim，且必須是短 presenter cue。
 
 ---
 
@@ -78,25 +83,27 @@
 2. **Given** HTML deck 在 browser 中開啟，**When** 使用者按下一頁或上一頁按鍵，**Then** deck 會在 slides 之間切換。
 3. **Given** HTML deck 在常見 laptop 或 projector 尺寸開啟，**When** 使用者 preview，**Then** slides 保持 16:9 presentation format，且主要文字與 UI 不互相重疊。
 4. **Given** slide JSON 包含 chart intent 或 metric content block，**When** 系統 render HTML，**Then** 對應內容會以 chart、metric card、table 或 fallback text 呈現。
-5. **Given** 使用者在本機 web app 完成生成，**When** 生成結果顯示，**Then** 使用者在同一個 session 可以看到 slides preview、review report、slide JSON、generation summary，並下載 self-contained HTML。
+5. **Given** slide JSON 包含 `speakerNotesDraft`，**When** 系統 render HTML，**Then** HTML deck v1 不得呈現 speaker notes，但 slide JSON/review path 仍可供審查。
+6. **Given** 使用者在本機 web app 完成生成，**When** 生成結果顯示，**Then** 使用者在同一個 session 可以看到 slides preview、review report、slide JSON、generation summary，並下載 self-contained HTML。
 
 ---
 
 ### User Story 3 - Apply Design Planning and Critique (Priority: P3)
 
-系統依據使用者的 style direction 產生 deck-level design system，並使用 deterministic content core 保護來源事實，同時使用 ui-ux-pro-max 進行 summary presentation、design planning、layout selection 與 critique，確保 slides 視覺一致且適合會議展示。
+系統依據使用者的 style direction 產生 deck-level design system，並使用 deterministic content core 保護來源事實，同時使用 ui-ux-pro-max 進行 design planning、layout selection、chart treatment 與 critique，確保 slides 視覺一致且適合會議展示。
 
 **Why this priority**: 使用者期待的不只是摘要，而是能加速同步與理解的 slides。設計系統讓 deck 更可讀、更一致，也讓 renderer 不需要每頁重新發明風格。
 
-**Independent Test**: 使用同一份 slide JSON，提供明確 style direction，例如「高密度 PM planning deck，強調風險、里程碑與 KPI」；驗證 design system、summary presentation 與 layout decisions 符合風格且未新增來源未支持的內容。
+**Independent Test**: 使用同一份 slide JSON，提供明確 style direction，例如「高密度 PM planning deck，強調風險、里程碑與 KPI」；驗證 design system、slide pattern mapping、chart treatment 與 layout decisions 符合風格且未新增來源未支持的內容。
 
 **Independent Demo**: 展示 design system planning output 與 critique report，指出 palette、typography、visual density、layout patterns 與 chart style 的選擇理由。
 
 **Acceptance Scenarios**:
 
 1. **Given** 使用者提供 style direction，**When** 系統產生 design system，**Then** output 包含 palette、typography、spacing、visual density、layout grid、reusable slide patterns 與 chart style。
-2. **Given** 系統使用 ui-ux-pro-max 輔助 summary presentation、design planning、layout selection 或 critique，**When** skill 產生建議，**Then** 建議只能影響 wording presentation、visual hierarchy、layout selection、density、chart treatment 與 design consistency，不得新增或改寫來源事實。
-3. **Given** deck 有多張 slides，**When** 系統 render HTML preview，**Then** slides 的視覺語言、元件樣式與資訊密度保持一致。
+2. **Given** 系統使用 ui-ux-pro-max 輔助 design planning、layout selection 或 critique，**When** skill 產生建議，**Then** 建議只能影響 design system、slide pattern mapping、visual hierarchy、density、chart treatment、accessibility 與 design consistency，不得新增或改寫來源事實。
+3. **Given** design planning 發生在 valid `SlideDeck` 之後，**When** ui-ux-pro-max 產生建議，**Then** 它不得改變 deck order、title/message wording、outline meaning、speakerNotesDraft factual content 或 review warnings。
+4. **Given** deck 有多張 slides，**When** 系統 render HTML preview，**Then** slides 的視覺語言、元件樣式與資訊密度保持一致。
 
 ### Edge Cases
 
@@ -106,7 +113,11 @@
 - LLM segmentation output schema invalid、source quote 無法對回原文、section 順序錯誤或 coverage 不足。
 - LLM format repair 後仍輸出 invalid schema、額外欄位、空 `sourceQuotes`、改寫後 quote 或錯誤 order。
 - Deterministic deck plan proposal 引用不存在的 source section、source fact 或 chart intent。
+- Source content 太短，無法達到 3 張 slides；系統仍應產生可展示 deck 並在 review note 說明。
+- Source content 太長，超過 8 張 hard cap；系統需合併或壓縮，並把壓縮內容記錄到 review report。
 - Slide outline 太空泛、沒有 source trace、或把 speaker notes draft 的推論寫成事實。
+- Deck plan 試圖產生 complex role、appendix 或重排來源順序。
+- HTML renderer 不小心把 `speakerNotesDraft` 顯示在 presentation view。
 - Segmentation guidance 要求新增、改寫、刪除或強化 source content 未支持的事實。
 - 使用者沒有填寫 optional style direction 或 chart emphasis。
 - Chart emphasis 找不到對應數字、單位、期間或上下文。
@@ -137,7 +148,7 @@
 - **FR-015**: HTML slides MUST preserve 16:9 presentation format and basic responsive behavior for common laptop and projector sizes.
 - **FR-016**: System MUST use a deck-level design system for generated HTML slides.
 - **FR-017**: System MUST use backend-configured LLM-assisted semantic segmentation to split source content into source-grounded sections before downstream deck planning.
-- **FR-018**: System MUST use ui-ux-pro-max as part of the generation flow for summary presentation, design planning, layout selection, and critique.
+- **FR-018**: System MUST use ui-ux-pro-max as part of the generation flow for design planning, layout selection, chart treatment, and critique.
 - **FR-019**: ui-ux-pro-max usage MUST NOT invent facts, alter source meaning, or override review notes.
 - **FR-020**: System MUST keep LLM provider and model selection as backend runtime configuration, not user-facing request fields, response fields, or generated review-report fields.
 - **FR-021**: System MUST reject unsupported request fields that try to configure provider/model or design-planning skill usage because those are backend-owned flow decisions.
@@ -159,9 +170,15 @@
 - **FR-037**: System MUST separate deck planning into `DeckPlanner` and `DeckCompiler`: planner produces `DeckPlanProposal`; compiler validates references and produces final `SlideDeck`.
 - **FR-038**: `DeckPlanProposal` MUST reference existing `SourceSection`, `SourceFact`, and `ChartIntent` identifiers instead of copying or inventing source facts.
 - **FR-039**: `DeckCompiler` MUST validate every referenced source section, source fact, and chart intent before producing `SlideDeck`; invalid references MUST fail the proposal or trigger deterministic fallback planning.
-- **FR-040**: Every generated slide MUST include a source-grounded `outline` with one or more outline items, each carrying an emphasis category and source trace.
-- **FR-041**: Speaker notes draft MAY be generated in v1, but when present it MUST be conservative, marked as draft by field name, derived from slide outline/source trace, and MUST NOT add unsupported claims.
-- **FR-042**: Design planning may use ui-ux-pro-max skills, but design layer MUST consume deck outline/layout intent as design input and MUST NOT alter source facts, outline meaning, or speaker notes factual content.
+- **FR-040**: Deck planning v1 MUST target 3-8 slides, allow fewer only when source content is too short, and enforce 8 slides as a hard cap.
+- **FR-041**: Deck planning v1 MUST generate an opening slide, source-order content slides, and a closing slide only when source content contains next steps, actions, owners, or deadlines.
+- **FR-042**: Deck planning v1 MUST NOT use `narrativeType`, complex slide role classification, appendix slides, or automatic reordering of metrics/risks/decisions ahead of source order unless the user explicitly requests it.
+- **FR-043**: Every generated slide MUST include `slideKind: "opening" | "content" | "closing"`.
+- **FR-044**: Every generated slide MUST include a source-grounded `outline` with one or more outline items, each carrying an emphasis category and source trace; normal target is 2-4 items per slide.
+- **FR-045**: Every generated slide MUST include `speakerNotesDraft` as a conservative short presenter cue derived from slide outline/source trace; it MUST NOT add unsupported claims and MUST be at most 400 characters.
+- **FR-046**: HTML rendering v1 MUST NOT render `speakerNotesDraft` in the presentation view.
+- **FR-047**: Design planning may use ui-ux-pro-max skills only after `DeckCompiler` produces a valid `SlideDeck`, and critique may run after HTML rendering.
+- **FR-048**: ui-ux-pro-max design layer MUST consume deck outline/layout intent as design input and MUST NOT alter deck order, source facts, title/message wording, outline meaning, speaker notes factual content, or review warnings.
 
 ### HTML Slides Agent Constitution Requirements *(mandatory for slide-generation features)*
 
@@ -173,7 +190,7 @@
 - **CR-006 Semantic Titles**: Spec requires slide titles that summarize slide or paragraph meaning while staying grounded in source content.
 - **CR-007 Data Visualization**: Spec requires layered data visualization decisions: automatic numeric-content inspection first, then user chart emphasis, then chart/metric/table/fallback/review-note decision based on source data completeness.
 - **CR-008 TDD Coverage**: Spec requires focused tests or executable verification tasks for input handling, LLM semantic segmentation validation/fallback, deterministic deck planning/compiler behavior, slide outline/source trace, slide JSON, content core behavior, review report, chart decisions, HTML rendering, keyboard navigation, responsive behavior, and ui-ux-pro-max boundaries.
-- **CR-009 Domain Model**: Spec identifies `SourceContent`, `SemanticSegment`, `SourceSection`, `DeckBrief`, `DeckPlanProposal`, `SlideOutlineItem`, `SlideDeck`, `Slide`, `ContentBlock`, `ChartIntent`, `DesignSystem`, `ReviewReport`, and `PreviewArtifact`.
+- **CR-009 Domain Model**: Spec identifies `SourceContent`, `SemanticSegment`, `SourceSection`, `DeckBrief`, `DeckPlanProposal`, `DeckSlideProposal`, `SlideOutlineItem`, `LayoutIntent`, `SlideDeck`, `Slide`, `ContentBlock`, `ChartIntent`, `DesignSystem`, `DesignPlanningResult`, `ReviewReport`, and `PreviewArtifact`.
 - **CR-010 Lean Test Scope**: Tests should focus on observable behavior, domain rules, contracts, and key edge cases without redundant implementation-detail assertions.
 - **CR-011 Behavior-Driven Value**: Each user story has Given/When/Then acceptance scenarios and independent test/demo paths.
 - **CR-012 Code Simplicity**: Publishing, persistence, deck history, automatic artifact storage, file upload, PPTX export, full slide editing, and revision loop are excluded to keep this first implementation slice simple.
@@ -189,13 +206,16 @@
 - **SegmentationRepairAttempt**: 初次 LLM segmentation output 未通過 schema 時的一次性格式修復嘗試；只能修 JSON 結構，不得重解釋或改寫來源內容。
 - **SourceSection**: 經 segmentation validation 後可供 downstream content core 使用的來源段落。
 - **DeckBrief**: 使用者提供的簡報目的、受眾、風格描述、圖表化重點、切段偏好、語言與語氣偏好。
-- **DeckPlanProposal**: Deterministic deck planner 產生的中間 artifact，描述 slide grouping、slide role、title/message candidate、layout intent、outline candidate 與引用的 source/chart identifiers；v1 不由 LLM 產生。
+- **DeckPlanProposal**: Deterministic deck planner 產生的中間 artifact，描述 source-order slide grouping、`slideKind`、title/message candidate、layout intent、outline candidate、speaker notes draft 與引用的 source/chart identifiers；v1 不由 LLM 產生。
+- **DeckSlideProposal**: `DeckPlanProposal` 中的單頁 proposal，使用 `slideKind` 表示 opening/content/closing，不使用 complex role 或 narrative classification。
 - **SlideDeck**: 產生後的 structured deck，包含 metadata、design system、slides 與 review report reference。
-- **Slide**: 單張 slide，包含 semantic title、message、layout、outline、content blocks、speaker notes draft 與 source trace。
+- **Slide**: 單張 slide，包含 `slideKind`、semantic title、message、layout、outline、content blocks、speaker notes draft 與 source trace。
 - **SlideOutlineItem**: 單張 slide 的 source-grounded 大綱項目，標示重點類型、文字與 source trace。
+- **LayoutIntent**: Deck planner 給 design/rendering layer 的輕量視覺意圖，用於 pattern selection，不是最終樣式。
 - **ContentBlock**: slide 內的內容區塊，例如 paragraph、bullets、metric、table、timeline、callout、quote、chart placeholder 或 fallback text。
 - **ChartIntent**: 對數字內容進行視覺化或不視覺化的決策，整合自動偵測到的 numeric visualization opportunities 與使用者自由文字 chart emphasis，包含來源數字、單位、期間、分母、圖表理由與 fallback reason。
 - **DesignSystem**: deck-level 視覺系統，包含 palette、typography、spacing、visual density、layout grid、component patterns 與 chart style。
+- **DesignPlanningResult**: valid `SlideDeck` 進入 HTML rendering 前的 design handoff artifact，包含 design system、slide pattern mapping、chart treatment 與 critique notes；不得改變來源內容或 deck wording。
 - **ReviewReport**: 審查 artifact，列出 assumptions、omitted/compressed content、uncertain claims、charting decisions 與 human review notes。
 - **PreviewArtifact**: 本機 preview 用的 session-only artifact，包含 self-contained HTML、slide JSON、review report、generation summary 與驗證狀態；不代表已持久化的 deck record。
 
@@ -210,11 +230,11 @@
 - **SC-005**: 對於包含足夠數字資料與可視覺化邏輯的測試輸入，系統能先自動偵測 numeric visualization opportunities，再結合 chart emphasis 產生 chart/metric/table decision；對於資料不足的輸入，系統能產生 no-chart rationale。
 - **SC-006**: 每次 generation 都產生 review report，且包含 assumptions、omitted/compressed content、uncertain claims、charting decisions 與 review notes。
 - **SC-007**: 對於固定 source artifact fixture，deterministic `DeckPlanner` 會產生穩定的 `DeckPlanProposal`，且 v1 deck planning 不需要 LLM。
-- **SC-008**: 對於每張 generated slide，slide JSON 會包含至少一個 `outline` item，且每個 item 都有 source trace；`speakerNotesDraft` 若存在，必須只描述 outline/source facts 支持的內容。
+- **SC-008**: 對於每張 generated slide，slide JSON 會包含 `slideKind`、至少一個 `outline` item、source trace 與必填 `speakerNotesDraft`；`speakerNotesDraft` 必須只描述 outline/source facts 支持的內容。
 - **SC-009**: 有效 slide JSON 能 render 成 self-contained HTML slides，並可在 browser 本機開啟。
 - **SC-010**: HTML preview 支援 keyboard next/previous navigation。
 - **SC-011**: HTML preview 在至少一個 laptop 尺寸與一個 projector-like 16:9 尺寸下不出現主要內容重疊。
-- **SC-012**: Verification evidence 包含 semantic segmentation schema validation、source quote grounding check、segmentation guidance handling result、deck planner/compiler validation、slide outline trace validation、slide JSON schema validation、review report validation、HTML rendering check、keyboard navigation check、basic responsive check，以及 manual verification notes。
+- **SC-012**: Verification evidence 包含 semantic segmentation schema validation、source quote grounding check、segmentation guidance handling result、deck planner/compiler validation、slide outline trace validation、speaker notes non-rendering check、slide JSON schema validation、review report validation、HTML rendering check、keyboard navigation check、basic responsive check，以及 manual verification notes。
 
 ## Assumptions
 
@@ -223,11 +243,12 @@
 - `/speckit-plan` 應以 React + TypeScript frontend 與 NestJS backend 作為 preferred architecture；若 plan 改用其他 stack，必須記錄理由與 rejected simpler/company-standard alternative。
 - Preview revision 可透過重新生成處理；完整 revision loop 不在範圍內。
 - Native PPTX export、account system、persistence 與 full slide editor 不在範圍內。
-- 第一版 agent generation 採 LLM-assisted semantic segmentation + deterministic validation/content core + ui-ux-pro-max design layer；LLM segmentation 用於語意切段，content core 保護來源事實與可測性，ui-ux-pro-max 用於 summary presentation、design planning、layout selection 與 critique。
+- 第一版 agent generation 採 LLM-assisted semantic segmentation + deterministic validation/content core + ui-ux-pro-max design layer；LLM segmentation 用於語意切段，content core 保護來源事實與可測性，ui-ux-pro-max 用於 design planning、layout selection、chart treatment 與 critique。
 - 第一版 deck planning 不導入 LLM；`DeckPlanProposal` 由 deterministic planner 產生，`SlideDeck` 由 deterministic compiler 產出。未來若加入 LLM，也只能輔助 proposal，不得直接產 final `SlideDeck`。
+- 第一版 deck planning 不使用 narrative type 或複雜 slide role；只用 `slideKind` 區分 opening/content/closing，並維持來源順序。
 - 第一版不讓使用者選擇 LLM provider、model 或 design-planning skill 開關；這些由 backend flow 配置，且不出現在生成 response 或 review report。
 - Output language 預設跟隨 source content，除非使用者另有指定。
-- ui-ux-pro-max 是 summary presentation、design planning、layout selection 與 critique 輔助，不是 source truth 或 fact generator。
+- ui-ux-pro-max 是 design planning、layout selection 與 critique 輔助，不是 DeckPlanner、source truth 或 fact generator。
 
 ## Review and Safety Notes *(mandatory for generated-content features)*
 
@@ -237,5 +258,7 @@
 - **Sensitive Content Handling**: Source content 可能送往 backend-configured LLM provider；provider/model 不作為使用者 request/response contract，內部 evidence 必須足以讓 reviewer 理解敏感內容處理邊界。
 - **Segmentation Repair/Fallback Policy**: 初次 LLM segmentation schema validation 失敗時，只允許一次 format repair；repair prompt 必須明確禁止重解釋、摘要、擴寫、刪除或修改來源語意。repair 成功時 review/evidence 必須記錄曾進行自動格式修復；repair 或 grounding/order/coverage validation 失敗時必須使用 deterministic fallback，並以人能理解的 review note 說明已改用保守切段。
 - **Deck Outline and Speaker Notes Policy**: Slide outline 是可審查的 deck artifact，必須具備 source trace。`speakerNotesDraft` 是 presenter 輔助文字，不是 source truth；不得加入 outline/source trace 無法支持的 claim，且若內容被壓縮或需要人工確認，必須進 review notes。
+- **Deck Structure Policy**: Deck 必須有 opening slide，content slides 必須維持來源順序，closing slide 只能由來源中的 next steps/action/owner/deadline 支持；v1 不使用 appendix、narrative type 或 complex role。
+- **Design Handoff Policy**: ui-ux-pro-max 只在 valid `SlideDeck` 後進行 design planning，並可在 HTML 後進行 critique；不得改動 deck order、title/message wording、outline meaning、speaker notes factual content 或 review warnings。
 - **Evidence and Traceability**: Review evidence 必須包含 sample input、semantic segmentation validation result、source quote grounding result、slide JSON、review report、generated HTML artifact、schema/render/navigation/responsive verification result，以及 manual verification notes。
 - **Manual Verification Path**: 若 visual consistency、layout overlap 或 browser preview behavior 無法完全自動化，quickstart 必須提供明確手動檢查步驟。

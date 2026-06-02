@@ -49,6 +49,7 @@
     "slides": [
       {
         "id": "slide_001",
+        "slideKind": "opening",
         "type": "title",
         "title": "Q3 planning focuses on KPI improvement and delivery risk",
         "message": "Planning summary",
@@ -131,6 +132,10 @@ Content-Type: `text/html; charset=utf-8`
 - LLM provider、model 與 design-planning skill usage 由 backend flow 配置，不是使用者 request/response contract。
 - Design planning 與 critique 是固定 flow 能力，不提供使用者 opt-in/opt-out 欄位，且不得改寫來源事實。
 - Deck planning v1 不呼叫 LLM；`DeckPlanner` 產生 deterministic `DeckPlanProposal`，`DeckCompiler` 驗證 references 後產出 `SlideDeck`。
-- 每張 slide 必須包含 source-grounded `outline`；`speakerNotesDraft` 若存在，必須保守且不得新增 unsupported claim。
+- Deck order 必須是 opening -> source-order content slides -> conditional closing；不得自動把 metrics、risks 或 decisions 移到來源順序前面。
+- Deck planning v1 只使用 `slideKind: "opening" | "content" | "closing"`，不使用 `narrativeType`、complex role 或 appendix。
+- 每張 slide 必須包含 `slideKind`、source-grounded `outline`、`layoutIntent` 與必填 `speakerNotesDraft`；`speakerNotesDraft` 必須保守、最多 400 字元且不得新增 unsupported claim。
+- HTML rendering v1 不得在 presentation view 呈現 `speakerNotesDraft`。
+- ui-ux-pro-max 只能在 valid `SlideDeck` 後做 design planning，並在 HTML rendering 後做 critique；不得改變 deck order、title/message wording、outline meaning、speaker notes factual content 或 review warnings。
 - Response 必須包含 `slideDeck`、`slideDeck.reviewReport`、self-contained HTML 與 `generationSummary`。
 - Generated preview 是 session-only，不得暗示 persistence。

@@ -103,11 +103,22 @@ Expected deck planning behavior:
 
 - Deck planning v1 must not call LLM.
 - `DeckPlanner` produces deterministic `DeckPlanProposal` from validated sections, facts, chart intents, and deck brief.
+- Target deck size is 3-8 slides; content that is too short may produce fewer, and 8 slides is the hard cap.
+- Deck must start with an opening slide, preserve source order for content slides, and add a closing slide only when source content contains next steps, actions, owners, or deadlines.
+- v1 must not use `narrativeType`, complex slide role, appendix slide, or automatic metrics/risk/decision reordering unless the user explicitly asks.
 - `DeckCompiler` validates every `sourceSectionId`, `sourceFactId`, and `chartIntentId` before producing `SlideDeck`.
 - Invalid proposal references must fail validation or trigger deterministic fallback planning.
-- Every slide contains an `outline` array with at least one item.
+- Every slide contains `slideKind: "opening" | "content" | "closing"`.
+- Every slide contains an `outline` array with 2-4 items when source supports it, and at least one item.
 - Every outline item includes `text`, `emphasis`, and non-empty `sourceTrace`.
-- `speakerNotesDraft`, when present, uses only outline/source facts and remains conservative.
+- Every slide contains `speakerNotesDraft`; it uses only outline/source facts, remains conservative, and is at most 400 characters.
+- HTML rendering v1 must not render `speakerNotesDraft` in the presentation view.
+
+Expected design handoff behavior:
+
+- ui-ux-pro-max runs after `DeckCompiler` produces a valid `SlideDeck`, not inside `DeckPlanner`.
+- Design planning may influence `DesignSystem`, slide pattern mapping, chart treatment, density, visual hierarchy, accessibility notes, and critique notes.
+- Design planning must not change deck order, title/message wording, outline meaning, source facts, speaker notes factual content, or review warnings.
 
 ## Manual Verification Path
 
@@ -146,8 +157,11 @@ After T028-T036 implementation:
    - Deck metadata with purpose and audience
    - Semantic slide titles grounded in source content
    - Deterministic deck plan proposal evidence
+   - Opening slide followed by source-order content slides
+   - Conditional closing slide only if source content supports next steps/actions/owners/deadlines
+   - `slideKind` on every slide
    - Slide outlines with source trace for every slide
-   - Conservative `speakerNotesDraft` when present
+   - Conservative required `speakerNotesDraft` for every slide
    - Source facts for `18%`, `25%`, `12 小時`, `4 小時`, `2026-08-15`, `dashboard MVP`, `full CRM integration`, and `0.5 FTE`
    - Chart intents for conversion, response time, deadline, and resource risk where supported by source data
 6. Inspect the review report and confirm it includes:
@@ -162,12 +176,15 @@ After T028-T036 implementation:
 
 Before implementing deck planner/compiler revision:
 
-1. Review `contracts/slide-generation.schema.json` and confirm each slide requires `outline`.
+1. Review `contracts/slide-generation.schema.json` and confirm each slide requires `slideKind`, `outline`, `layoutIntent`, and `speakerNotesDraft`.
 2. Confirm v1 deck planning does not call LLM and does not use provider/model configuration.
 3. Use validated source artifacts from `tests/fixtures/planning-brief.md`.
 4. Confirm deterministic `DeckPlanProposal` includes:
    - stable slide order
-   - slide role
+   - opening slide first
+   - source-order content slides
+   - conditional closing slide only when supported by source
+   - `slideKind`, not narrative type or complex role
    - title and message candidate
    - source section references
    - source fact references
@@ -179,11 +196,34 @@ Before implementing deck planner/compiler revision:
    - unknown source fact id
    - unknown chart intent id
    - empty slide outline
-6. Confirm `speakerNotesDraft`, when present:
+6. Confirm `speakerNotesDraft`:
    - is visibly a draft field
    - does not add unsupported claim
    - can be traced back to outline/source facts
-7. Preserve deck proposal, compiler validation result, slide outline trace result, and speaker notes draft review notes in `evidence.md`.
+   - is at most 400 characters
+7. Confirm generated HTML does not render `speakerNotesDraft` in presentation view.
+8. Preserve deck proposal, compiler validation result, slide outline trace result, speaker notes draft review notes, and HTML non-rendering check in `evidence.md`.
+
+## ui-ux-pro-max Design Handoff Review Path
+
+Before implementing design planning/critique:
+
+1. Confirm DeckPlanner and DeckCompiler do not import or invoke ui-ux-pro-max adapters.
+2. Confirm design planning input is a valid `SlideDeck` plus design brief/style direction.
+3. Confirm design output is limited to:
+   - `DesignSystem`
+   - slide pattern mapping
+   - chart treatment notes
+   - accessibility notes
+   - critique notes
+4. Confirm design planning cannot modify:
+   - deck order
+   - title/message wording
+   - outline meaning
+   - source facts
+   - speaker notes factual content
+   - review warnings
+5. Preserve design handoff sample and critique result in `evidence.md`.
 
 ## Semantic Segmentation Prompt Review Path
 
@@ -233,8 +273,11 @@ After T078-T082 red tests are created and before T083 implementation:
 - Format repair input errors, repaired output validation result, and repair/fallback decision when applicable.
 - Source quote grounding validation result.
 - Deterministic deck plan proposal sample and compiler validation result.
+- Slide count and source-order check.
 - Slide outline source trace validation result.
 - Speaker notes draft sample and unsupported-claim review result.
+- HTML speaker notes non-rendering check.
+- ui-ux-pro-max design handoff and critique boundary check.
 - Generated slide JSON for sample input.
 - Generated review report for sample input.
 - Downloaded self-contained HTML artifact or a documented checksum/path.

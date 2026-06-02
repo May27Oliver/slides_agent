@@ -14,10 +14,13 @@
 - `SourceFact`: 從來源內容抽出的重要事實。
 - `ChartIntent`: 是否將數字視覺化，以及用何種方式視覺化的可審查決策。
 - `DeckPlanProposal`: deterministic deck planner 產生的中間規劃 artifact。
+- `DeckSlideProposal`: deck plan 中的單頁規劃 artifact。
 - `SlideOutlineItem`: 每張 slide 的 source-grounded 大綱項目。
+- `LayoutIntent`: deck planner 傳給 design/rendering layer 的輕量視覺意圖。
 - `SlideDeck`: 可 render 的 structured slide artifact。
 - `ReviewReport`: generation 的審查與追溯報告。
 - `DesignSystem`: deck-level 視覺規則。
+- `DesignPlanningResult`: valid `SlideDeck` 進入 HTML renderer 前的 design handoff artifact。
 - `PreviewArtifact`: session-only preview artifact。
 
 ## Entities and Value Objects
@@ -203,7 +206,6 @@ Fields:
 - `id: string`
 - `title: string`
 - `subtitle?: string`
-- `narrativeType: "status_update" | "proposal" | "planning" | "decision_memo" | "report"`
 - `slides: DeckSlideProposal[]`
 - `planningNotes: string[]`
 
@@ -213,6 +215,9 @@ Validation:
 - MUST reference existing `SourceSection`, `SourceFact`, and `ChartIntent` identifiers.
 - MUST NOT copy, rewrite, or invent source facts outside referenced artifacts.
 - MUST be stable for the same validated source artifacts and `DeckBrief`.
+- MUST target 3-8 slides, allow fewer only when source content is too short, and enforce 8 slides as hard cap.
+- MUST start with an opening slide, preserve source order for content slides, and add a closing slide only when source content contains next steps, actions, owners, or deadlines.
+- MUST NOT use `narrativeType`, complex role classification, appendix slides, or automatic reordering of metrics/risks/decisions unless the user explicitly requests it.
 - Future LLM assistance MAY propose this shape, but `DeckCompiler` MUST still validate and compile final `SlideDeck`.
 
 ### DeckSlideProposal
@@ -222,7 +227,7 @@ Represents one planned slide before compilation.
 Fields:
 
 - `id: string`
-- `role: "opening" | "context" | "insight" | "evidence" | "comparison" | "risk" | "decision" | "next_steps" | "appendix"`
+- `slideKind: "opening" | "content" | "closing"`
 - `title: string`
 - `message: string`
 - `sourceSectionIds: string[]`
@@ -230,14 +235,17 @@ Fields:
 - `chartIntentIds: string[]`
 - `outline: SlideOutlineItem[]`
 - `layoutIntent: LayoutIntent`
-- `speakerNotesDraft?: string`
+- `speakerNotesDraft: string`
 - `reviewNotes: string[]`
 
 Validation:
 
 - `sourceSectionIds`, `sourceFactIds`, and `chartIntentIds` MUST reference existing validated artifacts.
-- `outline` MUST contain at least one source-grounded item.
-- `speakerNotesDraft`, when present, MUST be conservative and derived from outline/source trace.
+- `slideKind` MUST be opening, content, or closing only.
+- Content slides MUST contain at least one `sourceSectionId`.
+- Empty `chartIntentIds` is valid.
+- `outline` SHOULD contain 2-4 source-grounded items and MUST contain at least one item.
+- `speakerNotesDraft` MUST be conservative, 2-4 sentences when possible, at most 400 characters, and derived from outline/source trace.
 - Invalid references MUST fail proposal validation or trigger deterministic fallback planning.
 
 ### SlideOutlineItem
@@ -254,6 +262,8 @@ Validation:
 
 - `text` MUST be grounded in referenced source sections or source facts.
 - `sourceTrace` MUST contain at least one source section or source fact identifier.
+- Items that mention numbers, decisions, risks, constraints, owners, or deadlines SHOULD trace to `SourceFact` when available.
+- Chart-related outline items MAY trace to `ChartIntent`.
 - Outline text MAY compress source wording but MUST NOT add unsupported claims.
 
 ### LayoutIntent
@@ -270,6 +280,7 @@ Validation:
 
 - `LayoutIntent` is not final visual styling.
 - Design layer MAY use it for visual hierarchy and pattern selection, but MUST NOT alter source facts or outline meaning.
+- `LayoutIntent` MUST remain lightweight and must not encode final CSS or arbitrary per-slide styling.
 
 ### DesignSystem
 
@@ -291,6 +302,25 @@ Validation:
 
 - Must be deck-level, not per-slide arbitrary styles.
 - ui-ux-pro-max notes MUST NOT add facts or change source meaning.
+
+### DesignPlanningResult
+
+Represents design handoff after `DeckCompiler` and before HTML rendering.
+
+Fields:
+
+- `designSystem: DesignSystem`
+- `slidePatternMap: Record<string, string>`
+- `chartTreatmentNotes: string[]`
+- `accessibilityNotes: string[]`
+- `critiqueNotes: string[]`
+
+Validation:
+
+- MUST be produced from a valid `SlideDeck` plus `DeckBrief.styleDirection`.
+- MAY use ui-ux-pro-max as design planning guidance.
+- MUST NOT change slide order, title/message wording, outline meaning, source facts, speaker notes factual content, or review warnings.
+- MUST NOT depend on `speakerNotesDraft` because HTML v1 does not render speaker notes.
 
 ### SlideDeck
 
@@ -321,6 +351,7 @@ Represents one slide.
 Fields:
 
 - `id: string`
+- `slideKind: "opening" | "content" | "closing"`
 - `type: "title" | "section" | "content" | "comparison" | "timeline" | "table" | "metrics" | "quote" | "action"`
 - `title: string`
 - `message: string`
@@ -329,14 +360,16 @@ Fields:
 - `layoutIntent: LayoutIntent`
 - `contentBlocks: ContentBlock[]`
 - `sourceTrace: string[]`
-- `speakerNotesDraft?: string`
+- `speakerNotesDraft: string`
 
 Validation:
 
+- `slideKind` MUST identify deck structural position only; it is not a complex narrative role.
 - `title` SHOULD summarize slide meaning and MUST remain source-grounded.
 - `outline` MUST include at least one item and each item MUST include source trace.
 - `sourceTrace` SHOULD reference source sections or source facts when slide content derives from source.
-- `speakerNotesDraft`, when present, MUST be conservative and MUST NOT add unsupported claims.
+- `speakerNotesDraft` MUST be conservative, at most 400 characters, and MUST NOT add unsupported claims.
+- HTML renderer v1 MUST NOT render `speakerNotesDraft` in the presentation view.
 
 ### ContentBlock
 
@@ -406,7 +439,10 @@ Responsibilities:
 Responsibilities:
 
 - Produce deterministic `DeckPlanProposal` from validated `SourceSection`, `SourceFact`, `ChartIntent`, and `DeckBrief`.
-- Decide slide grouping, slide role, title/message candidate, outline, layout intent, and optional speaker notes draft.
+- Decide source-order slide grouping, `slideKind`, title/message candidate, outline, layout intent, and speaker notes draft.
+- Merge short source sections and conservatively split long source sections while respecting the 3-8 target and 8-slide hard cap.
+- Always produce an opening slide and produce a closing slide only when source content supports next steps, actions, owners, or deadlines.
+- Avoid narrative type, complex role classification, appendix slides, and automatic reordering.
 - Keep v1 free of LLM calls.
 - Preserve stable output for the same inputs.
 
@@ -416,8 +452,10 @@ Responsibilities:
 
 - Validate all `DeckPlanProposal` references against source sections, source facts, and chart intents.
 - Compile valid proposal into final `SlideDeck`.
-- Reject or deterministic-fallback invalid proposals.
+- Return validation failure for invalid proposals so the application flow can use deterministic fallback planning.
+- Deduplicate and stable-sort compiled source trace.
 - Ensure every slide has source-grounded outline and source trace.
+- Do not fill missing fields or rewrite proposal wording.
 
 ### ChartIntentPlanner
 
@@ -433,8 +471,9 @@ Responsibilities:
 Responsibilities:
 
 - Convert style direction into `DesignSystem`.
-- Apply ui-ux-pro-max guidance for presentation and critique.
+- Apply ui-ux-pro-max guidance after `DeckCompiler` for design planning and after HTML rendering for critique.
 - Enforce source-fidelity boundary.
+- Avoid title/message wording changes in v1.
 
 ### HtmlDeckRenderer
 
@@ -443,6 +482,7 @@ Responsibilities:
 - Render `SlideDeck` into self-contained HTML.
 - Include scoped CSS and keyboard navigation script.
 - Preserve 16:9 layout.
+- Do not render `speakerNotesDraft` in the presentation view.
 
 ## State Transitions
 

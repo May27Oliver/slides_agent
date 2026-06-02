@@ -149,6 +149,7 @@
       "type": "object",
       "required": [
         "id",
+        "slideKind",
         "type",
         "title",
         "message",
@@ -156,11 +157,15 @@
         "layout",
         "layoutIntent",
         "contentBlocks",
-        "sourceTrace"
+        "sourceTrace",
+        "speakerNotesDraft"
       ],
       "properties": {
         "id": {
           "type": "string"
+        },
+        "slideKind": {
+          "enum": ["opening", "content", "closing"]
         },
         "type": {
           "enum": ["title", "section", "content", "comparison", "timeline", "table", "metrics", "quote", "action"]
@@ -197,7 +202,8 @@
           }
         },
         "speakerNotesDraft": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 400
         }
       },
       "additionalProperties": false

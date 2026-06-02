@@ -22,7 +22,7 @@
 
 ## Decision: LLM-assisted semantic segmentation + deterministic validation/content core + ui-ux-pro-max design layer
 
-**Rationale**: 內部報告、提案與 PM planning 的 source content 不一定有穩定 heading 或格式。只靠 regex 切段會讓段落意義、slide grouping 與 source trace 變粗或錯位。第一版改採 backend-configured LLM-assisted semantic segmentation，由 LLM 判斷語意段落、命名 section，並輸出 exact source quotes；程式端必須用 schema validation、exact quote grounding、source order 與 coverage check 驗證後才能進入 downstream content core。內容事實、chart decisions、source trace 與 review report 仍由 deterministic 或 validation-backed core 保持可測、可追溯、可審查。ui-ux-pro-max 用於 summary presentation、design planning、layout selection、visual hierarchy 與 critique，讓第一版輸出不要只有可測但缺少設計感。
+**Rationale**: 內部報告、提案與 PM planning 的 source content 不一定有穩定 heading 或格式。只靠 regex 切段會讓段落意義、slide grouping 與 source trace 變粗或錯位。第一版改採 backend-configured LLM-assisted semantic segmentation，由 LLM 判斷語意段落、命名 section，並輸出 exact source quotes；程式端必須用 schema validation、exact quote grounding、source order 與 coverage check 驗證後才能進入 downstream content core。內容事實、chart decisions、source trace 與 review report 仍由 deterministic 或 validation-backed core 保持可測、可追溯、可審查。ui-ux-pro-max 用於 design planning、layout selection、chart treatment、visual hierarchy 與 critique，讓第一版輸出不要只有可測但缺少設計感。
 
 **Alternatives considered**:
 
@@ -50,15 +50,27 @@
 - Unlimited or multi-step LLM retry: 可能提高成功率，但成本與延遲不可控，也增加 LLM 在修格式過程中改寫或重解釋來源內容的風險。
 - Show raw schema errors to users: 對工程 debug 有用，但對使用者不可操作，且會讓 review report 混入低階 implementation detail；raw errors 應保存在 internal evidence。
 
-## Decision: Deck planning v1 is deterministic and split into planner/compiler
+## Decision: Deck planning v1 is deterministic, source-order preserving, and split into planner/compiler
 
-**Rationale**: Deck layer 要把 validated source sections、source facts、chart intents 與 deck brief 組成可 render、可 review、可交給 design layer 的簡報結構。v1 先不導入 LLM，避免在 slide grouping、title/message、outline 或 speaker notes draft 中加入 unsupported claims。`DeckPlanner` deterministic 產生 `DeckPlanProposal`；`DeckCompiler` 驗證所有 source/chart references 後產出 final `SlideDeck`。這個分層讓 v1 保持可測與可審查，也保留未來讓 LLM 輔助 proposal 的擴充點，但 final `SlideDeck` 仍由 compiler 產出。
+**Rationale**: Deck layer 要把 validated source sections、source facts、chart intents 與 deck brief 組成可 render、可 review、可交給 design layer 的簡報結構。v1 先不導入 LLM，避免在 slide grouping、title/message、outline 或 speaker notes draft 中加入 unsupported claims。`DeckPlanner` deterministic 產生 `DeckPlanProposal`；`DeckCompiler` 驗證所有 source/chart references 後產出 final `SlideDeck`。Deck 必須以 opening 開始，content slides 維持來源順序，closing 只在來源包含 next steps/action/owner/deadline 時產生。v1 不使用 `narrativeType`、複雜 slide role、appendix 或自動把 metrics/risk/decision 移到前面，因為這些會在沒有 LLM 的前提下造成過度設計與不必要推論。這個分層讓 v1 保持可測與可審查，也保留未來讓 LLM 輔助 proposal 的擴充點，但 final `SlideDeck` 仍由 compiler 產出。
 
 **Alternatives considered**:
 
 - Direct deterministic `SlideDeck` builder only: 最簡單，但會把 proposal、reference validation、compilation 與 evidence 混在一起，後續若要加入 LLM proposal 會難以維持邊界。
 - LLM-generated `SlideDeck`: 可能產生更自然的故事線與講稿，但 v1 會降低 schema 穩定性與 source fidelity，且 speaker notes 最容易補入來源未支持的語氣或推論。
 - LLM-generated speaker notes only: 使用者體驗可能較好，但在 outline/source trace 尚未穩定前容易把推論寫成講稿；v1 先以 conservative deterministic draft 為主。
+- Narrative type / complex slide role classification: 看似能提供更漂亮的故事架構，但 v1 沒有 LLM deck reasoning，使用固定分類容易誤導內容排序並增加不必要的規則。
+- Always include appendix: 可能保留更多內容，但 v1 self-contained HTML deck 的目標是會議可展示；壓縮或省略的重要內容應先進 review report。
+
+## Decision: ui-ux-pro-max is a design handoff and critique layer, not DeckPlanner
+
+**Rationale**: 使用者期待 deck 有設計感，但 deck planning 的核心仍是來源忠實與可審查。`ui-ux-pro-max` 是 design guidance/search/checklist 能力，不是 runtime source truth 或 deck planner。因此 v1 將它放在 `DeckCompiler` 產出 valid `SlideDeck` 之後，用於 `DesignSystem`、slide pattern mapping、chart treatment、visual hierarchy、density、accessibility notes；HTML rendering 後再用於 critique/verification。它不得改變 deck order、title/message wording、outline meaning、source facts、speakerNotesDraft factual content 或 review warnings。
+
+**Alternatives considered**:
+
+- Put ui-ux-pro-max inside DeckPlanner: 可能讓 slide grouping/story 更有設計感，但會模糊 design advice 與 content truth 的邊界，也讓測試難以判斷是 deck rule 還是 design rule 在改變內容。
+- Skip ui-ux-pro-max until renderer: 較簡單，但會讓 v1 視覺規劃不足，可能產生可測但不夠好用的 deck。
+- Let design layer polish title/message wording: 未來可另開 spec，但 v1 先避免 wording polish 改變來源語意或造成不易測的內容差異。
 
 ## Decision: Session-only preview
 

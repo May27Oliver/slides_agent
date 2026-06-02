@@ -100,6 +100,16 @@ This file records implementation and verification evidence for feature 002.
 
 - Added requirement that deck planning v1 does not call LLM.
 - Added `DeckPlanner` / `DeckCompiler` split: planner produces deterministic `DeckPlanProposal`; compiler validates references and emits final `SlideDeck`.
-- Added required slide `outline` with source trace and optional conservative `speakerNotesDraft`.
-- Updated slide-generation contract schema to require `outline` and `layoutIntent`, and to use `speakerNotesDraft` instead of `speakerNotes`.
+- Added required slide `outline` with source trace and conservative `speakerNotesDraft`.
+- Updated slide-generation contract schema to require `slideKind`, `outline`, `layoutIntent`, and `speakerNotesDraft`, and to use `speakerNotesDraft` instead of `speakerNotes`.
 - Added US1R3 tasks T102-T112 and kept the revision blocking before US2 implementation.
+
+### 2026-06-02 - Deck Planner Clarification A-F
+
+- Clarified deck structure target: 3-8 slides, 8-slide hard cap, required opening slide, conditional closing slide only when source supports next steps/actions/owners/deadlines, no appendix in v1.
+- Clarified deck planning ordering: content slides preserve source order; v1 does not use `narrativeType`, complex slide role, or automatic metrics/risk/decision reordering.
+- Replaced complex slide role with `slideKind: "opening" | "content" | "closing"`.
+- Required every slide to include source-grounded outline and required conservative `speakerNotesDraft`; speaker notes draft must be at most 400 characters and cannot add unsupported claims.
+- Clarified HTML rendering v1 must not render `speakerNotesDraft` in presentation view.
+- Clarified `DeckCompiler` validates only and does not fill missing fields; invalid proposals trigger deterministic fallback planning and user-readable review notes while preserving raw validation details as evidence.
+- Clarified ui-ux-pro-max is a design planning and critique layer after valid `SlideDeck`, not part of DeckPlanner; it may affect design system, pattern mapping, chart treatment, density, visual hierarchy, accessibility, and critique notes, but cannot alter source facts, deck order, title/message wording, outline meaning, speaker notes factual content, or review warnings.
