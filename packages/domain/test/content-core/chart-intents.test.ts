@@ -63,10 +63,12 @@ describe("layered chart intent decisions", () => {
       expect(result.intents).toContainEqual(
         expect.objectContaining({
           id: expectedIntent.id,
-          recommendedVisuals: expect.arrayContaining(expectedIntent.recommendedVisuals),
-          userEmphasisMatched: true
+          recommendedVisuals: expect.arrayContaining(expectedIntent.recommendedVisuals)
         })
       );
+    }
+    for (const intent of result.intents) {
+      expect(intent).not.toHaveProperty("userEmphasisMatched");
     }
   });
 });

@@ -1,15 +1,20 @@
 import { ChartIntentPlanner } from "@/content-core/chart-intent-planner";
 import { extractSourceFacts } from "@/content-core/source-fact-extractor";
+import type { SegmentationValidation } from "@/content-core/semantic-segmentation.types";
 import { segmentSourceContent } from "@/content-core/semantic-segmentation-validator";
 import { compileDeckPlanProposal } from "@/deck/deck-compiler";
 import { createDeckPlanProposal } from "@/deck/deck-planner";
 import type { SlideDeck } from "@/deck/deck.types";
 import type { SlideDeckPlannerInput } from "@/deck/deck-generation.types";
-import { defaultDesignSystem } from "@/design/default-design-system";
 import { buildReviewReport, buildSegmentationReviewNotes } from "@/review/review-report-builder";
 
 export function planSlideDeck(input: SlideDeckPlannerInput): SlideDeck {
-  const segmentation = segmentSourceContent({ sourceContent: input.sourceContent });
+  const segmentation = input.sourceSections
+    ? {
+        sections: input.sourceSections,
+        validation: input.segmentationValidation ?? validExternalSegmentation()
+      }
+    : segmentSourceContent({ sourceContent: input.sourceContent });
   const sections = segmentation.sections;
   const facts = extractSourceFacts(input.sourceContent, sections);
   const chartIntents = new ChartIntentPlanner().plan({
@@ -49,7 +54,6 @@ export function planSlideDeck(input: SlideDeckPlannerInput): SlideDeck {
     sourceFacts: facts,
     chartIntents: chartIntents.intents,
     deckBrief: input.deckBrief,
-    designSystem: defaultDesignSystem(input.deckBrief.styleDirection),
     reviewReport
   });
 
@@ -67,4 +71,15 @@ function documentTitle(sourceContent: string): string | undefined {
     .find((line) => /^#\s+/u.test(line));
 
   return firstHeading?.replace(/^#\s+/u, "");
+}
+
+function validExternalSegmentation(): SegmentationValidation {
+  return {
+    schemaValid: true,
+    quoteGroundingValid: true,
+    sourceOrderValid: true,
+    importantContentCoverageValid: true,
+    fallbackUsed: false,
+    issues: []
+  };
 }

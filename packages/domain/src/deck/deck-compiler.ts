@@ -4,7 +4,6 @@ import type {
   CompileDeckPlanProposalInput,
   CompileDeckPlanProposalResult
 } from "@/deck/deck-compiler.types";
-import { defaultDesignSystem } from "@/design/default-design-system";
 import { buildReviewReport } from "@/review/review-report-builder";
 
 export function compileDeckPlanProposal(
@@ -27,7 +26,6 @@ export function compileDeckPlanProposal(
       ...(input.proposal.subtitle ? { subtitle: input.proposal.subtitle } : {}),
       purpose: input.deckBrief.purpose,
       audience: input.deckBrief.audience,
-      designSystem: input.designSystem ?? defaultDesignSystem(input.deckBrief.styleDirection),
       slides: input.proposal.slides.map((slide): Slide => {
         const sourceTrace = stableSourceTrace(input, [
           ...slide.sourceSectionIds,

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "baseUrl": "../..",
     "noEmit": true,
+    "types": ["node", "vitest"],
     "paths": {
       "@/*": ["packages/domain/src/*"],
       "@slides-agent/contracts": ["packages/contracts/src/index.ts"],
@@ -11,5 +12,5 @@
       "@slides-agent/domain/*": ["packages/domain/src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "test", "vitest.config.ts"]
 }

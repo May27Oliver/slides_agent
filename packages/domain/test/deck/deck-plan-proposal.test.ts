@@ -14,6 +14,7 @@ interface DeckPlannerModule {
     chartIntents: Array<{ id: string; sourceFacts: unknown[] }>;
     deckBrief: { purpose: string; audience: string };
   }): {
+    title: string;
     slides: Array<{
       slideKind: "opening" | "content" | "closing";
       sourceSectionIds: string[];
@@ -57,6 +58,7 @@ describe("deck plan proposal", () => {
     });
 
     expect(second).toEqual(first);
+    expect(first).not.toHaveProperty("id");
     expect(first.slides.length).toBeGreaterThanOrEqual(3);
     expect(first.slides.length).toBeLessThanOrEqual(8);
     expect(first.slides[0]?.slideKind).toBe("opening");

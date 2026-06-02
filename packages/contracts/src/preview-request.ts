@@ -1,4 +1,4 @@
-import type { GeneratePreviewRequestContract } from "@/index";
+import type { GeneratePreviewRequestContract } from "./index";
 
 export interface ContractError {
   code: "INVALID_INPUT" | "UNSUPPORTED_OPTION";
@@ -26,8 +26,16 @@ type OptionalDeckBriefKey =
   | "styleDirection"
   | "chartEmphasis"
   | "segmentationGuidance"
-  | "language"
-  | "tone";
+  | "language";
+
+const supportedDeckBriefKeys = new Set([
+  "purpose",
+  "audience",
+  "styleDirection",
+  "chartEmphasis",
+  "segmentationGuidance",
+  "language"
+]);
 
 export function validateGeneratePreviewRequest(input: unknown): PreviewRequestValidationResult {
   if (!isRawGeneratePreviewRequest(input)) {
@@ -52,6 +60,11 @@ export function validateGeneratePreviewRequest(input: unknown): PreviewRequestVa
     return unsupportedOption(["options"]);
   }
 
+  const unsupportedDeckBriefFields = unsupportedDeckBriefFieldPaths(deckBrief);
+  if (unsupportedDeckBriefFields.length > 0) {
+    return unsupportedDeckBriefOption(unsupportedDeckBriefFields);
+  }
+
   return {
     ok: true,
     value: {
@@ -68,7 +81,6 @@ interface RawDeckBrief {
   chartEmphasis?: unknown;
   segmentationGuidance?: unknown;
   language?: unknown;
-  tone?: unknown;
 }
 
 function deckBriefValue(
@@ -96,8 +108,7 @@ function optionalDeckBriefEntries(
     ["styleDirection", readOptionalString(deckBrief.styleDirection)],
     ["chartEmphasis", readOptionalString(deckBrief.chartEmphasis)],
     ["segmentationGuidance", readOptionalString(deckBrief.segmentationGuidance)],
-    ["language", readOptionalString(deckBrief.language)],
-    ["tone", readOptionalString(deckBrief.tone)]
+    ["language", readOptionalString(deckBrief.language)]
   ].filter((entry): entry is [OptionalDeckBriefKey, string] => Boolean(entry[1]));
 }
 
@@ -121,6 +132,27 @@ function unsupportedOption(fields: string[]): PreviewRequestValidationResult {
       fields
     }
   };
+}
+
+function unsupportedDeckBriefOption(fields: string[]): PreviewRequestValidationResult {
+  return {
+    ok: false,
+    error: {
+      code: "UNSUPPORTED_OPTION",
+      message: "Unsupported deck brief fields are not accepted by this generation slice",
+      fields
+    }
+  };
+}
+
+function unsupportedDeckBriefFieldPaths(deckBrief: RawDeckBrief | undefined): string[] {
+  if (!deckBrief) {
+    return [];
+  }
+
+  return Object.keys(deckBrief)
+    .filter((key) => !supportedDeckBriefKeys.has(key))
+    .map((key) => `deckBrief.${key}`);
 }
 
 function isRawGeneratePreviewRequest(value: unknown): value is RawGeneratePreviewRequest {

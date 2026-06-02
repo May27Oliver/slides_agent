@@ -6,7 +6,6 @@ import type {
   SourceFact,
   SourceSection
 } from "@/deck/deck.types";
-import type { DesignSystem } from "@/design/types";
 import type { ReviewReport } from "@/review/types";
 
 export interface CompileDeckPlanProposalInput {
@@ -15,7 +14,6 @@ export interface CompileDeckPlanProposalInput {
   sourceFacts: Array<Pick<SourceFact, "id">>;
   chartIntents: Array<Pick<ChartIntent, "id">>;
   deckBrief: DeckBrief;
-  designSystem?: DesignSystem;
   reviewReport?: ReviewReport;
 }
 

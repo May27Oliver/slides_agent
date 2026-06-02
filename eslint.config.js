@@ -3,7 +3,13 @@ import tseslint from "typescript-eslint";
 
 export default [
   {
-    ignores: ["**/dist/**", "**/coverage/**", "**/node_modules/**", "packages/contracts/schemas/**"]
+    ignores: [
+      "**/dist/**",
+      "**/build/**",
+      "**/coverage/**",
+      "**/node_modules/**",
+      "packages/contracts/schemas/**"
+    ]
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

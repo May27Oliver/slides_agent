@@ -1,5 +1,5 @@
-import type { DesignSystem } from "@/design/types";
 import type { ReviewReport } from "@/review/types";
+import type { HtmlGenerationValidation } from "@/rendering/html-generation.types";
 
 export type SourceFactKind = "metric" | "date" | "decision" | "risk" | "constraint" | "claim";
 
@@ -31,7 +31,6 @@ export interface DeckBrief {
   chartEmphasis?: string;
   segmentationGuidance?: string;
   language?: string;
-  tone?: string;
 }
 
 export type SlideType =
@@ -91,7 +90,6 @@ export interface LayoutIntent {
 }
 
 export interface DeckPlanProposal {
-  id: string;
   title: string;
   subtitle?: string;
   slides: DeckSlideProposal[];
@@ -132,13 +130,13 @@ export interface SlideDeck {
   subtitle?: string;
   purpose: string;
   audience: string;
-  designSystem: DesignSystem;
   slides: Slide[];
   reviewReport: ReviewReport;
 }
 
 export interface PreviewArtifact {
   html: string;
+  htmlGenerationValidation: HtmlGenerationValidation;
   generationSummary: GenerationSummary;
 }
 

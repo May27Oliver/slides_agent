@@ -41,7 +41,13 @@ export function validateSemanticSegmentationOutput(
 
   assertOnlyKeys(input, ROOT_KEYS, "", errors);
   validateSegments(input.segments, errors);
-  validateStringArray(input.globalWarnings, "/globalWarnings", "globalWarnings", "global warning", errors);
+  validateStringArray(
+    input.globalWarnings,
+    "/globalWarnings",
+    "globalWarnings",
+    "global warning",
+    errors
+  );
 
   return {
     ok: errors.length === 0,
@@ -83,7 +89,11 @@ function validateSegment(segment: unknown, index: number, errors: ContractValida
   validateStringArray(segment.warnings, `${path}/warnings`, "warnings", "warning", errors);
 }
 
-function validateSourceQuotes(value: unknown, path: string, errors: ContractValidationError[]): void {
+function validateSourceQuotes(
+  value: unknown,
+  path: string,
+  errors: ContractValidationError[]
+): void {
   if (!Array.isArray(value) || value.length === 0) {
     errors.push({
       path,

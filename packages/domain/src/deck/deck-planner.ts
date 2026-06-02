@@ -26,7 +26,6 @@ export function createDeckPlanProposal(input: CreateDeckPlanProposalInput): Deck
   }
 
   return {
-    id: "deck_plan_001",
     title: deckTitle(input),
     slides,
     planningNotes: [

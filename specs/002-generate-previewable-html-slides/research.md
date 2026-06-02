@@ -12,7 +12,7 @@
 
 ## Decision: 使用 monorepo with shared domain/contracts packages
 
-**Rationale**: Deterministic content core、slide JSON schema、review report、chart intent、renderer contract 必須能在 UI 與 backend 之外被獨立測試。`packages/domain` 保存 DDD domain behavior；`packages/contracts` 保存 shared schema/API types；`apps/web` 與 `apps/api` 只負責 interaction/adapters。
+**Rationale**: Deterministic content core、slide JSON schema、review report、chart intent、HTML generation contract 與 validation 必須能在 UI 與 backend 之外被獨立測試。`packages/domain` 保存 DDD domain behavior；`packages/contracts` 保存 shared schema/API types；`apps/web` 與 `apps/api` 只負責 interaction/adapters。
 
 **Alternatives considered**:
 
@@ -64,13 +64,34 @@
 
 ## Decision: ui-ux-pro-max is a design handoff and critique layer, not DeckPlanner
 
-**Rationale**: 使用者期待 deck 有設計感，但 deck planning 的核心仍是來源忠實與可審查。`ui-ux-pro-max` 是 design guidance/search/checklist 能力，不是 runtime source truth 或 deck planner。因此 v1 將它放在 `DeckCompiler` 產出 valid `SlideDeck` 之後，用於 `DesignSystem`、slide pattern mapping、chart treatment、visual hierarchy、density、accessibility notes；HTML rendering 後再用於 critique/verification。它不得改變 deck order、title/message wording、outline meaning、source facts、speakerNotesDraft factual content 或 review warnings。
+**Rationale**: 使用者期待 deck 有設計感，但 deck planning 的核心仍是來源忠實與可審查。`ui-ux-pro-max` 是 design guidance/search/checklist 能力，不是 runtime source truth 或 deck planner。因此 v1 將它放在 `DeckCompiler` 產出 valid `SlideDeck` 之後，用於 `DesignPlanningResult`：`DesignSystem`、`SlidePatternAssignment`、`ChartTreatmentPlan`、`VisualHierarchyPlan`、`AccessibilityNotes`、`DesignReviewNotes` 與 `DesignConsistencyValidation`。HTML generation/validation 後再用於 critique/verification。它不得改變 deck order、title/message wording、outline meaning、source facts、speakerNotesDraft factual content 或 review warnings。
 
 **Alternatives considered**:
 
 - Put ui-ux-pro-max inside DeckPlanner: 可能讓 slide grouping/story 更有設計感，但會模糊 design advice 與 content truth 的邊界，也讓測試難以判斷是 deck rule 還是 design rule 在改變內容。
 - Skip ui-ux-pro-max until renderer: 較簡單，但會讓 v1 視覺規劃不足，可能產生可測但不夠好用的 deck。
 - Let design layer polish title/message wording: 未來可另開 spec，但 v1 先避免 wording polish 改變來源語意或造成不易測的內容差異。
+
+## Decision: DesignPlanningResult is the HTML generation contract for design, not a loose note bundle
+
+**Rationale**: HTML generation prompt/validator 不能重新解讀 `styleDirection`，否則 design decisions 會分散到 render 階段，難以測試、追溯與 manual verification。Design planning 必須接收 valid `SlideDeck`、`DeckBrief`、`ChartIntent[]`、style direction 與 slide `layoutIntent`，並輸出 HTML-generation-consumable `DesignPlanningResult`。`DesignSystem` 管 deck-level tokens；`SlidePatternAssignment` 管每頁 primary pattern；`ChartTreatmentPlan` 管 chart/metric/table/fallback 呈現；`VisualHierarchyPlan` 管每頁 primary/supporting/secondary/de-emphasized content；`AccessibilityNotes` 管色彩、字級、閱讀順序、chart labeling、keyboard 與 responsive risk；`DesignReviewNotes` 管 style interpretation、rejected suggestions、HTML generation constraints、consistency concerns 與 manual verification；`DesignConsistencyValidation` 管跨頁 style consistency 與 fallback 狀態。
+
+**Alternatives considered**:
+
+- Only `DesignSystem`: 最簡單，但只提供 deck-level tokens，無法讓 renderer 知道每頁 pattern、chart treatment 或 hierarchy，也無法清楚證明不同 slide 沒有任意風格化。
+- Renderer interprets style direction directly: 實作初期少一個 artifact，但會把 design decision 混進 rendering behavior，讓 source-to-design rationale 與 design critique 難追溯。
+- Free-form design notes: 對人工 review 友善，但 renderer 無法穩定消費，也不適合作為 contract tests。
+- Per-slide arbitrary CSS/style object: 很彈性，但會打開逐頁任意風格化風險，違反 coherent design system 與 anti-over-design gate。
+
+## Decision: Remove unconsumed properties instead of keeping speculative contract surface
+
+**Rationale**: Constitution v3.2.0 要求新 domain type、field、enum、service、planner、validator、adapter boundary 或 intermediate artifact 必須有 current consumer 或 near-term independently testable consuming task。檢查 content/deck/design flow 後，`DeckBrief.tone`、`ChartIntent.userEmphasisMatched`、`DeckPlanProposal.id` 與 `DesignSystem.uiUxProMaxNotes` 沒有明確 consumer。保留它們會讓 API/schema/domain surface 看起來比實際能力更大，也會增加後續 HTML generation、review report 與 tests 的不必要負擔。因此第一版直接刪除：`tone` 從 request contract 移除並被 validator 拒絕；chart emphasis 的影響併入 `ChartIntent.rationale`；deck proposal 不需要固定 id；ui-ux-pro-max notes 只能進 `DesignReviewNotes`，不能混在 HTML generation tokens 中。
+
+**Alternatives considered**:
+
+- Keep fields for future use: 實作最省事，但違反 anti-over-design gate，且未來消費者的語意可能不同。
+- Mark fields optional/deprecated: 仍會保留 contract surface，測試和文件仍需解釋沒有消費者的欄位。
+- Move all removed fields into review report: 對某些資訊可能有用，但 `tone` 和 proposal id 沒有目前 review value；`userEmphasisMatched` 可由 rationale 表達；ui-ux-pro-max notes 應進 design review notes 而不是 generic review report。
 
 ## Decision: Session-only preview
 
@@ -84,7 +105,7 @@
 
 ## Decision: Layered chart intent decision
 
-**Rationale**: Charting 不應只依賴使用者自由文字。Content core 先偵測 source content 是否有數字描述與可視覺化邏輯，再結合 free-text chart emphasis 產生 `ChartIntent`。資料不足時產生 no-chart rationale，避免捏造缺失資料。
+**Rationale**: Charting 不應只依賴使用者自由文字。Content core 先偵測 source content 是否有數字描述與可視覺化邏輯，再結合 free-text chart emphasis 產生 `ChartIntent`。使用者 chart emphasis 的影響必須呈現在 `ChartIntent.rationale`，而不是額外輸出沒有 downstream consumer 的 boolean。資料不足時產生 no-chart rationale，避免捏造缺失資料。
 
 **Alternatives considered**:
 
@@ -92,12 +113,15 @@
 - Structured chart fields only: 可測性高，但第一版使用摩擦大。
 - Auto-detect only: 使用者無法指定想強調的圖表重點。
 
-## Decision: Self-contained HTML renderer without runtime backend dependency
+## Decision: LLM-assisted HTML generation with deterministic validation, one repair attempt, and conservative fallback
 
-**Rationale**: Web-first artifact 必須能下載後直接用 browser 開啟。Renderer 產出的 HTML 需要包含必要 CSS、navigation script 與 slide data，不依賴 local backend。
+**Rationale**: 使用者期待 render 階段接收 `SlideDeck` 與 `DesignPlanningResult` 後，由 backend-configured LLM 產生更接近設計師輸出的 self-contained HTML，而不是只套固定 template。為了維持 source fidelity 與 artifact traceability，LLM HTML 不能直接成為 final artifact；系統必須 deterministic 驗證 self-contained resource boundary、slide count/order、title/message/outline fidelity、chart numbers/units/context、speaker notes non-rendering、design compliance、keyboard navigation 與 basic responsive readiness。若初次 HTML 未通過 validation，只允許一次 HTML repair；repair prompt 只能修 HTML/contract/design compliance，不能重解釋 source content 或改寫 slide semantics。若 repair 後仍失敗，系統使用 conservative fallback HTML renderer 或回傳可審查的 generation failure，並把 validation issues、repair/fallback decision 記錄到 evidence/generation summary。
 
 **Alternatives considered**:
 
+- Deterministic-only HTML renderer: 最簡單、最可重現，也保留作為 conservative fallback；但它限制在預先寫好的 template/pattern，無法滿足使用者希望 render 階段用 design planning artifact 交給 LLM 產 HTML 的工作流。
+- Trust raw LLM HTML directly: 實作最少，但 LLM 可能改寫 wording、遺漏 slide、加入 unsupported facts、引用外部資源或任意改風格，違反 source fidelity、web-first self-contained 與 evidence traceability。
+- Unlimited HTML repair/retry: 可能提高通過率，但成本與延遲不可控，也增加 LLM 在修 HTML 時改變語意或偏離 design artifact 的風險。
 - Preview route only: 實作較簡單，但不能驗證 self-contained deliverable。
 - External slide framework dependency: 開發快，但 first slice 應控制 runtime dependencies，避免交付物依賴外部 CDN 或 framework bootstrapping。
 

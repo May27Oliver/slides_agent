@@ -44,8 +44,7 @@ Deck brief:
   "styleDirection": "高密度 PM planning deck，強調風險、里程碑與 KPI",
   "chartEmphasis": "把 conversion、回覆時間、deadline 和 resource risk 做成容易比較的視覺重點",
   "segmentationGuidance": "請優先依照目標、決策、風險、限制、下一步切段",
-  "language": "zh-TW",
-  "tone": "direct"
+  "language": "zh-TW"
 }
 ```
 
@@ -65,9 +64,11 @@ Implementation should provide commands for:
 7. Domain test for deck compiler reference validation.
 8. Domain test for slide outline source trace and conservative speaker notes draft.
 9. Domain test for review report fields.
-10. Renderer test for self-contained HTML output.
-11. Browser test for keyboard next/previous navigation.
-12. Browser test for basic responsive behavior.
+10. LLM HTML generation prompt contract test.
+11. Deterministic HTML validation test for self-contained resources, content fidelity, design compliance, and speaker notes non-rendering.
+12. Fallback renderer test for invalid LLM HTML after one repair attempt.
+13. Browser test for keyboard next/previous navigation.
+14. Browser test for basic responsive behavior.
 
 Expected semantic segmentation behavior:
 
@@ -112,7 +113,19 @@ Expected deck planning behavior:
 - Every slide contains an `outline` array with 2-4 items when source supports it, and at least one item.
 - Every outline item includes `text`, `emphasis`, and non-empty `sourceTrace`.
 - Every slide contains `speakerNotesDraft`; it uses only outline/source facts, remains conservative, and is at most 400 characters.
-- HTML rendering v1 must not render `speakerNotesDraft` in the presentation view.
+- HTML generation v1 must not render `speakerNotesDraft` in the presentation view.
+
+Expected LLM-assisted HTML generation behavior:
+
+- HTML generation runs after valid `SlideDeck` and valid `DesignPlanningResult`.
+- The HTML generation prompt includes `SlideDeck`, `DesignPlanningResult`, HTML generation constraints, and source-fidelity instructions.
+- The prompt must tell the LLM to preserve slide count, slide order, title/message wording, outline meaning, chart numbers/units/context, and review boundaries.
+- The generated HTML must be self-contained: no external CSS, JavaScript, image, font, CDN, or backend dependency.
+- The generated HTML must not render `speakerNotesDraft` in presentation view.
+- Deterministic HTML validation must check self-contained resources, slide count/order, content fidelity, design compliance, speaker notes non-rendering, keyboard navigation, and basic responsive readiness.
+- If initial LLM HTML fails validation, the system may attempt one HTML repair only.
+- HTML repair may correct HTML structure, resource boundaries, navigation, and design compliance, but must not rewrite slide semantics or add unsupported facts.
+- If repaired HTML still fails validation, the system must use a conservative fallback HTML renderer or return a reviewable failure with validation issues.
 
 Expected design handoff behavior:
 
@@ -140,8 +153,23 @@ After implementation:
    - Projector-like 16:9 viewport: 1920x1080
 8. Confirm primary text and controls do not overlap.
 9. Download the HTML artifact.
-10. Open the downloaded HTML directly in a browser without backend running.
-11. Confirm downloaded HTML still supports slide navigation.
+10. Save the downloaded file path and checksum in `evidence.md`.
+11. Stop the API and web dev servers.
+12. Open the downloaded HTML directly from the local filesystem in a browser.
+13. Confirm the downloaded HTML opens without any backend request, CDN request, external font request, external image request, or console error related to missing runtime assets.
+14. Confirm downloaded HTML still supports slide navigation with:
+   - ArrowRight / PageDown for next slide
+   - ArrowLeft / PageUp for previous slide
+15. Confirm presentation view does not show `speakerNotesDraft`.
+16. Resize the downloaded HTML browser tab to 1440x900 and 1920x1080 and confirm no primary text, controls, chart labels, or slide numbers overlap.
+17. Preserve a screenshot of the downloaded HTML opened from the filesystem in `evidence.md`.
+18. Inspect `htmlGenerationValidation` and confirm:
+   - `selfContained` is true
+   - `slideCountAndOrderPreserved` is true
+   - `contentFidelityPreserved` is true
+   - `designCompliancePreserved` is true
+   - `speakerNotesHidden` is true
+   - repair/fallback status is understandable when used
 
 ## US1 Manual Demo Path
 
@@ -209,13 +237,15 @@ Before implementing deck planner/compiler revision:
 Before implementing design planning/critique:
 
 1. Confirm DeckPlanner and DeckCompiler do not import or invoke ui-ux-pro-max adapters.
-2. Confirm design planning input is a valid `SlideDeck` plus design brief/style direction.
+2. Confirm design planning input is a valid `SlideDeck`, `DeckBrief`, `ChartIntent[]`, style direction, and slide `layoutIntent`.
 3. Confirm design output is limited to:
    - `DesignSystem`
-   - slide pattern mapping
-   - chart treatment notes
-   - accessibility notes
-   - critique notes
+   - `SlidePatternAssignment`
+   - `ChartTreatmentPlan`
+   - `VisualHierarchyPlan`
+   - `AccessibilityNotes`
+   - `DesignReviewNotes`
+   - `DesignConsistencyValidation`
 4. Confirm design planning cannot modify:
    - deck order
    - title/message wording
@@ -223,7 +253,33 @@ Before implementing design planning/critique:
    - source facts
    - speaker notes factual content
    - review warnings
-5. Preserve design handoff sample and critique result in `evidence.md`.
+5. Confirm HTML generation prompt and validator consume `designPlanningResult` instead of reinterpreting `styleDirection`.
+6. Preserve design handoff sample and critique result in `evidence.md`.
+
+## LLM HTML Generation Review Path
+
+Before implementing render-stage LLM generation:
+
+1. Confirm HTML generation does not run until valid `SlideDeck` and valid `DesignPlanningResult` exist.
+2. Review the HTML generation prompt and confirm it instructs the LLM to:
+   - generate one self-contained HTML document
+   - avoid external CSS, JavaScript, images, fonts, CDNs, and backend dependencies
+   - preserve slide count and slide order
+   - preserve title/message wording and outline meaning
+   - preserve chart numbers, units, periods, denominators, and context
+   - not render `speakerNotesDraft`
+   - follow `DesignPlanningResult` for design system, pattern assignments, chart treatment, and visual hierarchy
+3. Run validation fixtures for:
+   - valid LLM HTML
+   - HTML with external resource URLs
+   - HTML that omits or reorders slides
+   - HTML that changes title/message/outline wording
+   - HTML that renders `speakerNotesDraft`
+   - HTML that ignores chart treatment or visual hierarchy
+4. Confirm invalid initial HTML triggers at most one repair attempt.
+5. Confirm repair prompt only addresses HTML/contract/design compliance and does not reinterpret source content.
+6. Confirm repair failure triggers conservative fallback HTML or a reviewable generation failure.
+7. Preserve prompt boundary, validation result, repair attempt result, fallback decision, downloaded HTML path/checksum, and screenshots in `evidence.md`.
 
 ## Semantic Segmentation Prompt Review Path
 
@@ -277,6 +333,8 @@ After T078-T082 red tests are created and before T083 implementation:
 - Slide outline source trace validation result.
 - Speaker notes draft sample and unsupported-claim review result.
 - HTML speaker notes non-rendering check.
+- LLM HTML generation prompt boundary and validation result.
+- HTML repair attempt and fallback decision when applicable.
 - ui-ux-pro-max design handoff and critique boundary check.
 - Generated slide JSON for sample input.
 - Generated review report for sample input.

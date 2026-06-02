@@ -1,4 +1,4 @@
-import type { DesignSystem } from "@/design/types";
+import type { DesignSystem } from "@/design/design.types";
 
 export function defaultDesignSystem(styleDirection?: string): DesignSystem {
   return {
@@ -23,8 +23,13 @@ export function defaultDesignSystem(styleDirection?: string): DesignSystem {
     },
     visualDensity: styleDirection?.includes("高密度") ? "high" : "medium",
     layoutGrid: "16:9",
-    slidePatterns: ["title", "metrics", "risk-table"],
-    chartStyle: "minimal",
-    uiUxProMaxNotes: styleDirection ? [`Style direction captured: ${styleDirection}`] : []
+    slidePatterns: [
+      "title-summary",
+      "content-summary",
+      "metric-comparison",
+      "risk-matrix",
+      "action-summary"
+    ],
+    chartStyle: "minimal"
   };
 }

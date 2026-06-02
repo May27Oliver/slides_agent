@@ -15,7 +15,6 @@ export interface ChartIntent {
   sourceFacts: SourceFact[];
   recommendedVisuals: VisualizationType[];
   rationale: string;
-  userEmphasisMatched: boolean;
 }
 
 export interface ChartIntentInput {

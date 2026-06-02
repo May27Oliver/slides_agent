@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { SourceFact } from "@/deck/deck.types";
+import { extractSourceFacts } from "@slides-agent/domain";
 import { readJsonFixture, readRootFixture } from "../support/fixtures";
-import { loadPendingModule } from "../support/pending-module";
-
-interface SourceFactExtractorModule {
-  extractSourceFacts(sourceContent: string): SourceFact[];
-}
 
 interface ExpectedSourceFactsFixture {
   facts: Array<{ value: string; sourceText: string }>;
@@ -13,9 +8,6 @@ interface ExpectedSourceFactsFixture {
 
 describe("source fact extraction", () => {
   it("preserves important facts, numbers, decisions, risks, and constraints from the source", async () => {
-    const { extractSourceFacts } = await loadPendingModule<SourceFactExtractorModule>(
-      "@/content-core/source-fact-extractor"
-    );
     const sourceContent = readRootFixture("planning-brief.md");
     const expected = readJsonFixture<ExpectedSourceFactsFixture>("expected-source-facts.json");
 

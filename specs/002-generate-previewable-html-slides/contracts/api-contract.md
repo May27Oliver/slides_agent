@@ -21,8 +21,7 @@
     "styleDirection": "High-density PM planning deck",
     "chartEmphasis": "Highlight KPI changes and schedule risks",
     "segmentationGuidance": "Group by goals, decisions, risks, constraints, and next steps",
-    "language": "zh-TW",
-    "tone": "direct"
+    "language": "zh-TW"
   }
 }
 ```
@@ -36,16 +35,6 @@
     "title": "Q3 Planning Review",
     "purpose": "PM planning review",
     "audience": "Product and engineering leads",
-    "designSystem": {
-      "themeName": "pm-planning-dense",
-      "palette": {},
-      "typography": {},
-      "spacing": {},
-      "visualDensity": "high",
-      "layoutGrid": "16:9",
-      "slidePatterns": ["title", "metrics", "risk-table"],
-      "chartStyle": "minimal"
-    },
     "slides": [
       {
         "id": "slide_001",
@@ -79,8 +68,78 @@
       "humanReviewNotes": []
     }
   },
+  "designPlanningResult": {
+    "designSystem": {
+      "themeName": "pm-planning-dense",
+      "palette": {},
+      "typography": {},
+      "spacing": {},
+      "visualDensity": "high",
+      "layoutGrid": "16:9",
+      "slidePatterns": ["title", "metrics", "risk-table"],
+      "chartStyle": "minimal"
+    },
+    "slidePatternAssignments": [
+      {
+        "slideId": "slide_001",
+        "primaryPattern": "title-summary",
+        "density": "medium",
+        "layoutIntent": {
+          "priority": "message_first",
+          "density": "medium",
+          "emphasis": "narrative"
+        },
+        "rationale": "Opening slide uses message-first hierarchy from slideKind and layoutIntent."
+      }
+    ],
+    "chartTreatmentPlans": [],
+    "visualHierarchyPlans": [
+      {
+        "slideId": "slide_001",
+        "primaryMessage": "Q3 planning focuses on KPI improvement and delivery risk",
+        "supportingEvidence": ["Review KPI improvement goals and delivery risks for Q3 planning."],
+        "secondaryDetails": [],
+        "deEmphasizedContent": []
+      }
+    ],
+    "accessibilityNotes": {
+      "colorContrast": [],
+      "textSize": [],
+      "readingOrder": [],
+      "chartLabeling": [],
+      "keyboardNavigation": [],
+      "responsiveRisks": []
+    },
+    "designReviewNotes": {
+      "styleInterpretation": ["High-density PM planning deck interpreted as compact spacing and evidence-first scanability."],
+      "rejectedSuggestions": [],
+      "htmlGenerationConstraints": [],
+      "consistencyConcerns": [],
+      "manualVerificationNeeds": []
+    },
+    "consistencyValidation": {
+      "status": "pass",
+      "checkedDimensions": ["palette", "typography", "spacing", "component style", "chart style", "density", "pattern usage"],
+      "issues": [],
+      "fallbackApplied": false
+    }
+  },
   "previewArtifact": {
     "html": "<!doctype html>...",
+    "htmlGenerationValidation": {
+      "status": "pass",
+      "selfContained": true,
+      "slideCountAndOrderPreserved": true,
+      "contentFidelityPreserved": true,
+      "designCompliancePreserved": true,
+      "speakerNotesHidden": true,
+      "keyboardNavigationPresent": true,
+      "externalResourceIssues": [],
+      "contentIssues": [],
+      "designIssues": [],
+      "repairAttempted": false,
+      "fallbackUsed": false
+    },
     "generationSummary": {
       "slideCount": 5,
       "sourceFactCount": 8,
@@ -129,13 +188,20 @@ Content-Type: `text/html; charset=utf-8`
 - `sourceContent`、`deckBrief.purpose`、`deckBrief.audience` 必填。
 - `chartEmphasis` 是 free text，不能被視為 source truth。
 - `segmentationGuidance` 是 free text，只能作為 semantic segmentation 偏好，不能被視為 source truth。
+- `language` 可引導輸出語言；tone-specific control 第一版沒有 consumer，不屬於 request contract。
 - LLM provider、model 與 design-planning skill usage 由 backend flow 配置，不是使用者 request/response contract。
 - Design planning 與 critique 是固定 flow 能力，不提供使用者 opt-in/opt-out 欄位，且不得改寫來源事實。
+- Response 必須包含 HTML-generation-consumable `designPlanningResult`，包含 design system、per-slide pattern assignments、chart treatment plans、visual hierarchy plans、accessibility notes、design review notes 與 consistency validation。
+- Render 階段使用 backend-configured LLM-assisted HTML generation，輸入必須是 valid `SlideDeck`、`DesignPlanningResult` 與 HTML generation constraints。
+- HTML generation provider/model 由 backend runtime 配置，不是 request/response contract。
+- LLM-generated HTML 必須先通過 deterministic validation，檢查 self-contained resource boundary、slide count/order、content fidelity、design compliance、speaker notes non-rendering、keyboard navigation 與 basic responsive readiness。
+- 初次 LLM HTML validation 失敗時最多允許一次 HTML repair；repair 只能修 HTML/contract/design compliance，不得改寫 slide semantics 或新增 facts。
+- Repair 後仍失敗時，系統必須使用 conservative fallback HTML renderer 或回傳可審查失敗原因，並保留 validation issues 與 fallback decision。
 - Deck planning v1 不呼叫 LLM；`DeckPlanner` 產生 deterministic `DeckPlanProposal`，`DeckCompiler` 驗證 references 後產出 `SlideDeck`。
 - Deck order 必須是 opening -> source-order content slides -> conditional closing；不得自動把 metrics、risks 或 decisions 移到來源順序前面。
 - Deck planning v1 只使用 `slideKind: "opening" | "content" | "closing"`，不使用 `narrativeType`、complex role 或 appendix。
 - 每張 slide 必須包含 `slideKind`、source-grounded `outline`、`layoutIntent` 與必填 `speakerNotesDraft`；`speakerNotesDraft` 必須保守、最多 400 字元且不得新增 unsupported claim。
-- HTML rendering v1 不得在 presentation view 呈現 `speakerNotesDraft`。
-- ui-ux-pro-max 只能在 valid `SlideDeck` 後做 design planning，並在 HTML rendering 後做 critique；不得改變 deck order、title/message wording、outline meaning、speaker notes factual content 或 review warnings。
-- Response 必須包含 `slideDeck`、`slideDeck.reviewReport`、self-contained HTML 與 `generationSummary`。
+- HTML generation v1 不得在 presentation view 呈現 `speakerNotesDraft`。
+- ui-ux-pro-max 只能在 valid `SlideDeck` 後做 design planning，並在 HTML generation/validation 後做 critique；不得改變 deck order、title/message wording、outline meaning、speaker notes factual content 或 review warnings。
+- Response 必須包含 `slideDeck`、`designPlanningResult`、`slideDeck.reviewReport`、self-contained HTML、`htmlGenerationValidation` 與 `generationSummary`。
 - Generated preview 是 session-only，不得暗示 persistence。

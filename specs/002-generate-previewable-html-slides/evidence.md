@@ -252,3 +252,37 @@ This file records implementation and verification evidence for feature 002.
   - `pnpm --filter @slides-agent/web build` passed.
   - `pnpm exec prettier --check packages/domain/src/deck packages/domain/src/index.ts packages/domain/AGENTS.md specs/002-generate-previewable-html-slides/tasks.md specs/002-generate-previewable-html-slides/evidence.md` passed.
   - `git diff --check` passed.
+
+### 2026-06-02 - US2 Web Preview, Panels, Download, and Keyboard Navigation
+
+- Completed the US2 local web preview surface:
+  - `SlideGenerationForm` collects source content, purpose, audience, style direction, chart emphasis, segmentation guidance, and language.
+  - `SlidePreviewPanel` renders generated self-contained HTML through an iframe using the API `previewArtifact.html`.
+  - `ReviewReportPanel`, `SlideJsonPanel`, `DesignPlanningPanel`, `HtmlGenerationValidationPanel`, and `GenerationSummaryPanel` expose the required reviewable artifacts.
+  - `download-html.ts` builds a self-contained HTML data URL for `preview-slides.html`.
+- Added Playwright route test `apps/web/tests/e2e/preview-navigation.spec.ts`:
+  - mocks `POST /api/slides/preview`;
+  - submits the local form;
+  - verifies generated iframe content;
+  - verifies `ArrowRight` and `ArrowLeft` keyboard navigation inside the generated HTML deck.
+- Added `apps/web/playwright.config.ts` with a Vite web server on `127.0.0.1:4173`.
+- Validation evidence:
+  - Initial web component tests failed because the form and panel components did not exist.
+  - Initial Playwright run failed because sandboxed execution could not bind the Vite dev server to localhost.
+  - Escalated Playwright run then failed because Chromium was not installed.
+  - `pnpm --filter @slides-agent/web exec playwright install chromium` completed successfully.
+  - `pnpm --filter @slides-agent/web test:e2e` passed: 1 Chromium test.
+  - `pnpm --filter @slides-agent/web test` passed: 2 files / 2 tests.
+  - `pnpm --filter @slides-agent/web build` passed.
+
+### 2026-06-02 - US2 ui-ux-pro-max Form Refinement
+
+- Refined the local web input form as a ui-ux-pro-max planning surface without changing the API request contract:
+  - split the form into Source, Brief, Design direction, and Planning sections;
+  - added style and chart segmented presets while preserving free-text overrides;
+  - kept `sourceContent`, `purpose`, `audience`, `styleDirection`, `chartEmphasis`, `segmentationGuidance`, and `language` as the submitted payload fields;
+  - added responsive, work-focused styling with visible focus states, stable spacing, and mobile single-column layout.
+- Validation evidence:
+  - `pnpm --filter @slides-agent/web test` passed: 2 files / 2 tests.
+  - `pnpm --filter @slides-agent/web build` passed.
+  - `pnpm --filter @slides-agent/web test:e2e` passed: 1 Chromium test.

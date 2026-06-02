@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "node --env-file=../../.env --import tsx src/main.ts",
     "build": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
@@ -15,5 +16,8 @@
     "class-validator": "^0.14.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.22.4"
   }
 }

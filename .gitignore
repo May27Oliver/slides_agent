@@ -1,8 +1,10 @@
 node_modules/
 dist/
+build/
 coverage/
 .agents/
 .claude/
+.codex/
 .coding_agent_tasks/
 .mcp.json
 .DS_Store

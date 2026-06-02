@@ -5,13 +5,13 @@ export {
   validateSemanticSegmentationOutput,
   type ContractValidationError,
   type SemanticSegmentationValidationResult
-} from "@/semantic-segmentation";
+} from "./semantic-segmentation";
 
 export {
   validateGeneratePreviewRequest,
   type ContractError,
   type PreviewRequestValidationResult
-} from "@/preview-request";
+} from "./preview-request";
 
 export interface DeckBriefContract {
   purpose: string;
@@ -20,7 +20,6 @@ export interface DeckBriefContract {
   chartEmphasis?: string;
   segmentationGuidance?: string;
   language?: string;
-  tone?: string;
 }
 
 export interface GeneratePreviewRequestContract {
@@ -30,7 +29,23 @@ export interface GeneratePreviewRequestContract {
 
 export interface PreviewArtifactContract {
   html: string;
+  htmlGenerationValidation: HtmlGenerationValidationContract;
   generationSummary: GenerationSummaryContract;
+}
+
+export interface HtmlGenerationValidationContract {
+  status: "pass" | "repair_required" | "fallback_used" | "failed";
+  selfContained: boolean;
+  slideCountAndOrderPreserved: boolean;
+  contentFidelityPreserved: boolean;
+  designCompliancePreserved: boolean;
+  speakerNotesHidden: boolean;
+  keyboardNavigationPresent: boolean;
+  externalResourceIssues: string[];
+  contentIssues: string[];
+  designIssues: string[];
+  repairAttempted: boolean;
+  fallbackUsed: boolean;
 }
 
 export interface GenerationSummaryContract {
@@ -42,5 +57,6 @@ export interface GenerationSummaryContract {
 
 export interface GeneratePreviewResponseContract {
   slideDeck: unknown;
+  designPlanningResult: unknown;
   previewArtifact: PreviewArtifactContract;
 }

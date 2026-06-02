@@ -2,7 +2,7 @@
 
 ## Bounded Context
 
-`SlideGeneration` 是本 feature 的 bounded context。它負責從 pasted source content 與 deck brief 產生可審查的 `SlideDeck`、`ReviewReport`、`DesignSystem` 與 self-contained `PreviewArtifact`。Publishing、persistence、deck history、file upload、PPTX export 與 full editor 不屬於此 context。
+`SlideGeneration` 是本 feature 的 bounded context。它負責從 pasted source content 與 deck brief 產生可審查的 `SlideDeck`、`ReviewReport`、`DesignPlanningResult` 與 self-contained `PreviewArtifact`。Publishing、persistence、deck history、file upload、PPTX export 與 full editor 不屬於此 context。
 
 ## Ubiquitous Language
 
@@ -20,7 +20,16 @@
 - `SlideDeck`: 可 render 的 structured slide artifact。
 - `ReviewReport`: generation 的審查與追溯報告。
 - `DesignSystem`: deck-level 視覺規則。
-- `DesignPlanningResult`: valid `SlideDeck` 進入 HTML renderer 前的 design handoff artifact。
+- `DesignPlanningResult`: valid `SlideDeck` 進入 HTML generation 前的 design handoff artifact。
+- `SlidePatternAssignment`: 每張 slide 的 HTML-generation-consumable primary pattern。
+- `ChartTreatmentPlan`: 每個 chart intent 的 HTML-generation-consumable visual treatment 或 fallback rationale。
+- `VisualHierarchyPlan`: 每張 slide 的 primary/supporting/secondary/de-emphasized 層級規劃。
+- `AccessibilityNotes`: 設計與 rendering 的可及性風險與檢查筆記。
+- `DesignReviewNotes`: style interpretation、rejected suggestions、HTML generation constraints 與 manual verification notes。
+- `DesignConsistencyValidation`: deck-level consistency validation result。
+- `HtmlGenerationAttempt`: render 階段的 backend-configured LLM HTML generation attempt。
+- `HtmlGenerationValidation`: deterministic validation result for generated HTML。
+- `HtmlRepairAttempt`: 初次 LLM HTML validation 失敗時的一次性 HTML repair attempt。
 - `PreviewArtifact`: session-only preview artifact。
 
 ## Entities and Value Objects
@@ -148,7 +157,6 @@ Fields:
 - `chartEmphasis?: string`
 - `segmentationGuidance?: string`
 - `language?: string`
-- `tone?: string`
 
 Validation:
 
@@ -156,6 +164,7 @@ Validation:
 - `chartEmphasis` is free text and MUST NOT be interpreted as source truth.
 - `segmentationGuidance` is free text and MUST be treated only as segmentation preference, not source truth.
 - Conflicting or fact-changing segmentation guidance MUST be ignored and surfaced in warnings/evidence.
+- `language` MAY guide generated artifact language. Tone-specific control is intentionally out of scope until a consumer proves the need.
 
 ### SourceFact
 
@@ -185,7 +194,6 @@ Fields:
 
 - `id: string`
 - `sourceFactIds: string[]`
-- `userEmphasisMatched: boolean`
 - `visualizationType: "chart" | "metric_card" | "table" | "timeline" | "fallback_text" | "review_note"`
 - `rationale: string`
 - `missingContext: string[]`
@@ -203,7 +211,6 @@ Represents deterministic deck planning output before final `SlideDeck` compilati
 
 Fields:
 
-- `id: string`
 - `title: string`
 - `subtitle?: string`
 - `slides: DeckSlideProposal[]`
@@ -296,31 +303,140 @@ Fields:
 - `layoutGrid: string`
 - `slidePatterns: string[]`
 - `chartStyle: string`
-- `uiUxProMaxNotes: string[]`
 
 Validation:
 
 - Must be deck-level, not per-slide arbitrary styles.
-- ui-ux-pro-max notes MUST NOT add facts or change source meaning.
+- Notes from ui-ux-pro-max MUST live in `DesignReviewNotes`, not inside HTML generation tokens.
 
 ### DesignPlanningResult
 
-Represents design handoff after `DeckCompiler` and before HTML rendering.
+Represents design handoff after `DeckCompiler` and before HTML generation.
 
 Fields:
 
 - `designSystem: DesignSystem`
-- `slidePatternMap: Record<string, string>`
-- `chartTreatmentNotes: string[]`
-- `accessibilityNotes: string[]`
-- `critiqueNotes: string[]`
+- `slidePatternAssignments: SlidePatternAssignment[]`
+- `chartTreatmentPlans: ChartTreatmentPlan[]`
+- `visualHierarchyPlans: VisualHierarchyPlan[]`
+- `accessibilityNotes: AccessibilityNotes`
+- `designReviewNotes: DesignReviewNotes`
+- `consistencyValidation: DesignConsistencyValidation`
 
 Validation:
 
-- MUST be produced from a valid `SlideDeck` plus `DeckBrief.styleDirection`.
+- MUST be produced from a valid `SlideDeck`, `DeckBrief`, `ChartIntent[]`, style direction, and slide `layoutIntent`.
 - MAY use ui-ux-pro-max as design planning guidance.
 - MUST NOT change slide order, title/message wording, outline meaning, source facts, speaker notes factual content, or review warnings.
 - MUST NOT depend on `speakerNotesDraft` because HTML v1 does not render speaker notes.
+- Every referenced slide and chart intent MUST exist.
+- HTML generation prompt and validator MUST consume `designSystem`, slide pattern assignments, chart treatment plans, and visual hierarchy plans instead of reinterpreting style direction.
+
+### SlidePatternAssignment
+
+Represents the selected primary renderer pattern for one slide.
+
+Fields:
+
+- `slideId: string`
+- `primaryPattern: string`
+- `density: "low" | "medium" | "high"`
+- `layoutIntent: LayoutIntent`
+- `rationale: string`
+
+Validation:
+
+- `slideId` MUST reference a slide in the valid `SlideDeck`.
+- Each slide MUST have exactly one primary pattern assignment.
+- Pattern selection MUST be supported by `slideKind`, `outline`, `layoutIntent`, `ChartIntent`, or `DesignSystem`.
+- Pattern selection MUST NOT introduce content semantics or arbitrary per-slide styling.
+
+### ChartTreatmentPlan
+
+Represents visual treatment for a chart intent.
+
+Fields:
+
+- `chartIntentId: string`
+- `treatment: "chart" | "metric_card" | "table" | "timeline" | "fallback_text" | "review_note"`
+- `labelingNotes: string[]`
+- `preservedContext: string[]`
+- `fallbackRationale?: string`
+
+Validation:
+
+- `chartIntentId` MUST reference an existing `ChartIntent`.
+- Treatment MUST preserve original values, units, periods, denominators, and context.
+- Unsupported chart treatments MUST use fallback text or review note.
+
+### VisualHierarchyPlan
+
+Represents per-slide hierarchy before rendering.
+
+Fields:
+
+- `slideId: string`
+- `primaryMessage: string`
+- `supportingEvidence: string[]`
+- `secondaryDetails: string[]`
+- `deEmphasizedContent: string[]`
+
+Validation:
+
+- `slideId` MUST reference a slide in the valid `SlideDeck`.
+- `primaryMessage` MUST derive from slide title/message/outline without changing meaning.
+- De-emphasized content remains reviewable and MUST NOT be silently dropped.
+
+### AccessibilityNotes
+
+Represents accessibility risks and verification notes for design/rendering.
+
+Fields:
+
+- `colorContrast: string[]`
+- `textSize: string[]`
+- `readingOrder: string[]`
+- `chartLabeling: string[]`
+- `keyboardNavigation: string[]`
+- `responsiveRisks: string[]`
+
+Validation:
+
+- Notes SHOULD identify automated checks when possible.
+- Notes MUST include manual verification needs for visual risks that cannot be fully automated.
+
+### DesignReviewNotes
+
+Represents review notes for design decisions.
+
+Fields:
+
+- `styleInterpretation: string[]`
+- `rejectedSuggestions: string[]`
+- `htmlGenerationConstraints: string[]`
+- `consistencyConcerns: string[]`
+- `manualVerificationNeeds: string[]`
+
+Validation:
+
+- Rejected suggestions MUST explain whether the reason is source fidelity, HTML generation support, accessibility, or deck consistency.
+- Notes MUST NOT expose backend provider/model selection as user-facing configuration.
+
+### DesignConsistencyValidation
+
+Represents deck-level design consistency validation.
+
+Fields:
+
+- `status: "pass" | "needs_manual_review" | "fallback_used"`
+- `checkedDimensions: string[]`
+- `issues: string[]`
+- `fallbackApplied: boolean`
+
+Validation:
+
+- MUST check palette, typography, spacing, component style, chart style, visual density, and pattern usage.
+- Inconsistent or unsupported output MUST trigger conservative fallback or manual verification notes.
 
 ### SlideDeck
 
@@ -333,14 +449,14 @@ Fields:
 - `subtitle?: string`
 - `purpose: string`
 - `audience: string`
-- `designSystem: DesignSystem`
 - `slides: Slide[]`
 - `reviewReport: ReviewReport`
 
 Validation:
 
 - MUST contain at least one slide.
-- MUST include design system and review report.
+- MUST include review report.
+- MUST NOT include design system; design system belongs to `DesignPlanningResult`.
 - Slide order MUST be stable for the same deterministic input.
 - MUST be produced by `DeckCompiler`, not directly by LLM.
 
@@ -369,7 +485,72 @@ Validation:
 - `outline` MUST include at least one item and each item MUST include source trace.
 - `sourceTrace` SHOULD reference source sections or source facts when slide content derives from source.
 - `speakerNotesDraft` MUST be conservative, at most 400 characters, and MUST NOT add unsupported claims.
-- HTML renderer v1 MUST NOT render `speakerNotesDraft` in the presentation view.
+- HTML generation v1 MUST NOT render `speakerNotesDraft` in the presentation view.
+
+### HtmlGenerationAttempt
+
+Represents one render-stage backend-configured LLM attempt to produce self-contained HTML.
+
+Fields:
+
+- `attemptNumber: 1 | 2`
+- `inputSlideDeckId: string`
+- `inputDesignPlanningResultHash: string`
+- `promptBoundaryNotes: string[]`
+- `html: string`
+- `validation: HtmlGenerationValidation`
+- `repairAttempt?: HtmlRepairAttempt`
+- `fallbackUsed: boolean`
+
+Validation:
+
+- MUST be created only after valid `SlideDeck` and `DesignPlanningResult` exist.
+- MUST NOT expose provider/model selection as user-facing request/response configuration.
+- Prompt input MUST include HTML generation constraints and MUST instruct the LLM to preserve slide count/order/title/message/outline meaning, source-supported content, chart numbers/units/context, and review boundaries.
+- Prompt input MUST instruct the LLM to avoid external CSS, JavaScript, images, fonts, CDNs, or backend dependencies.
+
+### HtmlGenerationValidation
+
+Represents deterministic validation for LLM-generated or fallback HTML.
+
+Fields:
+
+- `status: "pass" | "repair_required" | "fallback_used" | "failed"`
+- `selfContained: boolean`
+- `slideCountAndOrderPreserved: boolean`
+- `contentFidelityPreserved: boolean`
+- `designCompliancePreserved: boolean`
+- `speakerNotesHidden: boolean`
+- `keyboardNavigationPresent: boolean`
+- `externalResourceIssues: string[]`
+- `contentIssues: string[]`
+- `designIssues: string[]`
+- `repairAttempted: boolean`
+- `fallbackUsed: boolean`
+
+Validation:
+
+- MUST reject HTML with external CSS, JavaScript, image, font, CDN, or backend dependencies.
+- MUST reject HTML that changes slide order, omits slides, changes title/message wording, changes outline meaning, renders `speakerNotesDraft`, or adds unsupported facts.
+- MUST check that slide patterns, chart treatments, visual hierarchy, and design system tokens map back to `DesignPlanningResult` or conservative fallback choices.
+- SHOULD identify manual verification needs for responsive/layout overlap risks that cannot be fully automated.
+
+### HtmlRepairAttempt
+
+Represents one bounded LLM repair attempt after initial HTML validation fails.
+
+Fields:
+
+- `attemptNumber: 1`
+- `inputValidationIssues: string[]`
+- `repairInstructions: string[]`
+- `repairedValidation: HtmlGenerationValidation`
+
+Validation:
+
+- Only one HTML repair attempt is allowed per generation.
+- Repair MUST be constrained to HTML structure, self-contained resource boundary, navigation, and design compliance.
+- Repair MUST NOT reinterpret source content, rewrite slide title/message/outline semantics, change chart numbers/units/context, or add unsupported facts.
 
 ### ContentBlock
 
@@ -413,12 +594,14 @@ Fields:
 - `html: string`
 - `slideDeck: SlideDeck`
 - `generationSummary: GenerationSummary`
+- `htmlGenerationValidation: HtmlGenerationValidation`
 - `verificationStatus: VerificationStatus`
 
 Validation:
 
 - MUST NOT imply persistence.
 - `html` MUST be self-contained and openable without backend.
+- `htmlGenerationValidation` MUST pass, use conservative fallback, or record a reviewable failure before download is offered.
 
 ## Domain Services
 
@@ -470,16 +653,35 @@ Responsibilities:
 
 Responsibilities:
 
-- Convert style direction into `DesignSystem`.
-- Apply ui-ux-pro-max guidance after `DeckCompiler` for design planning and after HTML rendering for critique.
+- Consume valid `SlideDeck`, `DeckBrief`, `ChartIntent[]`, style direction, and slide `layoutIntent`.
+- Convert style direction into HTML-generation-consumable `DesignSystem`.
+- Produce per-slide `SlidePatternAssignment`, `ChartTreatmentPlan`, `VisualHierarchyPlan`, `AccessibilityNotes`, `DesignReviewNotes`, and `DesignConsistencyValidation`.
+- Apply ui-ux-pro-max guidance after `DeckCompiler` for design planning and after HTML generation/validation for critique.
 - Enforce source-fidelity boundary.
 - Avoid title/message wording changes in v1.
 
-### HtmlDeckRenderer
+### HtmlGenerator
 
 Responsibilities:
 
-- Render `SlideDeck` into self-contained HTML.
+- Build the backend-configured LLM prompt from valid `SlideDeck`, `DesignPlanningResult`, and HTML generation constraints.
+- Request self-contained HTML from the HTML generation adapter.
+- Preserve the sensitive-content/provider boundary by keeping provider/model backend-owned.
+- Never call the LLM before `SlideDeck` and `DesignPlanningResult` are valid.
+
+### HtmlGenerationValidator
+
+Responsibilities:
+
+- Validate LLM-generated HTML for self-contained resources, content fidelity, design compliance, speaker notes non-rendering, keyboard navigation, and basic responsive readiness.
+- Produce `HtmlGenerationValidation` with actionable issues.
+- Trigger at most one bounded HTML repair attempt when validation fails.
+
+### FallbackHtmlRenderer
+
+Responsibilities:
+
+- Render conservative self-contained HTML from `SlideDeck` and `DesignPlanningResult` when LLM HTML generation or repair fails.
 - Include scoped CSS and keyboard navigation script.
 - Preserve 16:9 layout.
 - Do not render `speakerNotesDraft` in the presentation view.
@@ -492,6 +694,8 @@ DraftInput
 -> ProposedDeckPlan
 -> PlannedSlideDeck
 -> DesignedSlideDeck
+-> GeneratedHtmlCandidate
+-> ValidatedHtmlArtifact
 -> RenderedPreviewArtifact
 -> DownloadedHtml
 ```

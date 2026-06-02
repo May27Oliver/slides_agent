@@ -9,7 +9,7 @@ export interface ContentCorePlannerInput {
 }
 
 export interface PlannedContentCore {
-  deck: Omit<SlideDeck, "designSystem" | "reviewReport">;
+  deck: Omit<SlideDeck, "reviewReport">;
   assumptions: string[];
   omittedOrCompressedContent: string[];
   uncertainClaims: string[];

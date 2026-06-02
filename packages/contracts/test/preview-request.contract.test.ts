@@ -44,8 +44,7 @@ describe("Generate preview request contract", () => {
         styleDirection: "高密度 PM planning deck",
         chartEmphasis: "Highlight KPI changes and schedule risks",
         segmentationGuidance: "Group by goals, decisions, risks, constraints, and next steps",
-        language: "zh-TW",
-        tone: "direct"
+        language: "zh-TW"
       }
     });
 
@@ -110,6 +109,28 @@ describe("Generate preview request contract", () => {
         code: "UNSUPPORTED_OPTION",
         message: "Generation settings are backend-configured and cannot be set in request",
         fields: ["options"]
+      }
+    });
+  });
+
+  it("rejects tone because it has no generation consumer in this slice", async () => {
+    const { validateGeneratePreviewRequest } = await loadPreviewRequestModule();
+
+    const result = validateGeneratePreviewRequest({
+      sourceContent: "Q3 planning notes",
+      deckBrief: {
+        purpose: "PM planning review",
+        audience: "Product and engineering leads",
+        tone: "direct"
+      }
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        code: "UNSUPPORTED_OPTION",
+        message: "Unsupported deck brief fields are not accepted by this generation slice",
+        fields: ["deckBrief.tone"]
       }
     });
   });

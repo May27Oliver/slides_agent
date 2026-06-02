@@ -1,3 +1,11 @@
+import type {
+  SemanticSegmentationRepairer,
+  SemanticSegmentationRepairInput,
+  SemanticSegmenter,
+  SemanticSegmenterInput
+} from "@slides-agent/domain";
+import type { LlmCompletionClient } from "@/adapters/llm/openai-responses.client";
+
 export interface BuildSemanticSegmentationPromptInput {
   sourceContent: string;
   purpose: string;
@@ -17,6 +25,39 @@ export interface SemanticSegmentationPrompt {
   system: string;
   user: string;
   responseSchemaId: string;
+}
+
+export interface SemanticSegmentationAdapterOptions {
+  client: LlmCompletionClient;
+  model?: string;
+}
+
+export class SemanticSegmentationAdapter
+  implements SemanticSegmenter, SemanticSegmentationRepairer
+{
+  constructor(private readonly options: SemanticSegmentationAdapterOptions) {}
+
+  async segment(input: SemanticSegmenterInput): Promise<unknown> {
+    const prompt = buildSemanticSegmentationPrompt(input);
+    const rawOutput = await this.options.client.complete({
+      ...(this.options.model ? { model: this.options.model } : {}),
+      operation: "semantic_segmentation",
+      prompt: `${prompt.system}\n\n${prompt.user}`
+    });
+
+    return parseJsonOutput(rawOutput);
+  }
+
+  async repair(input: SemanticSegmentationRepairInput): Promise<unknown> {
+    const prompt = buildSemanticSegmentationRepairPrompt(input);
+    const rawOutput = await this.options.client.complete({
+      ...(this.options.model ? { model: this.options.model } : {}),
+      operation: "semantic_segmentation_repair",
+      prompt: `${prompt.system}\n\n${prompt.user}`
+    });
+
+    return parseJsonOutput(rawOutput);
+  }
 }
 
 export function buildSemanticSegmentationPrompt(
@@ -94,4 +135,19 @@ export function buildSemanticSegmentationRepairPrompt(
 
 function outputLanguage(language?: string): string {
   return language?.trim() || "Follow the dominant language of SOURCE_CONTENT.";
+}
+
+function parseJsonOutput(rawOutput: string): unknown {
+  try {
+    return JSON.parse(stripJsonFence(rawOutput));
+  } catch {
+    throw new Error("LLM semantic segmentation returned invalid JSON.");
+  }
+}
+
+function stripJsonFence(rawOutput: string): string {
+  return rawOutput
+    .trim()
+    .replace(/^```(?:json)?\s*/iu, "")
+    .replace(/\s*```$/u, "");
 }
