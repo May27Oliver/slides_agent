@@ -1,20 +1,16 @@
 <!--
 Sync Impact Report
-Version change: 2.0.0 -> 3.0.0
+Version change: 3.1.0 -> 3.2.0
 Modified principles:
-- Changed: prior provider boundary -> Backend-Configured LLM Boundary
-- Removed: provider/model selection from user request and response contracts
-- Removed: provider disclosure from generated review reports by default
-- Clarified: provider/model usage is backend-owned operational configuration with internal evidence
-- Clarified: ui-ux-pro-max is a fixed generation-flow design layer, not a user option
+- Expanded: Code Quality and Simplicity with anti-over-design consumer/evidence gate
 Added sections:
 - None
 Removed sections:
 - None
 Templates requiring updates:
 - Updated: .specify/templates/plan-template.md
-- Updated: .specify/templates/spec-template.md
 - Updated: .specify/templates/tasks-template.md
+- No update needed: .specify/templates/spec-template.md
 Follow-up TODOs:
 - None
 -->
@@ -127,8 +123,26 @@ Proof-of-concept, MVP, and internal-tool work SHOULD optimize for clarity, trace
 and reversibility over premature scale. Refactoring is allowed when it removes real
 duplication, clarifies domain boundaries, or simplifies a verified behavior.
 
+Domain modules MUST keep file roles readable. Type-only declarations SHOULD live in
+`*.types.ts` files. External capability interfaces and adapter boundaries SHOULD live in
+`*.port.ts` files. Domain behavior SHOULD live in files named for the behavior role, such
+as `*.planner.ts`, `*.validator.ts`, `*.extractor.ts`, `*.parser.ts`, `*.service.ts`, or a
+specific flow name. A non-trivial file MUST NOT mix type-only declarations, external
+ports, and orchestration behavior unless the feature plan documents why the temporary
+mixing is simpler and how it will be unwound.
+
+Do not over-design domain artifacts. A new type, field, enum value, service, planner,
+validator, adapter boundary, or intermediate artifact MUST have at least one current
+consumer in the same feature slice, or a near-term task with an independently testable
+acceptance path that consumes it. If the consumer is future work, the feature plan MUST
+record the rejected simpler alternative and the task that will prove the artifact is
+useful. Artifacts that remain unconsumed after the planned slice MUST be removed or
+simplified before completion unless the deferral is explicitly approved in evidence.
+
 Rationale: The project is exploring a new agent workflow. Simple, readable increments make
-the system easier to validate and change.
+the system easier to validate and change. Domain structures that humans cannot see in
+current behavior are risk: they increase review cost and make the agent flow look more
+capable than it is.
 
 ### VIII. Test-First Engineering and DDD
 
@@ -145,6 +159,12 @@ Domain behavior MUST be modeled with DDD discipline: use clear ubiquitous langua
 domain concepts, entities, value objects, domain services, or policies. Core rules MUST
 NOT be scattered across UI, controllers, provider adapters, persistence code, or rendering
 code.
+
+DDD artifacts MUST make their role obvious from the file name and import path. `types`
+files define language and shapes only. `port` files define what the domain needs from
+outside the domain. Behavior files contain executable domain decisions. Tests SHOULD
+import behavior from behavior files and types from type or port files, so refactoring does
+not blur domain language with execution flow.
 
 Rationale: TDD proves behavior against the spec; DDD keeps slide generation, source
 fidelity, review reporting, design planning, rendering, and publishing boundaries clear.
@@ -261,4 +281,4 @@ Compliance review is required during planning and before feature completion. If 
 deferred, the deferral MUST include a specific follow-up task and cannot be hidden in
 general prose.
 
-**Version**: 2.0.0 | **Ratified**: 2026-05-29 | **Last Amended**: 2026-06-01
+**Version**: 3.2.0 | **Ratified**: 2026-05-29 | **Last Amended**: 2026-06-02

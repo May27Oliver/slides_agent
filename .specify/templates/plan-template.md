@@ -66,9 +66,17 @@ The plan MUST explicitly answer each gate below:
   or kept as text when the data is insufficient.
 - **Code Quality and Simplicity**: Explain the smallest readable approach. Any added
   abstraction, framework, service, or complexity MUST include the rejected simpler
-  alternative.
+  alternative. Confirm non-trivial domain modules separate type-only declarations,
+  external ports, and executable behavior into clearly named files such as `*.types.ts`,
+  `*.port.ts`, `*.planner.ts`, `*.validator.ts`, `*.extractor.ts`, `*.parser.ts`, or
+  `*.service.ts`. For every new domain type, field, enum value, service, planner,
+  validator, adapter boundary, or intermediate artifact, identify the current consumer or
+  the near-term independently testable task that will consume it; otherwise choose the
+  rejected simpler alternative.
 - **TDD and DDD**: Identify the first failing tests or verification tasks, the main
-  domain concepts, bounded context, and where domain behavior will live.
+  domain concepts, bounded context, where domain behavior will live, and which files hold
+  domain language (`*.types.ts`), adapter boundaries (`*.port.ts`), and executable domain
+  decisions.
 - **Lean Test Scope**: Explain why the planned tests are sufficient and not redundant;
   avoid implementation-detail assertions unless they guard an explicit contract.
 - **Consistent UX and Language**: Define the terms that must remain consistent across UI,

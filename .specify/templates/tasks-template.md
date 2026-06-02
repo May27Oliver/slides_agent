@@ -83,12 +83,17 @@ Examples of foundational tasks (adjust based on your project):
   evidence
 - [ ] T013 Define domain concepts, bounded context, and domain service boundaries from the
   accepted spec
+- [ ] T013a Define domain file role boundaries: `*.types.ts` for type-only declarations,
+  `*.port.ts` for external capability interfaces, and behavior files for planners,
+  validators, extractors, parsers, services, or named flows
 - [ ] T014 Define concise test strategy that maps each spec requirement to focused tests or
   executable verification tasks
 - [ ] T015 Define evidence capture plan for decisions, generated outputs, operational
   results, and manual verification paths
 - [ ] T016 Identify any added complexity and document the rejected simpler alternative in
   the feature plan
+- [ ] T016a Identify each new domain artifact's current consumer or near-term testable
+  consuming task; remove or simplify artifacts with no consumer
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -225,6 +230,10 @@ Examples of foundational tasks (adjust based on your project):
 - Services before endpoints
 - Core implementation before integration
 - Refactor after tests pass, keeping domain boundaries clear
+- Refactor after tests pass, keeping type-only declarations, ports, and executable
+  behavior in clearly named files
+- Remove or simplify unconsumed domain artifacts before story completion unless evidence
+  explicitly approves the deferral and names the consuming task
 - Story complete before moving to next priority
 
 ### Parallel Opportunities
