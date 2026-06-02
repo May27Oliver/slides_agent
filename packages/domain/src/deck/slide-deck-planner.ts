@@ -1,78 +1,63 @@
 import { ChartIntentPlanner } from "@/content-core/chart-intent-planner";
 import { extractSourceFacts } from "@/content-core/source-fact-extractor";
 import { segmentSourceContent } from "@/content-core/semantic-segmentation-validator";
-import { planSemanticSlideTitles } from "@/content-core/semantic-title-planner";
-import type { Slide, SlideDeck } from "@/deck/types";
+import { compileDeckPlanProposal } from "@/deck/deck-compiler";
+import { createDeckPlanProposal } from "@/deck/deck-planner";
+import type { SlideDeck } from "@/deck/deck.types";
+import type { SlideDeckPlannerInput } from "@/deck/deck-generation.types";
 import { defaultDesignSystem } from "@/design/default-design-system";
-import { buildReviewReport } from "@/review/review-report-builder";
-
-export interface DeckBrief {
-  purpose: string;
-  audience: string;
-  styleDirection?: string;
-  chartEmphasis?: string;
-  segmentationGuidance?: string;
-  language?: string;
-  tone?: string;
-}
-
-export interface SlideDeckPlannerInput {
-  sourceContent: string;
-  deckBrief: DeckBrief;
-}
+import { buildReviewReport, buildSegmentationReviewNotes } from "@/review/review-report-builder";
 
 export function planSlideDeck(input: SlideDeckPlannerInput): SlideDeck {
   const segmentation = segmentSourceContent({ sourceContent: input.sourceContent });
   const sections = segmentation.sections;
   const facts = extractSourceFacts(input.sourceContent, sections);
-  const titles = planSemanticSlideTitles(sections);
   const chartIntents = new ChartIntentPlanner().plan({
     sourceFacts: facts,
     ...(input.deckBrief.chartEmphasis ? { chartEmphasis: input.deckBrief.chartEmphasis } : {})
   });
-  const slides = titles.map<Slide>((title, index) => {
-    const section = sections.find((candidate) => candidate.id === title.sourceSectionId);
-
-    return {
-      id: `slide_${String(index + 1).padStart(3, "0")}`,
-      type: index === 0 ? "metrics" : "content",
-      title: title.title,
-      message: section?.heading ?? "Planning detail",
-      layout: index === 0 ? "metrics-summary" : "content-summary",
-      contentBlocks: [
-        {
-          kind: "bullets",
-          content: {
-            items: section?.text.split("\n") ?? []
-          }
-        }
-      ],
-      sourceTrace: facts
-        .filter((fact) => fact.sourceSectionId === section?.id)
-        .map((fact) => fact.id)
-    };
+  const proposal = createDeckPlanProposal({
+    sourceSections: sections,
+    sourceFacts: facts,
+    chartIntents: chartIntents.intents,
+    deckBrief: input.deckBrief
+  });
+  const reviewReport = buildReviewReport({
+    assumptions: [
+      "Slide titles and deck grouping are deterministic summaries of source sections.",
+      ...proposal.planningNotes
+    ],
+    omittedOrCompressedContent: [],
+    uncertainClaims: [],
+    chartingDecisions: chartIntents.intents.map((intent) => ({
+      chartIntentId: intent.id,
+      decision: `Use ${intent.recommendedVisuals.join(" or ")} for ${intent.title}.`,
+      sourceFacts: intent.sourceFacts.map((fact) => fact.value),
+      rationale: intent.rationale
+    })),
+    humanReviewNotes: [
+      "Review generated slide grouping before presentation use.",
+      ...buildSegmentationReviewNotes(segmentation.validation)
+    ]
+  });
+  const compiled = compileDeckPlanProposal({
+    proposal: {
+      ...proposal,
+      title: documentTitle(input.sourceContent) ?? proposal.title
+    },
+    sourceSections: sections,
+    sourceFacts: facts,
+    chartIntents: chartIntents.intents,
+    deckBrief: input.deckBrief,
+    designSystem: defaultDesignSystem(input.deckBrief.styleDirection),
+    reviewReport
   });
 
-  return {
-    id: "deck_local_001",
-    title: documentTitle(input.sourceContent) ?? slides[0]?.title ?? "Generated slide deck",
-    purpose: input.deckBrief.purpose,
-    audience: input.deckBrief.audience,
-    designSystem: defaultDesignSystem(input.deckBrief.styleDirection),
-    slides,
-    reviewReport: buildReviewReport({
-      assumptions: ["Slide titles are deterministic summaries of source sections."],
-      omittedOrCompressedContent: [],
-      uncertainClaims: [],
-      chartingDecisions: chartIntents.intents.map((intent) => ({
-        chartIntentId: intent.id,
-        decision: `Use ${intent.recommendedVisuals.join(" or ")} for ${intent.title}.`,
-        sourceFacts: intent.sourceFacts.map((fact) => fact.value),
-        rationale: intent.rationale
-      })),
-      humanReviewNotes: ["Review generated slide grouping before presentation use."]
-    })
-  };
+  if (!compiled.ok) {
+    throw new Error(`Deck plan proposal failed validation: ${compiled.issues.join("; ")}`);
+  }
+
+  return compiled.slideDeck;
 }
 
 function documentTitle(sourceContent: string): string | undefined {

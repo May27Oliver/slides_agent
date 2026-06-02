@@ -24,6 +24,16 @@ export interface SourceFact {
   sourceSectionId?: string;
 }
 
+export interface DeckBrief {
+  purpose: string;
+  audience: string;
+  styleDirection?: string;
+  chartEmphasis?: string;
+  segmentationGuidance?: string;
+  language?: string;
+  tone?: string;
+}
+
 export type SlideType =
   | "title"
   | "section"
@@ -52,15 +62,68 @@ export interface ContentBlock {
   chartIntentId?: string;
 }
 
+export type SlideKind = "opening" | "content" | "closing";
+
+export type SlideOutlineEmphasis =
+  | "main_point"
+  | "evidence"
+  | "risk"
+  | "decision"
+  | "action"
+  | "context";
+
+export interface SlideOutlineItem {
+  text: string;
+  sourceTrace: string[];
+  emphasis: SlideOutlineEmphasis;
+}
+
+export interface LayoutIntent {
+  priority:
+    | "message_first"
+    | "metrics_first"
+    | "comparison"
+    | "timeline"
+    | "risk_matrix"
+    | "table_dense";
+  density: "low" | "medium" | "high";
+  emphasis: "narrative" | "numbers" | "risks" | "decisions" | "actions";
+}
+
+export interface DeckPlanProposal {
+  id: string;
+  title: string;
+  subtitle?: string;
+  slides: DeckSlideProposal[];
+  planningNotes: string[];
+}
+
+export interface DeckSlideProposal {
+  id: string;
+  slideKind: SlideKind;
+  title: string;
+  message: string;
+  sourceSectionIds: string[];
+  sourceFactIds: string[];
+  chartIntentIds: string[];
+  outline: SlideOutlineItem[];
+  layoutIntent: LayoutIntent;
+  speakerNotesDraft: string;
+  reviewNotes: string[];
+}
+
 export interface Slide {
   id: string;
+  slideKind: SlideKind;
   type: SlideType;
   title: string;
   message: string;
+  outline: SlideOutlineItem[];
   layout: string;
+  layoutIntent: LayoutIntent;
   contentBlocks: ContentBlock[];
   sourceTrace: string[];
-  speakerNotes?: string;
+  speakerNotesDraft: string;
 }
 
 export interface SlideDeck {

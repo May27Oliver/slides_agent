@@ -1,5 +1,5 @@
-import type { ChartIntent } from "@/content-core/chart-intent";
-import type { SourceContent, SlideDeck } from "@/deck/types";
+import type { ChartIntent } from "@/content-core/chart-intent.types";
+import type { SourceContent, SlideDeck } from "@/deck/deck.types";
 
 export interface ContentCorePlannerInput {
   sourceContent: SourceContent;

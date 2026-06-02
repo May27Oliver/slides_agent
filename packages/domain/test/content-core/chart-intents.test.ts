@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ChartIntentPlanner } from "@/content-core/chart-intent-planner";
-import type { SourceFact } from "@/deck/types";
+import type { SourceFact } from "@/deck/deck.types";
 import { readJsonFixture } from "../support/fixtures";
 
 interface ExpectedChartIntentsFixture {

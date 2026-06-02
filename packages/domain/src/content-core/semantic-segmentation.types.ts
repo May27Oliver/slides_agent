@@ -1,4 +1,4 @@
-import type { SourceSection } from "@/deck/types";
+import type { SourceSection } from "@/deck/deck.types";
 
 export type SourceQuoteRole = "heading" | "body" | "bullet" | "table" | "quote";
 export type SegmentationConfidence = "high" | "medium" | "low";
@@ -31,9 +31,19 @@ export interface SegmentationValidation {
   importantContentCoverageValid: boolean;
   fallbackUsed: boolean;
   issues: string[];
+  repairAttempted?: boolean;
+  repairSucceeded?: boolean;
+  repairNotes?: string[];
 }
 
 export interface SegmentedSourceContent {
   sections: Array<SourceSection & { segmentationSource: "llm" | "deterministic_fallback" }>;
   validation: SegmentationValidation;
+}
+
+export interface SegmentationRepairAttempt {
+  attemptNumber: 1;
+  inputValidationErrors: string[];
+  repairedSchemaValid: boolean;
+  repairNotes: string[];
 }

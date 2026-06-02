@@ -3,7 +3,7 @@ import type {
   SegmentationValidation,
   SemanticSegment,
   SemanticSegmentationOutput
-} from "@/content-core/semantic-segmentation";
+} from "@/content-core/semantic-segmentation.types";
 import { parseSourceSections } from "@/content-core/source-parser";
 
 interface ValidateSemanticSegmentsInput {

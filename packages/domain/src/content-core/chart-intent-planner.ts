@@ -1,5 +1,5 @@
-import type { ChartIntentInput, ChartIntentPlannerResult } from "@/content-core/chart-intent";
-import type { SourceFact } from "@/deck/types";
+import type { ChartIntentInput, ChartIntentPlannerResult } from "@/content-core/chart-intent.types";
+import type { SourceFact } from "@/deck/deck.types";
 
 export class ChartIntentPlanner {
   plan(input: ChartIntentInput): ChartIntentPlannerResult {

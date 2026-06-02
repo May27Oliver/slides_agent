@@ -1,4 +1,4 @@
-import type { SourceFact } from "@/deck/types";
+import type { SourceFact } from "@/deck/deck.types";
 
 export type VisualizationType =
   | "metric_card"

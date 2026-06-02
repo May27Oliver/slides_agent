@@ -12,7 +12,8 @@
 - 所有可自動化的 domain behavior 必須 TDD：先寫 failing test，確認 red，再做最小實作。
 - 每個 user-facing 行為與 agent decision flow 必須能被 Given/When/Then 或 focused test 獨立展示。
 - domain code 必須保留來源內容的重要事實、數字、決策、風險與限制，不得為了設計效果新增 unsupported facts。
-- 使用 `@/*` 做 package-local import，例如 `@/deck/types`。跨 package 才使用 `@slides-agent/contracts`。
+- 使用 `@/*` 做 package-local import，例如 `@/deck/deck.types`。跨 package 才使用 `@slides-agent/contracts`。
+- 非 trivial domain module 必須讓檔案角色從名稱看得出來：type-only declarations 放在 `*.types.ts`，外部能力介面或 adapter boundary 放在 `*.port.ts`，可執行 behavior 放在 `*.planner.ts`、`*.validator.ts`、`*.extractor.ts`、`*.parser.ts`、`*.service.ts` 或具體 flow 名稱的檔案。不要把 types、ports 和 orchestration behavior 混在同一個檔案，除非 feature plan 明確記錄暫時理由。
 
 ## 子領域責任
 
@@ -34,6 +35,16 @@
 
 這層是 validation-backed content core。LLM 可以輔助 source semantic segmentation，但 segmentation output 必須通過 schema、exact source quote grounding、source order 與 coverage validation；失敗時使用 deterministic fallback。後續 source facts、chart intent、source trace 與 review report 行為仍應保持 deterministic 或可驗證。它回答：「來源內容應如何按語意切段？有哪些事實、數字、決策、風險、限制？哪些內容適合被圖表化？」測試應聚焦在輸入內容、validation result、fallback behavior 與 deterministic output。
 
+檔案分類建議：
+
+- `*.types.ts`: `SemanticSegment`、`SourceQuote`、`ChartIntent` 這類 domain language。
+- `*.port.ts`: `SemanticSegmenter`、`SemanticSegmentationRepairer` 這類外部能力介面。
+- `*.validator.ts`: schema、quote grounding、order、coverage validation。
+- `*.parser.ts`: deterministic parser/fallback parsing。
+- `*.extractor.ts`: source fact extraction。
+- `*.planner.ts`: title/chart/content planning。
+- 具體 flow 檔，例如 `semantic-segmentation-repair.ts`: orchestration behavior。
+
 ### `deck`
 
 負責把已理解的內容組成簡報結構。
@@ -50,6 +61,16 @@
 
 `deck` 不重新抽取 source facts，也不決定視覺風格。它回答：「這份簡報有哪些頁？每頁承載什麼訊息與 blocks？」
 
+檔案分類建議：
+
+- `deck.types.ts`: `SlideDeck`、`Slide`、`DeckPlanProposal`、`DeckSlideProposal`、`DeckBrief` 等 deck domain language。
+- `deck-planner.types.ts`: planner input/output boundary types。
+- `deck-compiler.types.ts`: compiler input/result boundary types。
+- `deck-generation.types.ts`: preview generation flow input/result types。
+- `deck-planner.ts`: deterministic deck proposal behavior。
+- `deck-compiler.ts`: proposal validation and `SlideDeck` compilation behavior。
+- `slide-deck-planner.ts`、`generate-preview-deck.ts`: orchestration behavior。
+
 ### `design`
 
 負責整份簡報的設計系統與 presentation decisions。
@@ -65,7 +86,7 @@
 - chart style
 - ui-ux-pro-max critique notes
 
-`design` 可以改善 summary presentation、layout selection 與 visual consistency，但不能新增、刪除或改寫來源事實。ui-ux-pro-max 的影響必須停在設計與 critique，不得覆蓋 `content-core` 的 fact decisions。
+`design` 可以改善 layout selection、chart treatment、visual hierarchy 與 visual consistency，但不能新增、刪除、改寫或重排來源事實。ui-ux-pro-max 的影響必須停在設計與 critique，不得覆蓋 `content-core` 的 fact decisions，也不得改寫 deck title/message wording。
 
 ### `review`
 

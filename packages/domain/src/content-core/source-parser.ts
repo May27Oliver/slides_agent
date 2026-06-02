@@ -1,4 +1,4 @@
-import type { SourceSection } from "@/deck/types";
+import type { SourceSection } from "@/deck/deck.types";
 
 const headingPattern = /^(.+?)：$/u;
 

@@ -1,4 +1,4 @@
-import type { PreviewArtifact, SlideDeck } from "@/deck/types";
+import type { PreviewArtifact, SlideDeck } from "@/deck/deck.types";
 
 export interface HtmlDeckRendererInput {
   deck: SlideDeck;

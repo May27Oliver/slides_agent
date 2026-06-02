@@ -32,9 +32,9 @@
 
 - [X] T008 [P] Copy JSON schema contract into `packages/contracts/schemas/slide-generation.schema.json`
 - [X] T009 [P] Create contract exports in `packages/contracts/src/index.ts`
-- [X] T010 [P] Create domain model type definitions in `packages/domain/src/deck/types.ts`
+- [X] T010 [P] Create domain model type definitions in `packages/domain/src/deck/deck.types.ts`
 - [X] T011 [P] Create review report type definitions in `packages/domain/src/review/types.ts`
-- [X] T012 [P] Create chart intent type definitions in `packages/domain/src/content-core/chart-intent.ts`
+- [X] T012 [P] Create chart intent type definitions in `packages/domain/src/content-core/chart-intent.types.ts`
 - [X] T013 [P] Create design system type definitions in `packages/domain/src/design/types.ts`
 - [X] T014 Create deterministic content core service skeleton in `packages/domain/src/content-core/content-core-planner.ts`
 - [X] T015 Create chart intent planner skeleton in `packages/domain/src/content-core/chart-intent-planner.ts`
@@ -101,10 +101,10 @@
 
 - [X] T083 [US1R] Copy internal semantic segmentation schema into `packages/contracts/schemas/semantic-segmentation.schema.json`
 - [X] T084 [US1R] Export semantic segmentation schema id and contract helpers from `packages/contracts/src/semantic-segmentation.ts`
-- [X] T085 [US1R] Define `SemanticSegment`, `SourceQuote`, and `SegmentationValidation` domain types in `packages/domain/src/content-core/semantic-segmentation.ts`
+- [X] T085 [US1R] Define `SemanticSegment`, `SourceQuote`, and `SegmentationValidation` domain types in `packages/domain/src/content-core/semantic-segmentation.types.ts`
 - [X] T086 [US1R] Implement semantic segmentation validator for schema result, exact source quote grounding, source order, and important-content coverage in `packages/domain/src/content-core/semantic-segmentation-validator.ts`
 - [X] T087 [US1R] Keep deterministic parser as fallback segmenter in `packages/domain/src/content-core/source-parser.ts`
-- [X] T088 [US1R] Define semantic segmenter port/interface in `packages/domain/src/content-core/semantic-segmenter.ts`
+- [X] T088 [US1R] Define semantic segmenter port/interface in `packages/domain/src/content-core/semantic-segmenter.port.ts`
 - [X] T089 [US1R] Implement backend LLM semantic segmentation prompt builder and adapter boundary in `apps/api/src/adapters/llm/semantic-segmentation.adapter.ts`
 - [X] T090 [US1R] Wire semantic segmentation + validation + fallback before source fact extraction in the preview generation flow
 - [X] T091 [US1R] Capture segmentation schema, prompt, quote-grounding, fallback, and review evidence in `specs/002-generate-previewable-html-slides/evidence.md`
@@ -123,19 +123,19 @@
 
 ### Tests for US1 Segmentation Repair Revision (REQUIRED - write first)
 
-- [ ] T092 [P] [US1R2] Write failing contract/domain test for one format repair attempt after invalid initial segmentation schema in `packages/domain/test/content-core/semantic-segmentation-repair.test.ts`
-- [ ] T093 [P] [US1R2] Write failing domain test that repair failure triggers deterministic fallback and records repair/fallback issue in `packages/domain/test/content-core/semantic-segmentation-fallback.test.ts`
-- [ ] T094 [P] [US1R2] Write failing API adapter prompt test for repair-only instructions that forbid reinterpretation, summarization, expansion, deletion, or source quote rewriting in `apps/api/test/semantic-segmentation-repair-prompt.test.ts`
-- [ ] T095 [P] [US1R2] Write failing review report/evidence test that user-facing notes explain repair/fallback plainly and do not expose raw schema paths as the primary message in `packages/domain/test/review/segmentation-review-notes.test.ts`
+- [X] T092 [P] [US1R2] Write failing contract/domain test for one format repair attempt after invalid initial segmentation schema in `packages/domain/test/content-core/semantic-segmentation-repair.test.ts`
+- [X] T093 [P] [US1R2] Write failing domain test that repair failure triggers deterministic fallback and records repair/fallback issue in `packages/domain/test/content-core/semantic-segmentation-fallback.test.ts`
+- [X] T094 [P] [US1R2] Write failing API adapter prompt test for repair-only instructions that forbid reinterpretation, summarization, expansion, deletion, or source quote rewriting in `apps/api/test/semantic-segmentation-repair-prompt.test.ts`
+- [X] T095 [P] [US1R2] Write failing review report/evidence test that user-facing notes explain repair/fallback plainly and do not expose raw schema paths as the primary message in `packages/domain/test/review/segmentation-review-notes.test.ts`
 
 ### Implementation for US1 Segmentation Repair Revision
 
-- [ ] T096 [US1R2] Define segmentation repair attempt types and result fields in `packages/domain/src/content-core/semantic-segmentation.ts`
-- [ ] T097 [US1R2] Implement semantic segmentation repair coordinator that allows at most one repair attempt before deterministic fallback in `packages/domain/src/content-core/semantic-segmenter.ts`
-- [ ] T098 [US1R2] Implement backend LLM repair prompt builder in `apps/api/src/adapters/llm/semantic-segmentation.adapter.ts`
-- [ ] T099 [US1R2] Wire repair success/failure, fallback reason, and user-readable review notes into preview generation flow before source fact extraction
-- [ ] T100 [US1R2] Update quickstart/evidence examples with malformed initial output, repaired output, fallback case, and review note sample in `specs/002-generate-previewable-html-slides/evidence.md`
-- [ ] T101 [US1R2] Run focused contract/domain/API tests for segmentation repair and record results in `specs/002-generate-previewable-html-slides/evidence.md`
+- [X] T096 [US1R2] Define segmentation repair attempt types and result fields in `packages/domain/src/content-core/semantic-segmentation.types.ts`
+- [X] T097 [US1R2] Implement semantic segmentation repair coordinator that allows at most one repair attempt before deterministic fallback in `packages/domain/src/content-core/semantic-segmentation-repair.ts`
+- [X] T098 [US1R2] Implement backend LLM repair prompt builder in `apps/api/src/adapters/llm/semantic-segmentation.adapter.ts`
+- [X] T099 [US1R2] Wire repair success/failure, fallback reason, and user-readable review notes into preview generation flow before source fact extraction
+- [X] T100 [US1R2] Update quickstart/evidence examples with malformed initial output, repaired output, fallback case, and review note sample in `specs/002-generate-previewable-html-slides/evidence.md`
+- [X] T101 [US1R2] Run focused contract/domain/API tests for segmentation repair and record results in `specs/002-generate-previewable-html-slides/evidence.md`
 
 **Checkpoint**: US1 handles invalid initial LLM segmentation output without raw user-facing schema errors: one repair attempt if possible, deterministic fallback if needed, and review/evidence that explains what happened.
 
@@ -151,20 +151,20 @@
 
 ### Tests for US1 Deck Planning Revision (REQUIRED - write first)
 
-- [ ] T102 [P] [US1R3] Write failing domain test for deterministic source-order `DeckPlanProposal` with opening slide, 3-8 target, merge/split behavior, and conditional closing in `packages/domain/test/deck/deck-plan-proposal.test.ts`
-- [ ] T103 [P] [US1R3] Write failing domain test for `DeckCompiler` rejecting unknown source section, source fact, or chart intent references in `packages/domain/test/deck/deck-compiler-validation.test.ts`
-- [ ] T104 [P] [US1R3] Write failing domain test that every slide has `slideKind` and source-grounded `outline` items with emphasis and source trace in `packages/domain/test/deck/slide-outline.test.ts`
-- [ ] T105 [P] [US1R3] Write failing domain test for required conservative `speakerNotesDraft` that is at most 400 characters and does not add unsupported claims in `packages/domain/test/deck/speaker-notes-draft.test.ts`
-- [ ] T106 [P] [US1R3] Write failing contract/schema test that `Slide` requires `slideKind`, `outline`, `layoutIntent`, and `speakerNotesDraft` instead of final-sounding `speakerNotes` in `packages/contracts/test/slide-generation-schema.test.ts`
+- [X] T102 [P] [US1R3] Write failing domain test for deterministic source-order `DeckPlanProposal` with opening slide, 3-8 target, merge/split behavior, and conditional closing in `packages/domain/test/deck/deck-plan-proposal.test.ts`
+- [X] T103 [P] [US1R3] Write failing domain test for `DeckCompiler` rejecting unknown source section, source fact, or chart intent references in `packages/domain/test/deck/deck-compiler-validation.test.ts`
+- [X] T104 [P] [US1R3] Write failing domain test that every slide has `slideKind` and source-grounded `outline` items with emphasis and source trace in `packages/domain/test/deck/slide-outline.test.ts`
+- [X] T105 [P] [US1R3] Write failing domain test for required conservative `speakerNotesDraft` that is at most 400 characters and does not add unsupported claims in `packages/domain/test/deck/speaker-notes-draft.test.ts`
+- [X] T106 [P] [US1R3] Write failing contract/schema test that `Slide` requires `slideKind`, `outline`, `layoutIntent`, and `speakerNotesDraft` instead of final-sounding `speakerNotes` in `packages/contracts/test/slide-generation-schema.test.ts`
 
 ### Implementation for US1 Deck Planning Revision
 
-- [ ] T107 [US1R3] Define `DeckPlanProposal`, `DeckSlideProposal`, `SlideOutlineItem`, and `LayoutIntent` types with `slideKind` and no `narrativeType`/complex role in `packages/domain/src/deck/types.ts`
-- [ ] T108 [US1R3] Implement deterministic source-order deck planner with opening slide, short-section merge, long-section conservative split, conditional closing, 3-8 target, and 8-slide hard cap in `packages/domain/src/deck/deck-planner.ts`
-- [ ] T109 [US1R3] Implement deck compiler reference validation, deterministic fallback trigger, and stable sourceTrace dedupe/sort in `packages/domain/src/deck/deck-compiler.ts`
-- [ ] T110 [US1R3] Wire deck planner/compiler into preview generation flow and remove direct slide construction from `packages/domain/src/deck/slide-deck-planner.ts`
-- [ ] T111 [US1R3] Update slide-generation schema and contract package schema to require `slideKind`, slide outline, `layoutIntent`, and `speakerNotesDraft`
-- [ ] T112 [US1R3] Capture deck proposal, compiler validation, source-order/slide-count check, outline trace, speaker notes draft, and focused test evidence in `specs/002-generate-previewable-html-slides/evidence.md`
+- [X] T107 [US1R3] Define `DeckPlanProposal`, `DeckSlideProposal`, `SlideOutlineItem`, and `LayoutIntent` types with `slideKind` and no `narrativeType`/complex role in `packages/domain/src/deck/deck.types.ts`
+- [X] T108 [US1R3] Implement deterministic source-order deck planner with opening slide, short-section merge, long-section conservative split, conditional closing, 3-8 target, and 8-slide hard cap in `packages/domain/src/deck/deck-planner.ts`
+- [X] T109 [US1R3] Implement deck compiler reference validation, deterministic fallback trigger, and stable sourceTrace dedupe/sort in `packages/domain/src/deck/deck-compiler.ts`
+- [X] T110 [US1R3] Wire deck planner/compiler into preview generation flow and remove direct slide construction from `packages/domain/src/deck/slide-deck-planner.ts`
+- [X] T111 [US1R3] Update slide-generation schema and contract package schema to require `slideKind`, slide outline, `layoutIntent`, and `speakerNotesDraft`
+- [X] T112 [US1R3] Capture deck proposal, compiler validation, source-order/slide-count check, outline trace, speaker notes draft, and focused test evidence in `specs/002-generate-previewable-html-slides/evidence.md`
 
 **Checkpoint**: US1 produces `SlideDeck` through deterministic planner/compiler, every slide has source-grounded outline, and speaker notes draft remains conservative and reviewable.
 

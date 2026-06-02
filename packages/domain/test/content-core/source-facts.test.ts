@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SourceFact } from "@/deck/types";
+import type { SourceFact } from "@/deck/deck.types";
 import { readJsonFixture, readRootFixture } from "../support/fixtures";
 import { loadPendingModule } from "../support/pending-module";
 

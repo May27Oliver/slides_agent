@@ -1,4 +1,4 @@
-import type { SourceFact, SourceFactKind, SourceSection } from "@/deck/types";
+import type { SourceFact, SourceFactKind, SourceSection } from "@/deck/deck.types";
 import { parseSourceSections } from "@/content-core/source-parser";
 
 interface FactCandidate {

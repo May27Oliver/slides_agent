@@ -113,3 +113,142 @@ This file records implementation and verification evidence for feature 002.
 - Clarified HTML rendering v1 must not render `speakerNotesDraft` in presentation view.
 - Clarified `DeckCompiler` validates only and does not fill missing fields; invalid proposals trigger deterministic fallback planning and user-readable review notes while preserving raw validation details as evidence.
 - Clarified ui-ux-pro-max is a design planning and critique layer after valid `SlideDeck`, not part of DeckPlanner; it may affect design system, pattern mapping, chart treatment, density, visual hierarchy, accessibility, and critique notes, but cannot alter source facts, deck order, title/message wording, outline meaning, speaker notes factual content, or review warnings.
+
+### 2026-06-02 - US1R2 Segmentation Repair Green Slice
+
+- Added focused red tests for one bounded repair attempt, repair failure fallback, repair-only prompt instructions, and user-readable review notes.
+- Initial red evidence:
+  - Domain tests failed because `segmentSourceContentWithRepair` and `buildSegmentationReviewNotes` did not exist.
+  - API test failed because `buildSemanticSegmentationRepairPrompt` did not exist.
+- Implemented `SegmentationRepairAttempt` and repair result fields on segmentation validation.
+- Implemented `segmentSourceContentWithRepair` coordinator:
+  - validates the initial segmentation output;
+  - calls the repairer at most once when initial validation falls back;
+  - validates repaired output before use;
+  - uses deterministic fallback when repair fails or repaired output still fails validation.
+- Implemented repair prompt builder that instructs the LLM to repair JSON/schema shape only and forbids reinterpretation, different summarization, expansion, deletion, source quote rewriting, source meaning changes, invented facts, or strengthened claims.
+- Added `buildSegmentationReviewNotes` so user-facing notes explain repair/fallback plainly:
+  - `AI 語意切段格式未通過驗證，已嘗試自動修復。`
+  - `AI 語意切段格式修復後仍未通過驗證，已改用保守切段。`
+- Wired segmentation review notes into preview deck review report human notes.
+- Malformed initial output fixture: `{ "segments": [{ "id": "segment_001" }], "globalWarnings": [] }`.
+- Repaired output success fixture exact quote: `Onboarding conversion 從 18% 提升到 25%`.
+- Repair failure fallback fixture rewrites source quote to `Design resource 只有 2 FTE`; validation rejects it and fallback preserves deterministic section text `Design resource 只有 0.5 FTE`.
+- Focused green evidence:
+  - `pnpm --filter @slides-agent/domain test -- semantic-segmentation-repair.test.ts semantic-segmentation-fallback.test.ts segmentation-review-notes.test.ts` passed: 9 files, 11 tests.
+  - `pnpm --filter @slides-agent/api test -- semantic-segmentation-repair-prompt.test.ts` passed: 3 files, 3 tests.
+- Full validation after formatting:
+  - `pnpm run test` passed: domain 9 files / 11 tests, contracts 2 files / 6 tests, API 3 files / 3 tests, web no tests yet with `--passWithNoTests`.
+  - `pnpm run lint` passed.
+  - `pnpm --filter @slides-agent/domain build` passed.
+  - `pnpm --filter @slides-agent/api build` passed.
+  - `pnpm exec prettier --check ...` passed for changed code/test/spec files.
+  - `python3 -m json.tool specs/002-generate-previewable-html-slides/contracts/slide-generation.schema.json` passed.
+  - `git diff --check` passed.
+
+### 2026-06-02 - Domain File Role Refactor
+
+- Constitution amended to v3.1.0 to require readable domain file roles:
+  - `*.types.ts` for type-only declarations;
+  - `*.port.ts` for external capability interfaces and adapter boundaries;
+  - behavior files named by role, such as planner, validator, extractor, parser, service, or a concrete flow name.
+- Updated Spec Kit plan/tasks templates so future feature plans and task lists check type/port/behavior separation.
+- Refactored `content-core` without behavior changes:
+  - `chart-intent.ts` -> `chart-intent.types.ts`;
+  - `semantic-segmentation.ts` -> `semantic-segmentation.types.ts`;
+  - `semantic-segmenter.ts` split into `semantic-segmenter.port.ts` and `semantic-segmentation-repair.ts`.
+- Updated `packages/domain/AGENTS.md` with the same domain file role guidance.
+- Refactor validation:
+  - `pnpm run test` passed.
+  - `pnpm run lint` passed.
+  - `pnpm --filter @slides-agent/domain build` passed.
+  - `pnpm --filter @slides-agent/contracts build` passed.
+  - `pnpm --filter @slides-agent/api build` passed.
+  - `pnpm --filter @slides-agent/web build` passed.
+  - `pnpm exec prettier --check ...` passed for changed constitution/template/domain/spec files.
+  - `git diff --check` passed.
+
+### 2026-06-02 - US1R3 Deterministic Deck Planning Green Slice
+
+- Added focused red tests for deterministic deck planning and compiler/schema behavior:
+  - `packages/domain/test/deck/deck-plan-proposal.test.ts`
+  - `packages/domain/test/deck/deck-compiler-validation.test.ts`
+  - `packages/domain/test/deck/slide-outline.test.ts`
+  - `packages/domain/test/deck/speaker-notes-draft.test.ts`
+  - `packages/contracts/test/slide-generation-schema.test.ts`
+- Initial red evidence:
+  - Domain deck tests failed because `@/deck/deck-planner` and `@/deck/deck-compiler` did not exist.
+  - Contract schema test failed because `Slide` did not require `slideKind`, `outline`, `layoutIntent`, or `speakerNotesDraft`, and still exposed `speakerNotes`.
+- Implemented `DeckPlanProposal`, `DeckSlideProposal`, `SlideOutlineItem`, `LayoutIntent`, and `slideKind` domain types.
+- Implemented deterministic `createDeckPlanProposal`:
+  - opening slide is always first;
+  - content slides preserve source section order;
+  - adjacent short sections are merged;
+  - deck target stays within 3-8 slides when source supports it;
+  - 8 slides is a hard cap;
+  - closing slide appears only when source text supports next steps, actions, owners, or deadlines;
+  - v1 does not call LLM and does not use `narrativeType`, complex role, or appendix.
+- Implemented `compileDeckPlanProposal`:
+  - validates source section, source fact, chart intent, and outline source trace references;
+  - returns `fallbackRequired: true` instead of producing a final deck when references are invalid;
+  - deduplicates and stable-sorts `sourceTrace`;
+  - compiles valid proposals into `SlideDeck`.
+- Rewired `planSlideDeck` so slide construction now goes through `DeckPlanner` and `DeckCompiler`.
+- Updated `packages/contracts/schemas/slide-generation.schema.json` so each `Slide` requires `slideKind`, `outline`, `layoutIntent`, and `speakerNotesDraft`; removed final-sounding `speakerNotes`.
+- Focused green evidence:
+  - `pnpm --filter @slides-agent/domain test -- deck-plan-proposal.test.ts deck-compiler-validation.test.ts slide-outline.test.ts speaker-notes-draft.test.ts` passed: 13 files, 15 tests.
+  - `pnpm --filter @slides-agent/contracts test -- slide-generation-schema.test.ts` passed: 3 files, 7 tests.
+  - `pnpm run test` passed: domain 13 files / 15 tests, contracts 3 files / 7 tests, API 3 files / 3 tests, web no tests yet with `--passWithNoTests`.
+  - `pnpm run lint` passed.
+  - `pnpm --filter @slides-agent/domain build` passed.
+  - `pnpm --filter @slides-agent/contracts build` passed.
+  - `pnpm --filter @slides-agent/api build` passed.
+  - `pnpm --filter @slides-agent/web build` passed.
+  - `python3 -m json.tool packages/contracts/schemas/slide-generation.schema.json` passed.
+  - `python3 -m json.tool specs/002-generate-previewable-html-slides/contracts/slide-generation.schema.json` passed.
+  - `pnpm exec prettier --check ...` passed for changed deck/schema/spec files.
+  - `git diff --check` passed.
+
+### 2026-06-02 - Semantic Segmentation Prompt Language Consistency
+
+- Added API prompt contract tests to prevent language drift:
+  - Chinese source or `deckBrief.language: "zh-TW"` requires generated headings, summaries, rationales, and warnings to use Traditional Chinese.
+  - English source or `deckBrief.language: "en"` requires generated headings, summaries, rationales, and warnings to use English.
+  - `sourceQuotes` must always preserve exact original source language and text.
+  - Prompt explicitly forbids translating `sourceQuotes`.
+- Updated both initial semantic segmentation prompt and repair prompt with an `OUTPUT_LANGUAGE` section.
+- If no explicit language is provided, `OUTPUT_LANGUAGE` instructs the model to follow the dominant language of `SOURCE_CONTENT`.
+- Focused red/green evidence:
+  - Initial `pnpm --filter @slides-agent/api test -- semantic-segmentation-language.test.ts` failed because prompts did not include `OUTPUT_LANGUAGE` or source quote translation guards.
+  - After implementation, `pnpm --filter @slides-agent/api test -- semantic-segmentation-language.test.ts semantic-segmentation-prompt.test.ts semantic-segmentation-guidance.test.ts semantic-segmentation-repair-prompt.test.ts` passed: 4 files, 6 tests.
+
+### 2026-06-02 - Anti-Over-Design Constitution Gate
+
+- Constitution amended to v3.2.0 to require every new domain type, field, enum value, service, planner, validator, adapter boundary, or intermediate artifact to have a current consumer or a near-term independently testable consuming task.
+- If the consumer is future work, the feature plan must record the rejected simpler alternative and the task that will prove the artifact is useful.
+- Unconsumed artifacts must be removed or simplified before completion unless evidence explicitly approves the deferral.
+- This gate was added after reviewing `SourceFactKind`: it is acceptable only if chart/deck/design consumers use it or tasks prove future consumption.
+
+### 2026-06-02 - Deck File Role Refactor
+
+- Refactored `packages/domain/src/deck` so type declarations and behavior are no longer mixed:
+  - `types.ts` -> `deck.types.ts`;
+  - planner boundary types moved to `deck-planner.types.ts`;
+  - compiler boundary types moved to `deck-compiler.types.ts`;
+  - preview generation boundary types moved to `deck-generation.types.ts`.
+- Kept behavior files focused on executable behavior:
+  - `deck-planner.ts` creates deterministic `DeckPlanProposal`;
+  - `deck-compiler.ts` validates and compiles proposals;
+  - `slide-deck-planner.ts` and `generate-preview-deck.ts` orchestrate the flow.
+- Updated package exports, internal imports, `packages/domain/AGENTS.md`, and completed task paths to use `@/deck/deck.types`.
+- Refactor validation:
+  - `pnpm --filter @slides-agent/domain build` passed.
+  - `pnpm --filter @slides-agent/domain test` passed: 13 files / 15 tests.
+  - `pnpm run test` passed: domain 13 files / 15 tests, contracts 3 files / 7 tests, API 4 files / 6 tests, web no tests yet with `--passWithNoTests`.
+  - `pnpm run lint` passed.
+  - `pnpm --filter @slides-agent/contracts build` passed.
+  - `pnpm --filter @slides-agent/domain build` passed.
+  - `pnpm --filter @slides-agent/api build` passed.
+  - `pnpm --filter @slides-agent/web build` passed.
+  - `pnpm exec prettier --check packages/domain/src/deck packages/domain/src/index.ts packages/domain/AGENTS.md specs/002-generate-previewable-html-slides/tasks.md specs/002-generate-previewable-html-slides/evidence.md` passed.
+  - `git diff --check` passed.

@@ -182,16 +182,27 @@
       "type": "object",
       "required": [
         "id",
+        "slideKind",
         "type",
         "title",
         "message",
+        "outline",
         "layout",
+        "layoutIntent",
         "contentBlocks",
-        "sourceTrace"
+        "sourceTrace",
+        "speakerNotesDraft"
       ],
       "properties": {
         "id": {
           "type": "string"
+        },
+        "slideKind": {
+          "enum": [
+            "opening",
+            "content",
+            "closing"
+          ]
         },
         "type": {
           "enum": [
@@ -212,8 +223,18 @@
         "message": {
           "type": "string"
         },
+        "outline": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/SlideOutlineItem"
+          }
+        },
         "layout": {
           "type": "string"
+        },
+        "layoutIntent": {
+          "$ref": "#/$defs/LayoutIntent"
         },
         "contentBlocks": {
           "type": "array",
@@ -227,8 +248,78 @@
             "type": "string"
           }
         },
-        "speakerNotes": {
-          "type": "string"
+        "speakerNotesDraft": {
+          "type": "string",
+          "maxLength": 400
+        }
+      },
+      "additionalProperties": false
+    },
+    "SlideOutlineItem": {
+      "type": "object",
+      "required": [
+        "text",
+        "sourceTrace",
+        "emphasis"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceTrace": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "emphasis": {
+          "enum": [
+            "main_point",
+            "evidence",
+            "risk",
+            "decision",
+            "action",
+            "context"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "LayoutIntent": {
+      "type": "object",
+      "required": [
+        "priority",
+        "density",
+        "emphasis"
+      ],
+      "properties": {
+        "priority": {
+          "enum": [
+            "message_first",
+            "metrics_first",
+            "comparison",
+            "timeline",
+            "risk_matrix",
+            "table_dense"
+          ]
+        },
+        "density": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "emphasis": {
+          "enum": [
+            "narrative",
+            "numbers",
+            "risks",
+            "decisions",
+            "actions"
+          ]
         }
       },
       "additionalProperties": false
