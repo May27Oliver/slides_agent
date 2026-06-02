@@ -16,3 +16,4 @@ test-results/
 *.tsbuildinfo
 .npmrc.local
 .pnpm-store/
+.gitnexus
