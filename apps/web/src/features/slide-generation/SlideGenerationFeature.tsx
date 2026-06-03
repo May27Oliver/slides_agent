@@ -1,11 +1,18 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { PresentationIcon } from "@/components/icons";
+import { PreviewJobProgressPanel } from "@/features/slide-generation/PreviewJobProgressPanel";
 import { ResultsPanel } from "@/features/slide-generation/ResultsPanel";
 import { SlideGenerationForm } from "@/features/slide-generation/SlideGenerationForm";
 import { buildHtmlDownload } from "@/features/slide-generation/download-html";
+import {
+  createPreviewJob,
+  fetchPreviewJobStatus,
+  isTerminalPreviewJobStatus
+} from "@/features/slide-generation/preview-job-polling";
 import type {
   GeneratedPreviewArtifact,
+  PreviewJobStatusResponse,
   SlideGenerationRequest
 } from "@/features/slide-generation/slide-generation.types";
 import { useI18n } from "@/i18n";
@@ -17,35 +24,70 @@ interface SlideGenerationFeatureProps {
 export function SlideGenerationFeature({ initialPreview }: SlideGenerationFeatureProps = {}) {
   const { t } = useI18n();
   const [preview, setPreview] = useState<GeneratedPreviewArtifact | undefined>(initialPreview);
+  const [previewJob, setPreviewJob] = useState<PreviewJobStatusResponse | undefined>();
+  const [lastRequest, setLastRequest] = useState<SlideGenerationRequest | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const htmlDownload = useMemo(
     () => (preview ? buildHtmlDownload(preview.previewArtifact.html) : undefined),
     [preview]
   );
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Abort any in-flight polling loop when the component unmounts.
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   async function handleSubmit(request: SlideGenerationRequest) {
+    // Cancel a previous run so re-submissions never race to set state.
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const { signal } = controller;
+
     setIsSubmitting(true);
     setErrorMessage(undefined);
+    setPreview(undefined);
+    setLastRequest(request);
 
     try {
-      const response = await fetch("/api/slides/preview", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(request)
-      });
+      const created = await createPreviewJob(request, fetch, signal);
+      setPreviewJob(queuedStatusFromCreateResponse(created));
 
-      if (!response.ok) {
-        throw new Error("Preview generation failed");
+      let current = await fetchPreviewJobStatus(created.statusUrl, fetch, signal);
+      setPreviewJob(current);
+
+      let polls = 0;
+      while (!isTerminalPreviewJobStatus(current.status)) {
+        if (polls >= MAX_POLLS) {
+          throw new Error("Preview job polling exceeded its budget");
+        }
+        polls += 1;
+        await wait(POLL_INTERVAL_MS, signal);
+        current = await fetchPreviewJobStatus(created.statusUrl, fetch, signal);
+        setPreviewJob(current);
       }
 
-      setPreview((await response.json()) as GeneratedPreviewArtifact);
-    } catch {
+      if (current.status === "succeeded" && current.result) {
+        setPreview(current.result);
+        setPreviewJob(undefined);
+      }
+    } catch (error) {
+      if (isAbortError(error)) {
+        return;
+      }
       setErrorMessage(t("error.generic"));
     } finally {
-      setIsSubmitting(false);
+      // Only the run that still owns the controller may flip the flag back;
+      // a superseded run must not clear the new submission's spinner.
+      if (abortRef.current === controller) {
+        setIsSubmitting(false);
+      }
+    }
+  }
+
+  function handleRetry() {
+    if (lastRequest) {
+      void handleSubmit(lastRequest);
     }
   }
 
@@ -86,9 +128,59 @@ export function SlideGenerationFeature({ initialPreview }: SlideGenerationFeatur
           aria-label={t("results.title")}
           className="scroll-area bg-surface lg:h-full lg:min-h-0 lg:overflow-y-auto"
         >
+          {previewJob ? <PreviewJobProgressPanel job={previewJob} onRetry={handleRetry} /> : null}
           <ResultsPanel preview={preview} htmlDownload={htmlDownload} />
         </section>
       </main>
     </div>
   );
+}
+
+function queuedStatusFromCreateResponse(created: {
+  jobId: string;
+  status: "queued";
+  stage: "request_accepted";
+  createdAt: string;
+  updatedAt: string;
+}): PreviewJobStatusResponse {
+  return {
+    jobId: created.jobId,
+    status: created.status,
+    stage: created.stage,
+    createdAt: created.createdAt,
+    updatedAt: created.updatedAt,
+    evidence: {
+      stageTransitions: [{ stage: "request_accepted", at: created.createdAt }],
+      validationAccepted: true,
+      fallbackUsed: false,
+      repairAttempted: false,
+      finalStatus: "queued"
+    }
+  };
+}
+
+const POLL_INTERVAL_MS = 1000;
+// Server caps jobs at 5 min; template-primary runs ~100s. 360 * 1s = 6 min ceiling.
+const MAX_POLLS = 360;
+
+function wait(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException("Aborted", "AbortError"));
+      return;
+    }
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(timer);
+        reject(new DOMException("Aborted", "AbortError"));
+      },
+      { once: true }
+    );
+  });
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
 }

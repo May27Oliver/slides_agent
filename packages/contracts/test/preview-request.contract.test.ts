@@ -33,6 +33,47 @@ async function loadPreviewRequestModule(): Promise<PreviewRequestModule> {
 }
 
 describe("Generate preview request contract", () => {
+  it("rejects source content that exceeds the maximum length", async () => {
+    const { validateGeneratePreviewRequest } = await loadPreviewRequestModule();
+
+    const result = validateGeneratePreviewRequest({
+      sourceContent: "x".repeat(50_001),
+      deckBrief: { purpose: "Review", audience: "Team" }
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe("INVALID_INPUT");
+      expect(result.error.fields).toContain("sourceContent");
+    }
+  });
+
+  it("rejects an over-long deckBrief field", async () => {
+    const { validateGeneratePreviewRequest } = await loadPreviewRequestModule();
+
+    const result = validateGeneratePreviewRequest({
+      sourceContent: "Q3 planning notes",
+      deckBrief: { purpose: "Review", audience: "Team", styleDirection: "x".repeat(2_001) }
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe("INVALID_INPUT");
+      expect(result.error.fields).toContain("deckBrief.styleDirection");
+    }
+  });
+
+  it("accepts source content at the maximum length boundary", async () => {
+    const { validateGeneratePreviewRequest } = await loadPreviewRequestModule();
+
+    const result = validateGeneratePreviewRequest({
+      sourceContent: "x".repeat(50_000),
+      deckBrief: { purpose: "Review", audience: "Team" }
+    });
+
+    expect(result.ok).toBe(true);
+  });
+
   it("accepts pasted source content with purpose, audience, style direction, and chart emphasis", async () => {
     const { validateGeneratePreviewRequest } = await loadPreviewRequestModule();
 

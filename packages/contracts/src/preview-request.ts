@@ -28,6 +28,14 @@ type OptionalDeckBriefKey =
   | "segmentationGuidance"
   | "language";
 
+// Upper bound on raw source text. Source content is fanned out verbatim into
+// several chained LLM calls, so an uncapped input is a runaway-cost vector.
+const MAX_SOURCE_CONTENT_CHARS = 50_000;
+
+// deckBrief fields also flow into LLM prompts; cap them to bound cost and limit
+// the prompt-injection surface.
+const MAX_DECK_BRIEF_FIELD_CHARS = 2_000;
+
 const supportedDeckBriefKeys = new Set([
   "purpose",
   "audience",
@@ -54,6 +62,29 @@ export function validateGeneratePreviewRequest(input: unknown): PreviewRequestVa
 
   if (missingFields.length > 0) {
     return invalidInput(missingFields);
+  }
+
+  if (sourceContent.length > MAX_SOURCE_CONTENT_CHARS) {
+    return {
+      ok: false,
+      error: {
+        code: "INVALID_INPUT",
+        message: `sourceContent exceeds the maximum of ${MAX_SOURCE_CONTENT_CHARS} characters`,
+        fields: ["sourceContent"]
+      }
+    };
+  }
+
+  const overlongField = firstOverlongDeckBriefField(purpose, audience, deckBrief);
+  if (overlongField) {
+    return {
+      ok: false,
+      error: {
+        code: "INVALID_INPUT",
+        message: `${overlongField} exceeds the maximum of ${MAX_DECK_BRIEF_FIELD_CHARS} characters`,
+        fields: [overlongField]
+      }
+    };
   }
 
   if (input.options !== undefined) {
@@ -143,6 +174,23 @@ function unsupportedDeckBriefOption(fields: string[]): PreviewRequestValidationR
       fields
     }
   };
+}
+
+function firstOverlongDeckBriefField(
+  purpose: string,
+  audience: string,
+  deckBrief: RawDeckBrief | undefined
+): string | undefined {
+  const fields: Array<[string, string]> = [
+    ["deckBrief.purpose", purpose],
+    ["deckBrief.audience", audience],
+    ["deckBrief.styleDirection", readString(deckBrief?.styleDirection)],
+    ["deckBrief.chartEmphasis", readString(deckBrief?.chartEmphasis)],
+    ["deckBrief.segmentationGuidance", readString(deckBrief?.segmentationGuidance)],
+    ["deckBrief.language", readString(deckBrief?.language)]
+  ];
+
+  return fields.find(([, value]) => value.length > MAX_DECK_BRIEF_FIELD_CHARS)?.[0];
 }
 
 function unsupportedDeckBriefFieldPaths(deckBrief: RawDeckBrief | undefined): string[] {

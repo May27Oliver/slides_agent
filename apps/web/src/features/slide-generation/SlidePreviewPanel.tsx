@@ -21,6 +21,11 @@ export function SlidePreviewPanel({ preview }: SlidePreviewPanelProps) {
         className="h-[clamp(420px,52vh,720px)] w-full bg-[#0b1512]"
         srcDoc={preview.previewArtifact.html}
         title={t("preview.iframeTitle")}
+        // LLM/template HTML is untrusted: allow-scripts keeps keyboard nav working
+        // but, without allow-same-origin, the frame gets an opaque origin with no
+        // access to the parent window, storage, cookies, or same-origin API calls.
+        sandbox="allow-scripts"
+        referrerPolicy="no-referrer"
       />
       {firstSlide ? (
         <article className="border-t border-line px-5 py-4">

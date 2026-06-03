@@ -3,10 +3,38 @@ import { expect, test } from "@playwright/test";
 test("generated preview route supports keyboard navigation inside the HTML deck", async ({
   page
 }) => {
-  await page.route("**/api/slides/preview", async (route) => {
+  await page.route("**/api/slides/preview-jobs", async (route) => {
+    await route.fulfill({
+      status: 202,
+      contentType: "application/json",
+      body: JSON.stringify({
+        jobId: "preview_job_keyboard",
+        status: "queued",
+        stage: "request_accepted",
+        createdAt: "2026-06-02T14:00:00.000Z",
+        updatedAt: "2026-06-02T14:00:00.000Z",
+        statusUrl: "/api/slides/preview-jobs/preview_job_keyboard"
+      })
+    });
+  });
+  await page.route("**/api/slides/preview-jobs/preview_job_keyboard", async (route) => {
     await route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify(previewResponse())
+      body: JSON.stringify({
+        jobId: "preview_job_keyboard",
+        status: "succeeded",
+        stage: "completed",
+        createdAt: "2026-06-02T14:00:00.000Z",
+        updatedAt: "2026-06-02T14:00:01.000Z",
+        result: previewResponse(),
+        evidence: {
+          stageTransitions: [{ stage: "completed", at: "2026-06-02T14:00:01.000Z" }],
+          validationAccepted: true,
+          fallbackUsed: false,
+          repairAttempted: false,
+          finalStatus: "succeeded"
+        }
+      })
     });
   });
 

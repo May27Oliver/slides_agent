@@ -93,3 +93,57 @@ export interface GeneratedPreviewArtifact {
     };
   };
 }
+
+export type PreviewJobStatus = "queued" | "running" | "succeeded" | "failed" | "expired";
+
+export type PreviewJobStage =
+  | "request_accepted"
+  | "queued"
+  | "content_planning"
+  | "deck_planning"
+  | "design_planning"
+  | "html_generation"
+  | "html_validation"
+  | "repair_or_fallback"
+  | "completed"
+  | "failed";
+
+export interface PreviewJobFailure {
+  code: "PREVIEW_JOB_TIMEOUT" | "PREVIEW_GENERATION_FAILED" | "PREVIEW_JOB_UNAVAILABLE";
+  message: string;
+  failedStage: PreviewJobStage;
+  retryable: boolean;
+  retryGuidance: string;
+}
+
+export interface PreviewJobEvidence {
+  stageTransitions: Array<{
+    stage: PreviewJobStage;
+    at: string;
+  }>;
+  validationAccepted: boolean;
+  fallbackUsed: boolean;
+  repairAttempted: boolean;
+  finalStatus: PreviewJobStatus;
+  failureCategory?: "timeout" | "generation" | "unavailable";
+}
+
+export interface CreatePreviewJobResponse {
+  jobId: string;
+  status: "queued";
+  stage: "request_accepted";
+  createdAt: string;
+  updatedAt: string;
+  statusUrl: string;
+}
+
+export interface PreviewJobStatusResponse {
+  jobId: string;
+  status: PreviewJobStatus;
+  stage: PreviewJobStage;
+  createdAt: string;
+  updatedAt: string;
+  evidence: PreviewJobEvidence;
+  result?: GeneratedPreviewArtifact;
+  failure?: PreviewJobFailure;
+}
