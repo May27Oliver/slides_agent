@@ -8,13 +8,11 @@ export interface QueueConfig {
   redisUrl: string;
   queueName: string;
   workerConcurrency: number;
-  jobRetentionMs: number;
   timeoutSweepIntervalMs: number;
 }
 
 const DEFAULT_QUEUE_NAME = "preview-jobs";
 const DEFAULT_WORKER_CONCURRENCY = 1;
-const DEFAULT_JOB_RETENTION_MS = 10 * 60 * 1000;
 const DEFAULT_TIMEOUT_SWEEP_INTERVAL_MS = 30 * 1000;
 
 type EnvLike = Record<string, string | undefined>;
@@ -30,7 +28,6 @@ export function loadQueueConfig(env: EnvLike = process.env): QueueConfig {
     redisUrl,
     queueName: env.PREVIEW_QUEUE_NAME?.trim() || DEFAULT_QUEUE_NAME,
     workerConcurrency: positiveIntOr(env.PREVIEW_WORKER_CONCURRENCY, DEFAULT_WORKER_CONCURRENCY),
-    jobRetentionMs: positiveIntOr(env.PREVIEW_JOB_RETENTION_MS, DEFAULT_JOB_RETENTION_MS),
     timeoutSweepIntervalMs: positiveIntOr(
       env.PREVIEW_TIMEOUT_SWEEP_INTERVAL_MS,
       DEFAULT_TIMEOUT_SWEEP_INTERVAL_MS

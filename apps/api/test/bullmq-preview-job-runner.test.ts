@@ -33,7 +33,11 @@ describe("BullMqPreviewJobRunner", () => {
     expect(add).toHaveBeenCalledWith(
       "generate",
       { jobId: "preview_job_1" },
-      expect.objectContaining({ attempts: 1 })
+      expect.objectContaining({
+        attempts: 1,
+        removeOnComplete: true,
+        removeOnFail: expect.objectContaining({ count: 100 })
+      })
     );
   });
 

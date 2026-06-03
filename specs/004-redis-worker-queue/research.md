@@ -86,17 +86,20 @@
 - **Redis Hash 逐欄位儲存**：rejected。`evidence`、`result` 等為巢狀結構，JSON 字串較單純且與 domain 形狀一致。
 - **在 store 內就地手刻 Date 轉換**：rejected。難以 pure 測試，且把 domain 形狀知識洩漏到 infra 層。
 
-## Decision: job 狀態更新採「終態守門 + 條件寫入」避免競態覆蓋
+## Decision: job 狀態更新採「讀-改-寫 + domain 終態守門」（接受窄競態，不上 CAS）
 
 **Rationale**:
 
 - 同一 job 可能同時被 worker（推進階段）與 timeout sweeper（標記失敗）寫入。
-- 既有 `PreviewJobService.markX` 已對終態 no-op（`isTerminalJobStatus`）；於 Redis 讀-改-寫時，以 BullMQ 單一消費保證 worker 端序列化，sweeper 端則在寫回前重讀並再次套用終態守門（必要時以 `WATCH`/樂觀鎖或小型 Lua 腳本確保「僅在非終態時更新」）。
+- 既有 `PreviewJobService.markX` 已對終態 no-op（`isTerminalJobStatus`）；store 在讀-改-寫時偵測「無變更」即不寫回，正常情況不會把終態 job 退回非終態。
+- BullMQ 單一消費保證 worker 端對同一 job 的寫入是序列化的；sweeper 只在逾時後才動作。
+- **已接受的窄競態（MVP 取捨）**：唯一風險視窗是「worker 在第 5 分鐘邊界剛好 `markSucceeded`」與「sweeper 同一刻 `markFailed`」兩者都讀到非終態 → last-write-wins。極少數情況下成功 job 可能被標成 failed，使用者重送即可。為維持 KISS，本內部工具 MVP **不**引入 `WATCH`/Lua CAS 來消除此競態。
 - 採網路隔離 + TTL 控管敏感資料，應用層不加密（使用者定案）。
 
 **Alternatives considered**:
 
-- **每個 job 一把分散式鎖**：rejected。BullMQ 已序列化單一 job 的處理；只有 sweeper 與 worker 的少量交會，終態守門 + 條件寫入即足夠，分散式鎖屬過度設計。
+- **`WATCH`/Lua compare-and-set**：rejected for MVP。能消除上述窄競態，但增加 Redis 端腳本複雜度與測試成本；競態視窗極小且後果可由使用者重送吸收。若日後被證實為實際問題，再加一個小型 Lua CAS helper（保留為明確的後續觸發條件）。
+- **每個 job 一把分散式鎖**：rejected。BullMQ 已序列化單一 job 的處理，分散式鎖屬過度設計。
 - **應用層加密 Redis 內容**：rejected（使用者定案）。增加金鑰管理與複雜度，超出本機／內部工具範圍。
 
 ## Decision: 公開 HTTP 契約與前端輪詢流程不變

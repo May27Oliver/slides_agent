@@ -9,7 +9,6 @@ describe("queue config", () => {
       redisUrl: "redis://127.0.0.1:6379",
       queueName: "preview-jobs",
       workerConcurrency: 1,
-      jobRetentionMs: 600000,
       timeoutSweepIntervalMs: 30000
     });
   });
@@ -19,7 +18,6 @@ describe("queue config", () => {
       REDIS_URL: "redis://cache:6379",
       PREVIEW_QUEUE_NAME: "preview",
       PREVIEW_WORKER_CONCURRENCY: "4",
-      PREVIEW_JOB_RETENTION_MS: "120000",
       PREVIEW_TIMEOUT_SWEEP_INTERVAL_MS: "5000"
     });
 
@@ -27,7 +25,6 @@ describe("queue config", () => {
       redisUrl: "redis://cache:6379",
       queueName: "preview",
       workerConcurrency: 4,
-      jobRetentionMs: 120000,
       timeoutSweepIntervalMs: 5000
     });
   });

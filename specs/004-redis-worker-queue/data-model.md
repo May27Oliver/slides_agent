@@ -41,7 +41,8 @@
 
 **規則**：
 
-- 寫回採「僅在非終態時更新」（`PreviewJobService.markX` 已對終態 no-op；Redis 端以重讀 + 條件寫入／`WATCH` 或小型 Lua 確保不覆蓋已終態的 job）。
+- 寫回採**讀-改-寫 + domain 終態守門**：`PreviewJobService.markX` 對終態 job 回傳原物件（no-op），store 偵測到無變更即不寫回，因此正常情況不會把終態 job 退回 running。
+- **已接受的窄競態（MVP 取捨）**：唯一風險視窗是「worker 在第 5 分鐘邊界剛好 `markSucceeded`」與「timeout sweeper 同一刻 `markFailed`」兩者都讀到非終態 → last-write-wins，極少數情況下成功 job 可能被標成 failed（使用者重送即可）。本內部工具 MVP **刻意不**引入 `WATCH`／Lua CAS 來消除此競態，以維持 KISS；若日後競態被證實為實際問題，再加一個小型 Lua compare-and-set helper。
 - Redis 不可用時，`create` 必須 fail-fast 丟出可被控制器轉為安全錯誤的例外（不洩漏連線細節）。
 - `id` 唯一性沿用 003（`PreviewJobService` 產生）。
 

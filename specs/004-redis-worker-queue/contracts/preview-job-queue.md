@@ -55,11 +55,11 @@
 | `REDIS_URL` | Redis 連線（含 host/port/密碼）；缺少時 API/worker fail-fast | 無（必要） |
 | `PREVIEW_QUEUE_NAME` | BullMQ 佇列名稱 | `preview-jobs` |
 | `PREVIEW_WORKER_CONCURRENCY` | 單一 worker 同時處理 job 數 | `1` |
-| `PREVIEW_JOB_RETENTION_MS` | job 保留時間（對齊既有 retention） | `600000`（10 分鐘） |
 | `PREVIEW_TIMEOUT_SWEEP_INTERVAL_MS` | timeout sweep 間隔 | `30000`（30 秒） |
 
 - 以上皆為後端設定，不得作為公開 job 請求／回應欄位（CR-004、FR-016）。
 - provider/model 設定維持既有 `llm.config.ts` 邊界，不在此重複。
+- job 保留期不另設環境變數：沿用 domain `PreviewJobService` 的預設 retention（10 分鐘），Redis 鍵 TTL 即對齊 `expiresAt` + 緩衝。
 
 ## 安全與錯誤（沿用並延伸 003）
 

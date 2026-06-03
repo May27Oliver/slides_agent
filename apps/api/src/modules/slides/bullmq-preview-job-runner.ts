@@ -1,3 +1,4 @@
+import type { JobsOptions } from "bullmq";
 import type { PreviewJob, PreviewJobRunner } from "@slides-agent/domain";
 
 /** The single job payload carried on the queue: only the id (request lives in Redis). */
@@ -7,11 +8,7 @@ export interface PreviewJobQueuePayload {
 
 /** Minimal structural view of a BullMQ Queue — keeps the runner testable. */
 export interface QueueLike {
-  add(
-    name: string,
-    data: PreviewJobQueuePayload,
-    opts?: { attempts?: number }
-  ): Promise<unknown>;
+  add(name: string, data: PreviewJobQueuePayload, opts?: JobsOptions): Promise<unknown>;
 }
 
 export interface BullMqPreviewJobRunnerOptions {
@@ -20,6 +17,16 @@ export interface BullMqPreviewJobRunnerOptions {
 }
 
 const DEFAULT_JOB_NAME = "generate";
+
+// Our Redis store is the source of truth for job state, so BullMQ's own job
+// records can be reclaimed: drop completed records immediately, keep a bounded
+// number of failed ones for operational debugging. Without this, BullMQ keys
+// accumulate in Redis indefinitely.
+const JOB_OPTIONS: JobsOptions = {
+  attempts: 1,
+  removeOnComplete: true,
+  removeOnFail: { count: 100 }
+};
 
 /**
  * Enqueues accepted preview jobs onto BullMQ for a separate worker process to
@@ -36,6 +43,6 @@ export class BullMqPreviewJobRunner implements PreviewJobRunner {
   }
 
   async start(job: PreviewJob): Promise<void> {
-    await this.queue.add(this.jobName, { jobId: job.id }, { attempts: 1 });
+    await this.queue.add(this.jobName, { jobId: job.id }, JOB_OPTIONS);
   }
 }
