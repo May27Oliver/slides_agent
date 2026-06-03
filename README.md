@@ -84,12 +84,6 @@ All LLM settings are **backend-only** and never exposed to the frontend or API r
 
 ## Running locally
 
-One command (splits the current iTerm2 tab into two panes — API + web):
-
-```bash
-pnpm dev:iterm
-```
-
 Preview generation runs as async jobs on a **Redis + BullMQ** queue, consumed by
 a separate **worker** process — so the API stays responsive while the LLM works.
 Redis is **required**; start it first:
@@ -98,7 +92,14 @@ Redis is **required**; start it first:
 docker run --rm -p 6379:6379 --name slides-redis redis:7
 ```
 
-Then run each process manually:
+With Redis running, one command splits the current iTerm2 tab into three panes —
+API + worker + web (it warns if Redis is unreachable):
+
+```bash
+pnpm dev:iterm
+```
+
+Or run each process manually:
 
 ```bash
 # Backend API (watch mode, restarts on change) → http://localhost:3000

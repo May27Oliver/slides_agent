@@ -84,12 +84,6 @@ pnpm install
 
 ## 本機執行
 
-一個指令(把目前 iTerm2 分頁切成兩個 pane:API + web):
-
-```bash
-pnpm dev:iterm
-```
-
 預覽生成以**非同步 job**形式跑在 **Redis + BullMQ** 佇列上,由一個獨立的
 **worker** 程序消費——這樣 LLM 在生成時 API 仍能即時回應。Redis 為**必要**,
 請先啟動:
@@ -98,7 +92,14 @@ pnpm dev:iterm
 docker run --rm -p 6379:6379 --name slides-redis redis:7
 ```
 
-接著分別手動啟動各程序:
+Redis 起好後,一個指令把目前 iTerm2 分頁切成三個 pane:API + worker + web
+(若連不到 Redis 會提醒):
+
+```bash
+pnpm dev:iterm
+```
+
+或分別手動啟動各程序:
 
 ```bash
 # 後端 API（watch 模式,變更自動重啟）→ http://localhost:3000
