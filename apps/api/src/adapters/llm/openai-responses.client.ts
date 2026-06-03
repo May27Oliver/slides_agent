@@ -1,11 +1,11 @@
 import type { LlmRuntimeConfig } from "@/config/llm.config";
+import { Logger } from "@nestjs/common";
 
 export type LlmOperation =
   | "semantic_segmentation"
   | "semantic_segmentation_repair"
-  | "design_planning"
-  | "html_generation"
-  | "html_repair";
+  | "deck_outline_planning"
+  | "design_planning";
 
 export interface JsonSchemaResponseFormat {
   type: "json_schema";
@@ -28,6 +28,7 @@ export interface LlmCompletionClient {
 interface OpenAiResponsesClientOptions {
   config: LlmRuntimeConfig;
   fetchImpl?: typeof fetch;
+  logger?: Pick<Logger, "log" | "error">;
 }
 
 interface OpenAiResponseBody {
@@ -58,36 +59,65 @@ export class OpenAiResponsesClient implements LlmCompletionClient {
       throw new Error("OPENAI_API_KEY is required for OpenAI LLM calls.");
     }
 
-    const abortController = new AbortController();
-    const timeout = setTimeout(() => abortController.abort(), this.options.config.requestTimeoutMs);
+    const startedAt = Date.now();
+    const logger = this.diagnosticLogger();
+    logger.log(`[OpenAiResponsesClient] operation=${input.operation} status=start model=${model}`);
 
-    const response = await this.fetchImpl("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.options.config.openAiApiKey}`,
-        "Content-Type": "application/json"
-      },
-      signal: abortController.signal,
-      body: JSON.stringify({
-        model,
-        input: input.prompt,
-        ...(input.responseFormat
-          ? {
-              text: {
-                format: input.responseFormat
+    try {
+      const response = await this.fetchImpl("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.options.config.openAiApiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model,
+          input: input.prompt,
+          ...(input.responseFormat
+            ? {
+                text: {
+                  format: input.responseFormat
+                }
               }
-            }
-          : {})
-      })
-    }).finally(() => clearTimeout(timeout));
+            : {})
+        })
+      });
 
-    const body = (await response.json()) as OpenAiResponseBody;
-    if (!response.ok) {
-      throw new Error(`OpenAI Responses API request failed with status ${response.status}.`);
+      const body = (await response.json()) as OpenAiResponseBody;
+      if (!response.ok) {
+        throw new Error(`OpenAI Responses API request failed with status ${response.status}.`);
+      }
+
+      const output = extractOutputText(body);
+      logger.log(
+        `[OpenAiResponsesClient] operation=${input.operation} status=success duration_ms=${Date.now() - startedAt} output_chars=${output.length}`
+      );
+      return output;
+    } catch (error) {
+      logger.error(
+        `[OpenAiResponsesClient] operation=${input.operation} status=failed ${safeFailureReason(error)} duration_ms=${Date.now() - startedAt}`
+      );
+      throw error;
     }
-
-    return extractOutputText(body);
   }
+
+  private diagnosticLogger(): Pick<Logger, "log" | "error"> {
+    return this.options.logger ?? new Logger(OpenAiResponsesClient.name);
+  }
+}
+
+function safeFailureReason(error: unknown): string {
+  const message = error instanceof Error ? error.message : "";
+  const status = message.match(/\bstatus\s+(\d{3})\b/i)?.[1];
+  if (status) {
+    return `reason=provider_http_error http_status=${status}`;
+  }
+
+  if (/no text output/i.test(message)) {
+    return "reason=empty_output";
+  }
+
+  return "reason=provider_error";
 }
 
 function extractOutputText(body: OpenAiResponseBody): string {

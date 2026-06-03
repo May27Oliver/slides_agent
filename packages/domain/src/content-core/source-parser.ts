@@ -1,6 +1,7 @@
 import type { SourceSection } from "@/deck/deck.types";
 
 const headingPattern = /^(.+?)：$/u;
+const markdownHeadingPattern = /^(#{1,6})\s+(.+)$/u;
 
 export function parseSourceSections(sourceContent: string): SourceSection[] {
   const sections: SourceSection[] = [];
@@ -12,7 +13,18 @@ export function parseSourceSections(sourceContent: string): SourceSection[] {
       continue;
     }
 
-    if (/^#\s+/u.test(line)) {
+    const markdownHeadingMatch = line.match(markdownHeadingPattern);
+    if (markdownHeadingMatch?.[1] && markdownHeadingMatch[2]) {
+      if (current) {
+        sections.push(toSourceSection(current, sections.length));
+      }
+
+      if (markdownHeadingMatch[1].length === 1 && sections.length === 0) {
+        current = undefined;
+        continue;
+      }
+
+      current = { heading: markdownHeadingMatch[2].trim(), lines: [] };
       continue;
     }
 
@@ -62,5 +74,5 @@ function sectionId(heading: string, index: number): string {
 }
 
 function stripBulletMarker(line: string): string {
-  return line.replace(/^[-*]\s+/u, "");
+  return line.replace(/^[-*]\s+/u, "").replace(/^\d+[.)]\s+/u, "");
 }

@@ -11,22 +11,29 @@ import type {
   GeneratePreviewResponseContract
 } from "@slides-agent/contracts";
 import {
+  type DeckOutlinePlanningPort,
   type DesignPlanningGenerationPort,
   type GeneratePreviewDeckInput,
   generatePreviewDeck,
-  type HtmlGenerationPort,
-  LlmAssistedHtmlDeckGenerator,
+  type JobStage,
+  LlmDeckOutlinePlanner,
+  renderTemplateDeckArtifact,
+  parseSourceSections,
   type SemanticSegmentationRepairer,
   type SemanticSegmenter,
   segmentSourceContentWithRepair,
   UiUxProMaxDesignPlanner
 } from "@slides-agent/domain";
 import {
+  DECK_OUTLINE_PLANNING_PORT,
   DESIGN_PLANNING_PORT,
-  HTML_GENERATION_PORT,
   SEMANTIC_SEGMENTATION_REPAIRER_PORT,
   SEMANTIC_SEGMENTER_PORT
 } from "@/modules/slides/slides.tokens";
+
+export interface SlidesPreviewProgress {
+  onStage?: (stage: JobStage) => void | Promise<void>;
+}
 
 @Injectable()
 export class SlidesService {
@@ -37,22 +44,53 @@ export class SlidesService {
     @Inject(DESIGN_PLANNING_PORT)
     private readonly designPlanningPort?: DesignPlanningGenerationPort,
     @Optional()
-    @Inject(HTML_GENERATION_PORT)
-    private readonly htmlGenerationPort?: HtmlGenerationPort,
-    @Optional()
     @Inject(SEMANTIC_SEGMENTER_PORT)
     private readonly semanticSegmenter?: SemanticSegmenter,
     @Optional()
     @Inject(SEMANTIC_SEGMENTATION_REPAIRER_PORT)
-    private readonly semanticSegmentationRepairer?: SemanticSegmentationRepairer
+    private readonly semanticSegmentationRepairer?: SemanticSegmentationRepairer,
+    @Optional()
+    @Inject(DECK_OUTLINE_PLANNING_PORT)
+    private readonly deckOutlinePlanningPort?: DeckOutlinePlanningPort
   ) {}
 
   async generatePreview(
-    request: GeneratePreviewRequestContract
+    request: GeneratePreviewRequestContract,
+    progress: SlidesPreviewProgress = {}
   ): Promise<GeneratePreviewResponseContract> {
+    let currentNode: JobStage = "content_planning";
+
     try {
+      await notifyStage(progress, "content_planning");
+      this.logger.log("[SlidesPipeline] node=content_planning start");
       const deckInput = await this.buildDeckInput(request);
-      const deckResult = generatePreviewDeck(deckInput);
+      this.logger.log(
+        `[SlidesPipeline] node=content_planning done segmentation=${deckInput.sourceSections ? "enabled" : "fallback"} sections=${deckInput.sourceSections?.length ?? 0}`
+      );
+      currentNode = "deck_planning";
+      await notifyStage(progress, "deck_planning");
+      this.logger.log("[SlidesPipeline] node=deck_planning start");
+      const baseDeckResult = generatePreviewDeck(deckInput);
+      const refinedSlideDeck = await new LlmDeckOutlinePlanner({
+        ...(this.deckOutlinePlanningPort
+          ? { deckOutlinePlanningPort: this.deckOutlinePlanningPort }
+          : {})
+      }).plan({
+        deck: baseDeckResult.slideDeck,
+        sourceSections:
+          deckInput.sourceSections && deckInput.sourceSections.length > 0
+            ? deckInput.sourceSections
+            : parseSourceSections(request.sourceContent),
+        deckBrief: request.deckBrief
+      });
+      const deckResult = { ...baseDeckResult, slideDeck: refinedSlideDeck };
+      const deckOutlineRefined = refinedSlideDeck !== baseDeckResult.slideDeck;
+      this.logger.log(
+        `[SlidesPipeline] node=deck_planning done slides=${deckResult.slideDeck.slides.length} chartIntents=${deckResult.chartIntents.length} outlineRefined=${deckOutlineRefined}`
+      );
+      currentNode = "design_planning";
+      await notifyStage(progress, "design_planning");
+      this.logger.log("[SlidesPipeline] node=design_planning start");
       const designPlanningResult = await new UiUxProMaxDesignPlanner({
         ...(this.designPlanningPort ? { designPlanningPort: this.designPlanningPort } : {})
       }).plan({
@@ -60,12 +98,23 @@ export class SlidesService {
         deckBrief: request.deckBrief,
         chartIntents: deckResult.chartIntents
       });
-      const previewArtifact = await new LlmAssistedHtmlDeckGenerator({
-        ...(this.htmlGenerationPort ? { htmlGenerationPort: this.htmlGenerationPort } : {})
-      }).generate({
+      this.logger.log(
+        `[SlidesPipeline] node=design_planning done patterns=${arrayLength(designPlanningResult.slidePatternAssignments)} fallback=${Boolean(designPlanningResult.consistencyValidation?.fallbackUsed)}`
+      );
+      currentNode = "html_generation";
+      await notifyStage(progress, "html_generation");
+      this.logger.log("[SlidesPipeline] node=html_generation start renderer=template");
+      const previewArtifact = renderTemplateDeckArtifact({
         deck: deckResult.slideDeck,
         designPlanningResult
       });
+      this.logger.log(
+        `[SlidesPipeline] node=html_generation done renderer=template validation=${previewArtifact.htmlGenerationValidation.status ?? "unknown"}`
+      );
+      currentNode = "html_validation";
+      await notifyStage(progress, "html_validation");
+      this.logger.log("[SlidesPipeline] node=html_validation done");
+      this.logger.log("[SlidesPipeline] node=preview_generation succeeded");
 
       return {
         slideDeck: deckResult.slideDeck,
@@ -73,6 +122,9 @@ export class SlidesService {
         previewArtifact
       };
     } catch (error) {
+      this.logger.error(
+        `[SlidesPipeline] node=${currentNode} failed code=PREVIEW_GENERATION_FAILED`
+      );
       if (error instanceof HttpException) {
         throw error;
       }
@@ -109,4 +161,12 @@ export class SlidesService {
       segmentationValidation: segmentation.validation
     };
   }
+}
+
+function arrayLength(value: unknown): number {
+  return Array.isArray(value) ? value.length : 0;
+}
+
+async function notifyStage(progress: SlidesPreviewProgress, stage: JobStage): Promise<void> {
+  await progress.onStage?.(stage);
 }

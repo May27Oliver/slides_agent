@@ -12,10 +12,12 @@ export default defineConfig({
       ),
       "@/deck": fileURLToPath(new URL("../../packages/domain/src/deck", import.meta.url)),
       "@/design": fileURLToPath(new URL("../../packages/domain/src/design", import.meta.url)),
-      "@/rendering": fileURLToPath(
-        new URL("../../packages/domain/src/rendering", import.meta.url)
+      "@/preview-job": fileURLToPath(
+        new URL("../../packages/domain/src/preview-job", import.meta.url)
       ),
+      "@/rendering": fileURLToPath(new URL("../../packages/domain/src/rendering", import.meta.url)),
       "@/review": fileURLToPath(new URL("../../packages/domain/src/review", import.meta.url)),
+      "@/shared": fileURLToPath(new URL("../../packages/domain/src/shared", import.meta.url)),
       "@": fileURLToPath(new URL("./src", import.meta.url)),
       "@slides-agent/contracts": fileURLToPath(
         new URL("../../packages/contracts/src/index.ts", import.meta.url)

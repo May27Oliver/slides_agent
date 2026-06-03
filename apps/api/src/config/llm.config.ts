@@ -9,11 +9,9 @@ export interface LlmRuntimeConfig {
   defaultModel?: string;
   semanticSegmentationModel?: string;
   designPlanningModel?: string;
-  htmlGenerationModel?: string;
   openAiApiKey?: string;
   hasOpenAiApiKey: boolean;
   maxRepairAttempts: number;
-  requestTimeoutMs: number;
 }
 
 interface LlmRuntimeConfigOptions {
@@ -38,19 +36,15 @@ export function loadLlmRuntimeConfig(
   const defaultModel = optionalValue(mergedEnv.LLM_MODEL);
   const semanticSegmentationModel = optionalValue(mergedEnv.SEMANTIC_SEGMENTATION_MODEL);
   const designPlanningRuntimeModel = optionalValue(mergedEnv.DESIGN_PLANNING_MODEL);
-  const htmlGenerationRuntimeModel = optionalValue(mergedEnv.HTML_GENERATION_MODEL);
-  const requestTimeoutMs = parseRequestTimeoutMs(mergedEnv.LLM_REQUEST_TIMEOUT_MS);
 
   return {
     provider,
     ...(defaultModel ? { defaultModel } : {}),
     ...(semanticSegmentationModel ? { semanticSegmentationModel } : {}),
     ...(designPlanningRuntimeModel ? { designPlanningModel: designPlanningRuntimeModel } : {}),
-    ...(htmlGenerationRuntimeModel ? { htmlGenerationModel: htmlGenerationRuntimeModel } : {}),
     ...(openAiApiKey ? { openAiApiKey } : {}),
     hasOpenAiApiKey: Boolean(openAiApiKey),
-    maxRepairAttempts: parseRepairAttempts(mergedEnv.LLM_MAX_REPAIR_ATTEMPTS),
-    requestTimeoutMs
+    maxRepairAttempts: parseRepairAttempts(mergedEnv.LLM_MAX_REPAIR_ATTEMPTS)
   };
 }
 
@@ -60,10 +54,6 @@ export function designPlanningModel(config: LlmRuntimeConfig): string | undefine
 
 export function semanticSegmentationModel(config: LlmRuntimeConfig): string | undefined {
   return config.semanticSegmentationModel ?? config.defaultModel;
-}
-
-export function htmlGenerationModel(config: LlmRuntimeConfig): string | undefined {
-  return config.htmlGenerationModel ?? config.defaultModel;
 }
 
 function optionalValue(value: string | undefined): string | undefined {
@@ -79,19 +69,6 @@ function parseRepairAttempts(value: string | undefined): number {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed) || parsed < 0) {
     throw new Error(`Invalid LLM_MAX_REPAIR_ATTEMPTS: ${value}`);
-  }
-
-  return parsed;
-}
-
-function parseRequestTimeoutMs(value: string | undefined): number {
-  if (!value) {
-    return 30000;
-  }
-
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isFinite(parsed) || parsed < 1000) {
-    throw new Error(`Invalid LLM_REQUEST_TIMEOUT_MS: ${value}`);
   }
 
   return parsed;

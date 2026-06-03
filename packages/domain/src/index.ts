@@ -19,29 +19,46 @@ export { createDeckPlanProposal } from "@/deck/deck-planner";
 export type * from "@/deck/deck-planner.types";
 export { generatePreviewDeck } from "@/deck/generate-preview-deck";
 export { planSlideDeck } from "@/deck/slide-deck-planner";
+export { LlmDeckOutlinePlanner } from "@/deck/llm-deck-outline-planner";
+export type { LlmDeckOutlinePlannerOptions } from "@/deck/llm-deck-outline-planner";
+export { validateDeckOutlineRefinement } from "@/deck/deck-outline-refinement-validator";
+export type * from "@/deck/deck-outline-planner.port";
 export type * from "@/deck/deck.types";
 export { UiUxProMaxDesignPlanner } from "@/design/design-planner";
 export type * from "@/design/design-planner.port";
 export type * from "@/design/design.types";
 export type * from "@/design/types";
-export { LlmAssistedHtmlDeckGenerator } from "@/rendering/html-deck-renderer";
-export type {
-  HtmlDeckGenerationInput,
-  HtmlDeckGenerator,
-  LlmAssistedHtmlDeckGeneratorOptions
-} from "@/rendering/html-deck-renderer";
-export { buildHtmlGenerationPrompt } from "@/rendering/html-generation-prompt";
-export type {
-  HtmlGenerationPrompt,
-  HtmlGenerationPromptInput
-} from "@/rendering/html-generation-prompt";
-export { buildDeckCss } from "@/rendering/deck-css";
-export { buildDeckNavigationScript } from "@/rendering/deck-navigation-script";
-export { renderFallbackHtmlDeck } from "@/rendering/fallback-html-renderer";
-export type { FallbackHtmlRendererInput } from "@/rendering/fallback-html-renderer";
-export type * from "@/rendering/html-generator.port";
+export { clampFontSizeCss, defaultDesignStyleKit } from "@/design/default-design-style-kit";
+export type { DefaultDesignStyleKitInput } from "@/design/default-design-style-kit";
+export type * from "@/design/design-style-kit.types";
+export { selectDesignStyleKit } from "@/design/select-design-style-kit";
+export type { SelectDesignStyleKitInput } from "@/design/select-design-style-kit";
+export { renderTemplateDeckArtifact } from "@/rendering/html-deck-renderer";
+export type { HtmlDeckGenerationInput } from "@/rendering/html-deck-renderer";
+export { buildDeckStyleCss } from "@/rendering/deck-style-css";
+export { buildDeckRuntimeScript } from "@/rendering/deck-runtime-script";
+export { renderTemplateDeck } from "@/rendering/template-html-renderer";
+export type { TemplateDeckInput } from "@/rendering/template-html-renderer";
 export { validateGeneratedHtml } from "@/rendering/html-generation-validator";
 export type { HtmlGenerationValidationInput } from "@/rendering/html-generation-validator";
 export type * from "@/rendering/html-generation.types";
 export { buildReviewReport } from "@/review/review-report-builder";
 export type * from "@/review/types";
+export type * from "@/preview-job/preview-job.types";
+export {
+  appendStageTransition,
+  createInitialJobEvidence,
+  isTerminalJobStatus
+} from "@/preview-job/preview-job.types";
+export type * from "@/preview-job/preview-job-store.port";
+export type * from "@/preview-job/preview-job-runner.port";
+export {
+  PreviewJobService,
+  createGenerationFailure,
+  createTimeoutFailure
+} from "@/preview-job/preview-job.service";
+export {
+  PREVIEW_JOB_TIMEOUT_MS,
+  hasPreviewJobTimedOut,
+  timeoutFailureForJob
+} from "@/preview-job/preview-job-timeout";

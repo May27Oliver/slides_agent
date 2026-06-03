@@ -1,5 +1,6 @@
 import type { ChartIntent } from "@/content-core/chart-intent.types";
 import type { DeckBrief, LayoutIntent, SlideDeck } from "@/deck/deck.types";
+import type { DesignStyleKit } from "@/design/design-style-kit.types";
 
 export type VisualDensity = "low" | "medium" | "high";
 
@@ -49,6 +50,11 @@ export interface DesignPlanningResult {
   accessibilityNotes: AccessibilityNotes;
   designReviewNotes: DesignReviewNotes;
   consistencyValidation: DesignConsistencyValidation;
+  /**
+   * Optional rich visual contract (concrete type scale, motion, effects,
+   * multi-hue palette). When absent the renderer uses defaultDesignStyleKit().
+   */
+  styleKit?: DesignStyleKit;
 }
 
 export interface SlidePatternAssignment {

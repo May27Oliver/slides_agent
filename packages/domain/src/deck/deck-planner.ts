@@ -8,6 +8,7 @@ import type {
   SourceSection
 } from "@/deck/deck.types";
 import type { CreateDeckPlanProposalInput } from "@/deck/deck-planner.types";
+import { cleanDisplayText } from "@/shared/clean-display-text";
 
 const maxSlideCount = 8;
 
@@ -122,7 +123,7 @@ function contentSlide(
     id: `slide_${String(index + 2).padStart(3, "0")}`,
     slideKind: "content",
     title,
-    message: sections.map((section) => section.heading).join(" / "),
+    message: sections.map((section) => cleanDisplayText(section.heading)).join(" / "),
     sourceSectionIds,
     sourceFactIds,
     chartIntentIds,
@@ -225,7 +226,7 @@ function chartIntentIdsForFacts(chartIntents: ChartIntent[], sourceFactIds: stri
 }
 
 function titleForSections(sections: SourceSection[]): string {
-  const headings = [...new Set(sections.map((section) => section.heading))];
+  const headings = [...new Set(sections.map((section) => cleanDisplayText(section.heading)))];
   if (headings.length === 1) {
     return `${headings[0]}: ${conciseText(sections[0]?.text ?? "")}`;
   }
@@ -244,7 +245,7 @@ function splitLines(text: string): string[] {
 }
 
 function conciseText(text: string): string {
-  const normalized = text.replace(/\s+/gu, " ").trim();
+  const normalized = cleanDisplayText(text).replace(/\s+/gu, " ").trim();
   return normalized.length > 90 ? `${normalized.slice(0, 87)}...` : normalized;
 }
 
@@ -253,7 +254,10 @@ function speakerNotes(title: string, outlineText: string): string {
 }
 
 function isClosingSupportedBySource(section: SourceSection): boolean {
-  return /下一步|next steps?|action|owner|deadline|負責|期限|需在\s*\d{4}-\d{2}-\d{2}|完成/iu.test(
-    `${section.heading}\n${section.text}`
+  const text = `${section.heading}\n${section.text}`;
+  return (
+    /下一步|next steps?|action items?|owners?|deadline|負責人|期限|截止|待辦|行動項目/iu.test(
+      text
+    ) || /需在\s*\d{4}-\d{2}-\d{2}\s*前完成/iu.test(text)
   );
 }

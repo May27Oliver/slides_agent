@@ -1,23 +1,26 @@
 import { Logger, Module } from "@nestjs/common";
-import { HtmlGenerationAdapter } from "@/adapters/html-generation/html-generation.adapter";
+import { DeckOutlinePlanningAdapter } from "@/adapters/llm/deck-outline-planning.adapter";
 import { OpenAiResponsesClient } from "@/adapters/llm/openai-responses.client";
 import type { LlmCompletionClient } from "@/adapters/llm/openai-responses.client";
 import { SemanticSegmentationAdapter } from "@/adapters/llm/semantic-segmentation.adapter";
 import { UiUxProMaxDesignPlanningAdapter } from "@/adapters/ui-ux-pro-max/ui-ux-pro-max.adapter";
 import {
   designPlanningModel,
-  htmlGenerationModel,
   loadLlmRuntimeConfig,
   semanticSegmentationModel
 } from "@/config/llm.config";
 import type { LlmRuntimeConfig } from "@/config/llm.config";
 import { SlidesController } from "@/modules/slides/slides.controller";
+import { InMemoryPreviewJobStore } from "@/modules/slides/in-memory-preview-job-store";
+import { InProcessPreviewJobRunner } from "@/modules/slides/in-process-preview-job-runner";
 import { SlidesService } from "@/modules/slides/slides.service";
 import {
+  DECK_OUTLINE_PLANNING_PORT,
   DESIGN_PLANNING_PORT,
-  HTML_GENERATION_PORT,
   LLM_COMPLETION_CLIENT,
   LLM_RUNTIME_CONFIG,
+  PREVIEW_JOB_RUNNER,
+  PREVIEW_JOB_STORE,
   SEMANTIC_SEGMENTATION_ADAPTER,
   SEMANTIC_SEGMENTATION_REPAIRER_PORT,
   SEMANTIC_SEGMENTER_PORT
@@ -29,6 +32,16 @@ const logger = new Logger("SlidesModule");
   controllers: [SlidesController],
   providers: [
     SlidesService,
+    {
+      provide: PREVIEW_JOB_STORE,
+      useClass: InMemoryPreviewJobStore
+    },
+    {
+      provide: PREVIEW_JOB_RUNNER,
+      useFactory: (store: InMemoryPreviewJobStore, slidesService: SlidesService) =>
+        new InProcessPreviewJobRunner({ store, slidesService }),
+      inject: [PREVIEW_JOB_STORE, SlidesService]
+    },
     {
       provide: LLM_RUNTIME_CONFIG,
       useFactory: () => loadLlmRuntimeConfig()
@@ -72,14 +85,14 @@ const logger = new Logger("SlidesModule");
       useExisting: SEMANTIC_SEGMENTATION_ADAPTER
     },
     {
-      provide: DESIGN_PLANNING_PORT,
+      provide: DECK_OUTLINE_PLANNING_PORT,
       useFactory: (
         config: LlmRuntimeConfig,
         client: LlmCompletionClient | undefined
-      ): UiUxProMaxDesignPlanningAdapter | undefined => {
-        const model = designPlanningModel(config);
+      ): DeckOutlinePlanningAdapter | undefined => {
+        const model = config.defaultModel;
         return client
-          ? new UiUxProMaxDesignPlanningAdapter({
+          ? new DeckOutlinePlanningAdapter({
               client,
               ...(model ? { model } : {})
             })
@@ -88,14 +101,14 @@ const logger = new Logger("SlidesModule");
       inject: [LLM_RUNTIME_CONFIG, LLM_COMPLETION_CLIENT]
     },
     {
-      provide: HTML_GENERATION_PORT,
+      provide: DESIGN_PLANNING_PORT,
       useFactory: (
         config: LlmRuntimeConfig,
         client: LlmCompletionClient | undefined
-      ): HtmlGenerationAdapter | undefined => {
-        const model = htmlGenerationModel(config);
+      ): UiUxProMaxDesignPlanningAdapter | undefined => {
+        const model = designPlanningModel(config);
         return client
-          ? new HtmlGenerationAdapter({
+          ? new UiUxProMaxDesignPlanningAdapter({
               client,
               ...(model ? { model } : {})
             })

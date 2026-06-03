@@ -210,7 +210,11 @@ describe("design planner", () => {
       chartIntents
     });
 
-    expect(result).toBe(generatedResult);
+    // The planner preserves the LLM result as the core design source and
+    // augments it with a curated UIUX Pro Max style kit.
+    expect(result.designSystem).toBe(generatedResult.designSystem);
+    expect(result.slidePatternAssignments).toBe(generatedResult.slidePatternAssignments);
+    expect(result.styleKit?.fonts.googleFontsHref).toMatch(/fonts\.googleapis\.com/u);
     expect(result.designSystem.themeName).toBe("llm-designed-operational-review");
     expect(result.designSystem.chartStyle).toBe("ui-ux-pro-max-dashboard");
     expect(result.designSystem.palette).toMatchObject({

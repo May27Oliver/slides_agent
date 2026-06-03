@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { renderFallbackHtmlDeck } from "@/rendering/fallback-html-renderer";
+import { renderTemplateDeck } from "@/rendering/template-html-renderer";
 import { renderingDeck, renderingDesignPlanningResult } from "./rendering-fixtures";
 
 describe("fallback HTML keyboard navigation", () => {
   it("includes self-contained previous and next keyboard navigation script", () => {
-    const html = renderFallbackHtmlDeck({
+    const html = renderTemplateDeck({
       deck: renderingDeck,
       designPlanningResult: renderingDesignPlanningResult
     });

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { renderFallbackHtmlDeck } from "@/rendering/fallback-html-renderer";
+import { renderTemplateDeck } from "@/rendering/template-html-renderer";
 import { renderingDeck, renderingDesignPlanningResult } from "./rendering-fixtures";
 
 describe("fallback HTML speaker notes visibility", () => {
   it("does not render speakerNotesDraft in presentation view", () => {
-    const html = renderFallbackHtmlDeck({
+    const html = renderTemplateDeck({
       deck: renderingDeck,
       designPlanningResult: renderingDesignPlanningResult
     });
