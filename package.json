@@ -8,6 +8,7 @@
     "lint": "eslint .",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
+    "dev:iterm": "scripts/dev.sh",
     "test": "pnpm run test:domain && pnpm run test:contracts && pnpm run test:api && pnpm run test:web",
     "test:domain": "pnpm --filter @slides-agent/domain test",
     "test:contracts": "pnpm --filter @slides-agent/contracts test",

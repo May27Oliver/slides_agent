@@ -17,7 +17,6 @@ export const LOCALE_LABELS: Record<Locale, string> = {
 const zhTW = {
   "app.brand": "HTML 簡報生成器",
   "app.title": "生成可預覽的 HTML 簡報",
-  "app.subtitle": "貼上或上傳內容，挑選想要的簡報風格，即可產生可預覽、可下載的 HTML 簡報。",
   "app.language": "語言",
 
   "form.heading": "簡報設定",
@@ -31,7 +30,6 @@ const zhTW = {
   "form.source.upload": "上傳檔案",
   "form.source.uploadHint": "支援 .txt、.md、.csv 純文字檔",
   "form.source.clear": "清除",
-  "form.source.dropHint": "或將檔案拖曳至此",
 
   "form.brief.step": "02",
   "form.brief.title": "簡報需求",
@@ -58,10 +56,12 @@ const zhTW = {
   "form.submit": "生成簡報",
   "form.submitting": "生成中…",
 
-  "preset.style.executive": "高階回顧",
-  "preset.style.product": "產品策略",
-  "preset.style.investor": "投資人簡報",
-  "preset.style.minimal": "極簡研究",
+  "preset.style.professional": "專業商務",
+  "preset.style.warm": "溫暖親切",
+  "preset.style.vibrant": "活潑繽紛",
+  "preset.style.elegant": "優雅高級",
+  "preset.style.tech": "科技新創",
+  "preset.style.minimal": "簡約俐落",
   "preset.chart.none": "不指定",
   "preset.chart.comparison": "比較",
   "preset.chart.trend": "趨勢",
@@ -121,8 +121,6 @@ type Dictionary = Record<TranslationKey, string>;
 const enUS: Dictionary = {
   "app.brand": "HTML Slides Agent",
   "app.title": "Generate Previewable HTML Slides",
-  "app.subtitle":
-    "Paste or upload your content, pick a slide style, and generate previewable, downloadable HTML slides.",
   "app.language": "Language",
 
   "form.heading": "Deck setup",
@@ -137,7 +135,6 @@ const enUS: Dictionary = {
   "form.source.upload": "Upload file",
   "form.source.uploadHint": "Plain text .txt, .md, .csv",
   "form.source.clear": "Clear",
-  "form.source.dropHint": "or drop a file here",
 
   "form.brief.step": "02",
   "form.brief.title": "Brief",
@@ -164,10 +161,12 @@ const enUS: Dictionary = {
   "form.submit": "Generate",
   "form.submitting": "Generating…",
 
-  "preset.style.executive": "Executive review",
-  "preset.style.product": "Product strategy",
-  "preset.style.investor": "Investor narrative",
-  "preset.style.minimal": "Minimal research",
+  "preset.style.professional": "Professional",
+  "preset.style.warm": "Warm & friendly",
+  "preset.style.vibrant": "Vibrant",
+  "preset.style.elegant": "Elegant",
+  "preset.style.tech": "Tech",
+  "preset.style.minimal": "Minimal",
   "preset.chart.none": "No preference",
   "preset.chart.comparison": "Comparison",
   "preset.chart.trend": "Trend",
@@ -224,8 +223,6 @@ const enUS: Dictionary = {
 const jaJP: Dictionary = {
   "app.brand": "HTML スライド生成",
   "app.title": "プレビュー可能な HTML スライドを生成",
-  "app.subtitle":
-    "コンテンツを貼り付けまたはアップロードし、スライドのスタイルを選んで、プレビュー・ダウンロードできる HTML スライドを生成します。",
   "app.language": "言語",
 
   "form.heading": "デッキ設定",
@@ -240,7 +237,6 @@ const jaJP: Dictionary = {
   "form.source.upload": "ファイルをアップロード",
   "form.source.uploadHint": "テキスト .txt、.md、.csv",
   "form.source.clear": "クリア",
-  "form.source.dropHint": "またはファイルをここにドロップ",
 
   "form.brief.step": "02",
   "form.brief.title": "概要",
@@ -267,10 +263,12 @@ const jaJP: Dictionary = {
   "form.submit": "生成",
   "form.submitting": "生成中…",
 
-  "preset.style.executive": "エグゼクティブレビュー",
-  "preset.style.product": "プロダクト戦略",
-  "preset.style.investor": "投資家向け",
-  "preset.style.minimal": "ミニマル研究",
+  "preset.style.professional": "プロフェッショナル",
+  "preset.style.warm": "温かみ",
+  "preset.style.vibrant": "鮮やか",
+  "preset.style.elegant": "エレガント",
+  "preset.style.tech": "テック",
+  "preset.style.minimal": "ミニマル",
   "preset.chart.none": "指定なし",
   "preset.chart.comparison": "比較",
   "preset.chart.trend": "トレンド",

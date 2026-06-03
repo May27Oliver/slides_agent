@@ -17,11 +17,17 @@ interface SlideGenerationFormProps {
   errorMessage?: string | undefined;
 }
 
-const stylePresetKeys: TranslationKey[] = [
-  "preset.style.executive",
-  "preset.style.product",
-  "preset.style.investor",
-  "preset.style.minimal"
+// Each preset's styleDirection is a curated keyword phrase that reliably selects
+// a coherent design kit (font pairing + palette) in the backend's
+// selectDesignStyleKit. The phrase is decoupled from the (translated) label so
+// switching languages never changes which design kit a preset maps to.
+const stylePresets: { key: TranslationKey; styleDirection: string }[] = [
+  { key: "preset.style.professional", styleDirection: "professional business corporate 商務" },
+  { key: "preset.style.warm", styleDirection: "warm friendly approachable 暖 親切" },
+  { key: "preset.style.vibrant", styleDirection: "playful creative vibrant 活潑 創意" },
+  { key: "preset.style.elegant", styleDirection: "elegant luxury editorial 優雅 高級" },
+  { key: "preset.style.tech", styleDirection: "tech startup developer 科技" },
+  { key: "preset.style.minimal", styleDirection: "minimal geometric clean 簡潔" }
 ];
 
 const chartPresetKeys: TranslationKey[] = [
@@ -51,8 +57,9 @@ export function SlideGenerationForm({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const styleDirection =
-      stringValue(form, "styleDirection") || (stylePresetKey ? t(stylePresetKey) : "");
+    const presetStyleDirection =
+      stylePresets.find((preset) => preset.key === stylePresetKey)?.styleDirection ?? "";
+    const styleDirection = stringValue(form, "styleDirection") || presetStyleDirection;
     const chartEmphasis =
       stringValue(form, "chartEmphasis") ||
       (chartPresetKey !== "preset.chart.none" ? t(chartPresetKey) : "");
@@ -126,7 +133,7 @@ export function SlideGenerationForm({
               value={sourceContent}
               placeholder={t("form.source.placeholder")}
               onChange={(event) => setSourceContent(event.currentTarget.value)}
-              className="block w-full resize-y rounded-t-2xl border-0 bg-transparent p-4 text-sm leading-relaxed text-ink outline-none placeholder:text-ink-soft/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400"
+              className="block w-full resize-none rounded-t-2xl border-0 bg-transparent p-4 text-sm leading-relaxed text-ink outline-none placeholder:text-ink-soft/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400"
             />
             <div className="flex flex-wrap items-center gap-2 border-t border-line px-3 py-2.5">
               <input
@@ -195,7 +202,7 @@ export function SlideGenerationForm({
               {t("form.design.stylePreset")}
             </legend>
             <div className="grid grid-cols-2 gap-2">
-              {stylePresetKeys.map((key) => {
+              {stylePresets.map(({ key }) => {
                 const active = stylePresetKey === key;
                 return (
                   <label
