@@ -11,7 +11,7 @@ import { REDIS_CONNECTION } from "@/infra/redis/redis.tokens";
 
 /**
  * The BullMQ consumer side of the preview-job queue. Lives only in the worker
- * runtime (WorkerAppModule) — it is never wired into the API process, so HTTP
+ * runtime (WorkerModule) — it is never wired into the API process, so HTTP
  * serving and generation stay in separate processes. Reuses the shared Redis
  * connection's URL to build a worker-specific connection (BullMQ workers require
  * `maxRetriesPerRequest: null`).

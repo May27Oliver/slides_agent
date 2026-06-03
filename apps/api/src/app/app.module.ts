@@ -10,4 +10,4 @@ import { SlidesModule } from "@/modules/slides/slides.module";
 @Module({
   imports: [RedisModule, SlidesModule]
 })
-export class ApiAppModule {}
+export class AppModule {}

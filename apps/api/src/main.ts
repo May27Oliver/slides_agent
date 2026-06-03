@@ -1,11 +1,11 @@
 import "reflect-metadata";
 import { Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
-import { ApiAppModule } from "@/app/api-app.module";
+import { AppModule } from "@/app/app.module";
 import { PreviewJobTimeoutSweeper } from "@/modules/slides/preview-job-timeout-sweeper";
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(ApiAppModule);
+  const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix("api");
   app.useGlobalPipes(
     new ValidationPipe({

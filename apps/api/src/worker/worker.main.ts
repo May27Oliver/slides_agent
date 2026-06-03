@@ -1,17 +1,17 @@
 import "reflect-metadata";
 import { Logger } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
-import { WorkerAppModule } from "@/app/worker-app.module";
+import { WorkerModule } from "@/app/worker.module";
 import { PreviewWorkerRuntime } from "@/modules/slides/preview-worker.runtime";
 
 /**
- * Standalone, non-HTTP worker process. It bootstraps WorkerAppModule (shared
+ * Standalone, non-HTTP worker process. It bootstraps WorkerModule (shared
  * Redis + slides feature + the BullMQ consumer) and starts the consumer. All
  * lifecycle/cleanup lives in the providers' onModuleDestroy hooks, triggered by
  * Nest shutdown hooks.
  */
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.createApplicationContext(WorkerAppModule, {
+  const app = await NestFactory.createApplicationContext(WorkerModule, {
     logger: ["error", "warn", "log"]
   });
   app.enableShutdownHooks();

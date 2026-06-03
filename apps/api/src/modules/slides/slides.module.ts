@@ -157,7 +157,7 @@ const logger = new Logger("SlidesModule");
       inject: [LLM_RUNTIME_CONFIG, LLM_COMPLETION_CLIENT]
     }
   ],
-  // Exported so the worker runtime (WorkerAppModule) can inject them.
+  // Exported so the worker runtime (WorkerModule) can inject them.
   exports: [SlidesService, PREVIEW_JOB_STORE, QUEUE_CONFIG]
 })
 export class SlidesModule {}

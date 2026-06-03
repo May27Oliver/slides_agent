@@ -12,4 +12,4 @@ import { PreviewWorkerRuntime } from "@/modules/slides/preview-worker.runtime";
   imports: [RedisModule, SlidesModule],
   providers: [PreviewWorkerRuntime]
 })
-export class WorkerAppModule {}
+export class WorkerModule {}
