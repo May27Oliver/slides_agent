@@ -7,6 +7,5 @@ export const LLM_RUNTIME_CONFIG = Symbol("LLM_RUNTIME_CONFIG");
 export const LLM_COMPLETION_CLIENT = Symbol("LLM_COMPLETION_CLIENT");
 export const PREVIEW_JOB_STORE = Symbol("PREVIEW_JOB_STORE");
 export const PREVIEW_JOB_RUNNER = Symbol("PREVIEW_JOB_RUNNER");
-export const REDIS_CONNECTION = Symbol("REDIS_CONNECTION");
 export const PREVIEW_JOB_QUEUE = Symbol("PREVIEW_JOB_QUEUE");
 export const QUEUE_CONFIG = Symbol("QUEUE_CONFIG");

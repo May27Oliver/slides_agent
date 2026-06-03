@@ -1,11 +1,11 @@
 import "reflect-metadata";
 import { Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
-import { SlidesModule } from "@/modules/slides/slides.module";
+import { ApiAppModule } from "@/app/api-app.module";
 import { PreviewJobTimeoutSweeper } from "@/modules/slides/preview-job-timeout-sweeper";
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(SlidesModule);
+  const app = await NestFactory.create(ApiAppModule);
   app.setGlobalPrefix("api");
   app.useGlobalPipes(
     new ValidationPipe({
@@ -14,6 +14,8 @@ async function bootstrap(): Promise<void> {
       transform: true
     })
   );
+  // Run RedisService.onModuleDestroy (and friends) on SIGINT/SIGTERM.
+  app.enableShutdownHooks();
   // The API process owns the out-of-worker 5-minute timeout sweep (the worker
   // process does not start it).
   app.get(PreviewJobTimeoutSweeper).start();

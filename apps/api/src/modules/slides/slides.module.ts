@@ -12,6 +12,9 @@ import {
   semanticSegmentationModel
 } from "@/config/llm.config";
 import type { LlmRuntimeConfig } from "@/config/llm.config";
+import { RedisModule } from "@/infra/redis/redis.module";
+import { RedisService } from "@/infra/redis/redis.service";
+import { REDIS_CONNECTION } from "@/infra/redis/redis.tokens";
 import { SlidesController } from "@/modules/slides/slides.controller";
 import { BullMqPreviewJobRunner } from "@/modules/slides/bullmq-preview-job-runner";
 import { RedisPreviewJobStore } from "@/modules/slides/redis-preview-job-store";
@@ -28,7 +31,6 @@ import {
   PREVIEW_JOB_RUNNER,
   PREVIEW_JOB_STORE,
   QUEUE_CONFIG,
-  REDIS_CONNECTION,
   SEMANTIC_SEGMENTATION_ADAPTER,
   SEMANTIC_SEGMENTATION_REPAIRER_PORT,
   SEMANTIC_SEGMENTER_PORT
@@ -37,35 +39,26 @@ import {
 const logger = new Logger("SlidesModule");
 
 @Module({
+  imports: [RedisModule],
   controllers: [SlidesController],
   providers: [
     SlidesService,
-    // Backend-only queue configuration. Throws at startup if REDIS_URL is
-    // missing — the async preview-job path requires Redis (fail-fast).
+    // Preview-queue tuning (queue name, concurrency, sweep interval). The Redis
+    // connection itself comes from RedisModule — slides uses Redis, it does not
+    // own it.
     {
       provide: QUEUE_CONFIG,
       useFactory: (): QueueConfig => loadQueueConfig()
     },
-    // Shared connection for the job store + timeout sweeper (regular commands).
-    // enableOfflineQueue:false makes commands reject promptly when Redis is
-    // down, so job creation fails fast instead of hanging.
-    {
-      provide: REDIS_CONNECTION,
-      useFactory: (config: QueueConfig) =>
-        new IORedis(config.redisUrl, {
-          maxRetriesPerRequest: 3,
-          enableOfflineQueue: false
-        }),
-      inject: [QUEUE_CONFIG]
-    },
-    // BullMQ queue connection is separate and must use maxRetriesPerRequest:null.
+    // BullMQ producer connection is separate from the shared command connection
+    // and must use maxRetriesPerRequest:null; derive it from the shared URL.
     {
       provide: PREVIEW_JOB_QUEUE,
-      useFactory: (config: QueueConfig) =>
+      useFactory: (config: QueueConfig, redisService: RedisService) =>
         new Queue(config.queueName, {
-          connection: new IORedis(config.redisUrl, { maxRetriesPerRequest: null })
+          connection: new IORedis(redisService.redisUrl, { maxRetriesPerRequest: null })
         }),
-      inject: [QUEUE_CONFIG]
+      inject: [QUEUE_CONFIG, RedisService]
     },
     {
       provide: PREVIEW_JOB_STORE,
@@ -77,9 +70,8 @@ const logger = new Logger("SlidesModule");
       useFactory: (queue: Queue) => new BullMqPreviewJobRunner({ queue }),
       inject: [PREVIEW_JOB_QUEUE]
     },
-    // Out-of-worker 5-minute timeout enforcement: a crashed worker cannot mark
-    // its own job failed, so the API process sweeps stalled jobs. Multi-replica
-    // safe via a Redis lease.
+    // Out-of-worker 5-minute timeout enforcement. Started only by the API
+    // process (see main.ts); the worker never starts it.
     {
       provide: PreviewJobTimeoutSweeper,
       useFactory: (store: RedisPreviewJobStore, redis: IORedis, config: QueueConfig) =>
@@ -164,6 +156,8 @@ const logger = new Logger("SlidesModule");
       },
       inject: [LLM_RUNTIME_CONFIG, LLM_COMPLETION_CLIENT]
     }
-  ]
+  ],
+  // Exported so the worker runtime (WorkerAppModule) can inject them.
+  exports: [SlidesService, PREVIEW_JOB_STORE, QUEUE_CONFIG]
 })
 export class SlidesModule {}
