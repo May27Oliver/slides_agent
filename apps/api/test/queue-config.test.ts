@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadQueueConfig } from "@/modules/slides/queue.config";
+import { loadQueueConfig } from "@/modules/preview-jobs/queue.config";
 
 describe("queue config", () => {
   it("applies safe defaults", () => {

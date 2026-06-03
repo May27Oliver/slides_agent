@@ -1,6 +1,6 @@
 import type { PreviewJob } from "@slides-agent/domain";
 import { hasPreviewJobTimedOut, timeoutFailureForJob } from "@slides-agent/domain";
-import type { RedisPreviewJobStore } from "@/modules/slides/redis-preview-job-store";
+import type { RedisPreviewJobStore } from "@/modules/preview-jobs/redis-preview-job-store";
 
 interface SweeperLogger {
   log(message: string): void;
@@ -19,7 +19,10 @@ export interface SweeperRedis {
 }
 
 export interface PreviewJobTimeoutSweeperOptions {
-  store: Pick<RedisPreviewJobStore, "listActiveJobIds" | "findById" | "markFailed" | "expireOldJobs">;
+  store: Pick<
+    RedisPreviewJobStore,
+    "listActiveJobIds" | "findById" | "markFailed" | "expireOldJobs"
+  >;
   redis: SweeperRedis;
   intervalMs: number;
   now?: () => Date;

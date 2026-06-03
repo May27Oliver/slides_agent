@@ -1,6 +1,6 @@
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { describe, expect, it, vi } from "vitest";
-import { SlidesController } from "../src/modules/slides/slides.controller";
+import { PreviewJobsController } from "../src/modules/preview-jobs/preview-jobs.controller";
 
 const request = {
   sourceContent: "Onboarding conversion improved from 18% to 25%.",
@@ -14,7 +14,7 @@ describe("preview job API contract", () => {
   it("POST /api/slides/preview-jobs returns accepted tracking details", async () => {
     const store = inMemoryHarnessStore();
     const runner = { start: vi.fn() };
-    const controller = new SlidesController({ generatePreview: vi.fn() }, store, runner);
+    const controller = new PreviewJobsController({ generatePreview: vi.fn() }, store, runner);
 
     const response = await controller.createPreviewJob(request);
 
@@ -29,7 +29,7 @@ describe("preview job API contract", () => {
 
   it("rejects invalid preview requests before job creation", async () => {
     const store = inMemoryHarnessStore();
-    const controller = new SlidesController({ generatePreview: vi.fn() }, store, {
+    const controller = new PreviewJobsController({ generatePreview: vi.fn() }, store, {
       start: vi.fn()
     });
 
@@ -41,7 +41,7 @@ describe("preview job API contract", () => {
 
   it("GET /api/slides/preview-jobs/:jobId returns running, succeeded, failed, and unavailable states", async () => {
     const store = inMemoryHarnessStore();
-    const controller = new SlidesController({ generatePreview: vi.fn() }, store, {
+    const controller = new PreviewJobsController({ generatePreview: vi.fn() }, store, {
       start: vi.fn()
     });
     const created = await controller.createPreviewJob(request);

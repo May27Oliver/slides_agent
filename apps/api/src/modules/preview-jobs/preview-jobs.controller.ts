@@ -14,7 +14,7 @@ import {
   ServiceUnavailableException,
   UseGuards
 } from "@nestjs/common";
-import { RateLimitGuard } from "@/modules/slides/rate-limit.guard";
+import { RateLimitGuard } from "@/modules/preview-jobs/rate-limit.guard";
 import type {
   CreatePreviewJobResponseContract,
   GeneratePreviewResponseContract,
@@ -26,7 +26,7 @@ import { validateGeneratePreviewRequest } from "@slides-agent/contracts";
 import type { PreviewJob, PreviewJobRunner, PreviewJobStore } from "@slides-agent/domain";
 import { PreviewJobService } from "@slides-agent/domain";
 import { SlidesService } from "@/modules/slides/slides.service";
-import { PREVIEW_JOB_RUNNER, PREVIEW_JOB_STORE } from "@/modules/slides/slides.tokens";
+import { PREVIEW_JOB_RUNNER, PREVIEW_JOB_STORE } from "@/modules/preview-jobs/preview-jobs.tokens";
 
 // Shared budget across both expensive POST endpoints (each request fans out
 // into multiple chained LLM calls). Tunable via env; defaults to 5 req/60s/IP.
@@ -36,7 +36,7 @@ const previewRateLimit = new RateLimitGuard({
 });
 
 @Controller("slides")
-export class SlidesController {
+export class PreviewJobsController {
   private readonly logger = new Logger("PreviewJobs");
   private readonly previewJobService = new PreviewJobService();
 

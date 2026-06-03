@@ -1,13 +1,12 @@
 import { Module } from "@nestjs/common";
-import { RedisModule } from "@/infra/redis/redis.module";
-import { SlidesModule } from "@/modules/slides/slides.module";
+import { PreviewJobsModule } from "@/modules/preview-jobs/preview-jobs.module";
 
 /**
- * The HTTP API process: shared Redis infra + the slides feature (controller,
- * queue producer, timeout sweeper). Future features (e.g. AuthModule) are added
- * here and reuse RedisModule rather than pulling Redis from SlidesModule.
+ * The HTTP API process. PreviewJobsModule pulls in the slides generation
+ * capability and the shared Redis infra it needs. Future features (e.g.
+ * AuthModule) are added here and import RedisModule directly.
  */
 @Module({
-  imports: [RedisModule, SlidesModule]
+  imports: [PreviewJobsModule]
 })
 export class AppModule {}

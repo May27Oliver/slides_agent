@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { PreviewJob } from "@slides-agent/domain";
-import { BullMqPreviewJobRunner } from "@/modules/slides/bullmq-preview-job-runner";
+import { BullMqPreviewJobRunner } from "@/modules/preview-jobs/bullmq-preview-job-runner";
 
 function job(id: string): PreviewJob {
   return {

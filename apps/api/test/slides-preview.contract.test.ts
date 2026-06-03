@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SlidesController } from "../src/modules/slides/slides.controller";
+import { PreviewJobsController } from "../src/modules/preview-jobs/preview-jobs.controller";
 
 const previewRequest = {
   sourceContent: "Onboarding conversion 從 18% 提升到 25%",
@@ -54,7 +54,7 @@ describe("POST /api/slides/preview contract", () => {
         return previewResponse;
       }
     };
-    const controller = new SlidesController(service);
+    const controller = new PreviewJobsController(service);
 
     await expect(controller.preview(previewRequest)).resolves.toEqual(previewResponse);
   });
@@ -65,7 +65,7 @@ describe("POST /api/slides/preview contract", () => {
         throw new Error("service should not be called for invalid requests");
       }
     };
-    const controller = new SlidesController(service);
+    const controller = new PreviewJobsController(service);
 
     await expect(
       controller.preview({

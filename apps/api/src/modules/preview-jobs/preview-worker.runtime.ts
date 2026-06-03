@@ -2,11 +2,11 @@ import { Inject, Injectable, Logger, type OnModuleDestroy } from "@nestjs/common
 import type IORedis from "ioredis";
 import { Worker } from "bullmq";
 import { SlidesService } from "@/modules/slides/slides.service";
-import { runPreviewJobGeneration } from "@/modules/slides/preview-job-execution";
-import type { RedisPreviewJobStore } from "@/modules/slides/redis-preview-job-store";
-import type { PreviewJobQueuePayload } from "@/modules/slides/bullmq-preview-job-runner";
-import type { QueueConfig } from "@/modules/slides/queue.config";
-import { PREVIEW_JOB_STORE, QUEUE_CONFIG } from "@/modules/slides/slides.tokens";
+import { runPreviewJobGeneration } from "@/modules/preview-jobs/preview-job-execution";
+import type { RedisPreviewJobStore } from "@/modules/preview-jobs/redis-preview-job-store";
+import type { PreviewJobQueuePayload } from "@/modules/preview-jobs/bullmq-preview-job-runner";
+import type { QueueConfig } from "@/modules/preview-jobs/queue.config";
+import { PREVIEW_JOB_STORE, QUEUE_CONFIG } from "@/modules/preview-jobs/preview-jobs.tokens";
 import { REDIS_CONNECTION } from "@/infra/redis/redis.tokens";
 
 /**

@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import RedisMock from "ioredis-mock";
 import type { PreviewJob } from "@slides-agent/domain";
-import { RedisPreviewJobStore } from "@/modules/slides/redis-preview-job-store";
-import { PreviewJobTimeoutSweeper } from "@/modules/slides/preview-job-timeout-sweeper";
+import { RedisPreviewJobStore } from "@/modules/preview-jobs/redis-preview-job-store";
+import { PreviewJobTimeoutSweeper } from "@/modules/preview-jobs/preview-job-timeout-sweeper";
 
 const NOW = new Date("2026-06-03T10:06:30.000Z");
 // Created > 5 minutes before NOW so it is timed out.

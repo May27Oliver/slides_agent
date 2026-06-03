@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { Logger } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { WorkerModule } from "@/app/worker.module";
-import { PreviewWorkerRuntime } from "@/modules/slides/preview-worker.runtime";
+import { PreviewWorkerRuntime } from "@/modules/preview-jobs/preview-worker.runtime";
 
 /**
  * Standalone, non-HTTP worker process. It bootstraps WorkerModule (shared

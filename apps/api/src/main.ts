@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "@/app/app.module";
-import { PreviewJobTimeoutSweeper } from "@/modules/slides/preview-job-timeout-sweeper";
+import { PreviewJobTimeoutSweeper } from "@/modules/preview-jobs/preview-job-timeout-sweeper";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);

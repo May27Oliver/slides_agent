@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import RedisMock from "ioredis-mock";
 import type { PreviewJob } from "@slides-agent/domain";
-import { RedisPreviewJobStore } from "@/modules/slides/redis-preview-job-store";
+import { RedisPreviewJobStore } from "@/modules/preview-jobs/redis-preview-job-store";
 
 const CREATED_AT = new Date("2026-06-03T10:00:00.000Z");
 
