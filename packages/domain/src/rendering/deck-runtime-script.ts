@@ -1,7 +1,8 @@
 /**
- * Self-contained presentation runtime: keyboard + click + dot navigation and a
- * progress indicator. Emits the literal keydown / ArrowRight / ArrowLeft /
- * PageDown / PageUp handlers the validator and accessibility tests expect.
+ * Self-contained presentation runtime: keyboard + click + dot navigation, a
+ * progress indicator, and an "F" fullscreen toggle. Emits the literal keydown /
+ * ArrowRight / ArrowLeft / PageDown / PageUp handlers the validator and
+ * accessibility tests expect.
  */
 export function buildDeckRuntimeScript(): string {
   return `
@@ -10,6 +11,22 @@ export function buildDeckRuntimeScript(): string {
   var dotsBox = document.getElementById("sidedots");
   var progress = document.getElementById("progress");
   var current = 0;
+
+  function toggleFullscreen() {
+    var root = document.documentElement;
+    var fsElement =
+      document.fullscreenElement || document.webkitFullscreenElement || null;
+    if (fsElement) {
+      var exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (exit) { exit.call(document); }
+    } else {
+      var request = root.requestFullscreen || root.webkitRequestFullscreen;
+      if (request) {
+        var result = request.call(root);
+        if (result && typeof result.catch === "function") { result.catch(function () {}); }
+      }
+    }
+  }
 
   if (dotsBox) {
     slides.forEach(function (_, index) {
@@ -43,6 +60,7 @@ export function buildDeckRuntimeScript(): string {
   document.addEventListener("keydown", function (event) {
     if (event.key === "ArrowRight" || event.key === "PageDown") { next(); }
     if (event.key === "ArrowLeft" || event.key === "PageUp") { prev(); }
+    if (event.key === "f" || event.key === "F") { toggleFullscreen(); }
   });
 
   var prevBtn = document.getElementById("prevBtn");

@@ -16,4 +16,16 @@ describe("fallback HTML keyboard navigation", () => {
     expect(html).toContain("PageUp");
     expect(html).not.toContain("<script src=");
   });
+
+  it("includes an F-key fullscreen toggle", () => {
+    const html = renderTemplateDeck({
+      deck: renderingDeck,
+      designPlanningResult: renderingDesignPlanningResult
+    });
+
+    expect(html).toContain('event.key === "f"');
+    expect(html).toContain('event.key === "F"');
+    expect(html).toContain("requestFullscreen");
+    expect(html).toContain("exitFullscreen");
+  });
 });

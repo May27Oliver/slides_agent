@@ -25,6 +25,9 @@ export function SlidePreviewPanel({ preview }: SlidePreviewPanelProps) {
         // but, without allow-same-origin, the frame gets an opaque origin with no
         // access to the parent window, storage, cookies, or same-origin API calls.
         sandbox="allow-scripts"
+        // Permit the sandboxed deck to enter fullscreen (press F) — Permissions
+        // Policy, independent of the sandbox token.
+        allow="fullscreen"
         referrerPolicy="no-referrer"
       />
       {firstSlide ? (
