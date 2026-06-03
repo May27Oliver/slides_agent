@@ -62,3 +62,8 @@ export {
   hasPreviewJobTimedOut,
   timeoutFailureForJob
 } from "@/preview-job/preview-job-timeout";
+export {
+  serializePreviewJob,
+  deserializePreviewJob
+} from "@/preview-job/preview-job-serialization";
+export type { SerializedPreviewJob } from "@/preview-job/preview-job-serialization";

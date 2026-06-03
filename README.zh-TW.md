@@ -90,11 +90,22 @@ pnpm install
 pnpm dev:iterm
 ```
 
-或分別手動啟動:
+預覽生成以**非同步 job**形式跑在 **Redis + BullMQ** 佇列上,由一個獨立的
+**worker** 程序消費——這樣 LLM 在生成時 API 仍能即時回應。Redis 為**必要**,
+請先啟動:
 
 ```bash
-# 後端（watch 模式,變更自動重啟）→ http://localhost:3000
+docker run --rm -p 6379:6379 --name slides-redis redis:7
+```
+
+接著分別手動啟動各程序:
+
+```bash
+# 後端 API（watch 模式,變更自動重啟）→ http://localhost:3000
 pnpm --filter @slides-agent/api dev
+
+# 預覽 job worker（獨立、非 HTTP 程序;消費佇列）
+pnpm --filter @slides-agent/api worker:dev
 
 # 前端（Vite HMR）→ http://localhost:5173
 pnpm --filter @slides-agent/web dev -- --host localhost --port 5173

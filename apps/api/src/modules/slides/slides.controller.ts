@@ -11,6 +11,7 @@ import {
   Optional,
   Param,
   Post,
+  ServiceUnavailableException,
   UseGuards
 } from "@nestjs/common";
 import { RateLimitGuard } from "@/modules/slides/rate-limit.guard";
@@ -74,9 +75,23 @@ export class SlidesController {
     }
 
     const store = this.requirePreviewJobStore();
-    const job = await store.create(this.previewJobService.createAcceptedJob(validation.value));
+
+    let job;
+    try {
+      job = await store.create(this.previewJobService.createAcceptedJob(validation.value));
+      // Await the enqueue so a Redis/queue outage fails fast instead of leaving
+      // an accepted job that no worker will ever pick up.
+      await this.previewJobRunner?.start(job);
+    } catch {
+      // Sanitized: never surface Redis/queue connection details to the client.
+      this.logger.error("preview job creation failed code=PREVIEW_QUEUE_UNAVAILABLE");
+      throw new ServiceUnavailableException({
+        code: "PREVIEW_QUEUE_UNAVAILABLE",
+        message: "Preview service is temporarily unavailable. Please try again."
+      });
+    }
+
     this.logger.log(`${job.id} accepted stage=request_accepted status=queued`);
-    this.previewJobRunner?.start(job);
 
     return {
       jobId: job.id,

@@ -100,3 +100,23 @@ docker stop slides-redis
 | 5 | FR-012、FR-015 / SC-006 |
 | 0（fail-fast） | FR-013 |
 | 全程 | CR-004 安全邊界 / SC-007 evidence 可追溯 |
+
+## Evidence
+
+### 自動化（已通過）
+
+實作於 `004-redis-worker-queue` 分支，TDD 逐項綠燈：
+
+- `packages/domain` serialization 來回測試（Date↔ISO 可逆、結構不符丟錯）。
+- `apps/api` 單元/整合測試（以 `ioredis-mock` 驗證 Redis 行為）:
+  - `queue-config`：缺 `REDIS_URL` fail-fast、預設值。
+  - `redis-preview-job-store`：create + active-set + TTL、findById、跨「程序」讀取、succeeded 移出 active-set、終態不被覆蓋、active 列表、expire 對帳、Redis 失敗回 sanitized 錯誤。
+  - `bullmq-preview-job-runner`：只入列 `{ jobId }`、`attempts:1`、不含完整 request。
+  - `preview-job-execution`：階段推進 + 成功結果、例外轉 sanitized failure（無 `sk-secret` 外洩）。
+  - `preview-job-timeout-sweeper`：逾時 job 收斂 `failed`、未逾時不動、lease 被佔用時跳過。
+- 全套件綠：domain 74、contracts 15、api 48、web 7；`apps/api` 與 `packages/domain` `tsc --noEmit` 通過。
+- 既有 003 contract test（`slides-preview-jobs.contract.test.ts`）在新 fail-fast 控制器下仍通過。
+
+### 待手動執行（需本機 Redis + 兩個程序）
+
+上方第 0–5 節的 live 端到端（主程序卸載觀察、重啟後輪詢、worker 崩潰逾時收斂、過期 TTL 觀察）尚未在本環境實跑，請依步驟以 `docker` Redis + `api dev` + `worker:dev` 驗證並回填觀察結果。

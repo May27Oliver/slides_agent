@@ -90,11 +90,22 @@ One command (splits the current iTerm2 tab into two panes — API + web):
 pnpm dev:iterm
 ```
 
-Or run each server manually:
+Preview generation runs as async jobs on a **Redis + BullMQ** queue, consumed by
+a separate **worker** process — so the API stays responsive while the LLM works.
+Redis is **required**; start it first:
 
 ```bash
-# Backend (watch mode, restarts on change) → http://localhost:3000
+docker run --rm -p 6379:6379 --name slides-redis redis:7
+```
+
+Then run each process manually:
+
+```bash
+# Backend API (watch mode, restarts on change) → http://localhost:3000
 pnpm --filter @slides-agent/api dev
+
+# Preview-job worker (separate, non-HTTP process; consumes the queue)
+pnpm --filter @slides-agent/api worker:dev
 
 # Frontend (Vite HMR) → http://localhost:5173
 pnpm --filter @slides-agent/web dev -- --host localhost --port 5173

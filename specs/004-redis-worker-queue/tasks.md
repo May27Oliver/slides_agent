@@ -26,9 +26,9 @@
 
 **目的**：建立 004 需要的相依、設定與測試佔位。
 
-- [ ] T001 在 `apps/api/package.json` 新增相依 `bullmq`、`ioredis`，devDependency `ioredis-mock`，並新增 scripts `worker`（`node --env-file=../../.env --import tsx src/worker/worker.main.ts`）與 `worker:dev`（加 `--watch`）
-- [ ] T002 [P] 更新 `.env.example` 新增 `REDIS_URL`、`PREVIEW_QUEUE_NAME`、`PREVIEW_WORKER_CONCURRENCY`、`PREVIEW_JOB_RETENTION_MS`、`PREVIEW_TIMEOUT_SWEEP_INTERVAL_MS`，並標註 `REDIS_URL` 為必要
-- [ ] T003 [P] 建立 API 測試佔位檔 `apps/api/test/redis-preview-job-store.test.ts`、`apps/api/test/bullmq-preview-job-runner.test.ts`、`apps/api/test/preview-job-execution.test.ts`、`apps/api/test/preview-job-timeout-sweeper.test.ts`、`apps/api/test/queue-config.test.ts`
+- [X] T001 在 `apps/api/package.json` 新增相依 `bullmq`、`ioredis`，devDependency `ioredis-mock`，並新增 scripts `worker`（`node --env-file=../../.env --import tsx src/worker/worker.main.ts`）與 `worker:dev`（加 `--watch`）
+- [X] T002 [P] 更新 `.env.example` 新增 `REDIS_URL`、`PREVIEW_QUEUE_NAME`、`PREVIEW_WORKER_CONCURRENCY`、`PREVIEW_JOB_RETENTION_MS`、`PREVIEW_TIMEOUT_SWEEP_INTERVAL_MS`，並標註 `REDIS_URL` 為必要
+- [X] T003 [P] 建立 API 測試佔位檔 `apps/api/test/redis-preview-job-store.test.ts`、`apps/api/test/bullmq-preview-job-runner.test.ts`、`apps/api/test/preview-job-execution.test.ts`、`apps/api/test/preview-job-timeout-sweeper.test.ts`、`apps/api/test/queue-config.test.ts`
 
 ---
 
@@ -40,16 +40,16 @@
 
 ### Foundation 測試（REQUIRED - 先寫）
 
-- [ ] T004 [P] 在 `packages/domain/test/preview-job/preview-job-serialization.test.ts` 撰寫 failing 來回（serialize→deserialize）測試，驗證 `createdAt/updatedAt/expiresAt` Date↔ISO 可逆、其餘形狀深度相等、結構不符時丟錯
-- [ ] T005 [P] 在 `apps/api/test/queue-config.test.ts` 撰寫 failing 設定測試，驗證缺 `REDIS_URL` 時 `loadQueueConfig()` 丟出可被安全化的錯誤、其餘欄位有正確預設
+- [X] T004 [P] 在 `packages/domain/test/preview-job/preview-job-serialization.test.ts` 撰寫 failing 來回（serialize→deserialize）測試，驗證 `createdAt/updatedAt/expiresAt` Date↔ISO 可逆、其餘形狀深度相等、結構不符時丟錯
+- [X] T005 [P] 在 `apps/api/test/queue-config.test.ts` 撰寫 failing 設定測試，驗證缺 `REDIS_URL` 時 `loadQueueConfig()` 丟出可被安全化的錯誤、其餘欄位有正確預設
 
 ### Foundation 實作
 
-- [ ] T006 在 `packages/domain/src/preview-job/preview-job-serialization.ts` 實作 pure `serializePreviewJob` / `deserializePreviewJob`（無 I/O、無內部時間相依）
-- [ ] T007 從 `packages/domain/src/index.ts` 匯出 serialization 函式
-- [ ] T008 在 `apps/api/src/modules/slides/queue.config.ts` 實作 `loadQueueConfig()`（讀 `REDIS_URL` 等環境變數、`REDIS_URL` 缺少時 fail-fast）
-- [ ] T009 在 `apps/api/src/modules/slides/slides.tokens.ts` 新增 `REDIS_CONNECTION`、`PREVIEW_JOB_QUEUE` tokens
-- [ ] T010 在 `apps/api/src/modules/slides/slides.module.ts` 新增 `REDIS_CONNECTION` provider（以 `loadQueueConfig()` 建立 ioredis 連線；連線設定錯誤 fail-fast，不洩漏連線字串）
+- [X] T006 在 `packages/domain/src/preview-job/preview-job-serialization.ts` 實作 pure `serializePreviewJob` / `deserializePreviewJob`（無 I/O、無內部時間相依）
+- [X] T007 從 `packages/domain/src/index.ts` 匯出 serialization 函式
+- [X] T008 在 `apps/api/src/modules/slides/queue.config.ts` 實作 `loadQueueConfig()`（讀 `REDIS_URL` 等環境變數、`REDIS_URL` 缺少時 fail-fast）
+- [X] T009 在 `apps/api/src/modules/slides/slides.tokens.ts` 新增 `REDIS_CONNECTION`、`PREVIEW_JOB_QUEUE` tokens
+- [X] T010 在 `apps/api/src/modules/slides/slides.module.ts` 新增 `REDIS_CONNECTION` provider（以 `loadQueueConfig()` 建立 ioredis 連線；連線設定錯誤 fail-fast，不洩漏連線字串）
 
 **Checkpoint**：序列化、設定與 Redis 連線 token 已就緒，可開始 story work。
 
@@ -63,16 +63,16 @@
 
 ### User Story 1 測試（REQUIRED - 先寫）
 
-- [ ] T011 [P] [US1] 在 `apps/api/test/redis-preview-job-store.test.ts` 撰寫 failing 測試（ioredis-mock）：`create(job)` 寫入 `preview-job:{id}` JSON 並 `SADD preview-job:active`、設定 TTL；`findById` 可讀回等價 job、不存在回 `undefined`
-- [ ] T012 [P] [US1] 在 `apps/api/test/bullmq-preview-job-runner.test.ts` 撰寫 failing 測試：`start(job)` 對 queue 以 `attempts:1` 入列僅含 `{ jobId }` 的 payload，且不呼叫 `SlidesService`
-- [ ] T013 [P] [US1] 在 `apps/api/test/redis-preview-job-store.test.ts` 撰寫 failing 測試：Redis 連線失敗時 `create` 丟出不含連線細節的錯誤（供控制器轉安全錯誤）
+- [X] T011 [P] [US1] 在 `apps/api/test/redis-preview-job-store.test.ts` 撰寫 failing 測試（ioredis-mock）：`create(job)` 寫入 `preview-job:{id}` JSON 並 `SADD preview-job:active`、設定 TTL；`findById` 可讀回等價 job、不存在回 `undefined`
+- [X] T012 [P] [US1] 在 `apps/api/test/bullmq-preview-job-runner.test.ts` 撰寫 failing 測試：`start(job)` 對 queue 以 `attempts:1` 入列僅含 `{ jobId }` 的 payload，且不呼叫 `SlidesService`
+- [X] T013 [P] [US1] 在 `apps/api/test/redis-preview-job-store.test.ts` 撰寫 failing 測試：Redis 連線失敗時 `create` 丟出不含連線細節的錯誤（供控制器轉安全錯誤）
 
 ### User Story 1 實作
 
-- [ ] T014 [US1] 在 `apps/api/src/modules/slides/redis-preview-job-store.ts` 實作 `RedisPreviewJobStore`（`create`/`findById`，使用 domain serialization 與 `PreviewJobService`，active-set 與 TTL）
-- [ ] T015 [US1] 在 `apps/api/src/modules/slides/bullmq-preview-job-runner.ts` 實作 `BullMqPreviewJobRunner.start`（注入 `PREVIEW_JOB_QUEUE`，入列 `{ jobId }`，`attempts:1`）
-- [ ] T016 [US1] 在 `apps/api/src/modules/slides/slides.module.ts` 把 `PREVIEW_JOB_STORE` 改 wire 到 `RedisPreviewJobStore`、`PREVIEW_JOB_RUNNER` 改 wire 到 `BullMqPreviewJobRunner`，並新增 `PREVIEW_JOB_QUEUE` provider（BullMQ `Queue`，用 `REDIS_CONNECTION` 與 `queue.config`）
-- [ ] T017 [US1] 在 `apps/api/src/modules/slides/slides.controller.ts` 確認 `createPreviewJob` 在 store/runner 不可用或 Redis 失敗時回安全錯誤（fail-fast，不洩漏內部細節）；公開回應形狀不變
+- [X] T014 [US1] 在 `apps/api/src/modules/slides/redis-preview-job-store.ts` 實作 `RedisPreviewJobStore`（`create`/`findById`，使用 domain serialization 與 `PreviewJobService`，active-set 與 TTL）
+- [X] T015 [US1] 在 `apps/api/src/modules/slides/bullmq-preview-job-runner.ts` 實作 `BullMqPreviewJobRunner.start`（注入 `PREVIEW_JOB_QUEUE`，入列 `{ jobId }`，`attempts:1`）
+- [X] T016 [US1] 在 `apps/api/src/modules/slides/slides.module.ts` 把 `PREVIEW_JOB_STORE` 改 wire 到 `RedisPreviewJobStore`、`PREVIEW_JOB_RUNNER` 改 wire 到 `BullMqPreviewJobRunner`，並新增 `PREVIEW_JOB_QUEUE` provider（BullMQ `Queue`，用 `REDIS_CONNECTION` 與 `queue.config`）
+- [X] T017 [US1] 在 `apps/api/src/modules/slides/slides.controller.ts` 確認 `createPreviewJob` 在 store/runner 不可用或 Redis 失敗時回安全錯誤（fail-fast，不洩漏內部細節）；公開回應形狀不變
 
 **Checkpoint**：US1 可獨立運作：有效 request 入列且不在主程序生成；Redis 不可用 fail-fast。
 
@@ -86,16 +86,16 @@
 
 ### User Story 2 測試（REQUIRED - 先寫）
 
-- [ ] T018 [P] [US2] 在 `apps/api/test/preview-job-execution.test.ts` 撰寫 failing 測試：`runPreviewJobGeneration` 透過 `onStage` 依序更新 running/各階段、成功時呼叫 `store.markSucceeded` 並帶 002 result 形狀
-- [ ] T019 [P] [US2] 在 `apps/api/test/redis-preview-job-store.test.ts` 撰寫 failing 測試（ioredis-mock）：`markRunning`/`markStage`/`markSucceeded` 寫回後，重新 `findById` 取得更新後狀態（模擬另一個程序讀取），succeeded 後移出 active-set
-- [ ] T020 [P] [US2] 在 `apps/api/test/preview-job-execution.test.ts` 撰寫 failing 測試：對終態 job 再次更新為 no-op（終態守門，不覆蓋）
+- [X] T018 [P] [US2] 在 `apps/api/test/preview-job-execution.test.ts` 撰寫 failing 測試：`runPreviewJobGeneration` 透過 `onStage` 依序更新 running/各階段、成功時呼叫 `store.markSucceeded` 並帶 002 result 形狀
+- [X] T019 [P] [US2] 在 `apps/api/test/redis-preview-job-store.test.ts` 撰寫 failing 測試（ioredis-mock）：`markRunning`/`markStage`/`markSucceeded` 寫回後，重新 `findById` 取得更新後狀態（模擬另一個程序讀取），succeeded 後移出 active-set
+- [X] T020 [P] [US2] 在 `apps/api/test/preview-job-execution.test.ts` 撰寫 failing 測試：對終態 job 再次更新為 no-op（終態守門，不覆蓋）
 
 ### User Story 2 實作
 
-- [ ] T021 [US2] 在 `apps/api/src/modules/slides/preview-job-execution.ts` 抽出並實作 `runPreviewJobGeneration({ store, slidesService, job, now, logger })`（移植自 003 in-process runner 的 run 邏輯，含 onStage 即時逾時檢查）
-- [ ] T022 [US2] 在 `apps/api/src/modules/slides/redis-preview-job-store.ts` 補齊 `markRunning`/`markStage`/`markSucceeded`/`markFailed`（讀-改-寫 + 終態守門 + 條件寫入；succeeded/failed 移出 active-set 並重設 TTL）
-- [ ] T023 [US2] 在 `apps/api/src/worker/worker.main.ts` 實作非 HTTP worker entrypoint：`createApplicationContext(SlidesModule)` 取得 `SlidesService` 與 `RedisPreviewJobStore`，建立 BullMQ `Worker(queueName, processor, { connection, concurrency })`，processor 以 `jobId` `findById` 後呼叫 `runPreviewJobGeneration`
-- [ ] T024 [US2] 確認 `apps/api/src/modules/slides/slides.controller.ts` 的 `GET /preview-jobs/:jobId` 透過 `RedisPreviewJobStore.findById` 讀取（沿用 003 handler，無需改公開形狀）
+- [X] T021 [US2] 在 `apps/api/src/modules/slides/preview-job-execution.ts` 抽出並實作 `runPreviewJobGeneration({ store, slidesService, job, now, logger })`（移植自 003 in-process runner 的 run 邏輯，含 onStage 即時逾時檢查）
+- [X] T022 [US2] 在 `apps/api/src/modules/slides/redis-preview-job-store.ts` 補齊 `markRunning`/`markStage`/`markSucceeded`/`markFailed`（讀-改-寫 + 終態守門 + 條件寫入；succeeded/failed 移出 active-set 並重設 TTL）
+- [X] T023 [US2] 在 `apps/api/src/worker/worker.main.ts` 實作非 HTTP worker entrypoint：`createApplicationContext(SlidesModule)` 取得 `SlidesService` 與 `RedisPreviewJobStore`，建立 BullMQ `Worker(queueName, processor, { connection, concurrency })`，processor 以 `jobId` `findById` 後呼叫 `runPreviewJobGeneration`
+- [X] T024 [US2] 確認 `apps/api/src/modules/slides/slides.controller.ts` 的 `GET /preview-jobs/:jobId` 透過 `RedisPreviewJobStore.findById` 讀取（沿用 003 handler，無需改公開形狀）
 
 **Checkpoint**：US2 可獨立運作：worker 在獨立程序推進並完成 job，狀態跨程序／重啟可讀。
 
@@ -109,16 +109,16 @@
 
 ### User Story 3 測試（REQUIRED - 先寫）
 
-- [ ] T025 [P] [US3] 在 `apps/api/test/preview-job-execution.test.ts` 撰寫 failing 測試：生成拋錯時呼叫 `store.markFailed`，failure 經 `createGenerationFailure` 安全化（不含 provider 原始錯誤／prompt／API key／stack trace），且記錄 failedStage
-- [ ] T026 [P] [US3] 在 `apps/api/test/preview-job-timeout-sweeper.test.ts` 撰寫 failing 測試（ioredis-mock + 注入 `now`）：對 active-set 中超過 5 分鐘的 job `markFailed(PREVIEW_JOB_TIMEOUT)`，已終態／不存在者從 active-set 移除
-- [ ] T027 [P] [US3] 在 `apps/api/test/preview-job-timeout-sweeper.test.ts` 撰寫 failing 測試：多副本 lease（`SET NX PX`）下，未取得 lock 的 tick 不執行 sweep
+- [X] T025 [P] [US3] 在 `apps/api/test/preview-job-execution.test.ts` 撰寫 failing 測試：生成拋錯時呼叫 `store.markFailed`，failure 經 `createGenerationFailure` 安全化（不含 provider 原始錯誤／prompt／API key／stack trace），且記錄 failedStage
+- [X] T026 [P] [US3] 在 `apps/api/test/preview-job-timeout-sweeper.test.ts` 撰寫 failing 測試（ioredis-mock + 注入 `now`）：對 active-set 中超過 5 分鐘的 job `markFailed(PREVIEW_JOB_TIMEOUT)`，已終態／不存在者從 active-set 移除
+- [X] T027 [P] [US3] 在 `apps/api/test/preview-job-timeout-sweeper.test.ts` 撰寫 failing 測試：多副本 lease（`SET NX PX`）下，未取得 lock 的 tick 不執行 sweep
 
 ### User Story 3 實作
 
-- [ ] T028 [US3] 在 `apps/api/src/modules/slides/preview-job-execution.ts` 完成失敗路徑（catch → `createGenerationFailure` → `store.markFailed`，沿用 003 安全化）
-- [ ] T029 [US3] 在 `apps/api/src/modules/slides/preview-job-timeout-sweeper.ts` 實作 sweep：取得 lease → `SMEMBERS active` → 逐一 `findById` → 逾時者 `markFailed(timeoutFailureForJob)`（重用 `preview-job-timeout.ts`）→ 終態/不存在者 `SREM`
-- [ ] T030 [US3] 在 `apps/api/src/modules/slides/redis-preview-job-store.ts` 實作 `expireOldJobs`（終態且 `expiresAt<=at` 標記 expired／交由 TTL 回收）並從 active-set 清除
-- [ ] T031 [US3] 在 `apps/api/src/modules/slides/slides.module.ts` 於 API 程序以 `onApplicationBootstrap` 啟動 timeout sweeper 週期計時器（`unref`），`onModuleDestroy` 清除；worker 程序不啟動 sweeper
+- [X] T028 [US3] 在 `apps/api/src/modules/slides/preview-job-execution.ts` 完成失敗路徑（catch → `createGenerationFailure` → `store.markFailed`，沿用 003 安全化）
+- [X] T029 [US3] 在 `apps/api/src/modules/slides/preview-job-timeout-sweeper.ts` 實作 sweep：取得 lease → `SMEMBERS active` → 逐一 `findById` → 逾時者 `markFailed(timeoutFailureForJob)`（重用 `preview-job-timeout.ts`）→ 終態/不存在者 `SREM`
+- [X] T030 [US3] 在 `apps/api/src/modules/slides/redis-preview-job-store.ts` 實作 `expireOldJobs`（終態且 `expiresAt<=at` 標記 expired／交由 TTL 回收）並從 active-set 清除
+- [X] T031 [US3] 在 `apps/api/src/modules/slides/slides.module.ts` 於 API 程序以 `onApplicationBootstrap` 啟動 timeout sweeper 週期計時器（`unref`），`onModuleDestroy` 清除；worker 程序不啟動 sweeper
 
 **Checkpoint**：US3 可獨立運作：worker 失敗與崩潰皆於 5 分鐘內安全收斂，錯誤不外洩。
 
@@ -128,12 +128,12 @@
 
 **目的**：刪除被取代的程序內實作、遷移受影響的 003 測試、跑全套測試、補 evidence 與文件。
 
-- [ ] T032 刪除 `apps/api/src/modules/slides/in-memory-preview-job-store.ts` 與 `apps/api/src/modules/slides/in-process-preview-job-runner.ts`（不留 dead code）
-- [ ] T033 遷移／更新受影響的 003 測試 `apps/api/test/slides-preview-jobs.service.test.ts`（改用 `preview-job-execution` + fake store）與 `apps/api/test/slides-preview-jobs.contract.test.ts`（store 以 ioredis-mock 或 fake 注入），移除對已刪除類別的引用
-- [ ] T034 [P] 更新 `README.md` 與 `README.zh-TW.md`：新增「啟動 Redis + worker」的本機執行說明
-- [ ] T035 [P] 在 `specs/004-redis-worker-queue/quickstart.md` 記錄手動驗證 evidence（主程序卸載、跨重啟追蹤、失敗/逾時收斂、過期回收的觀察結果）
-- [ ] T036 執行全套測試與型別檢查：`pnpm -r test`、`pnpm --filter @slides-agent/api build`、各套件 `tsc --noEmit`，確認全綠
-- [ ] T037 依 CLAUDE.md 於 commit 前執行 `gitnexus_detect_changes()` 確認影響範圍符合預期（若 gitnexus 可用）
+- [X] T032 刪除 `apps/api/src/modules/slides/in-memory-preview-job-store.ts` 與 `apps/api/src/modules/slides/in-process-preview-job-runner.ts`（不留 dead code）
+- [X] T033 遷移／更新受影響的 003 測試 `apps/api/test/slides-preview-jobs.service.test.ts`（改用 `preview-job-execution` + fake store）與 `apps/api/test/slides-preview-jobs.contract.test.ts`（store 以 ioredis-mock 或 fake 注入），移除對已刪除類別的引用
+- [X] T034 [P] 更新 `README.md` 與 `README.zh-TW.md`：新增「啟動 Redis + worker」的本機執行說明
+- [X] T035 [P] 在 `specs/004-redis-worker-queue/quickstart.md` 記錄手動驗證 evidence（主程序卸載、跨重啟追蹤、失敗/逾時收斂、過期回收的觀察結果）
+- [X] T036 執行全套測試與型別檢查：`pnpm -r test`、`pnpm --filter @slides-agent/api build`、各套件 `tsc --noEmit`，確認全綠
+- [X] T037 依 CLAUDE.md 於 commit 前執行 `gitnexus_detect_changes()` 確認影響範圍符合預期（若 gitnexus 可用）
 
 ---
 
