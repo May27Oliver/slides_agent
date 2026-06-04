@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -22,11 +21,14 @@ import type {
   PreviewJobStatus,
   PreviewJobStatusResponseContract
 } from "@slides-agent/contracts";
-import { validateGeneratePreviewRequest } from "@slides-agent/contracts";
 import type { PreviewJob, PreviewJobRunner, PreviewJobStore } from "@slides-agent/domain";
 import { PreviewJobService } from "@slides-agent/domain";
 import { SlidesService } from "@/modules/slides/slides.service";
 import { PREVIEW_JOB_RUNNER, PREVIEW_JOB_STORE } from "@/modules/preview-jobs/preview-jobs.tokens";
+import {
+  assertValidJobId,
+  parseGeneratePreviewRequest
+} from "@/modules/preview-jobs/preview-request.parser";
 
 // Shared budget across both expensive POST endpoints (each request fans out
 // into multiple chained LLM calls). Tunable via env; defaults to 5 req/60s/IP.
@@ -52,33 +54,21 @@ export class PreviewJobsController {
 
   @Post("preview")
   @UseGuards(previewRateLimit)
-  async preview(@Body() request: unknown): Promise<GeneratePreviewResponseContract> {
-    const validation = validateGeneratePreviewRequest(request);
-    if (!validation.ok) {
-      throw new BadRequestException(validation.error);
-    }
-
-    return this.slidesService.generatePreview(validation.value);
+  async preview(@Body() body: unknown): Promise<GeneratePreviewResponseContract> {
+    const request = parseGeneratePreviewRequest(body);
+    return this.slidesService.generatePreview(request);
   }
 
   @Post("preview-jobs")
   @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(previewRateLimit)
-  async createPreviewJob(@Body() request: unknown): Promise<CreatePreviewJobResponseContract> {
-    const validation = validateGeneratePreviewRequest(request);
-    if (!validation.ok) {
-      throw new BadRequestException({
-        code: "INVALID_PREVIEW_REQUEST",
-        message: "Preview request validation failed",
-        issues: validation.error.fields
-      });
-    }
-
+  async createPreviewJob(@Body() body: unknown): Promise<CreatePreviewJobResponseContract> {
+    const request = parseGeneratePreviewRequest(body);
     const store = this.requirePreviewJobStore();
 
     let job;
     try {
-      job = await store.create(this.previewJobService.createAcceptedJob(validation.value));
+      job = await store.create(this.previewJobService.createAcceptedJob(request));
       // Await the enqueue so a Redis/queue outage fails fast instead of leaving
       // an accepted job that no worker will ever pick up.
       await this.previewJobRunner?.start(job);
@@ -105,6 +95,7 @@ export class PreviewJobsController {
 
   @Get("preview-jobs/:jobId")
   async previewJobStatus(@Param("jobId") jobId: string): Promise<PreviewJobStatusResponseContract> {
+    assertValidJobId(jobId);
     const job = await this.requirePreviewJobStore().findById(jobId);
     if (!job || job.status === "unavailable") {
       this.logger.log(`${jobId} status_lookup unavailable`);

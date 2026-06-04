@@ -41,11 +41,27 @@
 
 `400 Bad Request`
 
+> 004 起,此端點與 `POST /api/slides/preview` 共用同一個 request validator 與
+> **同一錯誤形狀**(原生 `{ code, message, fields }`,保留 `INVALID_INPUT` /
+> `UNSUPPORTED_OPTION` 語意),取代先前的 `INVALID_PREVIEW_REQUEST` / `issues`。
+
 ```json
 {
-  "code": "INVALID_PREVIEW_REQUEST",
-  "message": "Preview request validation failed",
-  "issues": ["deckBrief.purpose is required"]
+  "code": "INVALID_INPUT",
+  "message": "sourceContent, purpose, and audience are required",
+  "fields": ["deckBrief.purpose"]
+}
+```
+
+### Invalid Job Id
+
+`GET /api/slides/preview-jobs/:jobId` 對格式不合法的 jobId(空、過長、含不安全字元)
+回 `400 Bad Request`:
+
+```json
+{
+  "code": "INVALID_JOB_ID",
+  "message": "Invalid preview job id."
 }
 ```
 
