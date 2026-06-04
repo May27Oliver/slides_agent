@@ -15,14 +15,15 @@ describe("buildOpenApiDocument", () => {
 
   it("documents the create-job request body and response codes from the contract", () => {
     const post = doc.paths["/api/slides/preview-jobs"]!.post!;
-    const requestSchema = (post.requestBody as { content: Record<string, { schema: { properties: object } }> })
-      .content["application/json"]!.schema;
+    const requestSchema = (
+      post.requestBody as { content: Record<string, { schema: { properties: object } }> }
+    ).content["application/json"]!.schema;
     expect(Object.keys(requestSchema.properties)).toEqual(["sourceContent", "deckBrief"]);
-    expect(Object.keys(post.responses)).toEqual(["202", "400", "429", "503"]);
+    expect(Object.keys(post.responses).sort()).toEqual(["202", "400", "429", "500", "503"]);
   });
 
   it("documents jobId status responses including the 400 invalid-id and 404", () => {
     const get = doc.paths["/api/slides/preview-jobs/{jobId}"]!.get!;
-    expect(Object.keys(get.responses)).toEqual(["200", "400", "404"]);
+    expect(Object.keys(get.responses).sort()).toEqual(["200", "400", "404", "500", "503"]);
   });
 });

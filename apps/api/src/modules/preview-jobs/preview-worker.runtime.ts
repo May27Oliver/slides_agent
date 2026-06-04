@@ -1,4 +1,10 @@
-import { Inject, Injectable, Logger, type OnModuleDestroy } from "@nestjs/common";
+import {
+  Inject,
+  Injectable,
+  Logger,
+  type OnApplicationBootstrap,
+  type OnModuleDestroy
+} from "@nestjs/common";
 import type IORedis from "ioredis";
 import { Worker } from "bullmq";
 import { SlidesService } from "@/modules/slides/slides.service";
@@ -17,7 +23,7 @@ import { REDIS_CONNECTION } from "@/infra/redis/redis.tokens";
  * `maxRetriesPerRequest: null`).
  */
 @Injectable()
-export class PreviewWorkerRuntime implements OnModuleDestroy {
+export class PreviewWorkerRuntime implements OnApplicationBootstrap, OnModuleDestroy {
   private readonly logger = new Logger("PreviewJobWorker");
   private worker?: Worker<PreviewJobQueuePayload>;
   private connection?: IORedis;
@@ -29,7 +35,8 @@ export class PreviewWorkerRuntime implements OnModuleDestroy {
     @Inject(SlidesService) private readonly slidesService: SlidesService
   ) {}
 
-  start(): void {
+  // Start the consumer only after all providers are initialized.
+  onApplicationBootstrap(): void {
     // BullMQ worker connections must use maxRetriesPerRequest:null; derive one
     // from the shared connection so we don't re-read the environment.
     this.connection = this.redis.duplicate({

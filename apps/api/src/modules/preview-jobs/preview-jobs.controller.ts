@@ -7,7 +7,6 @@ import {
   Inject,
   Logger,
   NotFoundException,
-  Optional,
   Param,
   Post,
   ServiceUnavailableException,
@@ -44,10 +43,11 @@ export class PreviewJobsController {
 
   constructor(
     @Inject(SlidesService) private readonly slidesService: SlidesService,
-    @Optional()
+    // Required for the job endpoints. Constructor params stay optional only so
+    // unit tests can build the controller for the sync /preview path alone; DI
+    // always provides them (no @Optional) so mis-wiring fails loudly at startup.
     @Inject(PREVIEW_JOB_STORE)
     private readonly previewJobStore?: PreviewJobStore,
-    @Optional()
     @Inject(PREVIEW_JOB_RUNNER)
     private readonly previewJobRunner?: PreviewJobRunner
   ) {}
@@ -65,20 +65,18 @@ export class PreviewJobsController {
   async createPreviewJob(@Body() body: unknown): Promise<CreatePreviewJobResponseContract> {
     const request = parseGeneratePreviewRequest(body);
     const store = this.requirePreviewJobStore();
+    const runner = this.requirePreviewJobRunner();
 
     let job;
     try {
       job = await store.create(this.previewJobService.createAcceptedJob(request));
       // Await the enqueue so a Redis/queue outage fails fast instead of leaving
       // an accepted job that no worker will ever pick up.
-      await this.previewJobRunner?.start(job);
+      await runner.start(job);
     } catch {
       // Sanitized: never surface Redis/queue connection details to the client.
       this.logger.error("preview job creation failed code=PREVIEW_QUEUE_UNAVAILABLE");
-      throw new ServiceUnavailableException({
-        code: "PREVIEW_QUEUE_UNAVAILABLE",
-        message: "Preview service is temporarily unavailable. Please try again."
-      });
+      throw this.serviceUnavailable();
     }
 
     this.logger.log(`${job.id} accepted stage=request_accepted status=queued`);
@@ -96,7 +94,17 @@ export class PreviewJobsController {
   @Get("preview-jobs/:jobId")
   async previewJobStatus(@Param("jobId") jobId: string): Promise<PreviewJobStatusResponseContract> {
     assertValidJobId(jobId);
-    const job = await this.requirePreviewJobStore().findById(jobId);
+    const store = this.requirePreviewJobStore();
+
+    let job;
+    try {
+      job = await store.findById(jobId);
+    } catch {
+      // Sanitized: a Redis outage must not surface connection details here.
+      this.logger.error(`${jobId} status_lookup failed code=PREVIEW_QUEUE_UNAVAILABLE`);
+      throw this.serviceUnavailable();
+    }
+
     if (!job || job.status === "unavailable") {
       this.logger.log(`${jobId} status_lookup unavailable`);
       throw new NotFoundException({
@@ -111,10 +119,27 @@ export class PreviewJobsController {
 
   private requirePreviewJobStore(): PreviewJobStore {
     if (!this.previewJobStore) {
-      throw new Error("Preview job store is not configured");
+      throw this.serviceUnavailable();
     }
 
     return this.previewJobStore;
+  }
+
+  private requirePreviewJobRunner(): PreviewJobRunner {
+    if (!this.previewJobRunner) {
+      throw this.serviceUnavailable();
+    }
+
+    return this.previewJobRunner;
+  }
+
+  private serviceUnavailable(): ServiceUnavailableException {
+    // Single sanitized 503 shape for any store/queue unavailability — never
+    // leaks Redis/queue connection details.
+    return new ServiceUnavailableException({
+      code: "PREVIEW_QUEUE_UNAVAILABLE",
+      message: "Preview service is temporarily unavailable. Please try again."
+    });
   }
 }
 

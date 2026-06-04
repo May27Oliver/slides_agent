@@ -71,7 +71,9 @@ describe("preview job serialization", () => {
   it("accepts both a JSON string and a parsed object", () => {
     const serialized = serializePreviewJob(sampleJob());
 
-    expect(deserializePreviewJob(serialized)).toEqual(deserializePreviewJob(JSON.stringify(serialized)));
+    expect(deserializePreviewJob(serialized)).toEqual(
+      deserializePreviewJob(JSON.stringify(serialized))
+    );
   });
 
   it("throws on structurally invalid input", () => {
@@ -80,5 +82,14 @@ describe("preview job serialization", () => {
     expect(() =>
       deserializePreviewJob({ ...serializePreviewJob(sampleJob()), createdAt: "nonsense-date" })
     ).toThrow();
+  });
+
+  it("rejects unknown status / stage enum values (corrupted record)", () => {
+    expect(() =>
+      deserializePreviewJob({ ...serializePreviewJob(sampleJob()), status: "bogus" })
+    ).toThrow(/status/u);
+    expect(() =>
+      deserializePreviewJob({ ...serializePreviewJob(sampleJob()), stage: "bogus" })
+    ).toThrow(/stage/u);
   });
 });

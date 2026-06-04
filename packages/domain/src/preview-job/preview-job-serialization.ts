@@ -1,4 +1,26 @@
-import type { PreviewJob } from "@/preview-job/preview-job.types";
+import type { JobStage, JobStatus, PreviewJob } from "@/preview-job/preview-job.types";
+
+const JOB_STATUSES: ReadonlySet<JobStatus> = new Set([
+  "queued",
+  "running",
+  "succeeded",
+  "failed",
+  "expired",
+  "unavailable"
+]);
+
+const JOB_STAGES: ReadonlySet<JobStage> = new Set([
+  "request_accepted",
+  "queued",
+  "content_planning",
+  "deck_planning",
+  "design_planning",
+  "html_generation",
+  "html_validation",
+  "repair_or_fallback",
+  "completed",
+  "failed"
+]);
 
 /**
  * Wire form of {@link PreviewJob}: identical shape except the three `Date`
@@ -31,14 +53,17 @@ export function deserializePreviewJob(raw: string | unknown): PreviewJob {
   const updatedAt = parseIsoDate(parsed.updatedAt, "updatedAt");
   const expiresAt = parseIsoDate(parsed.expiresAt, "expiresAt");
 
-  if (
-    typeof parsed.id !== "string" ||
-    typeof parsed.status !== "string" ||
-    typeof parsed.stage !== "string" ||
-    !isRecord(parsed.request) ||
-    !isRecord(parsed.evidence)
-  ) {
+  if (typeof parsed.id !== "string" || !isRecord(parsed.request) || !isRecord(parsed.evidence)) {
     throw new Error("Invalid serialized preview job: missing required fields");
+  }
+
+  // Validate the enum values, not just their type: a corrupted or schema-evolved
+  // record must not slip an unknown status/stage past the terminal-state guard.
+  if (!isJobStatus(parsed.status)) {
+    throw new Error("Invalid serialized preview job: unknown status");
+  }
+  if (!isJobStage(parsed.stage)) {
+    throw new Error("Invalid serialized preview job: unknown stage");
   }
 
   return {
@@ -68,6 +93,14 @@ function parseIsoDate(value: unknown, field: string): Date {
   }
 
   return date;
+}
+
+function isJobStatus(value: unknown): value is JobStatus {
+  return typeof value === "string" && JOB_STATUSES.has(value as JobStatus);
+}
+
+function isJobStage(value: unknown): value is JobStage {
+  return typeof value === "string" && JOB_STAGES.has(value as JobStage);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

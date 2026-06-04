@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { Logger, ValidationPipe } from "@nestjs/common";
+import { Logger } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { SwaggerModule } from "@nestjs/swagger";
 import { AppModule } from "@/app/app.module";
@@ -8,13 +8,9 @@ import { buildOpenApiDocument } from "@/openapi/openapi-document";
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix("api");
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true
-    })
-  );
+  // Note: request validation is done by the contracts validator inside the
+  // controller (parseGeneratePreviewRequest), not a DTO/ValidationPipe — the
+  // shared contract validator is the single runtime source of truth.
 
   // OpenAPI docs served at /api/docs (JSON at /api/docs-json). The document is a
   // static object built from the shared contract schemas — no controller

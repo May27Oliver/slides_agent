@@ -40,9 +40,13 @@ export function buildOpenApiDocument(): OpenAPIObject {
             "Runs the full pipeline and returns the deck + self-contained HTML. May be slow; prefer the async preview-jobs endpoint.",
           requestBody: { required: true, content: json(GENERATE_PREVIEW_REQUEST_SCHEMA) },
           responses: {
-            "200": { description: "Generated preview", content: json(GENERATE_PREVIEW_RESPONSE_SCHEMA) },
+            "200": {
+              description: "Generated preview",
+              content: json(GENERATE_PREVIEW_RESPONSE_SCHEMA)
+            },
             "400": { description: "Validation error", content: json(PREVIEW_REQUEST_ERROR_SCHEMA) },
-            "429": { description: "Rate limit exceeded for this IP." }
+            "429": { description: "Rate limit exceeded for this IP." },
+            "500": { description: "Unexpected server error." }
           }
         }
       },
@@ -54,13 +58,17 @@ export function buildOpenApiDocument(): OpenAPIObject {
             "Validates and enqueues a preview job, returning a job id to poll. Generation runs in a separate worker process.",
           requestBody: { required: true, content: json(GENERATE_PREVIEW_REQUEST_SCHEMA) },
           responses: {
-            "202": { description: "Job accepted", content: json(CREATE_PREVIEW_JOB_RESPONSE_SCHEMA) },
+            "202": {
+              description: "Job accepted",
+              content: json(CREATE_PREVIEW_JOB_RESPONSE_SCHEMA)
+            },
             "400": { description: "Validation error", content: json(PREVIEW_REQUEST_ERROR_SCHEMA) },
             "429": { description: "Rate limit exceeded for this IP." },
             "503": {
               description: "Queue/Redis unavailable",
               content: json(PREVIEW_QUEUE_UNAVAILABLE_SCHEMA)
-            }
+            },
+            "500": { description: "Unexpected server error." }
           }
         }
       },
@@ -78,9 +86,20 @@ export function buildOpenApiDocument(): OpenAPIObject {
             }
           ],
           responses: {
-            "200": { description: "Current job state", content: json(PREVIEW_JOB_STATUS_RESPONSE_SCHEMA) },
+            "200": {
+              description: "Current job state",
+              content: json(PREVIEW_JOB_STATUS_RESPONSE_SCHEMA)
+            },
             "400": { description: "Invalid job id", content: json(INVALID_JOB_ID_ERROR_SCHEMA) },
-            "404": { description: "Job unavailable", content: json(PREVIEW_JOB_UNAVAILABLE_SCHEMA) }
+            "404": {
+              description: "Job unavailable",
+              content: json(PREVIEW_JOB_UNAVAILABLE_SCHEMA)
+            },
+            "503": {
+              description: "Queue/Redis unavailable",
+              content: json(PREVIEW_QUEUE_UNAVAILABLE_SCHEMA)
+            },
+            "500": { description: "Unexpected server error." }
           }
         }
       }

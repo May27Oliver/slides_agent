@@ -63,23 +63,15 @@ export class RedisPreviewJobStore implements PreviewJobStore {
   }
 
   async create(job: PreviewJob): Promise<PreviewJob> {
-    try {
-      await this.writeJob(job);
-      if (!isTerminalJobStatus(job.status)) {
-        await this.redis.sadd(this.activeKey(), job.id);
-      }
-      return job;
-    } catch (error) {
-      if (error instanceof PreviewJobStoreUnavailableError) {
-        throw error;
-      }
-      // Wrap low-level Redis errors so connection details never reach callers.
-      throw new PreviewJobStoreUnavailableError();
+    await this.writeJob(job);
+    if (!isTerminalJobStatus(job.status)) {
+      await this.guarded(() => this.redis.sadd(this.activeKey(), job.id));
     }
+    return job;
   }
 
   async findById(jobId: string): Promise<PreviewJob | undefined> {
-    const raw = await this.redis.get(this.jobKey(jobId));
+    const raw = await this.guarded(() => this.redis.get(this.jobKey(jobId)));
     return raw ? deserializePreviewJob(raw) : undefined;
   }
 
@@ -105,7 +97,7 @@ export class RedisPreviewJobStore implements PreviewJobStore {
 
   /** Active = non-terminal jobs the timeout sweeper must watch. */
   async listActiveJobIds(): Promise<string[]> {
-    return this.redis.smembers(this.activeKey());
+    return this.guarded(() => this.redis.smembers(this.activeKey()));
   }
 
   async expireOldJobs(_at: Date): Promise<PreviewJob[]> {
@@ -116,11 +108,11 @@ export class RedisPreviewJobStore implements PreviewJobStore {
     for (const id of await this.listActiveJobIds()) {
       const job = await this.findById(id);
       if (!job) {
-        await this.redis.srem(this.activeKey(), id);
+        await this.guarded(() => this.redis.srem(this.activeKey(), id));
         continue;
       }
       if (isTerminalJobStatus(job.status)) {
-        await this.redis.srem(this.activeKey(), id);
+        await this.guarded(() => this.redis.srem(this.activeKey(), id));
         reconciled.push(job);
       }
     }
@@ -147,13 +139,36 @@ export class RedisPreviewJobStore implements PreviewJobStore {
 
     await this.writeJob(updated);
     if (isTerminalJobStatus(updated.status)) {
-      await this.redis.srem(this.activeKey(), updated.id);
+      await this.guarded(() => this.redis.srem(this.activeKey(), updated.id));
     }
     return updated;
   }
 
+  /**
+   * Routes every Redis call through one place so a connection failure surfaces
+   * as a sanitized {@link PreviewJobStoreUnavailableError} (never a raw ioredis
+   * error carrying host/port) regardless of which method touched Redis.
+   */
+  private async guarded<T>(op: () => Promise<T>): Promise<T> {
+    try {
+      return await op();
+    } catch (error) {
+      if (error instanceof PreviewJobStoreUnavailableError) {
+        throw error;
+      }
+      throw new PreviewJobStoreUnavailableError();
+    }
+  }
+
   private async writeJob(job: PreviewJob): Promise<void> {
-    await this.redis.set(this.jobKey(job.id), JSON.stringify(serializePreviewJob(job)), "PX", this.ttlFor(job));
+    await this.guarded(() =>
+      this.redis.set(
+        this.jobKey(job.id),
+        JSON.stringify(serializePreviewJob(job)),
+        "PX",
+        this.ttlFor(job)
+      )
+    );
   }
 
   private ttlFor(job: PreviewJob): number {

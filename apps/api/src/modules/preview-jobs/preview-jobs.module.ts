@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Logger, Module } from "@nestjs/common";
 import type IORedis from "ioredis";
 import { Queue } from "bullmq";
 import { RedisModule } from "@/infra/redis/redis.module";
@@ -54,7 +54,8 @@ import {
         new PreviewJobTimeoutSweeper({
           store,
           redis,
-          intervalMs: config.timeoutSweepIntervalMs
+          intervalMs: config.timeoutSweepIntervalMs,
+          logger: new Logger("PreviewJobTimeoutSweeper")
         }),
       inject: [PREVIEW_JOB_STORE, REDIS_CONNECTION, QUEUE_CONFIG]
     },
