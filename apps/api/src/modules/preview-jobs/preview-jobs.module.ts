@@ -1,6 +1,5 @@
 import { Logger, Module } from "@nestjs/common";
 import type IORedis from "ioredis";
-import { Queue } from "bullmq";
 import { RedisModule } from "@/infra/redis/redis.module";
 import { REDIS_CONNECTION } from "@/infra/redis/redis.tokens";
 import { SlidesModule } from "@/modules/slides/slides.module";
@@ -16,7 +15,6 @@ import {
   queueConfigProvider
 } from "@/modules/preview-jobs/preview-jobs.providers";
 import {
-  PREVIEW_JOB_QUEUE,
   PREVIEW_JOB_RUNNER,
   PREVIEW_JOB_STORE,
   QUEUE_CONFIG
@@ -37,14 +35,10 @@ import {
     // Owns the BullMQ producer Queue + its connection, with shutdown cleanup.
     PreviewJobQueueService,
     {
-      provide: PREVIEW_JOB_QUEUE,
-      useFactory: (queueService: PreviewJobQueueService) => queueService.queue,
-      inject: [PreviewJobQueueService]
-    },
-    {
       provide: PREVIEW_JOB_RUNNER,
-      useFactory: (queue: Queue) => new BullMqPreviewJobRunner({ queue }),
-      inject: [PREVIEW_JOB_QUEUE]
+      useFactory: (queueService: PreviewJobQueueService) =>
+        new BullMqPreviewJobRunner({ queue: queueService.queue }),
+      inject: [PreviewJobQueueService]
     },
     // Out-of-worker 5-minute timeout enforcement, started/stopped via
     // PreviewJobsApiRuntime (API process only; the worker never starts it).
