@@ -1,12 +1,13 @@
 import { Module } from "@nestjs/common";
-import IORedis from "ioredis";
+import type IORedis from "ioredis";
 import { Queue } from "bullmq";
 import { RedisModule } from "@/infra/redis/redis.module";
-import { RedisService } from "@/infra/redis/redis.service";
 import { REDIS_CONNECTION } from "@/infra/redis/redis.tokens";
 import { SlidesModule } from "@/modules/slides/slides.module";
 import { PreviewJobsController } from "@/modules/preview-jobs/preview-jobs.controller";
 import { BullMqPreviewJobRunner } from "@/modules/preview-jobs/bullmq-preview-job-runner";
+import { PreviewJobQueueService } from "@/modules/preview-jobs/preview-job-queue.service";
+import { PreviewJobsApiRuntime } from "@/modules/preview-jobs/preview-jobs-api.runtime";
 import { PreviewJobTimeoutSweeper } from "@/modules/preview-jobs/preview-job-timeout-sweeper";
 import { RedisPreviewJobStore } from "@/modules/preview-jobs/redis-preview-job-store";
 import type { QueueConfig } from "@/modules/preview-jobs/queue.config";
@@ -33,23 +34,20 @@ import {
   providers: [
     queueConfigProvider,
     previewJobStoreProvider,
-    // BullMQ producer connection is separate from the shared command connection
-    // and must use maxRetriesPerRequest:null; derive it from the shared URL.
+    // Owns the BullMQ producer Queue + its connection, with shutdown cleanup.
+    PreviewJobQueueService,
     {
       provide: PREVIEW_JOB_QUEUE,
-      useFactory: (config: QueueConfig, redisService: RedisService) =>
-        new Queue(config.queueName, {
-          connection: new IORedis(redisService.redisUrl, { maxRetriesPerRequest: null })
-        }),
-      inject: [QUEUE_CONFIG, RedisService]
+      useFactory: (queueService: PreviewJobQueueService) => queueService.queue,
+      inject: [PreviewJobQueueService]
     },
     {
       provide: PREVIEW_JOB_RUNNER,
       useFactory: (queue: Queue) => new BullMqPreviewJobRunner({ queue }),
       inject: [PREVIEW_JOB_QUEUE]
     },
-    // Out-of-worker 5-minute timeout enforcement. Started only by the API
-    // process (see main.ts); the worker never starts it.
+    // Out-of-worker 5-minute timeout enforcement, started/stopped via
+    // PreviewJobsApiRuntime (API process only; the worker never starts it).
     {
       provide: PreviewJobTimeoutSweeper,
       useFactory: (store: RedisPreviewJobStore, redis: IORedis, config: QueueConfig) =>
@@ -59,7 +57,8 @@ import {
           intervalMs: config.timeoutSweepIntervalMs
         }),
       inject: [PREVIEW_JOB_STORE, REDIS_CONNECTION, QUEUE_CONFIG]
-    }
+    },
+    PreviewJobsApiRuntime
   ]
 })
 export class PreviewJobsModule {}

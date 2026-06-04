@@ -22,6 +22,7 @@
     "rxjs": "^7.0.0"
   },
   "devDependencies": {
+    "@nestjs/testing": "^10.4.22",
     "ioredis-mock": "^8.13.1",
     "tsx": "^4.22.4"
   }

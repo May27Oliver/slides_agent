@@ -26,7 +26,7 @@ export class PreviewWorkerRuntime implements OnModuleDestroy {
     @Inject(QUEUE_CONFIG) private readonly config: QueueConfig,
     @Inject(PREVIEW_JOB_STORE) private readonly store: RedisPreviewJobStore,
     @Inject(REDIS_CONNECTION) private readonly redis: IORedis,
-    private readonly slidesService: SlidesService
+    @Inject(SlidesService) private readonly slidesService: SlidesService
   ) {}
 
   start(): void {

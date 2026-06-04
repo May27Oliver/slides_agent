@@ -2,7 +2,6 @@ import "reflect-metadata";
 import { Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "@/app/app.module";
-import { PreviewJobTimeoutSweeper } from "@/modules/preview-jobs/preview-job-timeout-sweeper";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -14,11 +13,10 @@ async function bootstrap(): Promise<void> {
       transform: true
     })
   );
-  // Run RedisService.onModuleDestroy (and friends) on SIGINT/SIGTERM.
+  // Drives provider lifecycle on SIGINT/SIGTERM: RedisService quits the shared
+  // connection, PreviewJobQueueService closes the queue, PreviewJobsApiRuntime
+  // stops the timeout sweep. The sweep is started on bootstrap by that runtime.
   app.enableShutdownHooks();
-  // The API process owns the out-of-worker 5-minute timeout sweep (the worker
-  // process does not start it).
-  app.get(PreviewJobTimeoutSweeper).start();
   await app.listen(process.env.PORT ?? 3000, process.env.HOST ?? "127.0.0.1");
 }
 
