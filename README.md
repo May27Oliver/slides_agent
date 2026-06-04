@@ -125,6 +125,8 @@ curl -i http://localhost:3000/api/slides/preview-jobs/example   # → 404 PREVIE
 
 ## API
 
+Interactive OpenAPI docs (Swagger UI): **`/api/docs`** (raw spec at `/api/docs-json`). The schema is built from the shared `@slides-agent/contracts` package.
+
 Base path: `/api/slides`
 
 | Method | Path | Description |

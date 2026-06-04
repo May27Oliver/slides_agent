@@ -125,6 +125,8 @@ curl -i http://localhost:3000/api/slides/preview-jobs/example   # → 404 PREVIE
 
 ## API
 
+互動式 OpenAPI 文件(Swagger UI):**`/api/docs`**(原始 spec 在 `/api/docs-json`)。schema 來自共用的 `@slides-agent/contracts` 套件。
+
 基底路徑:`/api/slides`
 
 | 方法 | 路徑 | 說明 |

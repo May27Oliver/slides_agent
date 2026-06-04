@@ -13,6 +13,19 @@ export {
   type PreviewRequestValidationResult
 } from "./preview-request";
 
+export {
+  type OpenApiSchema,
+  DECK_BRIEF_SCHEMA,
+  GENERATE_PREVIEW_REQUEST_SCHEMA,
+  GENERATE_PREVIEW_RESPONSE_SCHEMA,
+  CREATE_PREVIEW_JOB_RESPONSE_SCHEMA,
+  PREVIEW_JOB_STATUS_RESPONSE_SCHEMA,
+  PREVIEW_REQUEST_ERROR_SCHEMA,
+  INVALID_JOB_ID_ERROR_SCHEMA,
+  PREVIEW_JOB_UNAVAILABLE_SCHEMA,
+  PREVIEW_QUEUE_UNAVAILABLE_SCHEMA
+} from "./openapi";
+
 export interface DeckBriefContract {
   purpose: string;
   audience: string;
