@@ -7,6 +7,7 @@
 export function buildDeckRuntimeScript(): string {
   return `
 (function () {
+  var deck = document.querySelector(".deck");
   var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
   var dotsBox = document.getElementById("sidedots");
   var progress = document.getElementById("progress");
@@ -52,10 +53,19 @@ export function buildDeckRuntimeScript(): string {
       progress.style.width = ((nextIndex + 1) / slides.length) * 100 + "%";
     }
     current = nextIndex;
+    if (slides[current]) { slides[current].scrollTop = 0; }
   }
 
   function next() { show(current + 1); }
   function prev() { show(current - 1); }
+
+  function scrollActiveSlide(deltaY) {
+    var slide = slides[current];
+    if (!slide || slide.scrollHeight <= slide.clientHeight) { return false; }
+    var before = slide.scrollTop;
+    slide.scrollTop = before + deltaY;
+    return slide.scrollTop !== before;
+  }
 
   document.addEventListener("keydown", function (event) {
     if (event.key === "ArrowRight" || event.key === "PageDown") { next(); }
@@ -67,6 +77,11 @@ export function buildDeckRuntimeScript(): string {
   var nextBtn = document.getElementById("nextBtn");
   if (prevBtn) { prevBtn.addEventListener("click", prev); }
   if (nextBtn) { nextBtn.addEventListener("click", next); }
+  if (deck) {
+    deck.addEventListener("wheel", function (event) {
+      if (scrollActiveSlide(event.deltaY)) { event.preventDefault(); }
+    }, { passive: false });
+  }
 
   show(0);
 })();

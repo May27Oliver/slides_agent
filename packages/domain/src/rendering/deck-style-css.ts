@@ -25,6 +25,26 @@ function safeNumber(value: number, fallback: number): number {
   return Number.isFinite(value) ? value : fallback;
 }
 
+function hexToRgba(hex: string, alpha: number): string {
+  const raw = hex.replace("#", "");
+  const expanded =
+    raw.length === 3
+      ? raw
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : raw.slice(0, 6);
+  const parsed = Number.parseInt(expanded, 16);
+  if (!Number.isFinite(parsed)) {
+    return `rgba(0, 0, 0, ${alpha})`;
+  }
+  const red = (parsed >> 16) & 255;
+  const green = (parsed >> 8) & 255;
+  const blue = parsed & 255;
+  const safeAlpha = Math.min(1, Math.max(0, alpha));
+  return `rgba(${red}, ${green}, ${blue}, ${safeAlpha})`;
+}
+
 /**
  * Builds the reference-grade, self-contained deck CSS from a DesignStyleKit.
  *
@@ -37,6 +57,7 @@ export function buildDeckStyleCss(styleKit: DesignStyleKit, designSystem: Design
 
   const primaryHex = safeHex(styleKit.accentHues[0]?.base, "#FF6B6B");
   const accent = safeHex(styleKit.accentHues[0]?.base ?? designSystem.palette.accent, primaryHex);
+  const focusRing = hexToRgba(accent, 0.28);
   const stagger = safeNumber(motion.staggerStepMs, 90);
 
   const hueVars = styleKit.accentHues
@@ -66,6 +87,7 @@ export function buildDeckStyleCss(styleKit: DesignStyleKit, designSystem: Design
   --card-border: ${safeCssValue(effects.cardBorder, "1.5px solid rgba(0,0,0,.08)")};
   --card-shadow: ${safeCssValue(effects.cardShadow, "0 18px 44px rgba(31,41,51,.12)")};
   --card-surface: ${safeCssValue(effects.cardSurface, "rgba(255,255,255,.82)")};
+  --focus-ring: ${focusRing};
   --t-dur: ${safeNumber(motion.slideTransitionMs, 550)}ms;
   --t-ease: ${safeCssValue(motion.slideEasing, "ease")};
   --e-dur: ${safeNumber(motion.entranceMs, 600)}ms;
@@ -87,9 +109,12 @@ body{
   inset:0;
   display:flex;
   flex-direction:column;
-  justify-content:center;
+  justify-content:flex-start;
   gap:clamp(16px,2.2vh,28px);
-  padding:clamp(48px,6vw,96px);
+  padding:clamp(48px,6vw,96px) clamp(48px,6vw,96px) clamp(92px,9vh,132px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
   opacity:0;
   transform:translateX(40px);
   pointer-events:none;
@@ -97,7 +122,7 @@ body{
 }
 .slide.active{opacity:1;transform:none;pointer-events:auto}
 .slide.prev{transform:translateX(-40px)}
-.slide-body{display:flex;flex-direction:column;gap:clamp(14px,1.8vh,22px);max-width:1180px;min-height:0}
+.slide-body{display:flex;flex-direction:column;gap:clamp(14px,1.8vh,22px);max-width:1180px;min-height:0;margin:auto 0}
 .eyebrow{
   display:inline-flex;align-items:center;gap:10px;align-self:flex-start;
   padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.7);
@@ -108,7 +133,7 @@ body{
 .slide-title{
   margin:0;font-family:var(--font-heading);color:var(--text);
   font-size:var(--type-title);font-weight:${safeNumber(typeScale.slideTitle.weight, 800)};
-  line-height:${safeNumber(typeScale.slideTitle.lineHeight, 1.1)};letter-spacing:-.02em;
+  line-height:${safeNumber(typeScale.slideTitle.lineHeight, 1.1)};letter-spacing:0;
 }
 .slide.cover{align-items:flex-start}
 .slide.cover .slide-title{font-size:var(--type-cover);font-weight:${safeNumber(typeScale.coverTitle.weight, 800)};line-height:${safeNumber(typeScale.coverTitle.lineHeight, 1.05)}}
@@ -135,9 +160,10 @@ body{
 .bullet:nth-child(6n+5)::before{background:var(--hue-grad-4)}
 .bullet:nth-child(6n)::before{background:var(--hue-grad-5)}
 .layout-closing .bullets{counter-reset:step}
-.layout-closing .bullet{counter-increment:step}
+.layout-closing .bullet{counter-increment:step;padding-left:clamp(58px,4vw,74px)}
 .layout-closing .bullet::before{
-  content:counter(step);width:26px;height:26px;border-radius:50%;color:#fff;
+  content:counter(step);left:clamp(18px,1.6vw,24px);top:clamp(14px,1.8vw,22px);transform:none;
+  width:26px;height:26px;border-radius:50%;color:#fff;
   font-size:13px;font-weight:800;display:grid;place-items:center;
 }
 .controls{position:absolute;right:clamp(20px,3vw,40px);bottom:clamp(18px,2.6vh,32px);display:flex;gap:10px;z-index:30}
@@ -148,7 +174,7 @@ body{
   transition:background var(--micro) ease, color var(--micro) ease, box-shadow var(--micro) ease;
 }
 .btn:hover{background:var(--accent-grad);color:#fff}
-.btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.btn:focus-visible{outline:0;box-shadow:var(--card-shadow),0 0 0 4px var(--focus-ring)}
 .btn svg{width:22px;height:22px}
 .progress{position:absolute;top:0;left:0;height:6px;width:0;background:var(--accent-grad);transition:width var(--t-dur) ease;z-index:30}
 .sidedots{position:absolute;left:clamp(16px,2vw,28px);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:9px;z-index:30}

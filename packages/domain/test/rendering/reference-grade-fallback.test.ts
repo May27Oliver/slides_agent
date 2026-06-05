@@ -22,6 +22,13 @@ describe("reference-grade fallback renderer", () => {
     expect(html).toContain("@media (prefers-reduced-motion: reduce)");
   });
 
+  it("allows a tall active slide to scroll inside the preview viewport", () => {
+    expect(html).toContain("justify-content:flex-start;");
+    expect(html).toContain("overflow-y:auto;");
+    expect(html).toContain("overscroll-behavior:contain;");
+    expect(html).toContain("margin:auto 0");
+  });
+
   it("renders icon-only navigation with progress and side dots", () => {
     expect(html).toContain('id="prevBtn"');
     expect(html).toContain('id="nextBtn"');
@@ -29,6 +36,15 @@ describe("reference-grade fallback renderer", () => {
     expect(html).toContain('id="progress"');
     expect(html).toContain('id="sidedots"');
     expect(html).not.toContain("← 上一張");
+  });
+
+  it("keeps numbered action cards and navigation focus visually contained", () => {
+    expect(html).toContain(
+      ".layout-closing .bullet{counter-increment:step;padding-left:clamp(58px,4vw,74px)}"
+    );
+    expect(html).toContain("top:clamp(14px,1.8vw,22px);transform:none;");
+    expect(html).toContain("--focus-ring:");
+    expect(html).toContain(".btn:focus-visible{outline:0;");
   });
 
   it("strips markdown markers from titles, messages, and bullets", () => {

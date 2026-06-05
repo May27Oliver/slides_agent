@@ -28,4 +28,17 @@ describe("fallback HTML keyboard navigation", () => {
     expect(html).toContain("requestFullscreen");
     expect(html).toContain("exitFullscreen");
   });
+
+  it("routes wheel input to the active slide scroll container", () => {
+    const html = renderTemplateDeck({
+      deck: renderingDeck,
+      designPlanningResult: renderingDesignPlanningResult
+    });
+
+    expect(html).toContain('document.querySelector(".deck")');
+    expect(html).toContain("scrollActiveSlide(event.deltaY)");
+    expect(html).toContain("event.preventDefault()");
+    expect(html).toContain("passive: false");
+    expect(html).toContain("slides[current].scrollTop = 0");
+  });
 });

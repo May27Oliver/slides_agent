@@ -206,11 +206,24 @@ export const CURATED_PALETTES: [CuratedPalette, ...CuratedPalette[]] = [
     id: "portfolio-ink",
     primary: "#18181B",
     secondary: "#3F3F46",
-    cta: "#2563EB",
+    cta: "#BFA46A",
     background: "#FAFAFA",
     text: "#09090B",
     border: "#E4E4E7",
     dark: false,
-    keywords: ["portfolio", "minimal", "personal", "editorial", "簡潔", "個人"]
+    keywords: [
+      "portfolio",
+      "minimal",
+      "personal",
+      "editorial",
+      "elegant",
+      "luxury",
+      "premium",
+      "sophisticated",
+      "簡潔",
+      "個人",
+      "優雅",
+      "高級"
+    ]
   }
 ];

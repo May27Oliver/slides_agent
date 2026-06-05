@@ -50,6 +50,20 @@ describe("selectDesignStyleKit (UIUX Pro Max curated selection)", () => {
     expect(kit.kitName).toBe(expectedKit);
   });
 
+  it("renders the elegant preset with editorial gold accents and neutral cards", () => {
+    const kit = selectDesignStyleKit({
+      purpose: "簡報",
+      audience: "長官",
+      styleDirection: "elegant luxury editorial 優雅 高級"
+    });
+
+    expect(kit.kitName).toBe("portfolio-ink+classic-elegant");
+    expect(kit.accentHues[2]?.base).toBe("#BFA46A");
+    expect(kit.effects.cardRadiusPx).toBe(8);
+    expect(kit.effects.cardBorder).toContain("rgba(228, 228, 231");
+    expect(kit.effects.cardShadow).not.toContain("255, 107, 107");
+  });
+
   it("embeds the chosen heading family in the Google Fonts href", () => {
     const kit = selectDesignStyleKit({ purpose: "面試", audience: "長官" });
     const headingFamily = kit.fonts.heading.replace(/^"([^"]+)".*/u, "$1").replace(/\s+/gu, "+");

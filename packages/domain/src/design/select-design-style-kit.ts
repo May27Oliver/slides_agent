@@ -43,7 +43,7 @@ export function selectDesignStyleKit(input: SelectDesignStyleKitInput): DesignSt
     },
     accentHues,
     effects: {
-      ...base.effects,
+      ...buildCuratedEffects(base.effects, palette),
       accentGradient: `linear-gradient(110deg, ${palette.primary} 0%, ${palette.secondary} 55%, ${palette.cta} 100%)`
     },
     background: { css: buildBackground(palette) }
@@ -103,6 +103,28 @@ function buildGoogleFontsHref(pairing: CuratedFontPairing): string {
   return `https://fonts.googleapis.com/css2?${families.join("&")}&display=swap`;
 }
 
+function buildCuratedEffects(
+  base: DesignStyleKit["effects"],
+  palette: CuratedPalette
+): DesignStyleKit["effects"] {
+  if (palette.id === "portfolio-ink") {
+    return {
+      ...base,
+      cardRadiusPx: 8,
+      cardBorder: `1px solid ${hexToRgba(palette.border, 0.95)}`,
+      cardShadow: `0 24px 70px -46px ${hexToRgba(palette.primary, 0.34)}`,
+      cardSurface: "rgba(255, 255, 255, .9)"
+    };
+  }
+
+  return {
+    ...base,
+    cardBorder: `1px solid ${hexToRgba(palette.border, palette.dark ? 0.34 : 0.86)}`,
+    cardShadow: `0 22px 58px -34px ${hexToRgba(palette.primary, palette.dark ? 0.46 : 0.22)}, 0 10px 24px -20px ${hexToRgba(palette.secondary, palette.dark ? 0.32 : 0.16)}`,
+    cardSurface: palette.dark ? "rgba(24, 24, 27, .72)" : "rgba(255, 255, 255, .84)"
+  };
+}
+
 function buildBackground(palette: CuratedPalette): string {
   if (palette.dark) {
     return [
@@ -121,4 +143,16 @@ function buildBackground(palette: CuratedPalette): string {
 
 function encodeFamily(family: string): string {
   return family.replace(/\s+/gu, "+");
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const parsed = Number.parseInt(hex.replace("#", "").slice(0, 6), 16);
+  if (!Number.isFinite(parsed)) {
+    return `rgba(0, 0, 0, ${alpha})`;
+  }
+  const red = (parsed >> 16) & 255;
+  const green = (parsed >> 8) & 255;
+  const blue = parsed & 255;
+  const safeAlpha = Math.min(1, Math.max(0, alpha));
+  return `rgba(${red}, ${green}, ${blue}, ${safeAlpha})`;
 }
