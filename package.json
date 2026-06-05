@@ -13,6 +13,8 @@
     "db:generate": "pnpm --filter @slides-agent/api db:generate",
     "db:migrate": "pnpm --filter @slides-agent/api db:migrate",
     "db:seed": "pnpm --filter @slides-agent/api db:seed",
+    "db:repl": "pnpm --filter @slides-agent/api db:repl",
+    "db:studio": "pnpm --filter @slides-agent/api db:studio",
     "test": "pnpm run test:domain && pnpm run test:contracts && pnpm run test:api && pnpm run test:web",
     "test:domain": "pnpm --filter @slides-agent/domain test",
     "test:contracts": "pnpm --filter @slides-agent/contracts test",
