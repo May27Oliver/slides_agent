@@ -67,3 +67,12 @@ export {
   deserializePreviewJob
 } from "@/preview-job/preview-job-serialization";
 export type { SerializedPreviewJob } from "@/preview-job/preview-job-serialization";
+
+export type { UserAccount, AuthenticatedUser, AuthFailureCode } from "@/auth/auth.types";
+export type { UserAccountStore } from "@/auth/user-account-store.port";
+export {
+  evaluateLogin,
+  evaluateSession,
+  toAuthenticatedUser,
+  type AuthEvaluation
+} from "@/auth/auth-policy.service";

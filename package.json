@@ -9,6 +9,7 @@
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "dev:iterm": "scripts/dev.sh",
+    "auth:hash": "node --import tsx scripts/auth-hash.ts",
     "test": "pnpm run test:domain && pnpm run test:contracts && pnpm run test:api && pnpm run test:web",
     "test:domain": "pnpm --filter @slides-agent/domain test",
     "test:contracts": "pnpm --filter @slides-agent/contracts test",
@@ -21,6 +22,7 @@
     "@types/node": "^20.0.0",
     "eslint": "^9.0.0",
     "prettier": "^3.0.0",
+    "tsx": "^4.22.4",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.0.0",
     "vitest": "^2.0.0"

@@ -11,9 +11,13 @@ export interface RateLimitGuardOptions {
   windowMs: number;
   /** Maximum requests allowed per client within the window. */
   max: number;
+  /** Context-appropriate 429 message (defaults to a generic one). */
+  message?: string;
   /** Clock injection point for tests. */
   now?: () => number;
 }
+
+const DEFAULT_RATE_LIMIT_MESSAGE = "Too many requests. Please wait a moment and try again.";
 
 interface RateLimitedRequest {
   ip?: string;
@@ -32,6 +36,7 @@ interface RateLimitedRequest {
 export class RateLimitGuard implements CanActivate {
   private readonly windowMs: number;
   private readonly max: number;
+  private readonly message: string;
   private readonly now: () => number;
   private readonly hits = new Map<string, number[]>();
   private lastSweepAt = 0;
@@ -39,6 +44,7 @@ export class RateLimitGuard implements CanActivate {
   constructor(options: RateLimitGuardOptions) {
     this.windowMs = options.windowMs;
     this.max = options.max;
+    this.message = options.message ?? DEFAULT_RATE_LIMIT_MESSAGE;
     this.now = options.now ?? (() => Date.now());
   }
 
@@ -54,10 +60,7 @@ export class RateLimitGuard implements CanActivate {
 
     if (recent.length >= this.max) {
       throw new HttpException(
-        {
-          code: "RATE_LIMITED",
-          message: "Too many preview requests. Please wait a moment and try again."
-        },
+        { code: "RATE_LIMITED", message: this.message },
         HttpStatus.TOO_MANY_REQUESTS
       );
     }

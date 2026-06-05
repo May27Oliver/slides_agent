@@ -12,7 +12,8 @@ import {
   ServiceUnavailableException,
   UseGuards
 } from "@nestjs/common";
-import { RateLimitGuard } from "@/modules/preview-jobs/rate-limit.guard";
+import { RateLimitGuard } from "@/common/rate-limit.guard";
+import { JwtAuthGuard } from "@/modules/auth/jwt-auth.guard";
 import type {
   CreatePreviewJobResponseContract,
   GeneratePreviewResponseContract,
@@ -33,7 +34,8 @@ import {
 // into multiple chained LLM calls). Tunable via env; defaults to 5 req/60s/IP.
 const previewRateLimit = new RateLimitGuard({
   windowMs: Number(process.env.PREVIEW_RATE_LIMIT_WINDOW_MS) || 60_000,
-  max: Number(process.env.PREVIEW_RATE_LIMIT_MAX) || 5
+  max: Number(process.env.PREVIEW_RATE_LIMIT_MAX) || 5,
+  message: "Too many preview requests. Please wait a moment and try again."
 });
 
 @Controller("slides")
@@ -53,7 +55,7 @@ export class PreviewJobsController {
   ) {}
 
   @Post("preview")
-  @UseGuards(previewRateLimit)
+  @UseGuards(JwtAuthGuard, previewRateLimit)
   async preview(@Body() body: unknown): Promise<GeneratePreviewResponseContract> {
     const request = parseGeneratePreviewRequest(body);
     return this.slidesService.generatePreview(request);
@@ -61,7 +63,7 @@ export class PreviewJobsController {
 
   @Post("preview-jobs")
   @HttpCode(HttpStatus.ACCEPTED)
-  @UseGuards(previewRateLimit)
+  @UseGuards(JwtAuthGuard, previewRateLimit)
   async createPreviewJob(@Body() body: unknown): Promise<CreatePreviewJobResponseContract> {
     const request = parseGeneratePreviewRequest(body);
     const store = this.requirePreviewJobStore();
@@ -92,6 +94,7 @@ export class PreviewJobsController {
   }
 
   @Get("preview-jobs/:jobId")
+  @UseGuards(JwtAuthGuard)
   async previewJobStatus(@Param("jobId") jobId: string): Promise<PreviewJobStatusResponseContract> {
     assertValidJobId(jobId);
     const store = this.requirePreviewJobStore();
