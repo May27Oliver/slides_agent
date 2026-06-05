@@ -1,13 +1,13 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-specs/003-async-preview-jobs/plan.md
+specs/005-user-auth-jwt/plan.md
 <!-- SPECKIT END -->
 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **slides_agent** (1349 symbols, 2428 relationships, 89 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **slides_agent** (2418 symbols, 4533 relationships, 193 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
