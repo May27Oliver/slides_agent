@@ -29,7 +29,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: config.jwtSecret
+      secretOrKey: config.jwtSecret,
+      // Pin the algorithm so HS384/HS512 (auto-inferred for HMAC secrets) and any
+      // future alg-confusion are ruled out; verify the issuer we signed with.
+      algorithms: ["HS256"],
+      issuer: config.jwtIssuer
     });
   }
 

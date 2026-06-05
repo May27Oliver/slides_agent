@@ -4,11 +4,14 @@ import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 // relative path without the project's @/ path aliases.
 const KEY_LENGTH = 64;
 const SALT_BYTES = 16;
+// scrypt cost. N=2^16 follows current OWASP guidance for interactive login.
+// maxmem must exceed ~128*N*r bytes (~64MB here) or scryptSync throws.
+const SCRYPT_PARAMS = { N: 65536, r: 8, p: 1, maxmem: 128 * 1024 * 1024 } as const;
 
 /** Produce a `saltHex:hashHex` verifier for a plaintext password (scrypt). */
 export function hashPassword(plain: string): string {
   const salt = randomBytes(SALT_BYTES);
-  const derived = scryptSync(plain, salt, KEY_LENGTH);
+  const derived = scryptSync(plain, salt, KEY_LENGTH, SCRYPT_PARAMS);
   return `${salt.toString("hex")}:${derived.toString("hex")}`;
 }
 
@@ -24,6 +27,6 @@ export function verifyPassword(plain: string, stored: string): boolean {
   if (expected.length !== KEY_LENGTH) {
     return false;
   }
-  const derived = scryptSync(plain, Buffer.from(saltHex, "hex"), KEY_LENGTH);
+  const derived = scryptSync(plain, Buffer.from(saltHex, "hex"), KEY_LENGTH, SCRYPT_PARAMS);
   return timingSafeEqual(derived, expected);
 }

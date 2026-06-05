@@ -28,7 +28,12 @@ import { LoginRateLimitGuard } from "@/modules/auth/login-rate-limit.guard";
         const config = loadAuthConfig();
         return {
           secret: config.jwtSecret,
-          signOptions: { expiresIn: config.jwtExpiresIn }
+          // Pin algorithm + issuer at sign time to match what JwtStrategy verifies.
+          signOptions: {
+            algorithm: "HS256",
+            expiresIn: config.jwtExpiresIn,
+            issuer: config.jwtIssuer
+          }
         };
       }
     })

@@ -25,8 +25,20 @@ describe("loadAuthConfig", () => {
       AUTH_ACCOUNTS: JSON.stringify([account])
     });
     expect(config.jwtExpiresIn).toBe("30d");
+    expect(config.jwtIssuer).toBe("slides-agent");
     expect(config.accounts).toEqual([account]);
     expect(config.loginRateLimit).toEqual({ max: 10, windowMs: 60000 });
+  });
+
+  it("rejects a malformed AUTH_JWT_EXPIRES_IN", () => {
+    expect(() => loadAuthConfig({ AUTH_JWT_SECRET: SECRET, AUTH_JWT_EXPIRES_IN: "soon" })).toThrow(
+      /AUTH_JWT_EXPIRES_IN/u
+    );
+  });
+
+  it("accepts a custom issuer override", () => {
+    const config = loadAuthConfig({ AUTH_JWT_SECRET: SECRET, AUTH_JWT_ISSUER: "acme" });
+    expect(config.jwtIssuer).toBe("acme");
   });
 
   it("defaults to an empty allowlist when AUTH_ACCOUNTS is unset", () => {

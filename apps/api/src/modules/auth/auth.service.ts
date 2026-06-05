@@ -3,7 +3,7 @@ import { JwtService } from "@nestjs/jwt";
 import type { AuthenticatedUser, UserAccountStore } from "@slides-agent/domain";
 import { evaluateLogin, evaluateSession } from "@slides-agent/domain";
 import type { LoginResponseContract } from "@slides-agent/contracts";
-import { verifyPassword } from "@/common/scrypt-password";
+import { hashPassword, verifyPassword } from "@/common/scrypt-password";
 import { USER_ACCOUNT_STORE } from "@/modules/auth/auth.tokens";
 
 interface SessionClaims {
@@ -11,6 +11,11 @@ interface SessionClaims {
   username: string;
   displayName: string;
 }
+
+// Precomputed once so an unknown username still incurs the full scrypt cost.
+// Keeps login timing constant whether or not the account exists, closing the
+// timing side-channel that would otherwise leak which usernames are valid.
+const DUMMY_PASSWORD_HASH = hashPassword("__no_such_account__");
 
 /**
  * Auth application service: credential validation (delegates the decision to the
@@ -27,7 +32,8 @@ export class AuthService {
 
   async validateCredentials(username: string, password: string): Promise<AuthenticatedUser | null> {
     const account = await this.accounts.findByUsername(username);
-    const passwordMatches = account ? verifyPassword(password, account.passwordHash) : false;
+    // Always run scrypt (against a dummy hash for unknown users) for constant timing.
+    const passwordMatches = verifyPassword(password, account?.passwordHash ?? DUMMY_PASSWORD_HASH);
     const result = evaluateLogin(account, passwordMatches);
     return result.ok ? result.user : null;
   }

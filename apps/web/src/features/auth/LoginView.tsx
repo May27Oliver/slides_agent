@@ -3,11 +3,23 @@ import type { FormEvent } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/AuthProvider";
 
+/**
+ * Only follow the stored post-login destination if it is a same-origin relative
+ * path. Rejects protocol-relative ("//evil.com") and absolute URLs so a tampered
+ * router state can't turn login into an open redirect.
+ */
+function safeRedirectPath(from: string | undefined): string {
+  if (typeof from === "string" && from.startsWith("/") && !from.startsWith("//")) {
+    return from;
+  }
+  return "/";
+}
+
 export function LoginView() {
   const { login, status } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from ?? "/";
+  const from = safeRedirectPath((location.state as { from?: string } | null)?.from);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

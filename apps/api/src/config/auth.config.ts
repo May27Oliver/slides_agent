@@ -8,6 +8,7 @@ import type { UserAccount } from "@slides-agent/domain";
 export interface AuthConfig {
   jwtSecret: string;
   jwtExpiresIn: string;
+  jwtIssuer: string;
   accounts: UserAccount[];
   loginRateLimit: { max: number; windowMs: number };
 }
@@ -15,9 +16,12 @@ export interface AuthConfig {
 type EnvLike = Record<string, string | undefined>;
 
 const DEFAULT_EXPIRES_IN = "30d";
+const DEFAULT_ISSUER = "slides-agent";
 const MIN_JWT_SECRET_CHARS = 32;
 const DEFAULT_LOGIN_RATE_LIMIT_MAX = 10;
 const DEFAULT_LOGIN_RATE_LIMIT_WINDOW_MS = 60_000;
+// Accepts a bare seconds count or a vercel/ms duration string (e.g. "30d", "12h").
+const EXPIRES_IN_PATTERN = /^\d+(\.\d+)?\s*(ms|s|m|h|d|w|y)?$/u;
 
 export function loadAuthConfig(env: EnvLike = process.env): AuthConfig {
   const jwtSecret = env.AUTH_JWT_SECRET?.trim();
@@ -28,9 +32,15 @@ export function loadAuthConfig(env: EnvLike = process.env): AuthConfig {
     throw new Error(`AUTH_JWT_SECRET must be at least ${MIN_JWT_SECRET_CHARS} characters.`);
   }
 
+  const jwtExpiresIn = env.AUTH_JWT_EXPIRES_IN?.trim() || DEFAULT_EXPIRES_IN;
+  if (!EXPIRES_IN_PATTERN.test(jwtExpiresIn)) {
+    throw new Error('AUTH_JWT_EXPIRES_IN must be a seconds count or a duration string like "30d".');
+  }
+
   return {
     jwtSecret,
-    jwtExpiresIn: env.AUTH_JWT_EXPIRES_IN?.trim() || DEFAULT_EXPIRES_IN,
+    jwtExpiresIn,
+    jwtIssuer: env.AUTH_JWT_ISSUER?.trim() || DEFAULT_ISSUER,
     accounts: parseAccounts(env.AUTH_ACCOUNTS),
     loginRateLimit: {
       max: positiveIntOr(env.AUTH_LOGIN_RATE_LIMIT_MAX, DEFAULT_LOGIN_RATE_LIMIT_MAX),
