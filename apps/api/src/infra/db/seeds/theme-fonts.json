@@ -1,0 +1,1371 @@
+[
+  {
+    "id": "font-10-classic-elegant",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Classic Elegant",
+    "description": "High contrast between elegant heading and clean body. Perfect for luxury/premium.",
+    "keywords": [
+      "elegant",
+      "luxury",
+      "sophisticated",
+      "timeless",
+      "premium",
+      "editorial"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Playfair Display\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Inter\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-00-sans-default",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Modern Professional",
+    "description": "Geometric Poppins for headings, humanist Open Sans for readability.",
+    "keywords": [
+      "modern",
+      "professional",
+      "clean",
+      "corporate",
+      "friendly",
+      "approachable"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Poppins\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Open Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-tech-startup",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Tech Startup",
+    "description": "Space Grotesk has unique character, DM Sans is highly readable.",
+    "keywords": [
+      "tech",
+      "startup",
+      "modern",
+      "innovative",
+      "bold",
+      "futuristic"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Space Grotesk\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"DM Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-editorial-classic",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Editorial Classic",
+    "description": "All-serif pairing for traditional editorial feel.",
+    "keywords": [
+      "editorial",
+      "classic",
+      "literary",
+      "traditional",
+      "refined",
+      "bookish"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Cormorant Garamond\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Libre Baskerville\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-minimal-swiss",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Minimal Swiss",
+    "description": "Single font family with weight variations. Ultimate simplicity.",
+    "keywords": [
+      "minimal",
+      "clean",
+      "swiss",
+      "functional",
+      "neutral",
+      "professional"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Inter\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Inter\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-playful-creative",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Playful Creative",
+    "description": "Rounded, friendly fonts perfect for playful UIs.",
+    "keywords": [
+      "playful",
+      "friendly",
+      "fun",
+      "creative",
+      "warm",
+      "approachable"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Fredoka\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Nunito\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-bold-statement",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Bold Statement",
+    "description": "Bebas Neue for large headlines only. All-caps display font.",
+    "keywords": [
+      "bold",
+      "impactful",
+      "strong",
+      "dramatic",
+      "modern",
+      "headlines"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Bebas Neue\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Source Sans 3\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-wellness-calm",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Wellness Calm",
+    "description": "Lora's organic curves with Raleway's elegant simplicity.",
+    "keywords": [
+      "calm",
+      "wellness",
+      "health",
+      "relaxing",
+      "natural",
+      "organic"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Lora\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Raleway\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Raleway:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-developer-mono",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Developer Mono",
+    "description": "JetBrains for code, IBM Plex for UI. Developer-focused.",
+    "keywords": [
+      "code",
+      "developer",
+      "technical",
+      "precise",
+      "functional",
+      "hacker"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"JetBrains Mono\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"IBM Plex Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-retro-vintage",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Retro Vintage",
+    "description": "Abril Fatface for hero headlines only. High-impact vintage feel.",
+    "keywords": [
+      "retro",
+      "vintage",
+      "nostalgic",
+      "dramatic",
+      "decorative",
+      "bold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Abril Fatface\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Merriweather\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-geometric-modern",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Geometric Modern",
+    "description": "Both geometric but Outfit more distinctive for headings.",
+    "keywords": [
+      "geometric",
+      "modern",
+      "clean",
+      "balanced",
+      "contemporary",
+      "versatile"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Outfit\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Work Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Work+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-luxury-serif",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Luxury Serif",
+    "description": "Cormorant's elegance with Montserrat's geometric precision.",
+    "keywords": [
+      "luxury",
+      "high-end",
+      "fashion",
+      "elegant",
+      "refined",
+      "premium"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Cormorant\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Montserrat\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-friendly-saas",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Friendly SaaS",
+    "description": "Single versatile font. Modern alternative to Inter.",
+    "keywords": [
+      "friendly",
+      "modern",
+      "saas",
+      "clean",
+      "approachable",
+      "professional"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Plus Jakarta Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Plus Jakarta Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-news-editorial",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "News Editorial",
+    "description": "Newsreader designed for long-form reading. Roboto for UI.",
+    "keywords": [
+      "news",
+      "editorial",
+      "journalism",
+      "trustworthy",
+      "readable",
+      "informative"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Newsreader\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Roboto\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Newsreader:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-handwritten-charm",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Handwritten Charm",
+    "description": "Use Caveat sparingly for accents. Quicksand for body.",
+    "keywords": [
+      "handwritten",
+      "personal",
+      "friendly",
+      "casual",
+      "warm",
+      "charming"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Caveat\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Quicksand\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Quicksand:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-corporate-trust",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Corporate Trust",
+    "description": "Lexend designed for readability. Excellent accessibility.",
+    "keywords": [
+      "corporate",
+      "trustworthy",
+      "accessible",
+      "readable",
+      "professional",
+      "clean"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Lexend\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Source Sans 3\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-brutalist-raw",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Brutalist Raw",
+    "description": "All-mono for raw brutalist aesthetic. Limited weights.",
+    "keywords": [
+      "brutalist",
+      "raw",
+      "technical",
+      "monospace",
+      "minimal",
+      "stark"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Space Mono\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Space Mono\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-fashion-forward",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Fashion Forward",
+    "description": "Syne's unique character for headlines. Manrope for readability.",
+    "keywords": [
+      "fashion",
+      "avant-garde",
+      "creative",
+      "bold",
+      "artistic",
+      "edgy"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Syne\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Manrope\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-soft-rounded",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Soft Rounded",
+    "description": "Both rounded and friendly. Perfect for soft UI designs.",
+    "keywords": [
+      "soft",
+      "rounded",
+      "friendly",
+      "approachable",
+      "warm",
+      "gentle"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Varela Round\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Nunito Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-premium-sans",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Premium Sans",
+    "description": "Note: Satoshi/General Sans on Fontshare. DM Sans as Google alternative.",
+    "keywords": [
+      "premium",
+      "modern",
+      "clean",
+      "sophisticated",
+      "versatile",
+      "balanced"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Satoshi\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"General Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-vietnamese-friendly",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Vietnamese Friendly",
+    "description": "Be Vietnam Pro excellent Vietnamese support. Noto as fallback.",
+    "keywords": [
+      "vietnamese",
+      "international",
+      "readable",
+      "clean",
+      "multilingual",
+      "accessible"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Be Vietnam Pro\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Noto Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-japanese-elegant",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Japanese Elegant",
+    "description": "Noto fonts excellent Japanese support. Traditional + modern feel.",
+    "keywords": [
+      "japanese",
+      "elegant",
+      "traditional",
+      "modern",
+      "multilingual",
+      "readable"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Noto Serif JP\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Noto Sans JP\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-korean-modern",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Korean Modern",
+    "description": "Clean Korean typography. Single font with weight variations.",
+    "keywords": [
+      "korean",
+      "modern",
+      "clean",
+      "professional",
+      "multilingual",
+      "readable"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Noto Sans KR\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Noto Sans KR\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-chinese-traditional",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Chinese Traditional",
+    "description": "Traditional Chinese character support. Elegant pairing.",
+    "keywords": [
+      "chinese",
+      "traditional",
+      "elegant",
+      "cultural",
+      "multilingual",
+      "readable"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Noto Serif TC\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Noto Sans TC\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-chinese-simplified",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Chinese Simplified",
+    "description": "Simplified Chinese support. Clean modern look.",
+    "keywords": [
+      "chinese",
+      "simplified",
+      "modern",
+      "professional",
+      "multilingual",
+      "readable"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Noto Sans SC\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Noto Sans SC\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-arabic-elegant",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Arabic Elegant",
+    "description": "RTL support. Naskh for traditional, Sans for modern Arabic.",
+    "keywords": [
+      "arabic",
+      "elegant",
+      "traditional",
+      "cultural",
+      "rtl",
+      "readable"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Noto Naskh Arabic\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Noto Sans Arabic\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@300;400;500;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-thai-modern",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Thai Modern",
+    "description": "Clean Thai typography. Excellent readability.",
+    "keywords": [
+      "thai",
+      "modern",
+      "readable",
+      "clean",
+      "multilingual",
+      "accessible"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Noto Sans Thai\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Noto Sans Thai\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-hebrew-modern",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Hebrew Modern",
+    "description": "RTL support. Clean modern Hebrew typography.",
+    "keywords": [
+      "hebrew",
+      "modern",
+      "rtl",
+      "clean",
+      "professional",
+      "readable"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Noto Sans Hebrew\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Noto Sans Hebrew\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@300;400;500;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-legal-professional",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Legal Professional",
+    "description": "EB Garamond for authority. Lato for clean body text.",
+    "keywords": [
+      "legal",
+      "professional",
+      "traditional",
+      "trustworthy",
+      "formal",
+      "authoritative"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"EB Garamond\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Lato\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&family=Lato:wght@300;400;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-medical-clean",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Medical Clean",
+    "description": "Clean, accessible fonts for medical contexts.",
+    "keywords": [
+      "medical",
+      "clean",
+      "accessible",
+      "professional",
+      "healthcare",
+      "trustworthy"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Figtree\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Noto Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-financial-trust",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Financial Trust",
+    "description": "IBM Plex conveys trust and professionalism. Excellent for data.",
+    "keywords": [
+      "financial",
+      "trustworthy",
+      "professional",
+      "corporate",
+      "banking",
+      "serious"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"IBM Plex Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"IBM Plex Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-real-estate-luxury",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Real Estate Luxury",
+    "description": "Cinzel's elegance for headlines. Josefin for modern body.",
+    "keywords": [
+      "real estate",
+      "luxury",
+      "elegant",
+      "sophisticated",
+      "property",
+      "premium"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Cinzel\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Josefin Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Josefin+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-restaurant-menu",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Restaurant Menu",
+    "description": "Small caps Playfair for menu headers. Karla for descriptions.",
+    "keywords": [
+      "restaurant",
+      "menu",
+      "culinary",
+      "elegant",
+      "foodie",
+      "hospitality"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Playfair Display SC\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Karla\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Karla:wght@300;400;500;600;700&family=Playfair+Display+SC:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-art-deco",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Art Deco",
+    "description": "Poiret One for art deco headlines only. Didact for body.",
+    "keywords": [
+      "art deco",
+      "vintage",
+      "1920s",
+      "elegant",
+      "decorative",
+      "gatsby"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Poiret One\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Didact Gothic\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Poiret+One:wght@400;600;700&family=Didact+Gothic:wght@300;400;600&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-magazine-style",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Magazine Style",
+    "description": "Bodoni's editorial elegance. Public Sans for clean UI.",
+    "keywords": [
+      "magazine",
+      "editorial",
+      "publishing",
+      "refined",
+      "journalism",
+      "print"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Libre Bodoni\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Public Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Libre+Bodoni:wght@400;500;600;700&family=Public+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-crypto-web3",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Crypto/Web3",
+    "description": "Orbitron for futuristic headers. Exo 2 for readable body.",
+    "keywords": [
+      "crypto",
+      "web3",
+      "futuristic",
+      "tech",
+      "blockchain",
+      "digital"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Orbitron\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Exo 2\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-gaming-bold",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Gaming Bold",
+    "description": "Russo One for impact. Chakra Petch for techy body text.",
+    "keywords": [
+      "gaming",
+      "bold",
+      "action",
+      "esports",
+      "competitive",
+      "energetic"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Russo One\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Chakra Petch\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-indie-craft",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Indie/Craft",
+    "description": "Amatic for handwritten feel. Cabin for readable body.",
+    "keywords": [
+      "indie",
+      "craft",
+      "handmade",
+      "artisan",
+      "organic",
+      "creative"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Amatic SC\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Cabin\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Cabin:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-startup-bold",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Startup Bold",
+    "description": "Note: Clash Display on Fontshare. Outfit as Google alternative.",
+    "keywords": [
+      "startup",
+      "bold",
+      "modern",
+      "innovative",
+      "confident",
+      "dynamic"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Clash Display\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Satoshi\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Rubik:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-e-commerce-clean",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "E-commerce Clean",
+    "description": "Clean readable fonts perfect for product descriptions.",
+    "keywords": [
+      "ecommerce",
+      "clean",
+      "shopping",
+      "product",
+      "retail",
+      "conversion"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Rubik\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Nunito Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700&family=Rubik:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-academic-research",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Academic/Research",
+    "description": "Crimson for scholarly headlines. Atkinson for accessibility.",
+    "keywords": [
+      "academic",
+      "research",
+      "scholarly",
+      "accessible",
+      "readable",
+      "educational"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Crimson Pro\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Atkinson Hyperlegible\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Crimson+Pro:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-dashboard-data",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Dashboard Data",
+    "description": "Fira family cohesion. Code for data, Sans for labels.",
+    "keywords": [
+      "dashboard",
+      "data",
+      "analytics",
+      "code",
+      "technical",
+      "precise"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Fira Code\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Fira Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-music-entertainment",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Music/Entertainment",
+    "description": "Righteous for bold entertainment headers. Poppins for body.",
+    "keywords": [
+      "music",
+      "entertainment",
+      "fun",
+      "energetic",
+      "bold",
+      "performance"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Righteous\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Poppins\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-minimalist-portfolio",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Minimalist Portfolio",
+    "description": "Space Grotesk for distinctive headers. Archivo for clean body.",
+    "keywords": [
+      "minimal",
+      "portfolio",
+      "designer",
+      "creative",
+      "clean",
+      "artistic"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Archivo\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Space Grotesk\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-kids-education",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Kids/Education",
+    "description": "Fun, playful fonts for children. Comic Neue is readable comic style.",
+    "keywords": [
+      "kids",
+      "education",
+      "playful",
+      "friendly",
+      "colorful",
+      "learning"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Baloo 2\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Comic Neue\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&family=Comic+Neue:wght@300;400;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-wedding-romance",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Wedding/Romance",
+    "description": "Great Vibes for elegant accents. Cormorant for readable text.",
+    "keywords": [
+      "wedding",
+      "romance",
+      "elegant",
+      "script",
+      "invitation",
+      "feminine"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Great Vibes\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Cormorant Infant\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Cormorant+Infant:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-science-tech",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Science/Tech",
+    "description": "Exo for modern tech feel. Roboto Mono for code/data.",
+    "keywords": [
+      "science",
+      "technology",
+      "research",
+      "data",
+      "futuristic",
+      "precise"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Exo\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Roboto Mono\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Exo:wght@300;400;500;600;700&family=Roboto+Mono:wght@300;400;500;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-accessibility-first",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Accessibility First",
+    "description": "Designed for maximum legibility. Excellent for accessibility.",
+    "keywords": [
+      "accessible",
+      "readable",
+      "inclusive",
+      "wcag",
+      "dyslexia-friendly",
+      "clear"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Atkinson Hyperlegible\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Atkinson Hyperlegible\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-sports-fitness",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Sports/Fitness",
+    "description": "Condensed for impact headlines. Regular Barlow for body.",
+    "keywords": [
+      "sports",
+      "fitness",
+      "athletic",
+      "energetic",
+      "condensed",
+      "action"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Barlow Condensed\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Barlow\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-luxury-minimalist",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Luxury Minimalist",
+    "description": "Bodoni's high contrast elegance. Jost for geometric body.",
+    "keywords": [
+      "luxury",
+      "minimalist",
+      "high-end",
+      "sophisticated",
+      "refined",
+      "premium"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Bodoni Moda\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Jost\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;500;600;700&family=Jost:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-tech-hud-mono",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Tech/HUD Mono",
+    "description": "Share Tech Mono has that classic sci-fi look.",
+    "keywords": [
+      "tech",
+      "futuristic",
+      "hud",
+      "sci-fi",
+      "data",
+      "monospaced",
+      "precise"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Share Tech Mono\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Fira Code\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-pixel-retro",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Pixel Retro",
+    "description": "Press Start 2P is very wide/large. VT323 is better for body text.",
+    "keywords": [
+      "pixel",
+      "retro",
+      "gaming",
+      "8-bit",
+      "nostalgic",
+      "arcade"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Press Start 2P\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"VT323\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Press+Start+2P:wght@400;600;700&family=VT323:wght@300;400;600&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-neubrutalist-bold",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Neubrutalist Bold",
+    "description": "Lexend Mega has distinct character and variable weight.",
+    "keywords": [
+      "bold",
+      "neubrutalist",
+      "loud",
+      "strong",
+      "geometric",
+      "quirky"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Lexend Mega\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Public Sans\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Lexend+Mega:wght@100&family=Public+Sans:wght@100&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-academic-archival",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Academic/Archival",
+    "description": "Classic academic aesthetic. Very legible.",
+    "keywords": [
+      "academic",
+      "old-school",
+      "university",
+      "research",
+      "serious",
+      "traditional"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"EB Garamond\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Crimson Text\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&family=EB+Garamond:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-spatial-clear",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Spatial Clear",
+    "description": "Optimized for readability on dynamic backgrounds.",
+    "keywords": [
+      "spatial",
+      "legible",
+      "glass",
+      "system",
+      "clean",
+      "neutral"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Inter\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Inter\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-kinetic-motion",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Kinetic Motion",
+    "description": "Syncopate's wide stance works well with motion effects.",
+    "keywords": [
+      "kinetic",
+      "motion",
+      "futuristic",
+      "speed",
+      "wide",
+      "tech"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Syncopate\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Space Mono\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  },
+  {
+    "id": "font-10-gen-z-brutal",
+    "kind": "font",
+    "scope": "builtin",
+    "name": "Gen Z Brutal",
+    "description": "Anton is impactful and condensed. Good for stickers/badges.",
+    "keywords": [
+      "brutal",
+      "loud",
+      "shouty",
+      "meme",
+      "internet",
+      "bold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "fonts": {
+        "heading": "\"Anton\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "body": "\"Epilogue\", \"Noto Sans TC\", system-ui, -apple-system, sans-serif",
+        "googleFontsHref": "https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      }
+    }
+  }
+]

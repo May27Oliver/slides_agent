@@ -1,0 +1,5143 @@
+[
+  {
+    "id": "palette-00-safe-default",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "SaaS (General)",
+    "description": "Trust blue + orange CTA contrast",
+    "keywords": [
+      "saas",
+      "trust blue + orange cta contrast"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#2563EB",
+          "gradient": "linear-gradient(135deg, #2563EB, #3B82F6)"
+        },
+        {
+          "name": "secondary",
+          "base": "#3B82F6",
+          "gradient": "linear-gradient(135deg, #3B82F6, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #2563EB)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #2563EB 0%, #3B82F6 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #2563EB22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #3B82F61F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #F8FAFC"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(226, 232, 240, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-micro-saas",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Micro SaaS",
+    "description": "Indigo primary + emerald CTA",
+    "keywords": [
+      "micro saas",
+      "indigo primary + emerald cta"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#6366F1",
+          "gradient": "linear-gradient(135deg, #6366F1, #818CF8)"
+        },
+        {
+          "name": "secondary",
+          "base": "#818CF8",
+          "gradient": "linear-gradient(135deg, #818CF8, #10B981)"
+        },
+        {
+          "name": "cta",
+          "base": "#10B981",
+          "gradient": "linear-gradient(135deg, #10B981, #6366F1)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #6366F1 0%, #818CF8 55%, #10B981 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #6366F122 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #818CF81F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #10B9811A 0%, transparent 70%), #F5F3FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(224, 231, 255, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-e-commerce",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "E-commerce",
+    "description": "Success green + urgency orange",
+    "keywords": [
+      "e-commerce",
+      "success green + urgency orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#059669",
+          "gradient": "linear-gradient(135deg, #059669, #10B981)"
+        },
+        {
+          "name": "secondary",
+          "base": "#10B981",
+          "gradient": "linear-gradient(135deg, #10B981, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #059669)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #059669 0%, #10B981 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #05966922 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #10B9811F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #ECFDF5"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(167, 243, 208, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-e-commerce-luxury",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "E-commerce Luxury",
+    "description": "Premium dark + gold accent",
+    "keywords": [
+      "e-commerce luxury",
+      "premium dark + gold accent"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#1C1917",
+          "gradient": "linear-gradient(135deg, #1C1917, #44403C)"
+        },
+        {
+          "name": "secondary",
+          "base": "#44403C",
+          "gradient": "linear-gradient(135deg, #44403C, #CA8A04)"
+        },
+        {
+          "name": "cta",
+          "base": "#CA8A04",
+          "gradient": "linear-gradient(135deg, #CA8A04, #1C1917)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #1C1917 0%, #44403C 55%, #CA8A04 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #1C191722 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #44403C1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #CA8A041A 0%, transparent 70%), #FAFAF9"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(214, 211, 209, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-service-landing-page",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Service Landing Page",
+    "description": "Sky blue trust + warm CTA",
+    "keywords": [
+      "service landing page",
+      "sky blue trust + warm cta"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0EA5E9",
+          "gradient": "linear-gradient(135deg, #0EA5E9, #38BDF8)"
+        },
+        {
+          "name": "secondary",
+          "base": "#38BDF8",
+          "gradient": "linear-gradient(135deg, #38BDF8, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #0EA5E9)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0EA5E9 0%, #38BDF8 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0EA5E922 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #38BDF81F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #F0F9FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(186, 230, 253, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-b2b-service",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "B2B Service",
+    "description": "Professional navy + blue CTA",
+    "keywords": [
+      "b2b service",
+      "professional navy + blue cta"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0F172A",
+          "gradient": "linear-gradient(135deg, #0F172A, #334155)"
+        },
+        {
+          "name": "secondary",
+          "base": "#334155",
+          "gradient": "linear-gradient(135deg, #334155, #0369A1)"
+        },
+        {
+          "name": "cta",
+          "base": "#0369A1",
+          "gradient": "linear-gradient(135deg, #0369A1, #0F172A)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0F172A 0%, #334155 55%, #0369A1 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0F172A22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #3341551F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #0369A11A 0%, transparent 70%), #F8FAFC"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(226, 232, 240, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-financial-dashboard",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Financial Dashboard",
+    "description": "Dark bg + green positive indicators",
+    "keywords": [
+      "financial dashboard",
+      "dark bg + green positive indicators"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0F172A",
+          "gradient": "linear-gradient(135deg, #0F172A, #1E293B)"
+        },
+        {
+          "name": "secondary",
+          "base": "#1E293B",
+          "gradient": "linear-gradient(135deg, #1E293B, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #0F172A)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0F172A 0%, #1E293B 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #0F172A2E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #1E293B24 0%, transparent 60%), #020617"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(51, 65, 85, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-analytics-dashboard",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Analytics Dashboard",
+    "description": "Blue data + amber highlights",
+    "keywords": [
+      "analytics dashboard",
+      "blue data + amber highlights"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#1E40AF",
+          "gradient": "linear-gradient(135deg, #1E40AF, #3B82F6)"
+        },
+        {
+          "name": "secondary",
+          "base": "#3B82F6",
+          "gradient": "linear-gradient(135deg, #3B82F6, #F59E0B)"
+        },
+        {
+          "name": "cta",
+          "base": "#F59E0B",
+          "gradient": "linear-gradient(135deg, #F59E0B, #1E40AF)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #1E40AF 0%, #3B82F6 55%, #F59E0B 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #1E40AF22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #3B82F61F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F59E0B1A 0%, transparent 70%), #F8FAFC"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(219, 234, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-healthcare-app",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Healthcare App",
+    "description": "Calm cyan + health green",
+    "keywords": [
+      "healthcare app",
+      "calm cyan + health green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0891B2",
+          "gradient": "linear-gradient(135deg, #0891B2, #22D3EE)"
+        },
+        {
+          "name": "secondary",
+          "base": "#22D3EE",
+          "gradient": "linear-gradient(135deg, #22D3EE, #059669)"
+        },
+        {
+          "name": "cta",
+          "base": "#059669",
+          "gradient": "linear-gradient(135deg, #059669, #0891B2)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0891B2 0%, #22D3EE 55%, #059669 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0891B222 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #22D3EE1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #0596691A 0%, transparent 70%), #ECFEFF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(165, 243, 252, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-educational-app",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Educational App",
+    "description": "Playful indigo + energetic orange",
+    "keywords": [
+      "educational app",
+      "playful indigo + energetic orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#4F46E5",
+          "gradient": "linear-gradient(135deg, #4F46E5, #818CF8)"
+        },
+        {
+          "name": "secondary",
+          "base": "#818CF8",
+          "gradient": "linear-gradient(135deg, #818CF8, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #4F46E5)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #4F46E5 0%, #818CF8 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #4F46E522 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #818CF81F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #EEF2FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(199, 210, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-creative-agency",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Creative Agency",
+    "description": "Bold pink + cyan accent",
+    "keywords": [
+      "creative agency",
+      "bold pink + cyan accent"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#EC4899",
+          "gradient": "linear-gradient(135deg, #EC4899, #F472B6)"
+        },
+        {
+          "name": "secondary",
+          "base": "#F472B6",
+          "gradient": "linear-gradient(135deg, #F472B6, #06B6D4)"
+        },
+        {
+          "name": "cta",
+          "base": "#06B6D4",
+          "gradient": "linear-gradient(135deg, #06B6D4, #EC4899)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #EC4899 0%, #F472B6 55%, #06B6D4 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #EC489922 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #F472B61F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #06B6D41A 0%, transparent 70%), #FDF2F8"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(251, 207, 232, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-portfolio-personal",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Portfolio/Personal",
+    "description": "Monochrome + blue accent",
+    "keywords": [
+      "portfolio",
+      "personal",
+      "monochrome + blue accent"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#18181B",
+          "gradient": "linear-gradient(135deg, #18181B, #3F3F46)"
+        },
+        {
+          "name": "secondary",
+          "base": "#3F3F46",
+          "gradient": "linear-gradient(135deg, #3F3F46, #2563EB)"
+        },
+        {
+          "name": "cta",
+          "base": "#2563EB",
+          "gradient": "linear-gradient(135deg, #2563EB, #18181B)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #18181B 0%, #3F3F46 55%, #2563EB 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #18181B22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #3F3F461F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #2563EB1A 0%, transparent 70%), #FAFAFA"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(228, 228, 231, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-gaming",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Gaming",
+    "description": "Neon purple + rose action",
+    "keywords": [
+      "gaming",
+      "neon purple + rose action"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#7C3AED",
+          "gradient": "linear-gradient(135deg, #7C3AED, #A78BFA)"
+        },
+        {
+          "name": "secondary",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #F43F5E)"
+        },
+        {
+          "name": "cta",
+          "base": "#F43F5E",
+          "gradient": "linear-gradient(135deg, #F43F5E, #7C3AED)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #7C3AED 0%, #A78BFA 55%, #F43F5E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #7C3AED2E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #A78BFA24 0%, transparent 60%), #0F0F23"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(76, 29, 149, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-government-public-service",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Government/Public Service",
+    "description": "High contrast navy + blue",
+    "keywords": [
+      "government",
+      "public service",
+      "high contrast navy + blue"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0F172A",
+          "gradient": "linear-gradient(135deg, #0F172A, #334155)"
+        },
+        {
+          "name": "secondary",
+          "base": "#334155",
+          "gradient": "linear-gradient(135deg, #334155, #0369A1)"
+        },
+        {
+          "name": "cta",
+          "base": "#0369A1",
+          "gradient": "linear-gradient(135deg, #0369A1, #0F172A)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0F172A 0%, #334155 55%, #0369A1 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0F172A22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #3341551F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #0369A11A 0%, transparent 70%), #F8FAFC"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(226, 232, 240, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-fintech-crypto",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Fintech/Crypto",
+    "description": "Gold trust + purple tech",
+    "keywords": [
+      "fintech",
+      "crypto",
+      "gold trust + purple tech"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#F59E0B",
+          "gradient": "linear-gradient(135deg, #F59E0B, #FBBF24)"
+        },
+        {
+          "name": "secondary",
+          "base": "#FBBF24",
+          "gradient": "linear-gradient(135deg, #FBBF24, #8B5CF6)"
+        },
+        {
+          "name": "cta",
+          "base": "#8B5CF6",
+          "gradient": "linear-gradient(135deg, #8B5CF6, #F59E0B)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #F59E0B 0%, #FBBF24 55%, #8B5CF6 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #F59E0B2E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #FBBF2424 0%, transparent 60%), #0F172A"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(51, 65, 85, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-social-media-app",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Social Media App",
+    "description": "Vibrant rose + engagement blue",
+    "keywords": [
+      "social media app",
+      "vibrant rose + engagement blue"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#E11D48",
+          "gradient": "linear-gradient(135deg, #E11D48, #FB7185)"
+        },
+        {
+          "name": "secondary",
+          "base": "#FB7185",
+          "gradient": "linear-gradient(135deg, #FB7185, #2563EB)"
+        },
+        {
+          "name": "cta",
+          "base": "#2563EB",
+          "gradient": "linear-gradient(135deg, #2563EB, #E11D48)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #E11D48 0%, #FB7185 55%, #2563EB 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #E11D4822 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #FB71851F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #2563EB1A 0%, transparent 70%), #FFF1F2"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(254, 205, 211, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-productivity-tool",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Productivity Tool",
+    "description": "Teal focus + action orange",
+    "keywords": [
+      "productivity tool",
+      "teal focus + action orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0D9488",
+          "gradient": "linear-gradient(135deg, #0D9488, #14B8A6)"
+        },
+        {
+          "name": "secondary",
+          "base": "#14B8A6",
+          "gradient": "linear-gradient(135deg, #14B8A6, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #0D9488)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0D9488 0%, #14B8A6 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0D948822 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #14B8A61F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #F0FDFA"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(153, 246, 228, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-design-system-component-library",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Design System/Component Library",
+    "description": "Indigo brand + doc hierarchy",
+    "keywords": [
+      "design system",
+      "component library",
+      "indigo brand + doc hierarchy"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#4F46E5",
+          "gradient": "linear-gradient(135deg, #4F46E5, #6366F1)"
+        },
+        {
+          "name": "secondary",
+          "base": "#6366F1",
+          "gradient": "linear-gradient(135deg, #6366F1, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #4F46E5)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #4F46E5 0%, #6366F1 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #4F46E522 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #6366F11F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #EEF2FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(199, 210, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-ai-chatbot-platform",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "AI/Chatbot Platform",
+    "description": "AI purple + cyan interactions",
+    "keywords": [
+      "ai",
+      "chatbot platform",
+      "ai purple + cyan interactions"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#7C3AED",
+          "gradient": "linear-gradient(135deg, #7C3AED, #A78BFA)"
+        },
+        {
+          "name": "secondary",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #06B6D4)"
+        },
+        {
+          "name": "cta",
+          "base": "#06B6D4",
+          "gradient": "linear-gradient(135deg, #06B6D4, #7C3AED)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #7C3AED 0%, #A78BFA 55%, #06B6D4 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #7C3AED22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #A78BFA1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #06B6D41A 0%, transparent 70%), #FAF5FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(221, 214, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-nft-web3-platform",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "NFT/Web3 Platform",
+    "description": "Purple tech + gold value",
+    "keywords": [
+      "nft",
+      "web3 platform",
+      "purple tech + gold value"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#8B5CF6",
+          "gradient": "linear-gradient(135deg, #8B5CF6, #A78BFA)"
+        },
+        {
+          "name": "secondary",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #FBBF24)"
+        },
+        {
+          "name": "cta",
+          "base": "#FBBF24",
+          "gradient": "linear-gradient(135deg, #FBBF24, #8B5CF6)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #8B5CF6 0%, #A78BFA 55%, #FBBF24 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #8B5CF62E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #A78BFA24 0%, transparent 60%), #0F0F23"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(76, 29, 149, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-creator-economy-platform",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Creator Economy Platform",
+    "description": "Creator pink + engagement orange",
+    "keywords": [
+      "creator economy platform",
+      "creator pink + engagement orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#EC4899",
+          "gradient": "linear-gradient(135deg, #EC4899, #F472B6)"
+        },
+        {
+          "name": "secondary",
+          "base": "#F472B6",
+          "gradient": "linear-gradient(135deg, #F472B6, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #EC4899)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #EC4899 0%, #F472B6 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #EC489922 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #F472B61F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #FDF2F8"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(251, 207, 232, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-sustainability-esg-platform",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Sustainability/ESG Platform",
+    "description": "Nature green + ocean blue",
+    "keywords": [
+      "sustainability",
+      "esg platform",
+      "nature green + ocean blue"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#059669",
+          "gradient": "linear-gradient(135deg, #059669, #10B981)"
+        },
+        {
+          "name": "secondary",
+          "base": "#10B981",
+          "gradient": "linear-gradient(135deg, #10B981, #0891B2)"
+        },
+        {
+          "name": "cta",
+          "base": "#0891B2",
+          "gradient": "linear-gradient(135deg, #0891B2, #059669)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #059669 0%, #10B981 55%, #0891B2 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #05966922 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #10B9811F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #0891B21A 0%, transparent 70%), #ECFDF5"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(167, 243, 208, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-remote-work-collaboration-tool",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Remote Work/Collaboration Tool",
+    "description": "Calm indigo + success green",
+    "keywords": [
+      "remote work",
+      "collaboration tool",
+      "calm indigo + success green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#6366F1",
+          "gradient": "linear-gradient(135deg, #6366F1, #818CF8)"
+        },
+        {
+          "name": "secondary",
+          "base": "#818CF8",
+          "gradient": "linear-gradient(135deg, #818CF8, #10B981)"
+        },
+        {
+          "name": "cta",
+          "base": "#10B981",
+          "gradient": "linear-gradient(135deg, #10B981, #6366F1)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #6366F1 0%, #818CF8 55%, #10B981 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #6366F122 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #818CF81F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #10B9811A 0%, transparent 70%), #F5F3FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(224, 231, 255, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-mental-health-app",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Mental Health App",
+    "description": "Calming lavender + wellness green",
+    "keywords": [
+      "mental health app",
+      "calming lavender + wellness green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#8B5CF6",
+          "gradient": "linear-gradient(135deg, #8B5CF6, #C4B5FD)"
+        },
+        {
+          "name": "secondary",
+          "base": "#C4B5FD",
+          "gradient": "linear-gradient(135deg, #C4B5FD, #10B981)"
+        },
+        {
+          "name": "cta",
+          "base": "#10B981",
+          "gradient": "linear-gradient(135deg, #10B981, #8B5CF6)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #8B5CF6 0%, #C4B5FD 55%, #10B981 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #8B5CF622 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #C4B5FD1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #10B9811A 0%, transparent 70%), #FAF5FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(237, 233, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-pet-tech-app",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Pet Tech App",
+    "description": "Playful orange + trust blue",
+    "keywords": [
+      "pet tech app",
+      "playful orange + trust blue"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #FB923C)"
+        },
+        {
+          "name": "secondary",
+          "base": "#FB923C",
+          "gradient": "linear-gradient(135deg, #FB923C, #2563EB)"
+        },
+        {
+          "name": "cta",
+          "base": "#2563EB",
+          "gradient": "linear-gradient(135deg, #2563EB, #F97316)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #F97316 0%, #FB923C 55%, #2563EB 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #F9731622 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #FB923C1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #2563EB1A 0%, transparent 70%), #FFF7ED"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(254, 215, 170, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-smart-home-iot-dashboard",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Smart Home/IoT Dashboard",
+    "description": "Dark tech + status green",
+    "keywords": [
+      "smart home",
+      "iot dashboard",
+      "dark tech + status green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#1E293B",
+          "gradient": "linear-gradient(135deg, #1E293B, #334155)"
+        },
+        {
+          "name": "secondary",
+          "base": "#334155",
+          "gradient": "linear-gradient(135deg, #334155, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #1E293B)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #1E293B 0%, #334155 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #1E293B2E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #33415524 0%, transparent 60%), #0F172A"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(71, 85, 105, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-ev-charging-ecosystem",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "EV/Charging Ecosystem",
+    "description": "Electric cyan + eco green",
+    "keywords": [
+      "ev",
+      "charging ecosystem",
+      "electric cyan + eco green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0891B2",
+          "gradient": "linear-gradient(135deg, #0891B2, #22D3EE)"
+        },
+        {
+          "name": "secondary",
+          "base": "#22D3EE",
+          "gradient": "linear-gradient(135deg, #22D3EE, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #0891B2)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0891B2 0%, #22D3EE 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0891B222 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #22D3EE1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #22C55E1A 0%, transparent 70%), #ECFEFF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(165, 243, 252, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-subscription-box-service",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Subscription Box Service",
+    "description": "Excitement purple + urgency orange",
+    "keywords": [
+      "subscription box service",
+      "excitement purple + urgency orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#D946EF",
+          "gradient": "linear-gradient(135deg, #D946EF, #E879F9)"
+        },
+        {
+          "name": "secondary",
+          "base": "#E879F9",
+          "gradient": "linear-gradient(135deg, #E879F9, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #D946EF)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #D946EF 0%, #E879F9 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #D946EF22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #E879F91F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #FDF4FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(245, 208, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-podcast-platform",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Podcast Platform",
+    "description": "Dark audio + warm accent",
+    "keywords": [
+      "podcast platform",
+      "dark audio + warm accent"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#1E1B4B",
+          "gradient": "linear-gradient(135deg, #1E1B4B, #312E81)"
+        },
+        {
+          "name": "secondary",
+          "base": "#312E81",
+          "gradient": "linear-gradient(135deg, #312E81, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #1E1B4B)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #1E1B4B 0%, #312E81 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #1E1B4B2E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #312E8124 0%, transparent 60%), #0F0F23"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(67, 56, 202, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-dating-app",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Dating App",
+    "description": "Romantic rose + warm orange",
+    "keywords": [
+      "dating app",
+      "romantic rose + warm orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#E11D48",
+          "gradient": "linear-gradient(135deg, #E11D48, #FB7185)"
+        },
+        {
+          "name": "secondary",
+          "base": "#FB7185",
+          "gradient": "linear-gradient(135deg, #FB7185, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #E11D48)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #E11D48 0%, #FB7185 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #E11D4822 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #FB71851F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #FFF1F2"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(254, 205, 211, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-micro-credentials-badges-platform",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Micro-Credentials/Badges Platform",
+    "description": "Trust blue + achievement gold",
+    "keywords": [
+      "micro-credentials",
+      "badges platform",
+      "trust blue + achievement gold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0369A1",
+          "gradient": "linear-gradient(135deg, #0369A1, #0EA5E9)"
+        },
+        {
+          "name": "secondary",
+          "base": "#0EA5E9",
+          "gradient": "linear-gradient(135deg, #0EA5E9, #CA8A04)"
+        },
+        {
+          "name": "cta",
+          "base": "#CA8A04",
+          "gradient": "linear-gradient(135deg, #CA8A04, #0369A1)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0369A1 0%, #0EA5E9 55%, #CA8A04 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0369A122 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #0EA5E91F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #CA8A041A 0%, transparent 70%), #F0F9FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(186, 230, 253, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-knowledge-base-documentation",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Knowledge Base/Documentation",
+    "description": "Neutral grey + link blue",
+    "keywords": [
+      "knowledge base",
+      "documentation",
+      "neutral grey + link blue"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#475569",
+          "gradient": "linear-gradient(135deg, #475569, #64748B)"
+        },
+        {
+          "name": "secondary",
+          "base": "#64748B",
+          "gradient": "linear-gradient(135deg, #64748B, #2563EB)"
+        },
+        {
+          "name": "cta",
+          "base": "#2563EB",
+          "gradient": "linear-gradient(135deg, #2563EB, #475569)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #475569 0%, #64748B 55%, #2563EB 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #47556922 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #64748B1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #2563EB1A 0%, transparent 70%), #F8FAFC"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(226, 232, 240, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-hyperlocal-services",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Hyperlocal Services",
+    "description": "Location green + action orange",
+    "keywords": [
+      "hyperlocal services",
+      "location green + action orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#059669",
+          "gradient": "linear-gradient(135deg, #059669, #10B981)"
+        },
+        {
+          "name": "secondary",
+          "base": "#10B981",
+          "gradient": "linear-gradient(135deg, #10B981, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #059669)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #059669 0%, #10B981 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #05966922 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #10B9811F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #ECFDF5"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(167, 243, 208, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-beauty-spa-wellness-service",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Beauty/Spa/Wellness Service",
+    "description": "Soft pink + lavender luxury",
+    "keywords": [
+      "beauty",
+      "spa",
+      "wellness service",
+      "soft pink + lavender luxury"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#EC4899",
+          "gradient": "linear-gradient(135deg, #EC4899, #F9A8D4)"
+        },
+        {
+          "name": "secondary",
+          "base": "#F9A8D4",
+          "gradient": "linear-gradient(135deg, #F9A8D4, #8B5CF6)"
+        },
+        {
+          "name": "cta",
+          "base": "#8B5CF6",
+          "gradient": "linear-gradient(135deg, #8B5CF6, #EC4899)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #EC4899 0%, #F9A8D4 55%, #8B5CF6 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #EC489922 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #F9A8D41F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #8B5CF61A 0%, transparent 70%), #FDF2F8"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(251, 207, 232, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-luxury-premium-brand",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Luxury/Premium Brand",
+    "description": "Premium black + gold accent",
+    "keywords": [
+      "luxury",
+      "premium brand",
+      "premium black + gold accent"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#1C1917",
+          "gradient": "linear-gradient(135deg, #1C1917, #44403C)"
+        },
+        {
+          "name": "secondary",
+          "base": "#44403C",
+          "gradient": "linear-gradient(135deg, #44403C, #CA8A04)"
+        },
+        {
+          "name": "cta",
+          "base": "#CA8A04",
+          "gradient": "linear-gradient(135deg, #CA8A04, #1C1917)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #1C1917 0%, #44403C 55%, #CA8A04 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #1C191722 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #44403C1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #CA8A041A 0%, transparent 70%), #FAFAF9"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(214, 211, 209, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-restaurant-food-service",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Restaurant/Food Service",
+    "description": "Appetizing red + warm gold",
+    "keywords": [
+      "restaurant",
+      "food service",
+      "appetizing red + warm gold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#DC2626",
+          "gradient": "linear-gradient(135deg, #DC2626, #F87171)"
+        },
+        {
+          "name": "secondary",
+          "base": "#F87171",
+          "gradient": "linear-gradient(135deg, #F87171, #CA8A04)"
+        },
+        {
+          "name": "cta",
+          "base": "#CA8A04",
+          "gradient": "linear-gradient(135deg, #CA8A04, #DC2626)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #DC2626 0%, #F87171 55%, #CA8A04 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #DC262622 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #F871711F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #CA8A041A 0%, transparent 70%), #FEF2F2"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(254, 202, 202, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-fitness-gym-app",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Fitness/Gym App",
+    "description": "Energy orange + success green",
+    "keywords": [
+      "fitness",
+      "gym app",
+      "energy orange + success green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #FB923C)"
+        },
+        {
+          "name": "secondary",
+          "base": "#FB923C",
+          "gradient": "linear-gradient(135deg, #FB923C, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #F97316)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #F97316 0%, #FB923C 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #F973162E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #FB923C24 0%, transparent 60%), #1F2937"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(55, 65, 81, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-real-estate-property",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Real Estate/Property",
+    "description": "Trust teal + professional blue",
+    "keywords": [
+      "real estate",
+      "property",
+      "trust teal + professional blue"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0F766E",
+          "gradient": "linear-gradient(135deg, #0F766E, #14B8A6)"
+        },
+        {
+          "name": "secondary",
+          "base": "#14B8A6",
+          "gradient": "linear-gradient(135deg, #14B8A6, #0369A1)"
+        },
+        {
+          "name": "cta",
+          "base": "#0369A1",
+          "gradient": "linear-gradient(135deg, #0369A1, #0F766E)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0F766E 0%, #14B8A6 55%, #0369A1 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0F766E22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #14B8A61F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #0369A11A 0%, transparent 70%), #F0FDFA"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(153, 246, 228, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-travel-tourism-agency",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Travel/Tourism Agency",
+    "description": "Sky blue + adventure orange",
+    "keywords": [
+      "travel",
+      "tourism agency",
+      "sky blue + adventure orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0EA5E9",
+          "gradient": "linear-gradient(135deg, #0EA5E9, #38BDF8)"
+        },
+        {
+          "name": "secondary",
+          "base": "#38BDF8",
+          "gradient": "linear-gradient(135deg, #38BDF8, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #0EA5E9)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0EA5E9 0%, #38BDF8 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0EA5E922 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #38BDF81F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #F0F9FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(186, 230, 253, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-hotel-hospitality",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Hotel/Hospitality",
+    "description": "Luxury navy + gold service",
+    "keywords": [
+      "hotel",
+      "hospitality",
+      "luxury navy + gold service"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#1E3A8A",
+          "gradient": "linear-gradient(135deg, #1E3A8A, #3B82F6)"
+        },
+        {
+          "name": "secondary",
+          "base": "#3B82F6",
+          "gradient": "linear-gradient(135deg, #3B82F6, #CA8A04)"
+        },
+        {
+          "name": "cta",
+          "base": "#CA8A04",
+          "gradient": "linear-gradient(135deg, #CA8A04, #1E3A8A)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #1E3A8A 0%, #3B82F6 55%, #CA8A04 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #1E3A8A22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #3B82F61F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #CA8A041A 0%, transparent 70%), #F8FAFC"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(191, 219, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-wedding-event-planning",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Wedding/Event Planning",
+    "description": "Romantic pink + elegant gold",
+    "keywords": [
+      "wedding",
+      "event planning",
+      "romantic pink + elegant gold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#DB2777",
+          "gradient": "linear-gradient(135deg, #DB2777, #F472B6)"
+        },
+        {
+          "name": "secondary",
+          "base": "#F472B6",
+          "gradient": "linear-gradient(135deg, #F472B6, #CA8A04)"
+        },
+        {
+          "name": "cta",
+          "base": "#CA8A04",
+          "gradient": "linear-gradient(135deg, #CA8A04, #DB2777)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #DB2777 0%, #F472B6 55%, #CA8A04 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #DB277722 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #F472B61F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #CA8A041A 0%, transparent 70%), #FDF2F8"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(251, 207, 232, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-legal-services",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Legal Services",
+    "description": "Authority navy + trust gold",
+    "keywords": [
+      "legal services",
+      "authority navy + trust gold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#1E3A8A",
+          "gradient": "linear-gradient(135deg, #1E3A8A, #1E40AF)"
+        },
+        {
+          "name": "secondary",
+          "base": "#1E40AF",
+          "gradient": "linear-gradient(135deg, #1E40AF, #B45309)"
+        },
+        {
+          "name": "cta",
+          "base": "#B45309",
+          "gradient": "linear-gradient(135deg, #B45309, #1E3A8A)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #1E3A8A 0%, #1E40AF 55%, #B45309 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #1E3A8A22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #1E40AF1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #B453091A 0%, transparent 70%), #F8FAFC"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(203, 213, 225, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-insurance-platform",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Insurance Platform",
+    "description": "Security blue + protected green",
+    "keywords": [
+      "insurance platform",
+      "security blue + protected green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0369A1",
+          "gradient": "linear-gradient(135deg, #0369A1, #0EA5E9)"
+        },
+        {
+          "name": "secondary",
+          "base": "#0EA5E9",
+          "gradient": "linear-gradient(135deg, #0EA5E9, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #0369A1)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0369A1 0%, #0EA5E9 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0369A122 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #0EA5E91F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #22C55E1A 0%, transparent 70%), #F0F9FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(186, 230, 253, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-banking-traditional-finance",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Banking/Traditional Finance",
+    "description": "Trust navy + premium gold",
+    "keywords": [
+      "banking",
+      "traditional finance",
+      "trust navy + premium gold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0F172A",
+          "gradient": "linear-gradient(135deg, #0F172A, #1E3A8A)"
+        },
+        {
+          "name": "secondary",
+          "base": "#1E3A8A",
+          "gradient": "linear-gradient(135deg, #1E3A8A, #CA8A04)"
+        },
+        {
+          "name": "cta",
+          "base": "#CA8A04",
+          "gradient": "linear-gradient(135deg, #CA8A04, #0F172A)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0F172A 0%, #1E3A8A 55%, #CA8A04 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0F172A22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #1E3A8A1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #CA8A041A 0%, transparent 70%), #F8FAFC"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(226, 232, 240, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-online-course-e-learning",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Online Course/E-learning",
+    "description": "Progress teal + achievement orange",
+    "keywords": [
+      "online course",
+      "e-learning",
+      "progress teal + achievement orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0D9488",
+          "gradient": "linear-gradient(135deg, #0D9488, #2DD4BF)"
+        },
+        {
+          "name": "secondary",
+          "base": "#2DD4BF",
+          "gradient": "linear-gradient(135deg, #2DD4BF, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #0D9488)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0D9488 0%, #2DD4BF 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0D948822 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #2DD4BF1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #F0FDFA"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(94, 234, 212, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-non-profit-charity",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Non-profit/Charity",
+    "description": "Compassion blue + action orange",
+    "keywords": [
+      "non-profit",
+      "charity",
+      "compassion blue + action orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0891B2",
+          "gradient": "linear-gradient(135deg, #0891B2, #22D3EE)"
+        },
+        {
+          "name": "secondary",
+          "base": "#22D3EE",
+          "gradient": "linear-gradient(135deg, #22D3EE, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #0891B2)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0891B2 0%, #22D3EE 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0891B222 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #22D3EE1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #ECFEFF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(165, 243, 252, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-music-streaming",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Music Streaming",
+    "description": "Dark audio + play green",
+    "keywords": [
+      "music streaming",
+      "dark audio + play green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#1E1B4B",
+          "gradient": "linear-gradient(135deg, #1E1B4B, #4338CA)"
+        },
+        {
+          "name": "secondary",
+          "base": "#4338CA",
+          "gradient": "linear-gradient(135deg, #4338CA, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #1E1B4B)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #1E1B4B 0%, #4338CA 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #1E1B4B2E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #4338CA24 0%, transparent 60%), #0F0F23"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(49, 46, 129, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-video-streaming-ott",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Video Streaming/OTT",
+    "description": "Cinema dark + play red",
+    "keywords": [
+      "video streaming",
+      "ott",
+      "cinema dark + play red"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0F0F23",
+          "gradient": "linear-gradient(135deg, #0F0F23, #1E1B4B)"
+        },
+        {
+          "name": "secondary",
+          "base": "#1E1B4B",
+          "gradient": "linear-gradient(135deg, #1E1B4B, #E11D48)"
+        },
+        {
+          "name": "cta",
+          "base": "#E11D48",
+          "gradient": "linear-gradient(135deg, #E11D48, #0F0F23)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0F0F23 0%, #1E1B4B 55%, #E11D48 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #0F0F232E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #1E1B4B24 0%, transparent 60%), #000000"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(49, 46, 129, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-job-board-recruitment",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Job Board/Recruitment",
+    "description": "Professional blue + success green",
+    "keywords": [
+      "job board",
+      "recruitment",
+      "professional blue + success green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0369A1",
+          "gradient": "linear-gradient(135deg, #0369A1, #0EA5E9)"
+        },
+        {
+          "name": "secondary",
+          "base": "#0EA5E9",
+          "gradient": "linear-gradient(135deg, #0EA5E9, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #0369A1)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0369A1 0%, #0EA5E9 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0369A122 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #0EA5E91F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #22C55E1A 0%, transparent 70%), #F0F9FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(186, 230, 253, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-marketplace-p2p",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Marketplace (P2P)",
+    "description": "Trust purple + transaction green",
+    "keywords": [
+      "marketplace",
+      "trust purple + transaction green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#7C3AED",
+          "gradient": "linear-gradient(135deg, #7C3AED, #A78BFA)"
+        },
+        {
+          "name": "secondary",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #7C3AED)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #7C3AED 0%, #A78BFA 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #7C3AED22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #A78BFA1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #22C55E1A 0%, transparent 70%), #FAF5FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(221, 214, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-logistics-delivery",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Logistics/Delivery",
+    "description": "Tracking blue + delivery orange",
+    "keywords": [
+      "logistics",
+      "delivery",
+      "tracking blue + delivery orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#2563EB",
+          "gradient": "linear-gradient(135deg, #2563EB, #3B82F6)"
+        },
+        {
+          "name": "secondary",
+          "base": "#3B82F6",
+          "gradient": "linear-gradient(135deg, #3B82F6, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #2563EB)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #2563EB 0%, #3B82F6 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #2563EB22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #3B82F61F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #EFF6FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(191, 219, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-agriculture-farm-tech",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Agriculture/Farm Tech",
+    "description": "Earth green + harvest gold",
+    "keywords": [
+      "agriculture",
+      "farm tech",
+      "earth green + harvest gold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#15803D",
+          "gradient": "linear-gradient(135deg, #15803D, #22C55E)"
+        },
+        {
+          "name": "secondary",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #CA8A04)"
+        },
+        {
+          "name": "cta",
+          "base": "#CA8A04",
+          "gradient": "linear-gradient(135deg, #CA8A04, #15803D)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #15803D 0%, #22C55E 55%, #CA8A04 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #15803D22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #22C55E1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #CA8A041A 0%, transparent 70%), #F0FDF4"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(187, 247, 208, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-construction-architecture",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Construction/Architecture",
+    "description": "Industrial grey + safety orange",
+    "keywords": [
+      "construction",
+      "architecture",
+      "industrial grey + safety orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#64748B",
+          "gradient": "linear-gradient(135deg, #64748B, #94A3B8)"
+        },
+        {
+          "name": "secondary",
+          "base": "#94A3B8",
+          "gradient": "linear-gradient(135deg, #94A3B8, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #64748B)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #64748B 0%, #94A3B8 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #64748B22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #94A3B81F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #F8FAFC"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(226, 232, 240, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-automotive-car-dealership",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Automotive/Car Dealership",
+    "description": "Premium dark + action red",
+    "keywords": [
+      "automotive",
+      "car dealership",
+      "premium dark + action red"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#1E293B",
+          "gradient": "linear-gradient(135deg, #1E293B, #334155)"
+        },
+        {
+          "name": "secondary",
+          "base": "#334155",
+          "gradient": "linear-gradient(135deg, #334155, #DC2626)"
+        },
+        {
+          "name": "cta",
+          "base": "#DC2626",
+          "gradient": "linear-gradient(135deg, #DC2626, #1E293B)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #1E293B 0%, #334155 55%, #DC2626 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #1E293B22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #3341551F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #DC26261A 0%, transparent 70%), #F8FAFC"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(226, 232, 240, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-photography-studio",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Photography Studio",
+    "description": "Pure black + white contrast",
+    "keywords": [
+      "photography studio",
+      "pure black + white contrast"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#18181B",
+          "gradient": "linear-gradient(135deg, #18181B, #27272A)"
+        },
+        {
+          "name": "secondary",
+          "base": "#27272A",
+          "gradient": "linear-gradient(135deg, #27272A, #F8FAFC)"
+        },
+        {
+          "name": "cta",
+          "base": "#F8FAFC",
+          "gradient": "linear-gradient(135deg, #F8FAFC, #18181B)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #18181B 0%, #27272A 55%, #F8FAFC 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #18181B2E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #27272A24 0%, transparent 60%), #000000"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(63, 63, 70, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-coworking-space",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Coworking Space",
+    "description": "Energetic amber + booking blue",
+    "keywords": [
+      "coworking space",
+      "energetic amber + booking blue"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#F59E0B",
+          "gradient": "linear-gradient(135deg, #F59E0B, #FBBF24)"
+        },
+        {
+          "name": "secondary",
+          "base": "#FBBF24",
+          "gradient": "linear-gradient(135deg, #FBBF24, #2563EB)"
+        },
+        {
+          "name": "cta",
+          "base": "#2563EB",
+          "gradient": "linear-gradient(135deg, #2563EB, #F59E0B)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #F59E0B 0%, #FBBF24 55%, #2563EB 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #F59E0B22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #FBBF241F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #2563EB1A 0%, transparent 70%), #FFFBEB"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(253, 230, 138, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-cleaning-service",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Cleaning Service",
+    "description": "Fresh cyan + clean green",
+    "keywords": [
+      "cleaning service",
+      "fresh cyan + clean green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0891B2",
+          "gradient": "linear-gradient(135deg, #0891B2, #22D3EE)"
+        },
+        {
+          "name": "secondary",
+          "base": "#22D3EE",
+          "gradient": "linear-gradient(135deg, #22D3EE, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #0891B2)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0891B2 0%, #22D3EE 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0891B222 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #22D3EE1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #22C55E1A 0%, transparent 70%), #ECFEFF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(165, 243, 252, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-home-services-plumber-electrician",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Home Services (Plumber/Electrician)",
+    "description": "Professional blue + urgent orange",
+    "keywords": [
+      "home services (plumber",
+      "electrician)",
+      "professional blue + urgent orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#1E40AF",
+          "gradient": "linear-gradient(135deg, #1E40AF, #3B82F6)"
+        },
+        {
+          "name": "secondary",
+          "base": "#3B82F6",
+          "gradient": "linear-gradient(135deg, #3B82F6, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #1E40AF)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #1E40AF 0%, #3B82F6 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #1E40AF22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #3B82F61F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #EFF6FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(191, 219, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-childcare-daycare",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Childcare/Daycare",
+    "description": "Soft pink + safe green",
+    "keywords": [
+      "childcare",
+      "daycare",
+      "soft pink + safe green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#F472B6",
+          "gradient": "linear-gradient(135deg, #F472B6, #FBCFE8)"
+        },
+        {
+          "name": "secondary",
+          "base": "#FBCFE8",
+          "gradient": "linear-gradient(135deg, #FBCFE8, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #F472B6)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #F472B6 0%, #FBCFE8 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #F472B622 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #FBCFE81F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #22C55E1A 0%, transparent 70%), #FDF2F8"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(252, 231, 243, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-senior-care-elderly",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Senior Care/Elderly",
+    "description": "Calm blue + reassuring green",
+    "keywords": [
+      "senior care",
+      "elderly",
+      "calm blue + reassuring green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0369A1",
+          "gradient": "linear-gradient(135deg, #0369A1, #38BDF8)"
+        },
+        {
+          "name": "secondary",
+          "base": "#38BDF8",
+          "gradient": "linear-gradient(135deg, #38BDF8, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #0369A1)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0369A1 0%, #38BDF8 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0369A122 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #38BDF81F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #22C55E1A 0%, transparent 70%), #F0F9FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(224, 242, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-medical-clinic",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Medical Clinic",
+    "description": "Medical teal + health green",
+    "keywords": [
+      "medical clinic",
+      "medical teal + health green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0891B2",
+          "gradient": "linear-gradient(135deg, #0891B2, #22D3EE)"
+        },
+        {
+          "name": "secondary",
+          "base": "#22D3EE",
+          "gradient": "linear-gradient(135deg, #22D3EE, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #0891B2)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0891B2 0%, #22D3EE 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0891B222 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #22D3EE1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #22C55E1A 0%, transparent 70%), #F0FDFA"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(204, 251, 241, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-pharmacy-drug-store",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Pharmacy/Drug Store",
+    "description": "Pharmacy green + trust blue",
+    "keywords": [
+      "pharmacy",
+      "drug store",
+      "pharmacy green + trust blue"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#15803D",
+          "gradient": "linear-gradient(135deg, #15803D, #22C55E)"
+        },
+        {
+          "name": "secondary",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #0369A1)"
+        },
+        {
+          "name": "cta",
+          "base": "#0369A1",
+          "gradient": "linear-gradient(135deg, #0369A1, #15803D)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #15803D 0%, #22C55E 55%, #0369A1 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #15803D22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #22C55E1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #0369A11A 0%, transparent 70%), #F0FDF4"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(187, 247, 208, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-dental-practice",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Dental Practice",
+    "description": "Fresh blue + smile yellow",
+    "keywords": [
+      "dental practice",
+      "fresh blue + smile yellow"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0EA5E9",
+          "gradient": "linear-gradient(135deg, #0EA5E9, #38BDF8)"
+        },
+        {
+          "name": "secondary",
+          "base": "#38BDF8",
+          "gradient": "linear-gradient(135deg, #38BDF8, #FBBF24)"
+        },
+        {
+          "name": "cta",
+          "base": "#FBBF24",
+          "gradient": "linear-gradient(135deg, #FBBF24, #0EA5E9)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0EA5E9 0%, #38BDF8 55%, #FBBF24 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0EA5E922 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #38BDF81F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #FBBF241A 0%, transparent 70%), #F0F9FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(186, 230, 253, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-veterinary-clinic",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Veterinary Clinic",
+    "description": "Caring teal + warm orange",
+    "keywords": [
+      "veterinary clinic",
+      "caring teal + warm orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0D9488",
+          "gradient": "linear-gradient(135deg, #0D9488, #14B8A6)"
+        },
+        {
+          "name": "secondary",
+          "base": "#14B8A6",
+          "gradient": "linear-gradient(135deg, #14B8A6, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #0D9488)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0D9488 0%, #14B8A6 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0D948822 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #14B8A61F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #F0FDFA"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(153, 246, 228, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-florist-plant-shop",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Florist/Plant Shop",
+    "description": "Natural green + floral pink",
+    "keywords": [
+      "florist",
+      "plant shop",
+      "natural green + floral pink"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#15803D",
+          "gradient": "linear-gradient(135deg, #15803D, #22C55E)"
+        },
+        {
+          "name": "secondary",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #EC4899)"
+        },
+        {
+          "name": "cta",
+          "base": "#EC4899",
+          "gradient": "linear-gradient(135deg, #EC4899, #15803D)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #15803D 0%, #22C55E 55%, #EC4899 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #15803D22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #22C55E1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #EC48991A 0%, transparent 70%), #F0FDF4"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(187, 247, 208, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-bakery-cafe",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Bakery/Cafe",
+    "description": "Warm brown + cream white",
+    "keywords": [
+      "bakery",
+      "cafe",
+      "warm brown + cream white"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#92400E",
+          "gradient": "linear-gradient(135deg, #92400E, #B45309)"
+        },
+        {
+          "name": "secondary",
+          "base": "#B45309",
+          "gradient": "linear-gradient(135deg, #B45309, #F8FAFC)"
+        },
+        {
+          "name": "cta",
+          "base": "#F8FAFC",
+          "gradient": "linear-gradient(135deg, #F8FAFC, #92400E)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #92400E 0%, #B45309 55%, #F8FAFC 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #92400E22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #B453091F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F8FAFC1A 0%, transparent 70%), #FEF3C7"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(253, 230, 138, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-coffee-shop",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Coffee Shop",
+    "description": "Coffee brown + warm gold",
+    "keywords": [
+      "coffee shop",
+      "coffee brown + warm gold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#78350F",
+          "gradient": "linear-gradient(135deg, #78350F, #92400E)"
+        },
+        {
+          "name": "secondary",
+          "base": "#92400E",
+          "gradient": "linear-gradient(135deg, #92400E, #FBBF24)"
+        },
+        {
+          "name": "cta",
+          "base": "#FBBF24",
+          "gradient": "linear-gradient(135deg, #FBBF24, #78350F)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #78350F 0%, #92400E 55%, #FBBF24 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #78350F22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #92400E1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #FBBF241A 0%, transparent 70%), #FEF3C7"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(253, 230, 138, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-brewery-winery",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Brewery/Winery",
+    "description": "Deep burgundy + craft gold",
+    "keywords": [
+      "brewery",
+      "winery",
+      "deep burgundy + craft gold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#7C2D12",
+          "gradient": "linear-gradient(135deg, #7C2D12, #B91C1C)"
+        },
+        {
+          "name": "secondary",
+          "base": "#B91C1C",
+          "gradient": "linear-gradient(135deg, #B91C1C, #CA8A04)"
+        },
+        {
+          "name": "cta",
+          "base": "#CA8A04",
+          "gradient": "linear-gradient(135deg, #CA8A04, #7C2D12)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #7C2D12 0%, #B91C1C 55%, #CA8A04 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #7C2D1222 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #B91C1C1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #CA8A041A 0%, transparent 70%), #FEF2F2"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(254, 202, 202, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-airline",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Airline",
+    "description": "Sky blue + booking orange",
+    "keywords": [
+      "airline",
+      "sky blue + booking orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#1E3A8A",
+          "gradient": "linear-gradient(135deg, #1E3A8A, #3B82F6)"
+        },
+        {
+          "name": "secondary",
+          "base": "#3B82F6",
+          "gradient": "linear-gradient(135deg, #3B82F6, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #1E3A8A)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #1E3A8A 0%, #3B82F6 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #1E3A8A22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #3B82F61F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #EFF6FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(191, 219, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-news-media-platform",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "News/Media Platform",
+    "description": "Breaking red + link blue",
+    "keywords": [
+      "news",
+      "media platform",
+      "breaking red + link blue"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#DC2626",
+          "gradient": "linear-gradient(135deg, #DC2626, #EF4444)"
+        },
+        {
+          "name": "secondary",
+          "base": "#EF4444",
+          "gradient": "linear-gradient(135deg, #EF4444, #1E40AF)"
+        },
+        {
+          "name": "cta",
+          "base": "#1E40AF",
+          "gradient": "linear-gradient(135deg, #1E40AF, #DC2626)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #DC2626 0%, #EF4444 55%, #1E40AF 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #DC262622 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #EF44441F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #1E40AF1A 0%, transparent 70%), #FEF2F2"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(254, 202, 202, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-magazine-blog",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Magazine/Blog",
+    "description": "Editorial black + accent pink",
+    "keywords": [
+      "magazine",
+      "blog",
+      "editorial black + accent pink"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#18181B",
+          "gradient": "linear-gradient(135deg, #18181B, #3F3F46)"
+        },
+        {
+          "name": "secondary",
+          "base": "#3F3F46",
+          "gradient": "linear-gradient(135deg, #3F3F46, #EC4899)"
+        },
+        {
+          "name": "cta",
+          "base": "#EC4899",
+          "gradient": "linear-gradient(135deg, #EC4899, #18181B)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #18181B 0%, #3F3F46 55%, #EC4899 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #18181B22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #3F3F461F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #EC48991A 0%, transparent 70%), #FAFAFA"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(228, 228, 231, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-freelancer-platform",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Freelancer Platform",
+    "description": "Creative indigo + hire green",
+    "keywords": [
+      "freelancer platform",
+      "creative indigo + hire green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#6366F1",
+          "gradient": "linear-gradient(135deg, #6366F1, #818CF8)"
+        },
+        {
+          "name": "secondary",
+          "base": "#818CF8",
+          "gradient": "linear-gradient(135deg, #818CF8, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #6366F1)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #6366F1 0%, #818CF8 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #6366F122 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #818CF81F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #22C55E1A 0%, transparent 70%), #EEF2FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(199, 210, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-consulting-firm",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Consulting Firm",
+    "description": "Authority navy + premium gold",
+    "keywords": [
+      "consulting firm",
+      "authority navy + premium gold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0F172A",
+          "gradient": "linear-gradient(135deg, #0F172A, #334155)"
+        },
+        {
+          "name": "secondary",
+          "base": "#334155",
+          "gradient": "linear-gradient(135deg, #334155, #CA8A04)"
+        },
+        {
+          "name": "cta",
+          "base": "#CA8A04",
+          "gradient": "linear-gradient(135deg, #CA8A04, #0F172A)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0F172A 0%, #334155 55%, #CA8A04 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0F172A22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #3341551F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #CA8A041A 0%, transparent 70%), #F8FAFC"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(226, 232, 240, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-marketing-agency",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Marketing Agency",
+    "description": "Bold pink + creative cyan",
+    "keywords": [
+      "marketing agency",
+      "bold pink + creative cyan"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#EC4899",
+          "gradient": "linear-gradient(135deg, #EC4899, #F472B6)"
+        },
+        {
+          "name": "secondary",
+          "base": "#F472B6",
+          "gradient": "linear-gradient(135deg, #F472B6, #06B6D4)"
+        },
+        {
+          "name": "cta",
+          "base": "#06B6D4",
+          "gradient": "linear-gradient(135deg, #06B6D4, #EC4899)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #EC4899 0%, #F472B6 55%, #06B6D4 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #EC489922 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #F472B61F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #06B6D41A 0%, transparent 70%), #FDF2F8"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(251, 207, 232, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-event-management",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Event Management",
+    "description": "Excitement purple + action orange",
+    "keywords": [
+      "event management",
+      "excitement purple + action orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#7C3AED",
+          "gradient": "linear-gradient(135deg, #7C3AED, #A78BFA)"
+        },
+        {
+          "name": "secondary",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #7C3AED)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #7C3AED 0%, #A78BFA 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #7C3AED22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #A78BFA1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #FAF5FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(221, 214, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-conference-webinar-platform",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Conference/Webinar Platform",
+    "description": "Professional blue + join green",
+    "keywords": [
+      "conference",
+      "webinar platform",
+      "professional blue + join green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#1E40AF",
+          "gradient": "linear-gradient(135deg, #1E40AF, #3B82F6)"
+        },
+        {
+          "name": "secondary",
+          "base": "#3B82F6",
+          "gradient": "linear-gradient(135deg, #3B82F6, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #1E40AF)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #1E40AF 0%, #3B82F6 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #1E40AF22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #3B82F61F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #22C55E1A 0%, transparent 70%), #EFF6FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(191, 219, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-membership-community",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Membership/Community",
+    "description": "Community purple + join green",
+    "keywords": [
+      "membership",
+      "community",
+      "community purple + join green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#7C3AED",
+          "gradient": "linear-gradient(135deg, #7C3AED, #A78BFA)"
+        },
+        {
+          "name": "secondary",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #7C3AED)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #7C3AED 0%, #A78BFA 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #7C3AED22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #A78BFA1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #22C55E1A 0%, transparent 70%), #FAF5FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(221, 214, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-newsletter-platform",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Newsletter Platform",
+    "description": "Trust blue + subscribe orange",
+    "keywords": [
+      "newsletter platform",
+      "trust blue + subscribe orange"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0369A1",
+          "gradient": "linear-gradient(135deg, #0369A1, #0EA5E9)"
+        },
+        {
+          "name": "secondary",
+          "base": "#0EA5E9",
+          "gradient": "linear-gradient(135deg, #0EA5E9, #F97316)"
+        },
+        {
+          "name": "cta",
+          "base": "#F97316",
+          "gradient": "linear-gradient(135deg, #F97316, #0369A1)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0369A1 0%, #0EA5E9 55%, #F97316 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0369A122 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #0EA5E91F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F973161A 0%, transparent 70%), #F0F9FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(186, 230, 253, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-digital-products-downloads",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Digital Products/Downloads",
+    "description": "Digital indigo + buy green",
+    "keywords": [
+      "digital products",
+      "downloads",
+      "digital indigo + buy green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#6366F1",
+          "gradient": "linear-gradient(135deg, #6366F1, #818CF8)"
+        },
+        {
+          "name": "secondary",
+          "base": "#818CF8",
+          "gradient": "linear-gradient(135deg, #818CF8, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #6366F1)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #6366F1 0%, #818CF8 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #6366F122 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #818CF81F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #22C55E1A 0%, transparent 70%), #EEF2FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(199, 210, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-church-religious-organization",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Church/Religious Organization",
+    "description": "Spiritual purple + warm gold",
+    "keywords": [
+      "church",
+      "religious organization",
+      "spiritual purple + warm gold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#7C3AED",
+          "gradient": "linear-gradient(135deg, #7C3AED, #A78BFA)"
+        },
+        {
+          "name": "secondary",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #CA8A04)"
+        },
+        {
+          "name": "cta",
+          "base": "#CA8A04",
+          "gradient": "linear-gradient(135deg, #CA8A04, #7C3AED)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #7C3AED 0%, #A78BFA 55%, #CA8A04 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #7C3AED22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #A78BFA1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #CA8A041A 0%, transparent 70%), #FAF5FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(221, 214, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-sports-team-club",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Sports Team/Club",
+    "description": "Team red + championship gold",
+    "keywords": [
+      "sports team",
+      "club",
+      "team red + championship gold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#DC2626",
+          "gradient": "linear-gradient(135deg, #DC2626, #EF4444)"
+        },
+        {
+          "name": "secondary",
+          "base": "#EF4444",
+          "gradient": "linear-gradient(135deg, #EF4444, #FBBF24)"
+        },
+        {
+          "name": "cta",
+          "base": "#FBBF24",
+          "gradient": "linear-gradient(135deg, #FBBF24, #DC2626)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #DC2626 0%, #EF4444 55%, #FBBF24 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #DC262622 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #EF44441F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #FBBF241A 0%, transparent 70%), #FEF2F2"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(254, 202, 202, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-museum-gallery",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Museum/Gallery",
+    "description": "Gallery black + white space",
+    "keywords": [
+      "museum",
+      "gallery",
+      "gallery black + white space"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#18181B",
+          "gradient": "linear-gradient(135deg, #18181B, #27272A)"
+        },
+        {
+          "name": "secondary",
+          "base": "#27272A",
+          "gradient": "linear-gradient(135deg, #27272A, #F8FAFC)"
+        },
+        {
+          "name": "cta",
+          "base": "#F8FAFC",
+          "gradient": "linear-gradient(135deg, #F8FAFC, #18181B)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #18181B 0%, #27272A 55%, #F8FAFC 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #18181B22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #27272A1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #F8FAFC1A 0%, transparent 70%), #FAFAFA"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(228, 228, 231, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-theater-cinema",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Theater/Cinema",
+    "description": "Dramatic dark + spotlight gold",
+    "keywords": [
+      "theater",
+      "cinema",
+      "dramatic dark + spotlight gold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#1E1B4B",
+          "gradient": "linear-gradient(135deg, #1E1B4B, #312E81)"
+        },
+        {
+          "name": "secondary",
+          "base": "#312E81",
+          "gradient": "linear-gradient(135deg, #312E81, #CA8A04)"
+        },
+        {
+          "name": "cta",
+          "base": "#CA8A04",
+          "gradient": "linear-gradient(135deg, #CA8A04, #1E1B4B)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #1E1B4B 0%, #312E81 55%, #CA8A04 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #1E1B4B2E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #312E8124 0%, transparent 60%), #0F0F23"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(67, 56, 202, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-language-learning-app",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Language Learning App",
+    "description": "Learning indigo + progress green",
+    "keywords": [
+      "language learning app",
+      "learning indigo + progress green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#4F46E5",
+          "gradient": "linear-gradient(135deg, #4F46E5, #818CF8)"
+        },
+        {
+          "name": "secondary",
+          "base": "#818CF8",
+          "gradient": "linear-gradient(135deg, #818CF8, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #4F46E5)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #4F46E5 0%, #818CF8 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #4F46E522 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #818CF81F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #22C55E1A 0%, transparent 70%), #EEF2FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(199, 210, 254, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-coding-bootcamp",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Coding Bootcamp",
+    "description": "Terminal dark + success green",
+    "keywords": [
+      "coding bootcamp",
+      "terminal dark + success green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0F172A",
+          "gradient": "linear-gradient(135deg, #0F172A, #1E293B)"
+        },
+        {
+          "name": "secondary",
+          "base": "#1E293B",
+          "gradient": "linear-gradient(135deg, #1E293B, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #0F172A)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0F172A 0%, #1E293B 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #0F172A2E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #1E293B24 0%, transparent 60%), #020617"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(51, 65, 85, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-cybersecurity-platform",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Cybersecurity Platform",
+    "description": "Matrix green + alert red",
+    "keywords": [
+      "cybersecurity platform",
+      "matrix green + alert red"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#00FF41",
+          "gradient": "linear-gradient(135deg, #00FF41, #0D0D0D)"
+        },
+        {
+          "name": "secondary",
+          "base": "#0D0D0D",
+          "gradient": "linear-gradient(135deg, #0D0D0D, #FF3333)"
+        },
+        {
+          "name": "cta",
+          "base": "#FF3333",
+          "gradient": "linear-gradient(135deg, #FF3333, #00FF41)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #00FF41 0%, #0D0D0D 55%, #FF3333 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #00FF412E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #0D0D0D24 0%, transparent 60%), #000000"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(31, 31, 31, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-developer-tool-ide",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Developer Tool / IDE",
+    "description": "Code dark + run green",
+    "keywords": [
+      "developer tool",
+      "ide",
+      "code dark + run green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#1E293B",
+          "gradient": "linear-gradient(135deg, #1E293B, #334155)"
+        },
+        {
+          "name": "secondary",
+          "base": "#334155",
+          "gradient": "linear-gradient(135deg, #334155, #22C55E)"
+        },
+        {
+          "name": "cta",
+          "base": "#22C55E",
+          "gradient": "linear-gradient(135deg, #22C55E, #1E293B)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #1E293B 0%, #334155 55%, #22C55E 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #1E293B2E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #33415524 0%, transparent 60%), #0F172A"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(71, 85, 105, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-biotech-life-sciences",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Biotech / Life Sciences",
+    "description": "DNA blue + life green",
+    "keywords": [
+      "biotech",
+      "life sciences",
+      "dna blue + life green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#0EA5E9",
+          "gradient": "linear-gradient(135deg, #0EA5E9, #0284C7)"
+        },
+        {
+          "name": "secondary",
+          "base": "#0284C7",
+          "gradient": "linear-gradient(135deg, #0284C7, #10B981)"
+        },
+        {
+          "name": "cta",
+          "base": "#10B981",
+          "gradient": "linear-gradient(135deg, #10B981, #0EA5E9)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #0EA5E9 0%, #0284C7 55%, #10B981 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #0EA5E922 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #0284C71F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #10B9811A 0%, transparent 70%), #F0F9FF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(186, 230, 253, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-space-tech-aerospace",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Space Tech / Aerospace",
+    "description": "Star white + launch blue",
+    "keywords": [
+      "space tech",
+      "aerospace",
+      "star white + launch blue"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#F8FAFC",
+          "gradient": "linear-gradient(135deg, #F8FAFC, #94A3B8)"
+        },
+        {
+          "name": "secondary",
+          "base": "#94A3B8",
+          "gradient": "linear-gradient(135deg, #94A3B8, #3B82F6)"
+        },
+        {
+          "name": "cta",
+          "base": "#3B82F6",
+          "gradient": "linear-gradient(135deg, #3B82F6, #F8FAFC)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #F8FAFC 0%, #94A3B8 55%, #3B82F6 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #F8FAFC2E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #94A3B824 0%, transparent 60%), #0B0B10"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(30, 41, 59, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-architecture-interior",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Architecture / Interior",
+    "description": "Minimal black + accent gold",
+    "keywords": [
+      "architecture",
+      "interior",
+      "minimal black + accent gold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#171717",
+          "gradient": "linear-gradient(135deg, #171717, #404040)"
+        },
+        {
+          "name": "secondary",
+          "base": "#404040",
+          "gradient": "linear-gradient(135deg, #404040, #D4AF37)"
+        },
+        {
+          "name": "cta",
+          "base": "#D4AF37",
+          "gradient": "linear-gradient(135deg, #D4AF37, #171717)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #171717 0%, #404040 55%, #D4AF37 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #17171722 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #4040401F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #D4AF371A 0%, transparent 70%), #FFFFFF"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(229, 229, 229, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-quantum-computing",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Quantum Computing",
+    "description": "Quantum cyan + interference purple",
+    "keywords": [
+      "quantum computing",
+      "quantum cyan + interference purple"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#00FFFF",
+          "gradient": "linear-gradient(135deg, #00FFFF, #7B61FF)"
+        },
+        {
+          "name": "secondary",
+          "base": "#7B61FF",
+          "gradient": "linear-gradient(135deg, #7B61FF, #FF00FF)"
+        },
+        {
+          "name": "cta",
+          "base": "#FF00FF",
+          "gradient": "linear-gradient(135deg, #FF00FF, #00FFFF)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #00FFFF 0%, #7B61FF 55%, #FF00FF 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #00FFFF2E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #7B61FF24 0%, transparent 60%), #050510"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(51, 51, 68, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-biohacking-longevity",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Biohacking / Longevity",
+    "description": "Bio red/blue + vitality green",
+    "keywords": [
+      "biohacking",
+      "longevity",
+      "bio red",
+      "blue + vitality green"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#FF4D4D",
+          "gradient": "linear-gradient(135deg, #FF4D4D, #4D94FF)"
+        },
+        {
+          "name": "secondary",
+          "base": "#4D94FF",
+          "gradient": "linear-gradient(135deg, #4D94FF, #00E676)"
+        },
+        {
+          "name": "cta",
+          "base": "#00E676",
+          "gradient": "linear-gradient(135deg, #00E676, #FF4D4D)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #FF4D4D 0%, #4D94FF 55%, #00E676 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #FF4D4D22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #4D94FF1F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #00E6761A 0%, transparent 70%), #F5F5F7"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(229, 229, 234, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-autonomous-systems",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Autonomous Systems",
+    "description": "Terminal green + alert red",
+    "keywords": [
+      "autonomous systems",
+      "terminal green + alert red"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#00FF41",
+          "gradient": "linear-gradient(135deg, #00FF41, #008F11)"
+        },
+        {
+          "name": "secondary",
+          "base": "#008F11",
+          "gradient": "linear-gradient(135deg, #008F11, #FF3333)"
+        },
+        {
+          "name": "cta",
+          "base": "#FF3333",
+          "gradient": "linear-gradient(135deg, #FF3333, #00FF41)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #00FF41 0%, #008F11 55%, #FF3333 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 12% 0%, #00FF412E 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #008F1124 0%, transparent 60%), #0D1117"
+      },
+      "cardSurface": "rgba(24, 24, 27, .72)",
+      "cardBorder": "1px solid rgba(48, 54, 61, 0.34)"
+    }
+  },
+  {
+    "id": "palette-10-generative-ai-art",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Generative AI Art",
+    "description": "Canvas neutral + creative pink",
+    "keywords": [
+      "generative ai art",
+      "canvas neutral + creative pink"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#18181B",
+          "gradient": "linear-gradient(135deg, #18181B, #3F3F46)"
+        },
+        {
+          "name": "secondary",
+          "base": "#3F3F46",
+          "gradient": "linear-gradient(135deg, #3F3F46, #EC4899)"
+        },
+        {
+          "name": "cta",
+          "base": "#EC4899",
+          "gradient": "linear-gradient(135deg, #EC4899, #18181B)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #18181B 0%, #3F3F46 55%, #EC4899 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #18181B22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #3F3F461F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #EC48991A 0%, transparent 70%), #FAFAFA"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(228, 228, 231, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-spatial-vision-os",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Spatial / Vision OS",
+    "description": "Glass white + system blue",
+    "keywords": [
+      "spatial",
+      "vision os",
+      "glass white + system blue"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#FFFFFF",
+          "gradient": "linear-gradient(135deg, #FFFFFF, #E5E5E5)"
+        },
+        {
+          "name": "secondary",
+          "base": "#E5E5E5",
+          "gradient": "linear-gradient(135deg, #E5E5E5, #007AFF)"
+        },
+        {
+          "name": "cta",
+          "base": "#007AFF",
+          "gradient": "linear-gradient(135deg, #007AFF, #FFFFFF)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #FFFFFF 0%, #E5E5E5 55%, #007AFF 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #FFFFFF22 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #E5E5E51F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #007AFF1A 0%, transparent 70%), #888888"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(204, 204, 204, 0.86)"
+    }
+  },
+  {
+    "id": "palette-10-climate-tech",
+    "kind": "palette",
+    "scope": "builtin",
+    "name": "Climate Tech",
+    "description": "Nature green + solar gold",
+    "keywords": [
+      "climate tech",
+      "nature green + solar gold"
+    ],
+    "appliesTo": "universal",
+    "support": "full",
+    "styleKit": {
+      "accentHues": [
+        {
+          "name": "primary",
+          "base": "#059669",
+          "gradient": "linear-gradient(135deg, #059669, #10B981)"
+        },
+        {
+          "name": "secondary",
+          "base": "#10B981",
+          "gradient": "linear-gradient(135deg, #10B981, #FBBF24)"
+        },
+        {
+          "name": "cta",
+          "base": "#FBBF24",
+          "gradient": "linear-gradient(135deg, #FBBF24, #059669)"
+        },
+        {
+          "name": "mint",
+          "base": "#4ECDC4",
+          "gradient": "linear-gradient(135deg, #4ECDC4, #06B6A4)"
+        },
+        {
+          "name": "sky",
+          "base": "#5BC0EB",
+          "gradient": "linear-gradient(135deg, #5BC0EB, #3B82F6)"
+        },
+        {
+          "name": "lavender",
+          "base": "#A78BFA",
+          "gradient": "linear-gradient(135deg, #A78BFA, #7C3AED)"
+        }
+      ],
+      "accentGradient": "linear-gradient(110deg, #059669 0%, #10B981 55%, #FBBF24 100%)",
+      "background": {
+        "css": "radial-gradient(1200px 800px at 10% 0%, #05966922 0%, transparent 60%), radial-gradient(900px 700px at 100% 100%, #10B9811F 0%, transparent 60%), radial-gradient(700px 500px at 50% 50%, #FBBF241A 0%, transparent 70%), #ECFDF5"
+      },
+      "cardSurface": "rgba(255, 255, 255, .84)",
+      "cardBorder": "1px solid rgba(167, 243, 208, 0.86)"
+    }
+  }
+]

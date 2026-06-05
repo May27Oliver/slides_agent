@@ -8,7 +8,7 @@
 
 **Status**: Draft
 
-**Input**: User description: "Design theme system: seed builtin themes into the themes table from the ui-ux-pro-max CSVs (typography 56, colors 96, styles 67) — map the ~14 A-grade styles to full DesignStyleKit tokens, store B/C grades as partial/raw; make theme selection a mandatory engine step that reads from the DB (selectTheme) on both the LLM and fallback paths; add a CSV-to-seed conversion script; extend the rendering engine with the B-grade tokens (backdrop blur, glow, grain texture, animated gradient) so B-grade styles render full. User custom themes (scope=account) deferred to a later feature."
+**Input**: User description: "Design theme system: seed builtin themes into the themes table from the ui-ux-pro-max CSVs (typography 57, colors 96, styles 67) — map the ~14 A-grade styles to full DesignStyleKit tokens, store B/C grades as partial/raw; make theme selection a mandatory engine step that reads from the DB (selectTheme) on both the LLM and fallback paths; add a CSV-to-seed conversion script; extend the rendering engine with the B-grade tokens (backdrop blur, glow, grain texture, animated gradient) so B-grade styles render full. User custom themes (scope=account) deferred to a later feature."
 
 ---
 
@@ -21,7 +21,7 @@
 
 007 把「設計風格」從寫死常數升級為**資料驅動的 builtin theme 目錄**,並讓「選 theme」成為**獨立必經步驟**:
 
-1. 把三個 CSV(typography 56 / colors 96 / styles 67)轉成 seed 並灌進 `themes` 表;A 級 ~14 個風格手動映射成完整 `DesignStyleKit` token,B 級擴充引擎 token 後升為 full,C 級以 `raw` 原文存放、引擎暫不渲染。
+1. 把三個 CSV(typography 57 / colors 96 / styles 67)轉成 seed 並灌進 `themes` 表;A 級 ~14 個風格手動映射成完整 `DesignStyleKit` token,B 級擴充引擎 token 後升為 full,C 級以 `raw` 原文存放、引擎暫不渲染。
 2. selection 改為必經步驟——`ThemeStore` adapter 從 DB 撈候選、純函式 `selectTheme` 做 deterministic 選擇,**LLM 成功與 fallback 兩條路徑都套到一個具名 builtin theme**,不再有「fallback 只拿 default」的缺口。
 3. 渲染引擎擴充 B 級所需 token(backdrop blur / glow / grain 紋理 / 漸層動畫),讓 B 級風格能 full 渲染。
 
@@ -38,11 +38,11 @@
 
 ### Session 2026-06-06
 
-- Q: 三個 CSV(styles 67 / typography 56 / colors 96)如何落到 themes 表? → **A: 模型 C —— 全部進 themes 表,新增 `kind` 欄(`font` | `palette` | `style`)區分。** `selectTheme` 對三類各自關鍵字評分挑一,再 `composeKit` 合併成完整 `DesignStyleKit`(即把既有 `selectDesignStyleKit` 的 font×palette×structure 一般化,三軸候選全改由 `ThemeStore` 從 DB 撈、`selectTheme` 純函式選)。連帶後果:(1)`themes` 表新增 `kind` 欄(小 migration);(2)`style_kit` 為**分 kind 的 partial kit**,驗證需 kind-aware;(3)「被選 theme」為三元組(font+palette+style),證據以類 `kitName`(`style+palette+font`)記錄。
+- Q: 三個 CSV(styles 67 / typography 57 / colors 96)如何落到 themes 表? → **A: 模型 C —— 全部進 themes 表,新增 `kind` 欄(`font` | `palette` | `style`)區分。** `selectTheme` 對三類各自關鍵字評分挑一,再 `composeKit` 合併成完整 `DesignStyleKit`(即把既有 `selectDesignStyleKit` 的 font×palette×structure 一般化,三軸候選全改由 `ThemeStore` 從 DB 撈、`selectTheme` 純函式選)。連帶後果:(1)`themes` 表新增 `kind` 欄(小 migration);(2)`style_kit` 為**分 kind 的 partial kit**,驗證需 kind-aware;(3)「被選 theme」為三元組(font+palette+style),證據以類 `kitName`(`style+palette+font`)記錄。
 - Q: selectTheme 設為必經後,跟既有 LLM design planner 如何分工? → **A: 模型 A —— selectTheme 只負責 `styleKit`(三軸組合,確定性,兩路徑都跑);LLM design planner 仍照常產 `designSystem` / `slidePatternAssignments` / `chartTreatmentPlans`(內容感知層)。** LLM 失敗時用 fallback 的 designSystem + selectTheme 的 styleKit——fallback 也終於有 curated styleKit。LLM 不參與 theme 選擇(theme 為確定性 domain 邏輯,合 CR-004)。
 - Q: seed 資料來源與可重現性,db:seed 執行時讀什麼? → **A: 轉換腳本(dev-time)把 3 CSV 轉成 committed JSON seeds(`apps/api/src/infra/db/seeds/*.json`);font/palette 自動轉、`style` kind 的 token 人工補進 JSON。** `db:seed` runtime 只讀 repo 內 JSON,**app/CI 不依賴 `.claude/skills`**。JSON 進版控、diff 可審查、可重現。
 - Q: brief 無命中關鍵字 / 多筆平手時各軸怎麼收斂? → **A: 沿用現有 `pickBest` —— 無命中或平手取候選清單第一筆(index 0 勝)。** 為維持確定性,`ThemeStore.listSelectable` MUST 回傳**穩定排序**(`ORDER BY id`),使「第一筆」可重現;安全預設透過 seed id `00` 序位前綴(如 `style-00-minimalism`)保證排在各 kind 首位。
-- Q: 既有 `selectDesignStyleKit` + `CURATED_FONT_PAIRINGS`/`CURATED_PALETTES`(各 9)+ `withCuratedStyleKit` 怎麼處置? → **A: 資料移除、引擎留下,DB 為單一來源。** 移除 9 筆寫死常數(確保其精調已併入 56/96 seed);compose 引擎函式(`buildPaletteHues` / `buildCuratedEffects` / `buildBackground` / `pickBest`)**保留**供 `composeKit` 用。`selectDesignStyleKit` 重構為 `selectTheme`(純函式,接收 `ThemeStore` 撈出的候選)+ `composeKit`;最終 fallback 仍為 `defaultDesignStyleKit`(單層,不保留 code 常數中間層)。
+- Q: 既有 `selectDesignStyleKit` + `CURATED_FONT_PAIRINGS`/`CURATED_PALETTES`(各 9)+ `withCuratedStyleKit` 怎麼處置? → **A: 資料移除、引擎留下,DB 為單一來源。** 移除 9 筆寫死常數(確保其精調已併入 57/96 seed);compose 引擎函式(`buildPaletteHues` / `buildCuratedEffects` / `buildBackground` / `pickBest`)**保留**供 `composeKit` 用。`selectDesignStyleKit` 重構為 `selectTheme`(純函式,接收 `ThemeStore` 撈出的候選)+ `composeKit`;最終 fallback 仍為 `defaultDesignStyleKit`(單層,不保留 code 常數中間層)。
 
 ---
 
@@ -69,7 +69,7 @@
 
 ### User Story 2 - CSV→seed 轉換腳本與全量 builtin theme 目錄 (Priority: P2)
 
-維運者執行 `pnpm db:seed`(migration 後)把三個來源 CSV 轉成的 seed upsert 進 `themes` 表:typography 56、colors 96、styles 67 全部入庫。styles 依盤點分級打標籤——A 級 `support=full`(含完整 token)、B 級 `support=full`(007 擴 token 後)、C 級 `support=raw`(只存 Design System Variables 原文)、非簡報主題照標 `applies_to`(landing/dashboard/universal)。seed 為可重跑的 idempotent upsert。
+維運者執行 `pnpm db:seed`(migration 後)把三個來源 CSV 轉成的 seed upsert 進 `themes` 表:typography 57、colors 96、styles 67 全部入庫。styles 依盤點分級打標籤——A 級 `support=full`(含完整 token)、B 級 `support=full`(007 擴 token 後)、C 級 `support=raw`(只存 Design System Variables 原文)、非簡報主題照標 `applies_to`(landing/dashboard/universal)。seed 為可重跑的 idempotent upsert。
 
 **Why this priority**: 提供完整、可追溯、可重跑的 theme 目錄,讓 selection 有足夠候選且未來升級(C→full)不必重 seed。次於 US1,因為 US1 只需少量 A 級 theme 即可成立。
 
@@ -133,7 +133,7 @@
 - **FR-012**: domain 層 MUST 維持純淨(不含 SQL);theme 讀取 MUST 走 port/adapter,`selectTheme` 接收候選清單而非直接查 DB。
 - **FR-013**: 被選的三軸 theme 識別資訊(font + palette + style 的 id,如 composite `style+palette+font`)MUST 出現在生成證據(如 `generationSummary`),使「選了哪組 theme」可追溯且不需重跑 demo。
 - **FR-014**: 本 feature MUST NOT 改變內容生成輸出本身(slides 結構、文字、review report);只改變「選 theme + 渲染」這層。
-- **FR-015**: 系統 MUST 移除 `CURATED_FONT_PAIRINGS` / `CURATED_PALETTES`(各 9 筆寫死資料),其精調 MUST 已併入 56/96 seed;compose 引擎函式(`buildPaletteHues` / `buildCuratedEffects` / `buildBackground` / `pickBest`)MUST 保留供 `composeKit` 重用;`selectDesignStyleKit` 重構為 `selectTheme` + `composeKit`。DB 為 theme 資料的單一事實來源,`defaultDesignStyleKit` 為唯一最終 fallback。
+- **FR-015**: 系統 MUST 移除 `CURATED_FONT_PAIRINGS` / `CURATED_PALETTES`(各 9 筆寫死資料),其精調 MUST 已併入 57/96 seed;compose 引擎函式(`buildPaletteHues` / `buildCuratedEffects` / `buildBackground` / `pickBest`)MUST 保留供 `composeKit` 重用;`selectDesignStyleKit` 重構為 `selectTheme` + `composeKit`。DB 為 theme 資料的單一事實來源,`defaultDesignStyleKit` 為唯一最終 fallback。
 
 ### HTML Slides Agent Constitution Requirements *(mandatory for slide-generation features)*
 
@@ -156,7 +156,7 @@
 
 ### Key Entities *(include if feature involves data)*
 
-- **Theme(builtin)**: 一筆設計資料,以 `kind` 區分三軸——`font`(字體配對)/`palette`(配色)/`style`(結構風格)。屬性:`id`、`scope=builtin`、`kind`、`name`、`description`、`keywords`、`applies_to`、`support`、`style_kit`(該 kind 的 partial `DesignStyleKit`)、`active`。資料來源為三個 CSV(typography 56 / colors 96 / styles 67)轉出的 seed。
+- **Theme(builtin)**: 一筆設計資料,以 `kind` 區分三軸——`font`(字體配對)/`palette`(配色)/`style`(結構風格)。屬性:`id`、`scope=builtin`、`kind`、`name`、`description`、`keywords`、`applies_to`、`support`、`style_kit`(該 kind 的 partial `DesignStyleKit`)、`active`。資料來源為三個 CSV(typography 57 / colors 96 / styles 67)轉出的 seed。
 - **DesignStyleKit token**: 引擎可渲染的設計詞彙(fonts / accentHues / typeScale / motion / effects / background / patternLayouts / antiPatterns)。每筆 theme 的 `style_kit` 只裝其 `kind` 對應的子集;`composeKit` 合併三軸成完整 kit。007 新增 B 級 token:backdrop blur、glow、grain 紋理疊層、漸層動畫。
 - **ThemeStore(port)**: domain↔DB 邊界。提供「列出可選 builtin themes(含 kind)」與「依 id 取得」;adapter 讀 PostgreSQL,domain 不含 SQL。
 - **selectTheme(domain 純函式)**: 輸入 brief + 候選 themes,對 `font`/`palette`/`style` 三 kind 各關鍵字評分挑一,`composeKit` 合併成完整 `DesignStyleKit`(確定性);任一軸無候選時該軸退回 default,全空時退回 `defaultDesignStyleKit`。
@@ -231,7 +231,7 @@ erDiagram
 |---|---|---|---|
 | `id` | text | PK | builtin 用可排序 slug `{kind}-{序位}-{slug}`(如 `style-00-minimalism`、`style-10-glassmorphism`;`00` 序位=安全預設,見 FR-002);未來 account 主題用 uuid |
 | `scope` | text | NOT NULL | 007 只灌 `builtin`;`account` 留待 008。INDEX `themes_scope_idx` |
-| `kind` | text | NOT NULL **(007 新增欄)** | `font`(56)/`palette`(96)/`style`(67)三軸區分;`selectTheme` 各挑一再 `composeKit`。需小 migration |
+| `kind` | text | NOT NULL **(007 新增欄)** | `font`(57)/`palette`(96)/`style`(67)三軸區分;`selectTheme` 各挑一再 `composeKit`。需小 migration |
 | `account_id` | text | FK→`accounts.id` ON DELETE CASCADE,**NULL** | builtin 為 NULL;account 主題才填。INDEX `themes_account_idx` |
 | `name` | text | NOT NULL | 顯示名(如 "Glassmorphism") |
 | `description` | text | NULL | 風格描述 |
@@ -253,7 +253,7 @@ erDiagram
 ### Measurable Outcomes
 
 - **SC-001**: 任一生成路徑(LLM 成功 / fallback)產出的簡報都套到一組由 DB 選出的 theme(font+palette+style 三軸組合,非寫死 default);可由生成證據看出三軸被選 id。DB 無候選時各軸安全退回 default 且不報錯。
-- **SC-002**: 跑一次 seed 後,`themes` 表含全部 builtin 列(typography 56 + colors 96 + styles 67 對應),A 級 `support=full`、B 級 `support=full`、C 級 `support=raw`、非簡報主題 `applies_to` 正確;重跑 seed idempotent(無重複列)。
+- **SC-002**: 跑一次 seed 後,`themes` 表含全部 builtin 列(typography 57 + colors 96 + styles 67 對應),A 級 `support=full`、B 級 `support=full`、C 級 `support=raw`、非簡報主題 `applies_to` 正確;重跑 seed idempotent(無重複列)。
 - **SC-003**: ~14 個 A 級與全部 B 級 theme 以 `full` 渲染,輸出 CSS 帶正確 token(含 blur/glow/grain/漸層動畫)且全部值經 sanitize。
 - **SC-004**: `selectTheme` 對給定 brief 為確定性(同輸入同輸出)且評分可解釋;無關鍵字時回傳安全預設 theme。
 - **SC-005**: 全 monorepo 既有測試(domain/contracts/api/web)維持綠燈,且新增測試覆蓋本 feature 各 slice。
@@ -266,7 +266,7 @@ erDiagram
 - 使用者自訂主題(`scope=account`)、C 級結構/keyframe/3D 渲染、版型結構類(Bento/Editorial)**不在 007 範圍**。
 - selection 預設只挑 `applies_to in (presentation, universal)` 且 `support in (full, partial)`;`raw` 與 landing/dashboard 入庫但不被預設選中。
 - 送 LLM 的內容與 005/006 相同,不因 theme 系統而改變;theme 選擇為 domain 確定性邏輯,不依賴 LLM。
-- 既有 `selectDesignStyleKit` 重構為 `selectTheme`(純函式,候選由 `ThemeStore` 自 DB 撈出後傳入)+ `composeKit`;`CURATED_FONT_PAIRINGS`/`CURATED_PALETTES`(各 9 筆資料)移除,精調併入 56/96 seed;compose 引擎函式保留。`defaultDesignStyleKit` 為唯一最終 fallback(不保留 code 常數中間層)。
+- 既有 `selectDesignStyleKit` 重構為 `selectTheme`(純函式,候選由 `ThemeStore` 自 DB 撈出後傳入)+ `composeKit`;`CURATED_FONT_PAIRINGS`/`CURATED_PALETTES`(各 9 筆資料)移除,精調併入 57/96 seed;compose 引擎函式保留。`defaultDesignStyleKit` 為唯一最終 fallback(不保留 code 常數中間層)。
 
 ## Review and Safety Notes *(mandatory for generated-content features)*
 

@@ -20,7 +20,7 @@ export type ThemeKind = "font" | "palette" | "style";
 export type ThemeSupport = "full" | "partial" | "raw";
 export type ThemeAppliesTo = "presentation" | "landing" | "dashboard" | "universal";
 
-/** kind = "font" — sourced from typography.csv (56 rows). */
+/** kind = "font" — sourced from typography.csv (57 rows). */
 export interface FontStyleKit {
   readonly fonts: DesignFontFamily;
 }

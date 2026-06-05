@@ -50,7 +50,7 @@ seed 完成時 `themes` 列數/標籤分佈 MUST 對齊下表(完工時逐筆對
 
 | kind | 總數 | support 分佈 |
 |---|---|---|
-| `font` | 56 | 全 `full`(純值,自動轉) |
+| `font` | 57 | 全 `full`(純值,自動轉) |
 | `palette` | 96 | 全 `full`(純值,自動轉) |
 | `style` | 67 | `full` = A 級 14 + B 級 ~6 = ~20;`raw` = C 級 ~22 + N/A landing/dashboard/互動 ~25 = ~47 |
 
@@ -65,7 +65,7 @@ seed 完成時 `themes` 列數/標籤分佈 MUST 對齊下表(完工時逐筆對
 每列只裝其 `kind` 對應的子集(完整詞彙見 `design-style-kit.types.ts`):
 
 ```ts
-// kind = "font" —— 來源 typography.csv(56)
+// kind = "font" —— 來源 typography.csv(57)
 interface FontStyleKit {
   fonts: { heading: string; body: string; googleFontsHref?: string };
 }

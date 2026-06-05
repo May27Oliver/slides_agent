@@ -5,7 +5,7 @@
 
 ## DR-001 資料模型:模型 C —— 三 CSV 全進 `themes` 表 + `kind` 欄
 
-- **決定**:typography(56)/colors(96)/styles(67)全部進 `themes` 表,新增 `kind` 欄(`font` | `palette` | `style`)區分三軸。`style_kit` 為**分 kind 的 partial token**。
+- **決定**:typography(57)/colors(96)/styles(67)全部進 `themes` 表,新增 `kind` 欄(`font` | `palette` | `style`)區分三軸。`style_kit` 為**分 kind 的 partial token**。
 - **理由**:符合 inventory「全部入 DB」;三軸正交、組合多;`selectTheme` 即把既有 `selectDesignStyleKit`(font×palette×default-structure)一般化。
 - **否決**:A(themes 只放 67 風格、字體配色留 code 池)——字體配色不在 DB,部分違「全入庫」;B(每列存完整 kit)——資料重複、author 成本高、組合固定。
 
@@ -29,7 +29,7 @@
 
 ## DR-005 舊碼處置:移資料、留引擎
 
-- **決定**:移除 `CURATED_FONT_PAIRINGS`/`CURATED_PALETTES`(各約 9 筆寫死資料,併入 56/96 seed);compose 引擎函式(`buildPaletteHues`/`buildCuratedEffects`/`buildBackground`/`pickBest`)保留,移入 `compose-kit.ts` 供 `composeKit` 重用。`selectDesignStyleKit` 重構為 `selectTheme` + `composeKit`。`defaultDesignStyleKit` 為唯一最終 fallback(不留 code 常數中間層)。
+- **決定**:移除 `CURATED_FONT_PAIRINGS`/`CURATED_PALETTES`(各約 9 筆寫死資料,併入 57/96 seed);compose 引擎函式(`buildPaletteHues`/`buildCuratedEffects`/`buildBackground`/`pickBest`)保留,移入 `compose-kit.ts` 供 `composeKit` 重用。`selectDesignStyleKit` 重構為 `selectTheme` + `composeKit`。`defaultDesignStyleKit` 為唯一最終 fallback(不留 code 常數中間層)。
 - **理由**:DB 為單一事實來源、清死碼;引擎(確定性渲染邏輯)本就該留 codebase。
 - **否決**:保留常數當中間 fallback(兩套資料要同步維護);原封不動另寫並行路徑(留重複死碼)。
 

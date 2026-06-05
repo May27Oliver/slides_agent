@@ -18,7 +18,7 @@ description: "Task list for feature 007 design-theme-system"
 
 ## Phase 1: Setup(共用基礎)
 
-- [ ] T001 [P] 轉換腳本相依:`pnpm --filter @slides-agent/api add -D csv-parse`(供 `convert-csv-to-theme-seeds.ts` 解析 CSV;dev-time only)。
+- [x] T001 [P] 轉換腳本相依:`pnpm --filter @slides-agent/api add -D csv-parse`(供 `convert-csv-to-theme-seeds.ts` 解析 CSV;dev-time only)。
 - [ ] T002 [P] 確認既有 `db:generate`/`db:migrate`/`db:seed` script(006 已有)可用;`db:seed` 待 US2 擴充以含 themes。
 
 ---
@@ -67,19 +67,19 @@ description: "Task list for feature 007 design-theme-system"
 
 ## Phase 4: User Story 2 - CSV→seed 轉換腳本與全量 builtin theme 目錄(P2)
 
-**Goal**:dev-time 轉換腳本把 3 CSV → committed JSON;`pnpm db:seed` idempotent upsert 全量 themes(font 56 / palette 96 / style 67),kind-aware 驗證。
+**Goal**:dev-time 轉換腳本把 3 CSV → committed JSON;`pnpm db:seed` idempotent upsert 全量 themes(font 57 / palette 96 / style 67),kind-aware 驗證。
 
 **Independent Test**:乾淨 DB 跑 seed,列數/標籤分佈符合盤點;重跑 idempotent;不合法 `style_kit` 被攔。
 
 ### Tests(先寫,須失敗)⚠️
-- [ ] T022 [P] [US2] `apps/api/test/seed-themes.test.ts`(pglite):由 seed JSON upsert;**重跑 idempotent**(無重複列、可更新 updated_at);kind-aware 驗證——**一筆不合法則整批 rollback**(DB 維持原狀、回報所有壞列),不採跳過壞列的 partial success(FR-007)。
-- [ ] T023 [P] [US2] `apps/api/test/convert-csv-to-theme-seeds.test.ts`:對樣本 CSV 列,轉換產出符合 `ThemeSeed` 形狀(font/palette 自動轉、style 產骨架含 raw/待補標記)。
+- [x] T022 [P] [US2] `apps/api/test/seed-themes.test.ts`(pglite):由 seed JSON upsert;**重跑 idempotent**(無重複列、可更新 updated_at);kind-aware 驗證——**一筆不合法則整批 rollback**(DB 維持原狀、回報所有壞列),不採跳過壞列的 partial success(FR-007)。
+- [x] T023 [P] [US2] `apps/api/test/convert-csv-to-theme-seeds.test.ts`:對樣本 CSV 列,轉換產出符合 `ThemeSeed` 形狀(font/palette 自動轉、style 產骨架含 raw/待補標記)。
 
 ### Implementation
-- [ ] T024 [US2] `apps/api/src/infra/db/seed-themes.ts`:`seedThemes(db, seeds)` idempotent `onConflictDoUpdate`(target=`themes.id`)+ **kind-aware 驗證**(font/palette/style/raw 各一套 schema);**全量先驗證、單一 transaction 內任一壞列即整批 rollback** 並回報所有壞列。
-- [ ] T025 [US2] `apps/api/scripts/convert-csv-to-theme-seeds.ts`:dev-time,讀 `.claude/skills/ui-ux-pro-max/data/{typography,colors,styles}.csv` → 產 `seeds/theme-{fonts,palettes,styles}.json`(font/palette 完整、style 骨架)。
-- [ ] T026 [P] [US2] 執行轉換 + 人工補 `style` token:`apps/api/src/infra/db/seeds/theme-fonts.json`(56)、`theme-palettes.json`(96)、`theme-styles.json`(67;A 級 14 筆 full token、B 級 ~6 full、C 級 ~22 + N/A ~25 raw、非簡報主題標 `applies_to`)。id 用 `{kind}-{序位}-{slug}`,各 kind 安全預設給 `00` 序位(`style-00-minimalism`/`palette-00-safe-default`/`font-00-sans-default`)。對照 `data-model.md` 預期分佈表與 `THEME_SEED_INVENTORY.md` 逐筆確認。commit 進版控。
-- [ ] T027 [US2] `apps/api/scripts/db-seed.ts`:在 accounts 之後讀 `seeds/*.json` 呼叫 `seedThemes`;輸出各 kind 筆數。
+- [x] T024 [US2] `apps/api/src/infra/db/seed-themes.ts`:`seedThemes(db, seeds)` idempotent `onConflictDoUpdate`(target=`themes.id`)+ **kind-aware 驗證**(font/palette/style/raw 各一套 schema);**全量先驗證、單一 transaction 內任一壞列即整批 rollback** 並回報所有壞列。
+- [x] T025 [US2] `apps/api/scripts/convert-csv-to-theme-seeds.ts`:dev-time,讀 `.claude/skills/ui-ux-pro-max/data/{typography,colors,styles}.csv` → 產 `seeds/theme-{fonts,palettes,styles}.json`(font/palette 完整、style 骨架)。
+- [x] T026 [P] [US2] 執行轉換 + 人工補 `style` token:`apps/api/src/infra/db/seeds/theme-fonts.json`(57)、`theme-palettes.json`(96)、`theme-styles.json`(67;A 級 14 筆 full token、B 級 ~6 full、C 級 ~22 + N/A ~25 raw、非簡報主題標 `applies_to`)。id 用 `{kind}-{序位}-{slug}`,各 kind 安全預設給 `00` 序位(`style-00-minimalism`/`palette-00-safe-default`/`font-00-sans-default`)。對照 `data-model.md` 預期分佈表與 `THEME_SEED_INVENTORY.md` 逐筆確認。commit 進版控。
+- [x] T027 [US2] `apps/api/scripts/db-seed.ts`:在 accounts 之後讀 `seeds/*.json` 呼叫 `seedThemes`;輸出各 kind 筆數。
 
 **Checkpoint**:完整 theme 目錄入庫;US1 的 selection 有足夠候選。
 

@@ -6,7 +6,7 @@
 
 ## Summary
 
-把「設計風格」從寫死常數升級為**資料驅動的 builtin theme 目錄**,並讓「選 theme」成為設計階段的**獨立必經步驟**。三個來源 CSV(typography 56 / colors 96 / styles 67)經 dev-time 轉換腳本產出 committed JSON,`pnpm db:seed` 以 idempotent upsert 灌進 `themes` 表;表新增 `kind` 欄(`font` | `palette` | `style`)區分三軸,`style_kit` 為分 kind 的 partial token。新增 `selectTheme`(domain 純函式)對三軸各自關鍵字評分挑一,`composeKit` 合併成完整 `DesignStyleKit`——即把既有 `selectDesignStyleKit`(font×palette×default-structure)一般化、三軸候選改自 DB(經 `ThemeStore` adapter 撈出後傳給純函式 `selectTheme`)。`selectTheme` 只負責 `styleKit`;`designSystem`/`slidePatternAssignments`/`chartTreatmentPlans` 仍由 LLM design planner 或 fallback 產出,且**兩條路徑都套到 curated styleKit**(修掉現況 fallback 無風格的缺口)。渲染引擎擴充 B 級四類 token(backdrop blur / glow / grain 紋理 / 漸層動畫),B 級隨之 partial→full。domain 維持純淨(`ThemeStore` port + `selectTheme`/`composeKit` 純函式),DB 存取走 adapter;DB 為 theme 資料單一事實來源,`defaultDesignStyleKit` 為唯一最終 fallback。
+把「設計風格」從寫死常數升級為**資料驅動的 builtin theme 目錄**,並讓「選 theme」成為設計階段的**獨立必經步驟**。三個來源 CSV(typography 57 / colors 96 / styles 67)經 dev-time 轉換腳本產出 committed JSON,`pnpm db:seed` 以 idempotent upsert 灌進 `themes` 表;表新增 `kind` 欄(`font` | `palette` | `style`)區分三軸,`style_kit` 為分 kind 的 partial token。新增 `selectTheme`(domain 純函式)對三軸各自關鍵字評分挑一,`composeKit` 合併成完整 `DesignStyleKit`——即把既有 `selectDesignStyleKit`(font×palette×default-structure)一般化、三軸候選改自 DB(經 `ThemeStore` adapter 撈出後傳給純函式 `selectTheme`)。`selectTheme` 只負責 `styleKit`;`designSystem`/`slidePatternAssignments`/`chartTreatmentPlans` 仍由 LLM design planner 或 fallback 產出,且**兩條路徑都套到 curated styleKit**(修掉現況 fallback 無風格的缺口)。渲染引擎擴充 B 級四類 token(backdrop blur / glow / grain 紋理 / 漸層動畫),B 級隨之 partial→full。domain 維持純淨(`ThemeStore` port + `selectTheme`/`composeKit` 純函式),DB 存取走 adapter;DB 為 theme 資料單一事實來源,`defaultDesignStyleKit` 為唯一最終 fallback。
 
 **Artifact Language**: 繁體中文。
 
@@ -24,7 +24,7 @@
 
 **Project Type**: pnpm workspace monorepo(apps/api + apps/web + packages/domain + packages/contracts)。
 
-**Performance Goals**: `selectTheme` 為記憶體內關鍵字評分,候選列總量小(≤ ~219 列:56+96+67),`listSelectable` 走複合索引;對單次生成延遲影響可忽略。其餘 N/A。
+**Performance Goals**: `selectTheme` 為記憶體內關鍵字評分,候選列總量小(≤ ~220 列:57+96+67),`listSelectable` 走複合索引;對單次生成延遲影響可忽略。其餘 N/A。
 
 **Constraints**: domain 不得含 SQL;DB 來的每個 token 值逐值 sanitize;漸層動畫遵守 `prefers-reduced-motion`;`db:seed` runtime 不得依賴 `.claude/skills` 目錄;選擇為確定性(同輸入同輸出)。
 
@@ -91,7 +91,7 @@ apps/api/src/infra/db/
 ├── schema.ts                   # 修改:themes += kind 欄;新增/調整選擇用複合索引
 ├── migrations/0001_*.sql       # drizzle-kit generate 產出(ADD COLUMN kind + 索引)
 ├── seeds/                      # 新增:committed JSON(轉換腳本產出 + 人工補 style token)
-│   ├── theme-fonts.json        #   kind=font(56)
+│   ├── theme-fonts.json        #   kind=font(57)
 │   ├── theme-palettes.json     #   kind=palette(96)
 │   └── theme-styles.json       #   kind=style(67;A=full、B=full、C=raw)
 └── seed-themes.ts              # 新增:seedThemes(db, source) idempotent upsert + kind-aware 驗證

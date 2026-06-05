@@ -1,0 +1,181 @@
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
+import { themes } from "@/infra/db/schema";
+import {
+  ThemeSeedValidationError,
+  seedThemes,
+  validateThemeSeeds,
+  type ThemeSeed
+} from "@/infra/db/seed-themes";
+import { createTestDb, type TestDb } from "./helpers/pglite-db";
+
+/**
+ * 007 US2: builtin theme seeding. Idempotent upsert by id, and *all-or-nothing*
+ * kind-aware validation — one invalid row rejects the whole batch with no writes.
+ */
+
+const fontSeed: ThemeSeed = {
+  id: "font-00-sans-default",
+  kind: "font",
+  scope: "builtin",
+  name: "Sans Default",
+  keywords: ["clean", "neutral"],
+  appliesTo: "universal",
+  support: "full",
+  styleKit: { fonts: { heading: '"Inter", sans-serif', body: '"Inter", sans-serif' } }
+};
+
+const paletteSeed: ThemeSeed = {
+  id: "palette-00-safe-default",
+  kind: "palette",
+  scope: "builtin",
+  name: "Safe Default",
+  keywords: ["neutral"],
+  appliesTo: "universal",
+  support: "full",
+  styleKit: {
+    accentHues: [{ name: "ink", base: "#111111", gradient: "linear-gradient(135deg,#111,#333)" }],
+    accentGradient: "linear-gradient(110deg,#111,#333)",
+    background: { css: "#ffffff" },
+    cardSurface: "rgba(255,255,255,.84)",
+    cardBorder: "1px solid #111111"
+  }
+};
+
+const styleFullSeed: ThemeSeed = {
+  id: "style-00-minimalism",
+  kind: "style",
+  scope: "builtin",
+  name: "Minimalism & Swiss",
+  keywords: ["minimal", "swiss", "clean"],
+  appliesTo: "presentation",
+  support: "full",
+  styleKit: {
+    effects: { cardRadiusPx: 0, cardShadow: "none" },
+    motion: {
+      slideTransitionMs: 220,
+      slideEasing: "ease",
+      entranceMs: 300,
+      staggerStepMs: 60,
+      microMs: 160,
+      respectReducedMotion: true
+    }
+  }
+};
+
+const styleRawSeed: ThemeSeed = {
+  id: "style-10-bento-grids",
+  kind: "style",
+  scope: "builtin",
+  name: "Bento Grids",
+  keywords: ["bento", "grid"],
+  appliesTo: "presentation",
+  support: "raw",
+  styleKit: { rawDesignSystemVariables: "--gap: 1rem; --radius: 16px;" }
+};
+
+const validBatch: ThemeSeed[] = [fontSeed, paletteSeed, styleFullSeed, styleRawSeed];
+
+describe("seedThemes (007 US2)", () => {
+  let testDb: TestDb;
+
+  beforeEach(async () => {
+    testDb = await createTestDb();
+  });
+
+  afterEach(async () => {
+    await testDb.close();
+  });
+
+  it("upserts the batch and reports per-kind counts", async () => {
+    const result = await seedThemes(testDb.db, validBatch);
+
+    expect(result.total).toBe(4);
+    expect(result.byKind).toEqual({ font: 1, palette: 1, style: 2 });
+
+    const rows = await testDb.db.select().from(themes);
+    expect(rows).toHaveLength(4);
+    const minimal = rows.find((row) => row.id === "style-00-minimalism");
+    expect(minimal?.kind).toBe("style");
+    expect(minimal?.scope).toBe("builtin");
+    expect(minimal?.active).toBe(true);
+  });
+
+  it("is idempotent: re-running does not duplicate rows and advances updatedAt on change", async () => {
+    await seedThemes(testDb.db, validBatch);
+    const [before] = await testDb.db
+      .select()
+      .from(themes)
+      .where(eq(themes.id, "style-00-minimalism"));
+
+    const renamed: ThemeSeed[] = validBatch.map((seed) =>
+      seed.id === "style-00-minimalism" ? { ...seed, name: "Minimalism (renamed)" } : seed
+    );
+    await seedThemes(testDb.db, renamed);
+
+    const rows = await testDb.db.select().from(themes);
+    expect(rows).toHaveLength(4); // no duplicates
+
+    const [after] = await testDb.db
+      .select()
+      .from(themes)
+      .where(eq(themes.id, "style-00-minimalism"));
+    expect(after?.name).toBe("Minimalism (renamed)");
+    expect(after?.updatedAt?.getTime() ?? 0).toBeGreaterThanOrEqual(before?.updatedAt?.getTime() ?? 0);
+  });
+
+  it("rejects the whole batch and writes nothing when any row is invalid (all-or-nothing)", async () => {
+    const badStyle: ThemeSeed = {
+      ...styleFullSeed,
+      id: "style-10-broken",
+      // full style missing cardShadow + a non-numeric radius → invalid structural kit
+      styleKit: { effects: { cardRadiusPx: "nope" }, motion: styleFullSeed.styleKit } as never
+    };
+
+    await expect(seedThemes(testDb.db, [fontSeed, badStyle, paletteSeed])).rejects.toBeInstanceOf(
+      ThemeSeedValidationError
+    );
+
+    // Nothing was written — the good rows in the same batch did not slip through.
+    const rows = await testDb.db.select().from(themes);
+    expect(rows).toHaveLength(0);
+  });
+
+  it("reports every invalid row (not just the first) before any write", async () => {
+    const badFont: ThemeSeed = {
+      ...fontSeed,
+      id: "font-10-broken",
+      styleKit: { fonts: { heading: 42, body: "" } } as never
+    };
+    const badRaw: ThemeSeed = {
+      ...styleRawSeed,
+      id: "style-10-rawbroken",
+      styleKit: { rawDesignSystemVariables: "" } as never
+    };
+
+    const issues = validateThemeSeeds([fontSeed, badFont, badRaw]);
+    expect(issues.map((issue) => issue.id)).toEqual(["font-10-broken", "style-10-rawbroken"]);
+    expect(issues[0]?.problems.length).toBeGreaterThan(0);
+  });
+
+  it("flags font/palette rows that are not support=full", async () => {
+    const partialFont: ThemeSeed = { ...fontSeed, id: "font-10-partial", support: "partial" };
+    const issues = validateThemeSeeds([partialFont]);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.problems.some((p) => p.includes('support="full"'))).toBe(true);
+  });
+
+  it("flags an out-of-enum backgroundStructure value", async () => {
+    const badStructure: ThemeSeed = {
+      ...styleFullSeed,
+      id: "style-10-badtexture",
+      styleKit: {
+        ...(styleFullSeed.styleKit as object),
+        backgroundStructure: { textureOverlay: "sparkles" }
+      } as never
+    };
+    const issues = validateThemeSeeds([badStructure]);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.problems.some((p) => p.includes("textureOverlay"))).toBe(true);
+  });
+});

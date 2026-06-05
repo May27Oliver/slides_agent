@@ -12,6 +12,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file=../../.env --import tsx scripts/db-migrate.ts",
     "db:seed": "node --env-file=../../.env --import tsx scripts/db-seed.ts",
+    "db:convert-seeds": "node --import tsx scripts/convert-csv-to-theme-seeds.ts",
     "db:repl": "node --env-file=../../.env --import tsx src/repl.ts",
     "db:studio": "node --env-file=../../.env node_modules/.bin/drizzle-kit studio"
   },
@@ -39,6 +40,7 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
     "@types/pg": "^8.20.0",
+    "csv-parse": "^6.2.1",
     "drizzle-kit": "^0.31.10",
     "ioredis-mock": "^8.13.1",
     "tsx": "^4.22.4"

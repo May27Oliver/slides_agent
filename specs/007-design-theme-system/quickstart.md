@@ -19,7 +19,7 @@ pnpm db:migrate      # 套用
 pnpm tsx scripts/convert-csv-to-theme-seeds.ts   # 讀 .claude/skills/ui-ux-pro-max/data/*.csv
 ```
 
-產出 `src/infra/db/seeds/theme-fonts.json`(56)、`theme-palettes.json`(96)、`theme-styles.json`(67 骨架)。
+產出 `src/infra/db/seeds/theme-fonts.json`(57)、`theme-palettes.json`(96)、`theme-styles.json`(67 骨架)。
 **font/palette 自動轉完整;`style` kind 的 `styleKit` token 需人工補**(A 級對應 structure、C 級存 raw),補完 commit 進版控。`db:seed` 之後只讀這些 JSON,**不**再依賴 `.claude/skills`。
 
 ## 3. 灌 themes seed
@@ -32,7 +32,7 @@ pnpm db:seed         # accounts(006 既有)+ themes(007 新增,idempotent upsert
 
 ```bash
 psql slides_agent -c "SELECT kind, count(*) FROM themes GROUP BY kind;"
-# 預期 font≈56、palette≈96、style≈67
+# 預期 font≈57、palette≈96、style≈67
 
 psql slides_agent -c "SELECT support, count(*) FROM themes WHERE kind='style' GROUP BY support;"
 # 預期 full(A+B 級)、raw(C 級)
