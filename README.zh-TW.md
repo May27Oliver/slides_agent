@@ -167,6 +167,27 @@ pnpm db:studio   # Drizzle Studio — 瀏覽器視覺化介面(local.drizzle.stu
 
 > `db:studio` 的編輯是即時寫入、無 undo——操作正式資料請小心。
 
+### 新增資料庫欄位(migration)
+
+schema 採 **code-first**,定義在 `apps/api/src/infra/db/schema.ts`。要新增或修改欄位,
+先改這個檔,再產生並套用 migration:
+
+```bash
+# 1. 編輯 apps/api/src/infra/db/schema.ts 裡的 table
+#    例如在 decks 表加 `summary: text("summary")`。
+
+pnpm db:generate   # drizzle-kit 比對 schema.ts → 在 src/infra/db/migrations 產出新 SQL
+pnpm db:migrate    # 把待套用的 migration 套到 DATABASE_URL
+```
+
+- 套用前**先檢視產出的 SQL** —— 打開 `apps/api/src/infra/db/migrations/` 下的新檔確認 diff。
+  drizzle-kit 會自動命名(如 `0001_*.sql`)。
+- migration **不會在 API/worker 開機時自動執行**,一定要顯式跑 `pnpm db:migrate`(部署時也是)。
+  產出的 SQL 與 `meta/` 快照都會 commit 進 git,所以每個環境都會依序套用相同 migration。
+- 用 `pnpm db:studio` 或 `psql "$DATABASE_URL" -c '\d decks'` 驗證。
+
+> 破壞性變更(drop/rename 欄位)可能遺失資料——drizzle-kit 可能會詢問;請先檢視 SQL 並備份正式資料。
+
 ---
 
 ## API

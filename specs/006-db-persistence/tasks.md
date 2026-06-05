@@ -84,7 +84,7 @@ description: "Task list for feature 006 db-persistence"
 - [x] T029 [US2] `apps/api/src/modules/preview-jobs/preview-jobs.controller.ts`:建 job 時自 `req.user.id` 注入 `accountId`(需掛 `JwtAuthGuard`——對齊 005 既有保護)。
 - [x] T030 [US2] `apps/api/src/modules/decks/drizzle-deck-store.ts`:`@Inject(DRIZZLE)` 實作 `DeckStore.saveNewDeck`(交易);`decks.tokens.ts` 定義 `DECK_STORE`。
 - [x] T031 [US2] worker 成功路徑(`preview-worker.runtime` / job 完成處)呼叫 `createDeckFromPreviewResult` → `DECK_STORE.saveNewDeck`;`try/catch` 記錄持久化錯誤、不改 job 結果。WorkerModule import `DbModule` + 提供 `DECK_STORE`。
-- [ ] T032 [US2] 手動驗證:登入→生成→查 DB 有 deck + revision(quickstart 步驟 5.3)。
+- [x] T032 [US2] 手動驗證:登入→生成→查 DB 有 deck + revision(quickstart 步驟 5.3)。
 
 **Checkpoint**:US1+US2 各自可運作。
 
@@ -109,7 +109,7 @@ description: "Task list for feature 006 db-persistence"
 - [x] T040 [US3] `apps/api/src/openapi/openapi-document.ts`:補 `/api/decks`、`/api/decks/:id` 端點與 schema(手刻,tsx 無 reflection)。
 - [x] T041 [P] [US3] 前端最小:`apps/web/src/features/decks/decks-client.ts`(用 `authFetch`)+ `MyDecksView.tsx`(列表+開啟檢視)+ `App.tsx` 加路由。
 - [x] T042 [P] [US3] `apps/web/src/features/decks/decks-client.test.ts`:list/detail 呼叫帶 Bearer、401 行為。
-- [ ] T043 [US3] 手動驗證:quickstart 步驟 5.4–5.5(列表/檢視/跨帳號隔離)。
+- [x] T043 [US3] 手動驗證:quickstart 步驟 5.4–5.5(列表/檢視/跨帳號隔離)。
 
 **Checkpoint**:US1–US3 各自可運作。
 
@@ -138,7 +138,7 @@ description: "Task list for feature 006 db-persistence"
 - [x] T048 移除/簡化未被消費的 domain artifact(對照 plan「新增物件的消費者」)。
 - [x] T049 全 monorepo 回歸:`pnpm -r test` + 各包 `tsc --noEmit` 全綠。
 - [x] T050 code-review + security pass(DATABASE_URL/passwordHash 不外洩、擁有權隔離、SQL 注入面=Drizzle 參數化確認)。
-- [ ] T051 跑 `quickstart.md` 全流程驗證並回填證據(migration SQL、seed 輸出、EXPLAIN 走索引)。
+- [x] T051 跑 `quickstart.md` 全流程驗證並回填證據(migration SQL、seed 輸出、EXPLAIN 走索引)。見 quickstart「7. 驗證證據」。
 
 ---
 
