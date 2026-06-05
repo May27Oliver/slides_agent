@@ -52,6 +52,14 @@ export function loadAuthConfig(env: EnvLike = process.env): AuthConfig {
   };
 }
 
+/**
+ * Parses only the AUTH_ACCOUNTS allowlist — used by `db:seed`, which must not
+ * require AUTH_JWT_SECRET (seeding accounts has nothing to do with JWT signing).
+ */
+export function loadSeedAccounts(env: EnvLike = process.env): UserAccount[] {
+  return parseAccounts(env.AUTH_ACCOUNTS);
+}
+
 function parseAccounts(raw: string | undefined): UserAccount[] {
   if (!raw || !raw.trim()) {
     return [];

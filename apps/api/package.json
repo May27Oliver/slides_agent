@@ -8,7 +8,12 @@
     "worker": "node --env-file=../../.env --import tsx src/worker/worker.main.ts",
     "worker:dev": "node --env-file=../../.env --watch --import tsx src/worker/worker.main.ts",
     "build": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node --env-file=../../.env --import tsx scripts/db-migrate.ts",
+    "db:seed": "node --env-file=../../.env --import tsx scripts/db-seed.ts",
+    "db:repl": "node --env-file=../../.env --import tsx src/repl.ts",
+    "db:studio": "node --env-file=../../.env node_modules/.bin/drizzle-kit studio"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -18,18 +23,23 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^7.4.2",
     "bullmq": "^5.78.0",
+    "drizzle-orm": "^0.45.2",
     "helmet": "^8.2.0",
     "ioredis": "^5.11.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
+    "pg": "^8.21.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.0.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.1",
     "@nestjs/testing": "^10.4.22",
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.10",
     "ioredis-mock": "^8.13.1",
     "tsx": "^4.22.4"
   }

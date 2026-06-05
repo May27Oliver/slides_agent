@@ -6,15 +6,24 @@ import { WorkerModule } from "@/app/worker.module";
 import { RedisService } from "@/infra/redis/redis.service";
 import { PreviewJobQueueService } from "@/modules/preview-jobs/preview-job-queue.service";
 import { PreviewJobsController } from "@/modules/preview-jobs/preview-jobs.controller";
+import { DecksController } from "@/modules/decks/decks.controller";
+import { DECK_STORE } from "@/modules/decks/decks.tokens";
+import { DrizzleDeckStore } from "@/modules/decks/drizzle-deck-store";
 import { PreviewJobTimeoutSweeper } from "@/modules/preview-jobs/preview-job-timeout-sweeper";
 import { PreviewWorkerRuntime } from "@/modules/preview-jobs/preview-worker.runtime";
 import { SlidesService } from "@/modules/slides/slides.service";
 import { AuthController } from "@/modules/auth/auth.controller";
 import { LocalStrategy } from "@/modules/auth/local.strategy";
 import { JwtStrategy } from "@/modules/auth/jwt.strategy";
+import { DbUserAccountStore } from "@/modules/auth/db-user-account-store";
+import { USER_ACCOUNT_STORE } from "@/modules/auth/auth.tokens";
+import { DbService } from "@/infra/db/db.service";
 
 // AuthModule (imported by AppModule) reads AUTH_JWT_SECRET at build time (fail-fast).
 process.env.AUTH_JWT_SECRET ||= "test-secret-0123456789-0123456789ab";
+// DbModule (imported by AuthModule) reads DATABASE_URL at construction (fail-fast);
+// the Pool connects lazily so a fake URL is enough — DbService is also overridden.
+process.env.DATABASE_URL ||= "postgresql://fake:5432/slides_agent";
 
 // Verify module ownership boundaries without opening real Redis connections:
 // the Redis-touching providers are replaced with inert fakes so DI resolution
@@ -25,6 +34,7 @@ const fakeRedisService = {
   onModuleDestroy: async () => undefined
 };
 const fakeQueueService = { queue: {}, onModuleDestroy: async () => undefined };
+const fakeDbService = { pool: {}, db: {}, onModuleDestroy: async () => undefined };
 
 describe("module bootstrap boundaries", () => {
   let moduleRef: TestingModule | undefined;
@@ -40,6 +50,8 @@ describe("module bootstrap boundaries", () => {
       .useValue(fakeRedisService)
       .overrideProvider(PreviewJobQueueService)
       .useValue(fakeQueueService)
+      .overrideProvider(DbService)
+      .useValue(fakeDbService)
       .compile();
 
     expect(moduleRef.get(PreviewJobsController, { strict: false })).toBeInstanceOf(
@@ -55,12 +67,19 @@ describe("module bootstrap boundaries", () => {
     expect(moduleRef.get(AuthController, { strict: false })).toBeInstanceOf(AuthController);
     expect(moduleRef.get(LocalStrategy, { strict: false })).toBeInstanceOf(LocalStrategy);
     expect(moduleRef.get(JwtStrategy, { strict: false })).toBeInstanceOf(JwtStrategy);
+    // 006: accounts now come from the DB store (behind the unchanged port).
+    expect(moduleRef.get(USER_ACCOUNT_STORE, { strict: false })).toBeInstanceOf(DbUserAccountStore);
+    // 006 US3: the read-only decks API is wired on the API process.
+    expect(moduleRef.get(DecksController, { strict: false })).toBeInstanceOf(DecksController);
+    expect(moduleRef.get(DECK_STORE, { strict: false })).toBeInstanceOf(DrizzleDeckStore);
   });
 
   it("WorkerModule wires the worker runtime but not the controller or sweeper", async () => {
     moduleRef = await Test.createTestingModule({ imports: [WorkerModule] })
       .overrideProvider(RedisService)
       .useValue(fakeRedisService)
+      .overrideProvider(DbService)
+      .useValue(fakeDbService)
       .compile();
 
     expect(moduleRef.get(PreviewWorkerRuntime, { strict: false })).toBeInstanceOf(

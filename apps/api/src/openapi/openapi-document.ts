@@ -1,9 +1,14 @@
 import type { OpenAPIObject } from "@nestjs/swagger";
 import {
   type OpenApiSchema,
+  AUTH_REQUIRED_SCHEMA,
   CREATE_PREVIEW_JOB_RESPONSE_SCHEMA,
+  DECK_DETAIL_RESPONSE_SCHEMA,
+  DECK_LIST_RESPONSE_SCHEMA,
+  DECK_NOT_FOUND_SCHEMA,
   GENERATE_PREVIEW_REQUEST_SCHEMA,
   GENERATE_PREVIEW_RESPONSE_SCHEMA,
+  INVALID_DECK_ID_ERROR_SCHEMA,
   INVALID_JOB_ID_ERROR_SCHEMA,
   PREVIEW_JOB_STATUS_RESPONSE_SCHEMA,
   PREVIEW_JOB_UNAVAILABLE_SCHEMA,
@@ -30,8 +35,48 @@ export function buildOpenApiDocument(): OpenAPIObject {
       description: "Preview generation (sync) and async preview jobs.",
       version: "1.0"
     },
-    tags: [{ name: "slides" }],
+    tags: [{ name: "slides" }, { name: "decks" }],
     paths: {
+      "/api/decks": {
+        get: {
+          tags: ["decks"],
+          summary: "List the current user's decks (newest first)",
+          description: "JWT-protected; always scoped to the authenticated account. Not paginated.",
+          responses: {
+            "200": { description: "The user's decks", content: json(DECK_LIST_RESPONSE_SCHEMA) },
+            "401": { description: "Missing/invalid JWT", content: json(AUTH_REQUIRED_SCHEMA) },
+            "500": { description: "Unexpected server error." }
+          }
+        }
+      },
+      "/api/decks/{id}": {
+        get: {
+          tags: ["decks"],
+          summary: "Fetch one deck the current user owns",
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" },
+              example: "11111111-2222-3333-4444-555555555555"
+            }
+          ],
+          responses: {
+            "200": {
+              description: "The deck + current revision",
+              content: json(DECK_DETAIL_RESPONSE_SCHEMA)
+            },
+            "400": { description: "Invalid deck id", content: json(INVALID_DECK_ID_ERROR_SCHEMA) },
+            "401": { description: "Missing/invalid JWT", content: json(AUTH_REQUIRED_SCHEMA) },
+            "404": {
+              description: "Not found or owned by another account",
+              content: json(DECK_NOT_FOUND_SCHEMA)
+            },
+            "500": { description: "Unexpected server error." }
+          }
+        }
+      },
       "/api/slides/preview": {
         post: {
           tags: ["slides"],

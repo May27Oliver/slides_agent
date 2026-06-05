@@ -4,6 +4,10 @@ import type { AuthConfig } from "@/config/auth.config";
 import { AUTH_CONFIG } from "@/modules/auth/auth.tokens";
 
 /**
+ * @deprecated Since feature 006 the DB is the source of accounts; AuthModule uses
+ * `DbUserAccountStore`. AUTH_ACCOUNTS now only feeds `pnpm db:seed`. Kept as a
+ * reference / transition fallback; no longer wired into the module.
+ *
  * Reads the allowlisted accounts from runtime config (AUTH_ACCOUNTS) into
  * lookup maps. Username lookup is case-normalized.
  */
@@ -13,7 +17,9 @@ export class ConfiguredUserAccountStore implements UserAccountStore {
   private readonly byId: Map<string, UserAccount>;
 
   constructor(@Inject(AUTH_CONFIG) config: AuthConfig) {
-    this.byUsername = new Map(config.accounts.map((account) => [normalize(account.username), account]));
+    this.byUsername = new Map(
+      config.accounts.map((account) => [normalize(account.username), account])
+    );
     this.byId = new Map(config.accounts.map((account) => [account.id, account]));
   }
 

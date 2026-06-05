@@ -9,11 +9,13 @@ import {
   NotFoundException,
   Param,
   Post,
+  Req,
   ServiceUnavailableException,
   UseGuards
 } from "@nestjs/common";
 import { RateLimitGuard } from "@/common/rate-limit.guard";
 import { JwtAuthGuard } from "@/modules/auth/jwt-auth.guard";
+import type { AuthedRequestUser } from "@/modules/auth/jwt.strategy";
 import type {
   CreatePreviewJobResponseContract,
   GeneratePreviewResponseContract,
@@ -64,8 +66,19 @@ export class PreviewJobsController {
   @Post("preview-jobs")
   @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(JwtAuthGuard, previewRateLimit)
-  async createPreviewJob(@Body() body: unknown): Promise<CreatePreviewJobResponseContract> {
-    const request = parseGeneratePreviewRequest(body);
+  async createPreviewJob(
+    @Body() body: unknown,
+    // Optional only so unit tests can call this without an HTTP request; DI +
+    // JwtAuthGuard always provide req.user at runtime.
+    @Req() req?: { user?: AuthedRequestUser }
+  ): Promise<CreatePreviewJobResponseContract> {
+    // Tag the job with the authenticated owner so the worker can persist the
+    // result to that account (006 US2).
+    const accountId = req?.user?.id;
+    const request = {
+      ...parseGeneratePreviewRequest(body),
+      ...(accountId ? { accountId } : {})
+    };
     const store = this.requirePreviewJobStore();
     const runner = this.requirePreviewJobRunner();
 

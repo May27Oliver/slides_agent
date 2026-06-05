@@ -68,6 +68,13 @@ export {
 } from "@/preview-job/preview-job-serialization";
 export type { SerializedPreviewJob } from "@/preview-job/preview-job-serialization";
 
+export type { Deck, DeckRevision, DeckOrigin } from "@/deck-persistence/deck.types";
+export type { DeckStore, DeckSummary, DeckDetail } from "@/deck-persistence/deck-store.port";
+export {
+  createDeckFromPreviewResult,
+  type CreateDeckFromPreviewInput
+} from "@/deck-persistence/create-deck-from-preview";
+
 export type { UserAccount, AuthenticatedUser, AuthFailureCode } from "@/auth/auth.types";
 export type { UserAccountStore } from "@/auth/user-account-store.port";
 export {

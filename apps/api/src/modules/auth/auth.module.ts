@@ -2,10 +2,11 @@ import { Module } from "@nestjs/common";
 import { PassportModule } from "@nestjs/passport";
 import { JwtModule } from "@nestjs/jwt";
 import { loadAuthConfig } from "@/config/auth.config";
+import { DbModule } from "@/infra/db/db.module";
 import { AUTH_CONFIG, USER_ACCOUNT_STORE } from "@/modules/auth/auth.tokens";
 import { AuthController } from "@/modules/auth/auth.controller";
 import { AuthService } from "@/modules/auth/auth.service";
-import { ConfiguredUserAccountStore } from "@/modules/auth/configured-user-account-store";
+import { DbUserAccountStore } from "@/modules/auth/db-user-account-store";
 import { LocalStrategy } from "@/modules/auth/local.strategy";
 import { JwtStrategy } from "@/modules/auth/jwt.strategy";
 import { LoginRateLimitGuard } from "@/modules/auth/login-rate-limit.guard";
@@ -22,6 +23,7 @@ import { LoginRateLimitGuard } from "@/modules/auth/login-rate-limit.guard";
  */
 @Module({
   imports: [
+    DbModule,
     PassportModule,
     JwtModule.registerAsync({
       useFactory: () => {
@@ -41,7 +43,7 @@ import { LoginRateLimitGuard } from "@/modules/auth/login-rate-limit.guard";
   controllers: [AuthController],
   providers: [
     { provide: AUTH_CONFIG, useFactory: () => loadAuthConfig() },
-    { provide: USER_ACCOUNT_STORE, useClass: ConfiguredUserAccountStore },
+    { provide: USER_ACCOUNT_STORE, useClass: DbUserAccountStore },
     AuthService,
     LocalStrategy,
     JwtStrategy,

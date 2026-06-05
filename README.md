@@ -147,6 +147,52 @@ curl -I http://localhost:5173/                                 # frontend up
 curl -i http://localhost:3000/api/slides/preview-jobs/example   # → 404 PREVIEW_JOB_UNAVAILABLE
 ```
 
+### Database console
+
+Two ways to inspect the persisted accounts/decks from the terminal (both need only `DATABASE_URL`):
+
+```bash
+pnpm db:repl     # NestJS REPL — interactive terminal console
+pnpm db:studio   # Drizzle Studio — visual browser at local.drizzle.studio
+```
+
+`db:repl` boots a DB-only NestJS context (no Redis/worker — just `DATABASE_URL`). Inside it:
+
+```js
+> help()                                          // list the REPL commands
+> debug()                                          // modules / providers
+> methods(DrizzleDeckStore)                        // a provider's methods
+> await get(DbService).pool.query('select id, title, status from decks')  // raw SQL
+> await get(DrizzleDeckStore).listByAccount('user_owner')                 // typed store
+> await get(DbUserAccountStore).findByUsername('owner@example.com')
+```
+
+> `db:studio` edits write immediately with no undo — be careful against real data.
+
+### Adding a DB column (migrations)
+
+The schema is **code-first** in `apps/api/src/infra/db/schema.ts`. To add or change a
+column, edit that file, then generate and apply a migration:
+
+```bash
+# 1. Edit the table in apps/api/src/infra/db/schema.ts
+#    e.g. add `summary: text("summary")` to the decks table.
+
+pnpm db:generate   # drizzle-kit diffs schema.ts → new SQL in src/infra/db/migrations
+pnpm db:migrate    # applies pending migrations to DATABASE_URL
+```
+
+- **Review the generated SQL** before applying — open the new file under
+  `apps/api/src/infra/db/migrations/` and check the diff. drizzle-kit names it
+  automatically (e.g. `0001_*.sql`).
+- Migrations are **never run on API/worker boot** — you must run `pnpm db:migrate`
+  explicitly (also in deploy). The generated SQL and the `meta/` snapshot are
+  committed to git, so every environment applies the same migrations in order.
+- Verify with `pnpm db:studio` or `psql "$DATABASE_URL" -c '\d decks'`.
+
+> Destructive changes (drop/rename column) can lose data — drizzle-kit may prompt;
+> review the SQL and back up real data first.
+
 ---
 
 ## API
