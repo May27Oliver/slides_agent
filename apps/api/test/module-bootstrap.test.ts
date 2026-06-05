@@ -14,7 +14,7 @@ import { LocalStrategy } from "@/modules/auth/local.strategy";
 import { JwtStrategy } from "@/modules/auth/jwt.strategy";
 
 // AuthModule (imported by AppModule) reads AUTH_JWT_SECRET at build time (fail-fast).
-process.env.AUTH_JWT_SECRET ||= "test-secret";
+process.env.AUTH_JWT_SECRET ||= "test-secret-0123456789-0123456789ab";
 
 // Verify module ownership boundaries without opening real Redis connections:
 // the Redis-touching providers are replaced with inert fakes so DI resolution

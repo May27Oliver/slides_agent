@@ -8,6 +8,7 @@ import { AuthService } from "@/modules/auth/auth.service";
 import { ConfiguredUserAccountStore } from "@/modules/auth/configured-user-account-store";
 import { LocalStrategy } from "@/modules/auth/local.strategy";
 import { JwtStrategy } from "@/modules/auth/jwt.strategy";
+import { LoginRateLimitGuard } from "@/modules/auth/login-rate-limit.guard";
 
 /**
  * Login + protection. Provides the account allowlist store, both Passport
@@ -38,7 +39,8 @@ import { JwtStrategy } from "@/modules/auth/jwt.strategy";
     { provide: USER_ACCOUNT_STORE, useClass: ConfiguredUserAccountStore },
     AuthService,
     LocalStrategy,
-    JwtStrategy
+    JwtStrategy,
+    LoginRateLimitGuard
   ],
   exports: [AuthService]
 })

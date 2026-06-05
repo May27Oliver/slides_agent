@@ -19,9 +19,11 @@ export function verifyPassword(plain: string, stored: string): boolean {
     return false;
   }
   const expected = Buffer.from(hashHex, "hex");
-  if (expected.length === 0) {
+  // Always derive the fixed key length so a malformed/short stored hash can't
+  // shrink the comparison (and thus the work factor).
+  if (expected.length !== KEY_LENGTH) {
     return false;
   }
-  const derived = scryptSync(plain, Buffer.from(saltHex, "hex"), expected.length);
-  return derived.length === expected.length && timingSafeEqual(derived, expected);
+  const derived = scryptSync(plain, Buffer.from(saltHex, "hex"), KEY_LENGTH);
+  return timingSafeEqual(derived, expected);
 }

@@ -15,6 +15,7 @@ export interface AuthConfig {
 type EnvLike = Record<string, string | undefined>;
 
 const DEFAULT_EXPIRES_IN = "30d";
+const MIN_JWT_SECRET_CHARS = 32;
 const DEFAULT_LOGIN_RATE_LIMIT_MAX = 10;
 const DEFAULT_LOGIN_RATE_LIMIT_WINDOW_MS = 60_000;
 
@@ -23,6 +24,9 @@ export function loadAuthConfig(env: EnvLike = process.env): AuthConfig {
   if (!jwtSecret) {
     throw new Error("AUTH_JWT_SECRET is required but is not configured.");
   }
+  if (jwtSecret.length < MIN_JWT_SECRET_CHARS) {
+    throw new Error(`AUTH_JWT_SECRET must be at least ${MIN_JWT_SECRET_CHARS} characters.`);
+  }
 
   return {
     jwtSecret,
@@ -30,7 +34,10 @@ export function loadAuthConfig(env: EnvLike = process.env): AuthConfig {
     accounts: parseAccounts(env.AUTH_ACCOUNTS),
     loginRateLimit: {
       max: positiveIntOr(env.AUTH_LOGIN_RATE_LIMIT_MAX, DEFAULT_LOGIN_RATE_LIMIT_MAX),
-      windowMs: positiveIntOr(env.AUTH_LOGIN_RATE_LIMIT_WINDOW_MS, DEFAULT_LOGIN_RATE_LIMIT_WINDOW_MS)
+      windowMs: positiveIntOr(
+        env.AUTH_LOGIN_RATE_LIMIT_WINDOW_MS,
+        DEFAULT_LOGIN_RATE_LIMIT_WINDOW_MS
+      )
     }
   };
 }

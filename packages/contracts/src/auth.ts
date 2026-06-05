@@ -58,16 +58,20 @@ export function validateLoginRequest(input: unknown): LoginRequestValidationResu
   }
 
   if (username.length > MAX_USERNAME_CHARS || password.length > MAX_PASSWORD_CHARS) {
-    return invalid(username.length > MAX_USERNAME_CHARS ? ["username"] : ["password"]);
+    const field = username.length > MAX_USERNAME_CHARS ? "username" : "password";
+    return invalid([field], `${field} exceeds the maximum allowed length`);
   }
 
   return { ok: true, value: { username, password } };
 }
 
-function invalid(fields: string[]): LoginRequestValidationResult {
+function invalid(
+  fields: string[],
+  message = "username and password are required"
+): LoginRequestValidationResult {
   return {
     ok: false,
-    error: { code: "INVALID_INPUT", message: "username and password are required", fields }
+    error: { code: "INVALID_INPUT", message, fields }
   };
 }
 

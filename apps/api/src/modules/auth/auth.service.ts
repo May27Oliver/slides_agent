@@ -46,7 +46,9 @@ export class AuthService {
     };
     const token = await this.jwt.signAsync(claims);
     const decoded = this.jwt.decode(token) as { exp?: number } | null;
-    const expiresAt = decoded?.exp ? new Date(decoded.exp * 1000).toISOString() : "";
-    return { token, expiresAt, user };
+    if (typeof decoded?.exp !== "number") {
+      throw new Error("Signed JWT is missing an expiry claim.");
+    }
+    return { token, expiresAt: new Date(decoded.exp * 1000).toISOString(), user };
   }
 }

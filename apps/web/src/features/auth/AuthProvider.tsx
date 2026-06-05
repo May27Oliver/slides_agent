@@ -1,8 +1,21 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import type { ReactNode } from "react";
 import type { AuthContextValue, AuthStatus, StoredSession } from "@/features/auth/auth.types";
-import { AUTH_STORAGE_KEY, clearSession, loadSession, saveSession } from "@/features/auth/auth-storage";
-import { loginRequest, logoutRequest } from "@/features/auth/auth-client";
+import {
+  AUTH_STORAGE_KEY,
+  clearSession,
+  loadSession,
+  saveSession
+} from "@/features/auth/auth-storage";
+import { AuthError, loginRequest, logoutRequest } from "@/features/auth/auth-client";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -54,18 +67,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await logoutRequest(token);
   }, [applySession]);
 
-  const authFetch = useCallback<typeof fetch>(async (input, init) => {
-    const headers = new Headers(init?.headers);
-    if (tokenRef.current) {
-      headers.set("authorization", `Bearer ${tokenRef.current}`);
-    }
-    const response = await fetch(input, { ...init, headers });
-    if (response.status === 401) {
-      clearSession();
-      applySession(null);
-    }
-    return response;
-  }, [applySession]);
+  const authFetch = useCallback<typeof fetch>(
+    async (input, init) => {
+      const headers = new Headers(init?.headers);
+      if (tokenRef.current) {
+        headers.set("authorization", `Bearer ${tokenRef.current}`);
+      }
+      const response = await fetch(input, { ...init, headers });
+      if (response.status === 401) {
+        clearSession();
+        applySession(null);
+        // Surface as an auth error so callers abort instead of parsing a 401 body;
+        // applySession(null) also redirects to /login via ProtectedRoute.
+        throw new AuthError("Session expired");
+      }
+      return response;
+    },
+    [applySession]
+  );
 
   const value = useMemo<AuthContextValue>(
     () => ({ status, user: session?.user ?? null, login, logout, authFetch }),

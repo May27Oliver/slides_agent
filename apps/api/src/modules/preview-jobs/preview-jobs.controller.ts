@@ -34,7 +34,8 @@ import {
 // into multiple chained LLM calls). Tunable via env; defaults to 5 req/60s/IP.
 const previewRateLimit = new RateLimitGuard({
   windowMs: Number(process.env.PREVIEW_RATE_LIMIT_WINDOW_MS) || 60_000,
-  max: Number(process.env.PREVIEW_RATE_LIMIT_MAX) || 5
+  max: Number(process.env.PREVIEW_RATE_LIMIT_MAX) || 5,
+  message: "Too many preview requests. Please wait a moment and try again."
 });
 
 @Controller("slides")
