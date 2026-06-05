@@ -1,14 +1,17 @@
 import { describe, expect, it } from "vitest";
-import type { SelectableTheme, ThemeStore } from "@slides-agent/domain";
+import type {
+  DesignPlanningGenerationPort,
+  SelectableTheme,
+  ThemeStore
+} from "@slides-agent/domain";
+import { UiUxProMaxDesignPlanner } from "@slides-agent/domain";
 import { SlidesService } from "@/modules/slides/slides.service";
 
 /**
  * 007 US1: theme selection is a mandatory design-stage step. SlidesService runs
  * the real selectTheme over the ThemeStore's candidates and supplies the styleKit
- * on every path (here the fallback path — no LLM ports — which previously had no
- * curated kit). The styleKit override is unconditional in the service, so the
- * LLM-success branch sets it the same way (the domain design-planner test proves
- * the planner itself no longer carries a styleKit).
+ * on both the fallback path (no LLM ports) and the LLM-success path (a valid
+ * generated design-planning result). Both are covered below.
  */
 
 const request = {
@@ -42,12 +45,48 @@ const structuralKit = {
 };
 
 const CANDIDATES: SelectableTheme[] = [
-  { id: "font-00-sans", kind: "font", keywords: ["clean"], support: "full", styleKit: fontKit('"Inter"') },
-  { id: "font-10-display", kind: "font", keywords: ["brutalist"], support: "full", styleKit: fontKit('"Archivo"') },
-  { id: "palette-00-safe", kind: "palette", keywords: ["neutral"], support: "full", styleKit: paletteKit("#111") },
-  { id: "palette-10-acid", kind: "palette", keywords: ["brutalist"], support: "full", styleKit: paletteKit("#CCFF00") },
-  { id: "style-00-minimal", kind: "style", keywords: ["minimal"], support: "full", styleKit: { effects: { cardRadiusPx: 12, cardShadow: "none" }, motion: structuralKit.motion } },
-  { id: "style-10-brutalism", kind: "style", keywords: ["brutalist"], support: "full", styleKit: structuralKit }
+  {
+    id: "font-00-sans",
+    kind: "font",
+    keywords: ["clean"],
+    support: "full",
+    styleKit: fontKit('"Inter"')
+  },
+  {
+    id: "font-10-display",
+    kind: "font",
+    keywords: ["brutalist"],
+    support: "full",
+    styleKit: fontKit('"Archivo"')
+  },
+  {
+    id: "palette-00-safe",
+    kind: "palette",
+    keywords: ["neutral"],
+    support: "full",
+    styleKit: paletteKit("#111")
+  },
+  {
+    id: "palette-10-acid",
+    kind: "palette",
+    keywords: ["brutalist"],
+    support: "full",
+    styleKit: paletteKit("#CCFF00")
+  },
+  {
+    id: "style-00-minimal",
+    kind: "style",
+    keywords: ["minimal"],
+    support: "full",
+    styleKit: { effects: { cardRadiusPx: 12, cardShadow: "none" }, motion: structuralKit.motion }
+  },
+  {
+    id: "style-10-brutalism",
+    kind: "style",
+    keywords: ["brutalist"],
+    support: "full",
+    styleKit: structuralKit
+  }
 ];
 
 const storeReturning = (candidates: SelectableTheme[]): ThemeStore => ({
@@ -57,10 +96,47 @@ const storeReturning = (candidates: SelectableTheme[]): ThemeStore => ({
 const serviceWith = (themeStore?: ThemeStore): SlidesService =>
   new SlidesService(undefined, undefined, undefined, undefined, themeStore);
 
+// A design-planning port that returns a VALID generated result for the given
+// input (built via the real fallback planner so it passes deterministic
+// validation), tagged with a marker themeName so a test can prove the
+// LLM-success branch ran rather than the fallback branch.
+const LLM_THEME_MARKER = "llm-generated-theme";
+const llmDesignPlanningPort: DesignPlanningGenerationPort = {
+  generateDesignPlanningResult: async (input) => {
+    const base = await new UiUxProMaxDesignPlanner().plan(input);
+    return { ...base, designSystem: { ...base.designSystem, themeName: LLM_THEME_MARKER } };
+  }
+};
+
 describe("SlidesService theme selection (US1)", () => {
   it("applies the DB-selected named theme to styleKit and records the three axis ids", async () => {
     const response = await serviceWith(storeReturning(CANDIDATES)).generatePreview(request);
 
+    expect(response.designPlanningResult.styleKit?.kitName).toBe(
+      "style-10-brutalism+palette-10-acid+font-10-display"
+    );
+    expect(response.previewArtifact.generationSummary.selectedTheme).toEqual({
+      style: "style-10-brutalism",
+      palette: "palette-10-acid",
+      font: "font-10-display",
+      fallback: false
+    });
+  });
+
+  it("applies the DB-selected theme on the LLM-success path, not just the fallback path", async () => {
+    const service = new SlidesService(
+      llmDesignPlanningPort,
+      undefined,
+      undefined,
+      undefined,
+      storeReturning(CANDIDATES)
+    );
+    const response = await service.generatePreview(request);
+
+    // The LLM-success branch ran (marker survives), so this is genuinely the
+    // generated-result path — not a silent fall back to deterministic planning.
+    expect(response.designPlanningResult.designSystem.themeName).toBe(LLM_THEME_MARKER);
+    // ...and the mandatory selectTheme step still overrode styleKit with the DB pick.
     expect(response.designPlanningResult.styleKit?.kitName).toBe(
       "style-10-brutalism+palette-10-acid+font-10-display"
     );
@@ -78,7 +154,9 @@ describe("SlidesService theme selection (US1)", () => {
       deckBrief: { ...request.deckBrief, styleDirection: "minimal" }
     };
     const response = await serviceWith(storeReturning(CANDIDATES)).generatePreview(minimalReq);
-    expect(response.previewArtifact.generationSummary.selectedTheme?.style).toBe("style-00-minimal");
+    expect(response.previewArtifact.generationSummary.selectedTheme?.style).toBe(
+      "style-00-minimal"
+    );
   });
 
   it("safely falls back to the default kit when the DB has no selectable themes", async () => {
@@ -93,7 +171,10 @@ describe("SlidesService theme selection (US1)", () => {
     });
   });
 
-  it("does not throw when no ThemeStore is wired (treated as no candidates)", async () => {
+  it("treats direct construction without a store as no candidates (DI now requires it)", async () => {
+    // Under Nest DI the THEME_STORE is no longer @Optional, so a dropped wiring
+    // fails at bootstrap (see module-bootstrap.test.ts). This only documents that
+    // a direct unit construction without a store degrades safely to the default.
     const response = await serviceWith(undefined).generatePreview(request);
     expect(response.previewArtifact.generationSummary.selectedTheme?.fallback).toBe(true);
   });

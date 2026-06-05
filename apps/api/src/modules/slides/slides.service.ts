@@ -55,7 +55,10 @@ export class SlidesService {
     @Optional()
     @Inject(DECK_OUTLINE_PLANNING_PORT)
     private readonly deckOutlinePlanningPort?: DeckOutlinePlanningPort,
-    @Optional()
+    // 007: NOT @Optional — theme selection is mandatory and the DB-backed store is
+    // always wired (ThemesModule). Dropping the wiring must fail at bootstrap, not
+    // silently fall back to the default kit. The `?` is for direct unit construction
+    // only; under Nest DI an unresolved THEME_STORE now throws.
     @Inject(THEME_STORE)
     private readonly themeStore?: ThemeStore
   ) {}

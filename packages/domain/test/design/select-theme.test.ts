@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { defaultDesignStyleKit } from "@/design/default-design-style-kit";
 import { selectTheme } from "@/design/select-theme";
-import type { FontStyleKit, PaletteStyleKit, SelectableTheme, StyleStyleKit } from "@/design/theme.types";
+import type {
+  FontStyleKit,
+  PaletteStyleKit,
+  SelectableTheme,
+  StyleStyleKit
+} from "@/design/theme.types";
 
 const fontKit = (heading: string): FontStyleKit => ({
   fonts: { heading, body: '"Inter", sans-serif' }
@@ -29,12 +34,48 @@ const styleKit: StyleStyleKit = {
 
 // Stable id order: `00` safe defaults first, then `10` variants.
 const CANDIDATES: SelectableTheme[] = [
-  { id: "font-00-sans-default", kind: "font", keywords: ["clean"], support: "full", styleKit: fontKit('"Inter"') },
-  { id: "font-10-display", kind: "font", keywords: ["brutalist", "bold"], support: "full", styleKit: fontKit('"Archivo"') },
-  { id: "palette-00-safe-default", kind: "palette", keywords: ["neutral"], support: "full", styleKit: paletteKit("#111111") },
-  { id: "palette-10-violet", kind: "palette", keywords: ["brutalist", "vivid"], support: "full", styleKit: paletteKit("#7C3AED") },
-  { id: "style-00-minimalism", kind: "style", keywords: ["minimal"], support: "full", styleKit: { effects: { cardRadiusPx: 12, cardShadow: "none" }, motion: styleKit.motion } },
-  { id: "style-10-brutalism", kind: "style", keywords: ["brutalist", "raw"], support: "full", styleKit }
+  {
+    id: "font-00-sans-default",
+    kind: "font",
+    keywords: ["clean"],
+    support: "full",
+    styleKit: fontKit('"Inter"')
+  },
+  {
+    id: "font-10-display",
+    kind: "font",
+    keywords: ["brutalist", "bold"],
+    support: "full",
+    styleKit: fontKit('"Archivo"')
+  },
+  {
+    id: "palette-00-safe-default",
+    kind: "palette",
+    keywords: ["neutral"],
+    support: "full",
+    styleKit: paletteKit("#111111")
+  },
+  {
+    id: "palette-10-violet",
+    kind: "palette",
+    keywords: ["brutalist", "vivid"],
+    support: "full",
+    styleKit: paletteKit("#7C3AED")
+  },
+  {
+    id: "style-00-minimalism",
+    kind: "style",
+    keywords: ["minimal"],
+    support: "full",
+    styleKit: { effects: { cardRadiusPx: 12, cardShadow: "none" }, motion: styleKit.motion }
+  },
+  {
+    id: "style-10-brutalism",
+    kind: "style",
+    keywords: ["brutalist", "raw"],
+    support: "full",
+    styleKit
+  }
 ];
 
 describe("selectTheme", () => {
@@ -53,6 +94,21 @@ describe("selectTheme", () => {
     // 'brutalist' in the weak fields must not outrank a styleDirection match.
     const selected = selectTheme(
       { styleDirection: "minimal", purpose: "brutalist deck", audience: "brutalist team" },
+      CANDIDATES
+    );
+    expect(selected.ids.style).toBe("style-00-minimalism");
+  });
+
+  it("lets a single styleDirection match dominate many purpose/audience matches", () => {
+    // The flagged risk: weak-field accumulation must never overtake a strong match.
+    // style-10-brutalism keeps both keywords ('brutalist','raw') hit by the weak
+    // fields (2 weak), while style-00-minimalism gets a single styleDirection hit.
+    const selected = selectTheme(
+      {
+        styleDirection: "minimal",
+        purpose: "brutalist raw concrete",
+        audience: "brutalist raw industrial team"
+      },
       CANDIDATES
     );
     expect(selected.ids.style).toBe("style-00-minimalism");
@@ -95,7 +151,13 @@ describe("selectTheme", () => {
 
   it("excludes raw style rows from selection", () => {
     const withRaw: SelectableTheme[] = [
-      { id: "style-10-bento", kind: "style", keywords: ["brutalist"], support: "raw", styleKit: { rawDesignSystemVariables: "x" } },
+      {
+        id: "style-10-bento",
+        kind: "style",
+        keywords: ["brutalist"],
+        support: "raw",
+        styleKit: { rawDesignSystemVariables: "x" }
+      },
       ...CANDIDATES
     ];
     const selected = selectTheme({ styleDirection: "brutalist" }, withRaw);

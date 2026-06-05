@@ -17,6 +17,8 @@ import { LocalStrategy } from "@/modules/auth/local.strategy";
 import { JwtStrategy } from "@/modules/auth/jwt.strategy";
 import { DbUserAccountStore } from "@/modules/auth/db-user-account-store";
 import { USER_ACCOUNT_STORE } from "@/modules/auth/auth.tokens";
+import { THEME_STORE } from "@/modules/themes/themes.tokens";
+import { DrizzleThemeStore } from "@/modules/themes/drizzle-theme-store";
 import { DbService } from "@/infra/db/db.service";
 
 // AuthModule (imported by AppModule) reads AUTH_JWT_SECRET at build time (fail-fast).
@@ -61,6 +63,9 @@ describe("module bootstrap boundaries", () => {
       PreviewJobTimeoutSweeper
     );
     expect(moduleRef.get(SlidesService, { strict: false })).toBeInstanceOf(SlidesService);
+    // 007: SlidesService now requires THEME_STORE (no @Optional). It must resolve
+    // on the API graph; a dropped ThemesModule wiring would fail the line above.
+    expect(moduleRef.get(THEME_STORE, { strict: false })).toBeInstanceOf(DrizzleThemeStore);
     expect(() => moduleRef!.get(PreviewWorkerRuntime, { strict: false })).toThrow();
     // Auth wiring resolves under tsx (no decorator metadata) — Passport
     // strategies + controller use explicit @Inject.
@@ -86,6 +91,8 @@ describe("module bootstrap boundaries", () => {
       PreviewWorkerRuntime
     );
     expect(moduleRef.get(SlidesService, { strict: false })).toBeInstanceOf(SlidesService);
+    // 007: the worker runs generation, so it too must resolve the mandatory store.
+    expect(moduleRef.get(THEME_STORE, { strict: false })).toBeInstanceOf(DrizzleThemeStore);
     expect(() => moduleRef!.get(PreviewJobsController, { strict: false })).toThrow();
     expect(() => moduleRef!.get(PreviewJobTimeoutSweeper, { strict: false })).toThrow();
   });
