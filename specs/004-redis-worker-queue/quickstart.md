@@ -4,13 +4,15 @@
 
 ## 前置
 
-- Node.js `v20.19.5`、pnpm `10.30.3`、Docker（用來跑本機 Redis）。
+- Node.js `v20.19.5`、pnpm `10.30.3`、一個可連的 Redis（本機 Homebrew 或任何實例）。
 - 已安裝相依：`pnpm install`（含新增的 `bullmq`、`ioredis`）。
 
 ## 0. 啟動 Redis（必要）
 
 ```bash
-docker run --rm -p 6379:6379 --name slides-redis redis:7
+brew install redis        # 第一次
+brew services start redis # 背景服務,127.0.0.1:6379
+# 或前景:redis-server / 即丟容器:docker run --rm -p 6379:6379 redis:7
 ```
 
 於 `.env` 設定（見 `.env.example`）：

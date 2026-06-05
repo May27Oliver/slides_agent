@@ -86,11 +86,16 @@ All LLM settings are **backend-only** and never exposed to the frontend or API r
 
 Preview generation runs as async jobs on a **Redis + BullMQ** queue, consumed by
 a separate **worker** process — so the API stays responsive while the LLM works.
-Redis is **required**; start it first:
+Redis is **required**; start it first (locally with Homebrew):
 
 ```bash
-docker run --rm -p 6379:6379 --name slides-redis redis:7
+brew install redis        # once
+brew services start redis # background service on 127.0.0.1:6379
+# or run it in the foreground: redis-server
 ```
+
+> No Redis locally? Any reachable instance works — point `REDIS_URL` at it. If you
+> prefer a throwaway container: `docker run --rm -p 6379:6379 redis:7`.
 
 With Redis running, one command splits the current iTerm2 tab into three panes —
 API + worker + web (it warns if Redis is unreachable):

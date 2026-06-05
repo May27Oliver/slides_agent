@@ -86,11 +86,16 @@ pnpm install
 
 預覽生成以**非同步 job**形式跑在 **Redis + BullMQ** 佇列上,由一個獨立的
 **worker** 程序消費——這樣 LLM 在生成時 API 仍能即時回應。Redis 為**必要**,
-請先啟動:
+請先啟動(本機用 Homebrew):
 
 ```bash
-docker run --rm -p 6379:6379 --name slides-redis redis:7
+brew install redis        # 第一次
+brew services start redis # 背景服務,127.0.0.1:6379
+# 或前景執行:redis-server
 ```
+
+> 本機沒有 Redis?任何連得到的實例都行,把 `REDIS_URL` 指過去即可。想用即丟容器:
+> `docker run --rm -p 6379:6379 redis:7`。
 
 Redis 起好後,一個指令把目前 iTerm2 分頁切成三個 pane:API + worker + web
 (若連不到 Redis 會提醒):

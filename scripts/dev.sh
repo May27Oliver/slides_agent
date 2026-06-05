@@ -21,7 +21,8 @@ REDIS_PORT="${REDIS_PORT:-6379}"
 if ! (exec 3<>"/dev/tcp/${REDIS_HOST}/${REDIS_PORT}") 2>/dev/null; then
   echo "⚠️  Redis is not reachable at ${REDIS_HOST}:${REDIS_PORT}."
   echo "    The API and worker require it and will fail fast. Start it first, e.g.:"
-  echo "      docker run --rm -p 6379:6379 --name slides-redis redis:7"
+  echo "      brew services start redis      # or: redis-server"
+  echo "      (alt) docker run --rm -p 6379:6379 redis:7"
   echo ""
 fi
 
