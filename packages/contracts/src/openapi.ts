@@ -187,3 +187,63 @@ export const PREVIEW_QUEUE_UNAVAILABLE_SCHEMA: OpenApiSchema = errorSchema(
   ["PREVIEW_QUEUE_UNAVAILABLE"],
   "Preview service is temporarily unavailable. Please try again."
 );
+
+// --- Decks read-only API (feature 006 US3) ---
+
+const DECK_SUMMARY_SCHEMA: OpenApiSchema = {
+  type: "object",
+  properties: {
+    id: { type: "string", format: "uuid" },
+    title: { type: "string" },
+    status: { type: "string", enum: ["ready", "failed"] },
+    updatedAt: { type: "string", format: "date-time" }
+  }
+};
+
+export const DECK_LIST_RESPONSE_SCHEMA: OpenApiSchema = {
+  type: "object",
+  properties: {
+    decks: { type: "array", items: DECK_SUMMARY_SCHEMA }
+  }
+};
+
+const DECK_REVISION_SCHEMA: OpenApiSchema = {
+  type: "object",
+  properties: {
+    revision: { type: "integer" },
+    slideDeck: { type: "object", additionalProperties: true },
+    designPlan: { type: "object", additionalProperties: true, nullable: true },
+    html: { type: "string", nullable: true },
+    generationSummary: { type: "object", additionalProperties: true, nullable: true },
+    origin: { type: "string", enum: ["generation", "edit"] },
+    sourceJobId: { type: "string", nullable: true },
+    createdAt: { type: "string", format: "date-time" }
+  }
+};
+
+export const DECK_DETAIL_RESPONSE_SCHEMA: OpenApiSchema = {
+  type: "object",
+  properties: {
+    id: { type: "string", format: "uuid" },
+    title: { type: "string" },
+    status: { type: "string", enum: ["ready", "failed"] },
+    sourceContent: { type: "string" },
+    deckBrief: { type: "object", additionalProperties: true },
+    currentRevision: { ...DECK_REVISION_SCHEMA, nullable: true }
+  }
+};
+
+export const INVALID_DECK_ID_ERROR_SCHEMA: OpenApiSchema = errorSchema(
+  ["INVALID_DECK_ID"],
+  "Invalid deck id."
+);
+
+export const DECK_NOT_FOUND_SCHEMA: OpenApiSchema = errorSchema(
+  ["DECK_NOT_FOUND"],
+  "Deck not found."
+);
+
+export const AUTH_REQUIRED_SCHEMA: OpenApiSchema = errorSchema(
+  ["AUTH_REQUIRED"],
+  "Authentication required."
+);

@@ -34,8 +34,24 @@ export {
   PREVIEW_REQUEST_ERROR_SCHEMA,
   INVALID_JOB_ID_ERROR_SCHEMA,
   PREVIEW_JOB_UNAVAILABLE_SCHEMA,
-  PREVIEW_QUEUE_UNAVAILABLE_SCHEMA
+  PREVIEW_QUEUE_UNAVAILABLE_SCHEMA,
+  DECK_LIST_RESPONSE_SCHEMA,
+  DECK_DETAIL_RESPONSE_SCHEMA,
+  INVALID_DECK_ID_ERROR_SCHEMA,
+  DECK_NOT_FOUND_SCHEMA,
+  AUTH_REQUIRED_SCHEMA
 } from "./openapi";
+
+export {
+  validateDeckListResponse,
+  validateDeckDetailResponse,
+  type DeckSummaryContract,
+  type DeckListResponseContract,
+  type DeckRevisionContract,
+  type DeckDetailResponseContract,
+  type DeckNotFoundContract,
+  type DeckContractValidationResult
+} from "./deck";
 
 export interface DeckBriefContract {
   purpose: string;

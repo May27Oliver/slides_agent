@@ -6,6 +6,9 @@ import { WorkerModule } from "@/app/worker.module";
 import { RedisService } from "@/infra/redis/redis.service";
 import { PreviewJobQueueService } from "@/modules/preview-jobs/preview-job-queue.service";
 import { PreviewJobsController } from "@/modules/preview-jobs/preview-jobs.controller";
+import { DecksController } from "@/modules/decks/decks.controller";
+import { DECK_STORE } from "@/modules/decks/decks.tokens";
+import { DrizzleDeckStore } from "@/modules/decks/drizzle-deck-store";
 import { PreviewJobTimeoutSweeper } from "@/modules/preview-jobs/preview-job-timeout-sweeper";
 import { PreviewWorkerRuntime } from "@/modules/preview-jobs/preview-worker.runtime";
 import { SlidesService } from "@/modules/slides/slides.service";
@@ -66,6 +69,9 @@ describe("module bootstrap boundaries", () => {
     expect(moduleRef.get(JwtStrategy, { strict: false })).toBeInstanceOf(JwtStrategy);
     // 006: accounts now come from the DB store (behind the unchanged port).
     expect(moduleRef.get(USER_ACCOUNT_STORE, { strict: false })).toBeInstanceOf(DbUserAccountStore);
+    // 006 US3: the read-only decks API is wired on the API process.
+    expect(moduleRef.get(DecksController, { strict: false })).toBeInstanceOf(DecksController);
+    expect(moduleRef.get(DECK_STORE, { strict: false })).toBeInstanceOf(DrizzleDeckStore);
   });
 
   it("WorkerModule wires the worker runtime but not the controller or sweeper", async () => {
