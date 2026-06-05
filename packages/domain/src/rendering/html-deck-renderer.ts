@@ -1,4 +1,4 @@
-import type { PreviewArtifact, SlideDeck } from "@/deck/deck.types";
+import type { GenerationSummary, PreviewArtifact, SlideDeck } from "@/deck/deck.types";
 import { buildGenerationSummary } from "@/deck/generation-summary";
 import type { DesignPlanningResult } from "@/design/types";
 import { validateGeneratedHtml } from "@/rendering/html-generation-validator";
@@ -7,6 +7,8 @@ import { renderTemplateDeck } from "@/rendering/template-html-renderer";
 export interface HtmlDeckGenerationInput {
   deck: SlideDeck;
   designPlanningResult: DesignPlanningResult;
+  /** 007: the three theme axes selectTheme chose, recorded in the summary (FR-013). */
+  selectedTheme?: GenerationSummary["selectedTheme"];
 }
 
 /**
@@ -28,6 +30,6 @@ export function renderTemplateDeckArtifact(input: HtmlDeckGenerationInput): Prev
       repairAttempted: false,
       fallbackUsed: false
     },
-    generationSummary: buildGenerationSummary(input.deck)
+    generationSummary: buildGenerationSummary(input.deck, input.selectedTheme)
   };
 }

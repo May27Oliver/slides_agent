@@ -23,6 +23,13 @@ vi.mock("@slides-agent/domain", () => ({
       };
     }
   },
+  // 007: the mandatory theme-selection step. This suite mocks the whole domain,
+  // so stub selectTheme to a default SelectedTheme (no ThemeStore is wired here).
+  selectTheme: () => ({
+    styleKit: { kitName: "default" },
+    ids: { style: null, palette: null, font: null },
+    fallback: true
+  }),
   renderTemplateDeckArtifact: () => ({
     html: "<!doctype html><html><body>slides</body></html>",
     htmlGenerationValidation: { status: "pass", fallbackUsed: false },

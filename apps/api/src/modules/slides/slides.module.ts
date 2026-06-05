@@ -20,6 +20,7 @@ import {
   SEMANTIC_SEGMENTATION_REPAIRER_PORT,
   SEMANTIC_SEGMENTER_PORT
 } from "@/modules/slides/slides.tokens";
+import { ThemesModule } from "@/modules/themes/themes.module";
 
 const logger = new Logger("SlidesModule");
 
@@ -29,6 +30,7 @@ const logger = new Logger("SlidesModule");
  * machinery — preview-jobs imports this module and calls SlidesService.
  */
 @Module({
+  imports: [ThemesModule],
   providers: [
     SlidesService,
     {

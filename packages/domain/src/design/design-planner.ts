@@ -1,7 +1,6 @@
 import type { ChartIntent, VisualizationType } from "@/content-core/chart-intent.types";
 import type { Slide, SlideOutlineItem } from "@/deck/deck.types";
 import { defaultDesignSystem } from "@/design/default-design-system";
-import { selectDesignStyleKit } from "@/design/select-design-style-kit";
 import type { DesignPlanner, DesignPlanningGenerationPort } from "@/design/design-planner.port";
 import type {
   ChartTreatment,
@@ -37,7 +36,9 @@ export class UiUxProMaxDesignPlanner implements DesignPlanner {
       const validation = validateGeneratedDesignPlanningResult(input, generatedResult);
 
       if (validation.ok) {
-        return withCuratedStyleKit(generatedResult, input);
+        // 007: the planner no longer carries a styleKit. slides.service runs the
+        // mandatory selectTheme step and supplies styleKit on both paths (DR-002).
+        return generatedResult;
       }
 
       return buildFallbackDesignPlanningResult(input, {
@@ -97,34 +98,7 @@ function buildFallbackDesignPlanningResult(
         "Manually inspect visual hierarchy, chart treatment, and layout consistency before release."
       ]
     },
-    consistencyValidation,
-    styleKit: selectDesignStyleKit(styleKitInputFromBrief(input))
-  };
-}
-
-/**
- * Attaches a curated UIUX Pro Max style kit when the generated result does not
- * carry one, so the renderer always receives concrete fonts, palette, and motion.
- */
-function withCuratedStyleKit(
-  result: DesignPlanningResult,
-  input: DesignPlanningInput
-): DesignPlanningResult {
-  if (result.styleKit) {
-    return result;
-  }
-  return { ...result, styleKit: selectDesignStyleKit(styleKitInputFromBrief(input)) };
-}
-
-function styleKitInputFromBrief(input: DesignPlanningInput): {
-  purpose?: string;
-  audience?: string;
-  styleDirection?: string;
-} {
-  return {
-    purpose: input.deckBrief.purpose,
-    audience: input.deckBrief.audience,
-    ...(input.deckBrief.styleDirection ? { styleDirection: input.deckBrief.styleDirection } : {})
+    consistencyValidation
   };
 }
 

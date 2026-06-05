@@ -210,11 +210,12 @@ describe("design planner", () => {
       chartIntents
     });
 
-    // The planner preserves the LLM result as the core design source and
-    // augments it with a curated UIUX Pro Max style kit.
+    // 007: the planner preserves the LLM result verbatim as the core design
+    // source and no longer attaches a styleKit — slides.service runs the
+    // mandatory selectTheme step and supplies styleKit on both paths (DR-002).
     expect(result.designSystem).toBe(generatedResult.designSystem);
     expect(result.slidePatternAssignments).toBe(generatedResult.slidePatternAssignments);
-    expect(result.styleKit?.fonts.googleFontsHref).toMatch(/fonts\.googleapis\.com/u);
+    expect(result.styleKit).toBeUndefined();
     expect(result.designSystem.themeName).toBe("llm-designed-operational-review");
     expect(result.designSystem.chartStyle).toBe("ui-ux-pro-max-dashboard");
     expect(result.designSystem.palette).toMatchObject({

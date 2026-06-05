@@ -1,6 +1,9 @@
 import type { GenerationSummary, SlideDeck } from "@/deck/deck.types";
 
-export function buildGenerationSummary(deck: SlideDeck): GenerationSummary {
+export function buildGenerationSummary(
+  deck: SlideDeck,
+  selectedTheme?: GenerationSummary["selectedTheme"]
+): GenerationSummary {
   const sourceTraceIds = new Set(deck.slides.flatMap((slide) => slide.sourceTrace));
   const chartIntentIds = new Set(
     deck.slides.flatMap((slide) =>
@@ -12,6 +15,7 @@ export function buildGenerationSummary(deck: SlideDeck): GenerationSummary {
     slideCount: deck.slides.length,
     sourceFactCount: sourceTraceIds.size,
     chartIntentCount: chartIntentIds.size,
-    uncertainClaimCount: deck.reviewReport.uncertainClaims.length
+    uncertainClaimCount: deck.reviewReport.uncertainClaims.length,
+    ...(selectedTheme ? { selectedTheme } : {})
   };
 }

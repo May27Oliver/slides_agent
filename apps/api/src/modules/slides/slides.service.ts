@@ -22,6 +22,8 @@ import {
   type SemanticSegmentationRepairer,
   type SemanticSegmenter,
   segmentSourceContentWithRepair,
+  selectTheme,
+  type ThemeStore,
   UiUxProMaxDesignPlanner
 } from "@slides-agent/domain";
 import {
@@ -30,6 +32,7 @@ import {
   SEMANTIC_SEGMENTATION_REPAIRER_PORT,
   SEMANTIC_SEGMENTER_PORT
 } from "@/modules/slides/slides.tokens";
+import { THEME_STORE } from "@/modules/themes/themes.tokens";
 
 export interface SlidesPreviewProgress {
   onStage?: (stage: JobStage) => void | Promise<void>;
@@ -51,7 +54,10 @@ export class SlidesService {
     private readonly semanticSegmentationRepairer?: SemanticSegmentationRepairer,
     @Optional()
     @Inject(DECK_OUTLINE_PLANNING_PORT)
-    private readonly deckOutlinePlanningPort?: DeckOutlinePlanningPort
+    private readonly deckOutlinePlanningPort?: DeckOutlinePlanningPort,
+    @Optional()
+    @Inject(THEME_STORE)
+    private readonly themeStore?: ThemeStore
   ) {}
 
   async generatePreview(
@@ -101,12 +107,34 @@ export class SlidesService {
       this.logger.log(
         `[SlidesPipeline] node=design_planning done patterns=${arrayLength(designPlanningResult.slidePatternAssignments)} fallback=${Boolean(designPlanningResult.consistencyValidation?.fallbackUsed)}`
       );
+      // 007: mandatory deterministic theme selection. The adapter reads the DB;
+      // the pure selector picks the three axes. Both the LLM-success and fallback
+      // design paths converge here, so fallback decks finally get a named theme.
+      const themeCandidates = this.themeStore ? await this.themeStore.listSelectable() : [];
+      const selectedTheme = selectTheme(
+        {
+          purpose: request.deckBrief.purpose,
+          audience: request.deckBrief.audience,
+          ...(request.deckBrief.styleDirection
+            ? { styleDirection: request.deckBrief.styleDirection }
+            : {})
+        },
+        themeCandidates
+      );
+      const themedDesignPlanningResult = {
+        ...designPlanningResult,
+        styleKit: selectedTheme.styleKit
+      };
+      this.logger.log(
+        `[SlidesPipeline] node=theme_selection done theme=${selectedTheme.styleKit.kitName} fallback=${selectedTheme.fallback} candidates=${themeCandidates.length}`
+      );
       currentNode = "html_generation";
       await notifyStage(progress, "html_generation");
       this.logger.log("[SlidesPipeline] node=html_generation start renderer=template");
       const previewArtifact = renderTemplateDeckArtifact({
         deck: deckResult.slideDeck,
-        designPlanningResult
+        designPlanningResult: themedDesignPlanningResult,
+        selectedTheme: { ...selectedTheme.ids, fallback: selectedTheme.fallback }
       });
       this.logger.log(
         `[SlidesPipeline] node=html_generation done renderer=template validation=${previewArtifact.htmlGenerationValidation.status ?? "unknown"}`
@@ -118,7 +146,7 @@ export class SlidesService {
 
       return {
         slideDeck: deckResult.slideDeck,
-        designPlanningResult,
+        designPlanningResult: themedDesignPlanningResult,
         previewArtifact
       };
     } catch (error) {

@@ -33,8 +33,12 @@ export type { DefaultDesignStyleKitInput } from "@/design/default-design-style-k
 export type * from "@/design/design-style-kit.types";
 export type * from "@/design/theme.types";
 export type { ThemeStore } from "@/design/theme-store.port";
-export { selectDesignStyleKit } from "@/design/select-design-style-kit";
-export type { SelectDesignStyleKitInput } from "@/design/select-design-style-kit";
+export { composeKit } from "@/design/compose-kit";
+export type { ComposeKitParts } from "@/design/compose-kit";
+export { selectTheme } from "@/design/select-theme";
+export type { SelectThemeBrief } from "@/design/select-theme";
+export { expandFontPairing, expandPalette } from "@/design/style-kit-engine";
+export type { CuratedFontPairing, CuratedPalette } from "@/design/ui-ux-pro-max-knowledge";
 export { renderTemplateDeckArtifact } from "@/rendering/html-deck-renderer";
 export type { HtmlDeckGenerationInput } from "@/rendering/html-deck-renderer";
 export { buildDeckStyleCss } from "@/rendering/deck-style-css";
