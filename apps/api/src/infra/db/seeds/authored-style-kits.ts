@@ -2,8 +2,7 @@ import type {
   DesignMotion,
   StyleStyleKit,
   ThemeAppliesTo,
-  ThemeSupport,
-  TypeScaleToken
+  ThemeSupport
 } from "@slides-agent/domain";
 
 /**
@@ -41,9 +40,10 @@ const BASE_MOTION: DesignMotion = {
   respectReducedMotion: true
 };
 
-const motion = (overrides: Partial<DesignMotion>): DesignMotion => ({ ...BASE_MOTION, ...overrides });
-
-const heading = (token: TypeScaleToken): TypeScaleToken => token;
+const motion = (overrides: Partial<DesignMotion>): DesignMotion => ({
+  ...BASE_MOTION,
+  ...overrides
+});
 
 export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
   // 00 — safe default. Swiss minimalism: flat, sharp, subtle.
@@ -66,7 +66,13 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
         cardRadiusPx: 14,
         cardShadow: "-6px -6px 16px rgba(255,255,255,.7), 6px 6px 16px rgba(0,0,0,.15)"
       },
-      motion: motion({ slideTransitionMs: 200, slideEasing: "ease", entranceMs: 300, staggerStepMs: 50, microMs: 150 }),
+      motion: motion({
+        slideTransitionMs: 200,
+        slideEasing: "ease",
+        entranceMs: 300,
+        staggerStepMs: 50,
+        microMs: 150
+      }),
       antiPatterns: [
         "Do not use on data-dense or high-contrast-required screens (low contrast).",
         "Do not mix hard borders with the soft emboss."
@@ -78,10 +84,16 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
     support: "full",
     styleKit: {
       effects: { cardRadiusPx: 0, cardShadow: "8px 8px 0 rgba(0,0,0,1)" },
-      motion: motion({ slideTransitionMs: 0, slideEasing: "linear", entranceMs: 0, staggerStepMs: 0, microMs: 0 }),
+      motion: motion({
+        slideTransitionMs: 0,
+        slideEasing: "linear",
+        entranceMs: 0,
+        staggerStepMs: 0,
+        microMs: 0
+      }),
       typeScale: {
-        coverTitle: heading({ min: 48, preferredVw: 6.2, max: 88, weight: 900, lineHeight: 1.0 }),
-        slideTitle: heading({ min: 34, preferredVw: 4.4, max: 58, weight: 900, lineHeight: 1.05 })
+        coverTitle: { min: 48, preferredVw: 6.2, max: 88, weight: 900, lineHeight: 1.0 },
+        slideTitle: { min: 34, preferredVw: 4.4, max: 58, weight: 900, lineHeight: 1.05 }
       },
       antiPatterns: [
         "Do not soften corners or add smooth transitions.",
@@ -94,7 +106,13 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
     support: "full",
     styleKit: {
       effects: { cardRadiusPx: 18, cardShadow: "0 18px 40px -16px rgba(0,0,0,.28)" },
-      motion: motion({ slideTransitionMs: 300, slideEasing: "cubic-bezier(.2,.8,.2,1)", entranceMs: 420, staggerStepMs: 80, microMs: 240 }),
+      motion: motion({
+        slideTransitionMs: 300,
+        slideEasing: "cubic-bezier(.2,.8,.2,1)",
+        entranceMs: 420,
+        staggerStepMs: 80,
+        microMs: 240
+      }),
       antiPatterns: [
         "Do not crowd blocks; preserve large 48px+ gaps.",
         "Do not drop below 7:1 contrast on vibrant fills."
@@ -106,7 +124,13 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
     support: "full",
     styleKit: {
       effects: { cardRadiusPx: 12, cardShadow: "0 10px 30px -12px rgba(0,0,0,.6)" },
-      motion: motion({ slideTransitionMs: 300, slideEasing: "ease", entranceMs: 380, staggerStepMs: 70, microMs: 200 }),
+      motion: motion({
+        slideTransitionMs: 300,
+        slideEasing: "ease",
+        entranceMs: 380,
+        staggerStepMs: 70,
+        microMs: 200
+      }),
       antiPatterns: [
         "Do not emit large pure-white fills; keep white emission low.",
         "Do not rely on colour alone for focus; keep a visible focus ring."
@@ -121,7 +145,13 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
         cardRadiusPx: 20,
         cardShadow: "inset -2px -2px 8px rgba(0,0,0,.12), 6px 8px 16px rgba(0,0,0,.16)"
       },
-      motion: motion({ slideTransitionMs: 260, slideEasing: "cubic-bezier(.34,1.56,.64,1)", entranceMs: 420, staggerStepMs: 80, microMs: 200 }),
+      motion: motion({
+        slideTransitionMs: 260,
+        slideEasing: "cubic-bezier(.34,1.56,.64,1)",
+        entranceMs: 420,
+        staggerStepMs: 80,
+        microMs: 200
+      }),
       antiPatterns: [
         "Do not use hard lines; keep edges soft and puffy.",
         "Do not pair with harsh high-contrast palettes."
@@ -133,7 +163,13 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
     support: "full",
     styleKit: {
       effects: { cardRadiusPx: 2, cardShadow: "none" },
-      motion: motion({ slideTransitionMs: 180, slideEasing: "ease", entranceMs: 280, staggerStepMs: 50, microMs: 160 }),
+      motion: motion({
+        slideTransitionMs: 180,
+        slideEasing: "ease",
+        entranceMs: 280,
+        staggerStepMs: 50,
+        microMs: 160
+      }),
       antiPatterns: ["Do not add gradients or drop shadows.", "Do not use skeuomorphic textures."]
     }
   },
@@ -154,9 +190,15 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
     support: "full",
     styleKit: {
       effects: { cardRadiusPx: 0, cardShadow: "4px 4px 0 rgba(0,0,0,1)" },
-      motion: motion({ slideTransitionMs: 120, slideEasing: "cubic-bezier(.2,.8,.2,1)", entranceMs: 200, staggerStepMs: 40, microMs: 120 }),
+      motion: motion({
+        slideTransitionMs: 120,
+        slideEasing: "cubic-bezier(.2,.8,.2,1)",
+        entranceMs: 200,
+        staggerStepMs: 40,
+        microMs: 120
+      }),
       typeScale: {
-        slideTitle: heading({ min: 34, preferredVw: 4.4, max: 58, weight: 800, lineHeight: 1.05 })
+        slideTitle: { min: 34, preferredVw: 4.4, max: 58, weight: 800, lineHeight: 1.05 }
       },
       antiPatterns: [
         "Do not round the corners or blur the shadow.",
@@ -169,7 +211,13 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
     support: "full",
     styleKit: {
       effects: { cardRadiusPx: 24, cardShadow: "0 8px 32px rgba(0,0,0,.08)" },
-      motion: motion({ slideTransitionMs: 520, slideEasing: "cubic-bezier(.22,.61,.36,1)", entranceMs: 560, staggerStepMs: 90, microMs: 240 }),
+      motion: motion({
+        slideTransitionMs: 520,
+        slideEasing: "cubic-bezier(.22,.61,.36,1)",
+        entranceMs: 560,
+        staggerStepMs: 90,
+        microMs: 240
+      }),
       antiPatterns: [
         "Do not use sharp geometric corners; favour organic curves.",
         "Do not use harsh neon palettes."
@@ -180,7 +228,10 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
   "style-10-dimensional-layering": {
     support: "full",
     styleKit: {
-      effects: { cardRadiusPx: 16, cardShadow: "0 10px 20px rgba(0,0,0,.10), 0 20px 40px rgba(0,0,0,.10)" },
+      effects: {
+        cardRadiusPx: 16,
+        cardShadow: "0 10px 20px rgba(0,0,0,.10), 0 20px 40px rgba(0,0,0,.10)"
+      },
       motion: motion({ slideTransitionMs: 480, entranceMs: 520, staggerStepMs: 100, microMs: 240 }),
       antiPatterns: [
         "Do not flatten the elevation hierarchy; preserve distinct z-levels.",
@@ -195,8 +246,8 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
       effects: { cardRadiusPx: 0, cardShadow: "none" },
       motion: motion({ slideTransitionMs: 300, entranceMs: 420, staggerStepMs: 80, microMs: 220 }),
       typeScale: {
-        coverTitle: heading({ min: 48, preferredVw: 10, max: 192, weight: 900, lineHeight: 0.95 }),
-        slideTitle: heading({ min: 40, preferredVw: 6, max: 96, weight: 900, lineHeight: 1.0 })
+        coverTitle: { min: 48, preferredVw: 10, max: 192, weight: 900, lineHeight: 0.95 },
+        slideTitle: { min: 40, preferredVw: 6, max: 96, weight: 900, lineHeight: 1.0 }
       },
       antiPatterns: [
         "Do not fill the whitespace; oversized type needs room to breathe.",
@@ -210,7 +261,13 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
     styleKit: {
       effects: { cardRadiusPx: 2, cardShadow: "none" },
       // Instant "page turn": no fades, no motion blur.
-      motion: motion({ slideTransitionMs: 0, slideEasing: "linear", entranceMs: 0, staggerStepMs: 0, microMs: 0 }),
+      motion: motion({
+        slideTransitionMs: 0,
+        slideEasing: "linear",
+        entranceMs: 0,
+        staggerStepMs: 0,
+        microMs: 0
+      }),
       antiPatterns: [
         "Do not use fades or motion blur; transitions are instant page turns.",
         "Do not use saturated colours; stay ink-on-paper."
@@ -222,7 +279,13 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
     support: "full",
     styleKit: {
       effects: { cardRadiusPx: 18, cardShadow: "0 14px 36px -18px rgba(80,70,50,.30)" },
-      motion: motion({ slideTransitionMs: 480, slideEasing: "cubic-bezier(.16,1,.3,1)", entranceMs: 520, staggerStepMs: 90, microMs: 240 }),
+      motion: motion({
+        slideTransitionMs: 480,
+        slideEasing: "cubic-bezier(.16,1,.3,1)",
+        entranceMs: 520,
+        staggerStepMs: 90,
+        microMs: 240
+      }),
       antiPatterns: [
         "Do not use cold neon palettes; stay in warm natural tones.",
         "Do not over-animate; keep motion gentle."

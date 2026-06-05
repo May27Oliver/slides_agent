@@ -121,7 +121,9 @@ describe("seedThemes (007 US2)", () => {
       .from(themes)
       .where(eq(themes.id, "style-00-minimalism"));
     expect(after?.name).toBe("Minimalism (renamed)");
-    expect(after?.updatedAt?.getTime() ?? 0).toBeGreaterThanOrEqual(before?.updatedAt?.getTime() ?? 0);
+    expect(after?.updatedAt?.getTime() ?? 0).toBeGreaterThanOrEqual(
+      before?.updatedAt?.getTime() ?? 0
+    );
   });
 
   it("rejects the whole batch and writes nothing when any row is invalid (all-or-nothing)", async () => {
@@ -177,5 +179,83 @@ describe("seedThemes (007 US2)", () => {
     const issues = validateThemeSeeds([badStructure]);
     expect(issues).toHaveLength(1);
     expect(issues[0]?.problems.some((p) => p.includes("textureOverlay"))).toBe(true);
+  });
+
+  it("rejects a CSS-breakout in a free-CSS string field (cardShadow / glow)", async () => {
+    const breakout = "0 0 8px red } body { background: red"; // '}' escapes the rule
+    const badShadow: ThemeSeed = {
+      ...styleFullSeed,
+      id: "style-10-cssbreakout",
+      styleKit: {
+        effects: { cardRadiusPx: 8, cardShadow: breakout },
+        motion: (styleFullSeed.styleKit as { motion: unknown }).motion
+      } as never
+    };
+    const shadowIssues = validateThemeSeeds([badShadow]);
+    expect(shadowIssues[0]?.problems.some((p) => p.includes("cardShadow"))).toBe(true);
+
+    const badGlow: ThemeSeed = {
+      ...styleFullSeed,
+      id: "style-10-glowbreakout",
+      styleKit: {
+        ...(styleFullSeed.styleKit as object),
+        effects: {
+          ...(styleFullSeed.styleKit as { effects: object }).effects,
+          glow: "0 0 24px red; } .evil{}"
+        }
+      } as never
+    };
+    expect(validateThemeSeeds([badGlow])[0]?.problems.some((p) => p.includes("glow"))).toBe(true);
+  });
+
+  it("restricts googleFontsHref to fonts.googleapis.com", async () => {
+    const evilHref: ThemeSeed = {
+      ...fontSeed,
+      id: "font-10-evil-href",
+      styleKit: {
+        fonts: {
+          heading: '"Inter"',
+          body: '"Inter"',
+          googleFontsHref: "https://attacker.example/exfil.css"
+        }
+      } as never
+    };
+    const issues = validateThemeSeeds([evilHref]);
+    expect(issues[0]?.problems.some((p) => p.includes("googleapis.com"))).toBe(true);
+
+    // A legitimate Google Fonts href passes.
+    const okHref: ThemeSeed = {
+      ...fontSeed,
+      id: "font-10-ok-href",
+      styleKit: {
+        fonts: {
+          heading: '"Inter"',
+          body: '"Inter"',
+          googleFontsHref: "https://fonts.googleapis.com/css2?family=Inter&display=swap"
+        }
+      } as never
+    };
+    expect(validateThemeSeeds([okHref])).toEqual([]);
+  });
+
+  it("rejects a non-numeric typeScale size field (would reach clampFontSizeCss raw)", async () => {
+    const badTypeScale: ThemeSeed = {
+      ...styleFullSeed,
+      id: "style-10-badtypescale",
+      styleKit: {
+        ...(styleFullSeed.styleKit as object),
+        typeScale: {
+          coverTitle: { min: "0) } .evil {", preferredVw: 6, max: 88, weight: 900, lineHeight: 1 }
+        }
+      } as never
+    };
+    const issues = validateThemeSeeds([badTypeScale]);
+    expect(issues[0]?.problems.some((p) => p.includes("typeScale.coverTitle.min"))).toBe(true);
+  });
+
+  it("rejects an empty-string keyword (phantom-match guard)", async () => {
+    const emptyKeyword: ThemeSeed = { ...fontSeed, id: "font-10-emptykw", keywords: ["clean", ""] };
+    const issues = validateThemeSeeds([emptyKeyword]);
+    expect(issues[0]?.problems.some((p) => p.includes("keywords"))).toBe(true);
   });
 });

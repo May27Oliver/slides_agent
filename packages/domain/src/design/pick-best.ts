@@ -25,7 +25,12 @@ export function scoreKeywords(
 ): KeywordScore {
   return keywords.reduce<KeywordScore>(
     (total, keyword) => {
-      const needle = keyword.toLowerCase();
+      const needle = keyword.trim().toLowerCase();
+      // Skip empty needles: String.includes("") is always true, so an empty
+      // keyword would otherwise score a phantom match against every brief.
+      if (needle.length === 0) {
+        return total;
+      }
       return {
         strong: total.strong + (strong.includes(needle) ? 1 : 0),
         weak: total.weak + (weak.includes(needle) ? 1 : 0)

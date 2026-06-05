@@ -149,6 +149,24 @@ describe("selectTheme", () => {
     expect(selected.styleKit).toEqual({ ...defaultDesignStyleKit(), kitName: "default" });
   });
 
+  it("does not let an empty-string keyword phantom-match every brief", () => {
+    // An empty keyword would make String.includes("") true for any brief; the
+    // scorer must skip it so this candidate cannot outrank a real safe default.
+    const withEmptyKw: SelectableTheme[] = [
+      {
+        id: "style-00-minimalism",
+        kind: "style",
+        keywords: ["minimal"],
+        support: "full",
+        styleKit: { effects: { cardRadiusPx: 12, cardShadow: "none" }, motion: styleKit.motion }
+      },
+      { id: "style-10-phantom", kind: "style", keywords: [""], support: "full", styleKit }
+    ];
+    const selected = selectTheme({ styleDirection: "anything-unrelated" }, withEmptyKw);
+    // No real match → stable first candidate wins, NOT the empty-keyword phantom.
+    expect(selected.ids.style).toBe("style-00-minimalism");
+  });
+
   it("excludes raw style rows from selection", () => {
     const withRaw: SelectableTheme[] = [
       {

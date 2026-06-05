@@ -18,9 +18,18 @@ const HEX_PATTERN = /^#[0-9a-fA-F]{6}$/u;
 /**
  * Renders a TypeScaleToken to a CSS clamp() declaration value.
  * Shared by tests and the renderer so the contract stays single-sourced.
+ *
+ * The three size fields are coerced through Number.isFinite before interpolation:
+ * unlike weight/lineHeight (sanitized at the call site via safeNumber), these are
+ * embedded directly into the CSS, so a non-numeric DB/theme value would otherwise
+ * break out of the declaration. This is the value-level CSS-injection guard for
+ * the type scale (mirrors safeNumber in the renderer).
  */
 export function clampFontSizeCss(token: TypeScaleToken): string {
-  return `clamp(${token.min}px, ${token.preferredVw}vw, ${token.max}px)`;
+  const min = Number.isFinite(token.min) ? token.min : 14;
+  const preferredVw = Number.isFinite(token.preferredVw) ? token.preferredVw : 1.4;
+  const max = Number.isFinite(token.max) ? token.max : 24;
+  return `clamp(${min}px, ${preferredVw}vw, ${max}px)`;
 }
 
 /**

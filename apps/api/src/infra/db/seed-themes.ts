@@ -48,7 +48,9 @@ export class ThemeSeedValidationError extends Error {
   constructor(readonly issues: readonly ThemeSeedIssue[]) {
     super(
       `Theme seed validation failed for ${issues.length} row(s):\n` +
-        issues.map((issue) => `  [${issue.index}] ${issue.id}: ${issue.problems.join("; ")}`).join("\n")
+        issues
+          .map((issue) => `  [${issue.index}] ${issue.id}: ${issue.problems.join("; ")}`)
+          .join("\n")
     );
     this.name = "ThemeSeedValidationError";
   }
@@ -56,14 +58,15 @@ export class ThemeSeedValidationError extends Error {
 
 const KINDS: readonly ThemeKind[] = ["font", "palette", "style"];
 const SUPPORTS: readonly ThemeSupport[] = ["full", "partial", "raw"];
-const APPLIES_TO: readonly ThemeAppliesTo[] = [
-  "presentation",
-  "landing",
-  "dashboard",
-  "universal"
-];
+const APPLIES_TO: readonly ThemeAppliesTo[] = ["presentation", "landing", "dashboard", "universal"];
 const TEXTURE_OVERLAYS = ["grain", "noise", "paper"];
 const GRADIENT_PRESETS = ["aurora", "mesh"];
+// Mirrors the renderer's UNSAFE_CSS_VALUE guard (deck-style-css.ts): free-CSS
+// string tokens reaching the <style> block must not be able to break out of a
+// declaration/rule. Render-time safeCssValue is the live guard; this rejects such
+// values at the catalogue boundary too (defense-in-depth — validate at the edge).
+const UNSAFE_CSS_VALUE = /[;{}<>\\@]|url\(|\/\*|\*\/|expression\(|\r|\n/iu;
+const FONTS_HREF_HOST = "fonts.googleapis.com";
 
 /**
  * Validates the whole batch and upserts it inside a single transaction. Throws
@@ -153,7 +156,7 @@ function validateCommon(seed: ThemeSeed): string[] {
     problems.push("description must be a string when present");
   }
   if (!isStringArray(seed.keywords)) {
-    problems.push("keywords must be an array of strings");
+    problems.push("keywords must be an array of non-empty strings");
   }
   if (!APPLIES_TO.includes(seed.appliesTo)) {
     problems.push(`appliesTo must be one of ${APPLIES_TO.join(" | ")}`);
@@ -192,16 +195,30 @@ function validateFontKit(kit: Record<string, unknown>): string[] {
     return ["font styleKit.fonts must be an object"];
   }
   const problems: string[] = [];
-  if (!isNonEmptyString(fonts.heading)) {
-    problems.push("font styleKit.fonts.heading must be a non-empty string");
+  if (!isSafeCssValue(fonts.heading)) {
+    problems.push("font styleKit.fonts.heading must be a safe, non-empty CSS font stack");
   }
-  if (!isNonEmptyString(fonts.body)) {
-    problems.push("font styleKit.fonts.body must be a non-empty string");
+  if (!isSafeCssValue(fonts.body)) {
+    problems.push("font styleKit.fonts.body must be a safe, non-empty CSS font stack");
   }
-  if (fonts.googleFontsHref !== undefined && !isString(fonts.googleFontsHref)) {
-    problems.push("font styleKit.fonts.googleFontsHref must be a string when present");
+  if (fonts.googleFontsHref !== undefined) {
+    if (!isString(fonts.googleFontsHref)) {
+      problems.push("font styleKit.fonts.googleFontsHref must be a string when present");
+    } else if (fontsHrefHost(fonts.googleFontsHref) !== FONTS_HREF_HOST) {
+      // A <link href>/@import to an arbitrary host would let a crafted seed load
+      // attacker-controlled CSS into every rendered deck — restrict to Google Fonts.
+      problems.push(`font styleKit.fonts.googleFontsHref must be a https://${FONTS_HREF_HOST} URL`);
+    }
   }
   return problems;
+}
+
+function fontsHrefHost(href: string): string | undefined {
+  try {
+    return new URL(href).hostname;
+  } catch {
+    return undefined;
+  }
 }
 
 function validatePaletteKit(kit: Record<string, unknown>): string[] {
@@ -210,22 +227,29 @@ function validatePaletteKit(kit: Record<string, unknown>): string[] {
     problems.push("palette styleKit.accentHues must be a non-empty array");
   } else {
     kit.accentHues.forEach((hue, i) => {
-      if (!isObject(hue) || !isNonEmptyString(hue.name) || !isNonEmptyString(hue.base) || !isNonEmptyString(hue.gradient)) {
-        problems.push(`palette styleKit.accentHues[${i}] must have name/base/gradient strings`);
+      if (
+        !isObject(hue) ||
+        !isNonEmptyString(hue.name) ||
+        !isNonEmptyString(hue.base) ||
+        !isSafeCssValue(hue.gradient)
+      ) {
+        problems.push(
+          `palette styleKit.accentHues[${i}] must have name/base strings and a safe gradient`
+        );
       }
     });
   }
-  if (!isNonEmptyString(kit.accentGradient)) {
-    problems.push("palette styleKit.accentGradient must be a non-empty string");
+  if (!isSafeCssValue(kit.accentGradient)) {
+    problems.push("palette styleKit.accentGradient must be a safe, non-empty CSS value");
   }
-  if (!isObject(kit.background) || !isNonEmptyString(kit.background.css)) {
-    problems.push("palette styleKit.background.css must be a non-empty string");
+  if (!isObject(kit.background) || !isSafeCssValue(kit.background.css)) {
+    problems.push("palette styleKit.background.css must be a safe, non-empty CSS value");
   }
-  if (!isNonEmptyString(kit.cardSurface)) {
-    problems.push("palette styleKit.cardSurface must be a non-empty string");
+  if (!isSafeCssValue(kit.cardSurface)) {
+    problems.push("palette styleKit.cardSurface must be a safe, non-empty CSS value");
   }
-  if (!isNonEmptyString(kit.cardBorder)) {
-    problems.push("palette styleKit.cardBorder must be a non-empty string");
+  if (!isSafeCssValue(kit.cardBorder)) {
+    problems.push("palette styleKit.cardBorder must be a safe, non-empty CSS value");
   }
   return problems;
 }
@@ -245,18 +269,49 @@ function validateStructuralKit(kit: Record<string, unknown>): string[] {
     if (!isFiniteNumber(effects.cardRadiusPx)) {
       problems.push("style styleKit.effects.cardRadiusPx must be a number");
     }
-    if (!isNonEmptyString(effects.cardShadow)) {
-      problems.push("style styleKit.effects.cardShadow must be a non-empty string");
+    if (!isSafeCssValue(effects.cardShadow)) {
+      problems.push("style styleKit.effects.cardShadow must be a safe, non-empty CSS value");
     }
     if (effects.cardBackdropBlurPx !== undefined && !isFiniteNumber(effects.cardBackdropBlurPx)) {
       problems.push("style styleKit.effects.cardBackdropBlurPx must be a number when present");
     }
-    if (effects.glow !== undefined && !isString(effects.glow)) {
-      problems.push("style styleKit.effects.glow must be a string when present");
+    // glow is a B-grade token rendered in US3; guard it as a safe CSS value now so
+    // a crafted seed can never carry a CSS breakout into the future renderer.
+    if (effects.glow !== undefined && !isSafeCssValue(effects.glow)) {
+      problems.push("style styleKit.effects.glow must be a safe CSS value when present");
     }
   }
   problems.push(...validateMotion(kit.motion));
+  problems.push(...validateTypeScale(kit.typeScale));
   problems.push(...validateBackgroundStructure(kit.backgroundStructure));
+  return problems;
+}
+
+/**
+ * Each provided typeScale role replaces the default token wholesale (composeKit
+ * merges role-level), so a present role must be a complete numeric TypeScaleToken.
+ * Non-numeric size fields would otherwise reach clampFontSizeCss's CSS template.
+ */
+function validateTypeScale(typeScale: unknown): string[] {
+  if (typeScale === undefined) {
+    return [];
+  }
+  if (!isObject(typeScale)) {
+    return ["style styleKit.typeScale must be an object when present"];
+  }
+  const fields = ["min", "preferredVw", "max", "weight", "lineHeight"];
+  const problems: string[] = [];
+  for (const [role, token] of Object.entries(typeScale)) {
+    if (!isObject(token)) {
+      problems.push(`style styleKit.typeScale.${role} must be an object`);
+      continue;
+    }
+    for (const field of fields) {
+      if (!isFiniteNumber(token[field])) {
+        problems.push(`style styleKit.typeScale.${role}.${field} must be a finite number`);
+      }
+    }
+  }
   return problems;
 }
 
@@ -289,7 +344,9 @@ function validateBackgroundStructure(structure: unknown): string[] {
     structure.textureOverlay !== undefined &&
     !TEXTURE_OVERLAYS.includes(structure.textureOverlay as string)
   ) {
-    problems.push(`backgroundStructure.textureOverlay must be one of ${TEXTURE_OVERLAYS.join(" | ")}`);
+    problems.push(
+      `backgroundStructure.textureOverlay must be one of ${TEXTURE_OVERLAYS.join(" | ")}`
+    );
   }
   const animation = structure.gradientAnimation;
   if (animation !== undefined) {
@@ -297,7 +354,9 @@ function validateBackgroundStructure(structure: unknown): string[] {
       problems.push("backgroundStructure.gradientAnimation must be an object");
     } else {
       if (!GRADIENT_PRESETS.includes(animation.preset as string)) {
-        problems.push(`backgroundStructure.gradientAnimation.preset must be one of ${GRADIENT_PRESETS.join(" | ")}`);
+        problems.push(
+          `backgroundStructure.gradientAnimation.preset must be one of ${GRADIENT_PRESETS.join(" | ")}`
+        );
       }
       if (!isFiniteNumber(animation.durationMs)) {
         problems.push("backgroundStructure.gradientAnimation.durationMs must be a number");
@@ -326,12 +385,17 @@ function isString(value: unknown): value is string {
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
+/** A non-empty string with no CSS-injection characters (mirrors the renderer). */
+function isSafeCssValue(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0 && !UNSAFE_CSS_VALUE.test(value);
+}
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 function isBoolean(value: unknown): value is boolean {
   return typeof value === "boolean";
 }
+/** Every entry must be a non-empty string — an empty keyword scores a phantom match. */
 function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
+  return Array.isArray(value) && value.every((item) => isNonEmptyString(item));
 }
