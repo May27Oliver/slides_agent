@@ -78,7 +78,28 @@ All LLM settings are **backend-only** and never exposed to the frontend or API r
 | `LLM_MAX_REPAIR_ATTEMPTS` | `1` | Bounded repair attempts for validation-backed LLM outputs. |
 | `PREVIEW_RATE_LIMIT_MAX` | `5` | Max preview POSTs per window per client IP. |
 | `PREVIEW_RATE_LIMIT_WINDOW_MS` | `60000` | Rate-limit window in ms. |
+| `REDIS_URL` | — | **Required** (feature 004). Redis for the preview-job queue; API/worker fail fast without it. |
+| `AUTH_JWT_SECRET` | — | **Required** (feature 005). Secret for signing login JWTs; API fails fast without it. |
+| `AUTH_JWT_EXPIRES_IN` | `30d` | JWT lifetime. |
+| `AUTH_ACCOUNTS` | `[]` | JSON allowlist `[{ id, username, displayName, passwordHash, active }]`. Generate `passwordHash` with `pnpm auth:hash <password>`. |
+| `AUTH_LOGIN_RATE_LIMIT_MAX` | `10` | Max `POST /api/auth/login` per window per IP. |
+| `AUTH_LOGIN_RATE_LIMIT_WINDOW_MS` | `60000` | Login rate-limit window in ms. |
 | `VITE_API_PROXY_TARGET` | `http://localhost:3000` | (web) API proxy target for the dev server. |
+
+### Auth (feature 005)
+
+Login is required to use the app and the generation endpoints. Accounts are an
+owner-configured allowlist (no public signup). To add one:
+
+```bash
+pnpm auth:hash 'the-password'    # prints a scrypt passwordHash
+# add to AUTH_ACCOUNTS in .env:
+# [{ "id":"user_owner","username":"owner@example.com","displayName":"Owner","passwordHash":"<paste>","active":true }]
+```
+
+Auth endpoints: `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`.
+The JWT is stored in the browser's `localStorage`; the preview endpoints require
+`Authorization: Bearer <jwt>`.
 
 ---
 

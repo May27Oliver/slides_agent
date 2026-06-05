@@ -1,0 +1,45 @@
+import { Module } from "@nestjs/common";
+import { PassportModule } from "@nestjs/passport";
+import { JwtModule } from "@nestjs/jwt";
+import { loadAuthConfig } from "@/config/auth.config";
+import { AUTH_CONFIG, USER_ACCOUNT_STORE } from "@/modules/auth/auth.tokens";
+import { AuthController } from "@/modules/auth/auth.controller";
+import { AuthService } from "@/modules/auth/auth.service";
+import { ConfiguredUserAccountStore } from "@/modules/auth/configured-user-account-store";
+import { LocalStrategy } from "@/modules/auth/local.strategy";
+import { JwtStrategy } from "@/modules/auth/jwt.strategy";
+
+/**
+ * Login + protection. Provides the account allowlist store, both Passport
+ * strategies (local for login, jwt for protection), and the JWT signer. Importing
+ * this module registers the "jwt" strategy so JwtAuthGuard works on any
+ * controller in the same app process.
+ *
+ * (loadAuthConfig() is called directly in the JwtModule factory rather than
+ * injecting AUTH_CONFIG, to avoid the registerAsync injector-scope gotcha; the
+ * call is pure and fails fast identically.)
+ */
+@Module({
+  imports: [
+    PassportModule,
+    JwtModule.registerAsync({
+      useFactory: () => {
+        const config = loadAuthConfig();
+        return {
+          secret: config.jwtSecret,
+          signOptions: { expiresIn: config.jwtExpiresIn }
+        };
+      }
+    })
+  ],
+  controllers: [AuthController],
+  providers: [
+    { provide: AUTH_CONFIG, useFactory: () => loadAuthConfig() },
+    { provide: USER_ACCOUNT_STORE, useClass: ConfiguredUserAccountStore },
+    AuthService,
+    LocalStrategy,
+    JwtStrategy
+  ],
+  exports: [AuthService]
+})
+export class AuthModule {}

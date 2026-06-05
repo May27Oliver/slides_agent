@@ -14,6 +14,17 @@ export {
 } from "./preview-request";
 
 export {
+  validateLoginRequest,
+  type LoginRequestContract,
+  type AuthUserContract,
+  type LoginResponseContract,
+  type MeResponseContract,
+  type AuthErrorContract,
+  type LoginRequestError,
+  type LoginRequestValidationResult
+} from "./auth";
+
+export {
   type OpenApiSchema,
   DECK_BRIEF_SCHEMA,
   GENERATE_PREVIEW_REQUEST_SCHEMA,

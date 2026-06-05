@@ -5,15 +5,19 @@
 
 ## 1. Configure Auth
 
-Set backend runtime configuration for v1:
+Set backend runtime configuration for v1 (in `.env`):
 
 ```text
 AUTH_JWT_SECRET=<long random secret>
-AUTH_JWT_EXPIRES_IN_DAYS=30
-AUTH_USERS_JSON=[{"id":"user_owner","username":"owner@example.com","displayName":"Owner","passwordHash":"<scrypt hash>","active":true}]
+AUTH_JWT_EXPIRES_IN=30d
+AUTH_ACCOUNTS=[{"id":"user_owner","username":"owner@example.com","displayName":"Owner","passwordHash":"<scrypt hash>","active":true}]
 ```
 
-Do not commit real secrets or password hashes.
+Generate `passwordHash` with the helper script (do not commit real secrets/hashes):
+
+```bash
+pnpm auth:hash 'the-password'
+```
 
 ## 2. Start Services
 
@@ -80,11 +84,14 @@ pnpm test
 pnpm --filter @slides-agent/web test:e2e
 ```
 
-Expected coverage:
+## 5. Implementation status / evidence
 
-- Auth contract validation.
-- JWT sign/verify/expiry/tamper behavior.
-- Login success and sanitized failures.
-- Slides endpoints protected by auth guard.
-- Frontend localStorage persistence, logout, and `401` handling.
-- Login-to-preview smoke path.
+**Implemented + automated (green):**
+
+- domain `evaluate-login`/`evaluate-session` policy (8 tests); contracts `validateLoginRequest` (4).
+- `auth-config` fail-fast + allowlist parse (5); `scrypt-password` hash/verify (4); `auth:hash` script.
+- `LocalStrategy` / `JwtStrategy` validate (2 + 2); `LocalAuthGuard`/`JwtAuthGuard` sanitized 401 (4); `AuthController` login/me/logout (3).
+- Preview endpoints carry `@UseGuards(JwtAuthGuard)`; `module-bootstrap` proves Auth DI resolves under tsx.
+- Frontend `auth-storage` (3), `auth-client` (3), `AuthProvider` login/restore/logout/cross-tab (4); react-router protected route + login-aware fetch + logout button.
+
+**Deferred:** the Playwright `auth-gated-preview` E2E (live login→generate happy path, SC-006) — backend guard/strategy units + frontend AuthProvider tests cover the logic; run the manual verification in §3 against a live API + Redis for the end-to-end smoke.

@@ -19,9 +19,14 @@ import { useI18n } from "@/i18n";
 
 interface SlideGenerationFeatureProps {
   initialPreview?: GeneratedPreviewArtifact;
+  /** Injected by the protected route as the auth-aware fetch (adds the bearer token, clears on 401). */
+  fetchImpl?: typeof fetch;
 }
 
-export function SlideGenerationFeature({ initialPreview }: SlideGenerationFeatureProps = {}) {
+export function SlideGenerationFeature({
+  initialPreview,
+  fetchImpl = fetch
+}: SlideGenerationFeatureProps = {}) {
   const { t } = useI18n();
   const [preview, setPreview] = useState<GeneratedPreviewArtifact | undefined>(initialPreview);
   const [previewJob, setPreviewJob] = useState<PreviewJobStatusResponse | undefined>();
@@ -50,10 +55,10 @@ export function SlideGenerationFeature({ initialPreview }: SlideGenerationFeatur
     setLastRequest(request);
 
     try {
-      const created = await createPreviewJob(request, fetch, signal);
+      const created = await createPreviewJob(request, fetchImpl, signal);
       setPreviewJob(queuedStatusFromCreateResponse(created));
 
-      let current = await fetchPreviewJobStatus(created.statusUrl, fetch, signal);
+      let current = await fetchPreviewJobStatus(created.statusUrl, fetchImpl, signal);
       setPreviewJob(current);
 
       let polls = 0;
@@ -63,7 +68,7 @@ export function SlideGenerationFeature({ initialPreview }: SlideGenerationFeatur
         }
         polls += 1;
         await wait(POLL_INTERVAL_MS, signal);
-        current = await fetchPreviewJobStatus(created.statusUrl, fetch, signal);
+        current = await fetchPreviewJobStatus(created.statusUrl, fetchImpl, signal);
         setPreviewJob(current);
       }
 

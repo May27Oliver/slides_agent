@@ -78,7 +78,26 @@ pnpm install
 | `LLM_MAX_REPAIR_ATTEMPTS` | `1` | 驗證型 LLM 輸出的修補次數上限。 |
 | `PREVIEW_RATE_LIMIT_MAX` | `5` | 每個來源 IP 在時間窗內的預覽 POST 上限。 |
 | `PREVIEW_RATE_LIMIT_WINDOW_MS` | `60000` | rate-limit 時間窗(毫秒)。 |
+| `REDIS_URL` | — | **必要**(004)。預覽 job 佇列用的 Redis;沒有則 API/worker fail-fast。 |
+| `AUTH_JWT_SECRET` | — | **必要**(005)。簽發登入 JWT 的密鑰;沒有則 API fail-fast。 |
+| `AUTH_JWT_EXPIRES_IN` | `30d` | JWT 有效期。 |
+| `AUTH_ACCOUNTS` | `[]` | JSON 帳號白名單 `[{ id, username, displayName, passwordHash, active }]`;`passwordHash` 用 `pnpm auth:hash <密碼>` 產生。 |
+| `AUTH_LOGIN_RATE_LIMIT_MAX` | `10` | 每 IP 每時間窗 `POST /api/auth/login` 上限。 |
+| `AUTH_LOGIN_RATE_LIMIT_WINDOW_MS` | `60000` | 登入 rate-limit 時間窗(毫秒)。 |
 | `VITE_API_PROXY_TARGET` | `http://localhost:3000` | (web)dev 伺服器的 API proxy 目標。 |
+
+### 登入(功能 005)
+
+要先登入才能使用 app 與生成端點。帳號是站方設定的白名單(無公開註冊)。新增帳號:
+
+```bash
+pnpm auth:hash '密碼'    # 印出 scrypt passwordHash
+# 貼進 .env 的 AUTH_ACCOUNTS:
+# [{ "id":"user_owner","username":"owner@example.com","displayName":"Owner","passwordHash":"<貼上>","active":true }]
+```
+
+Auth 端點:`POST /api/auth/login`、`GET /api/auth/me`、`POST /api/auth/logout`。
+JWT 存在瀏覽器 `localStorage`;預覽端點需帶 `Authorization: Bearer <jwt>`。
 
 ---
 

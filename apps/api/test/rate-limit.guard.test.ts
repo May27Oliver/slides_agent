@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ExecutionContext } from "@nestjs/common";
-import { RateLimitGuard } from "../src/modules/preview-jobs/rate-limit.guard";
+import { RateLimitGuard } from "../src/common/rate-limit.guard";
 
 function contextFor(ip: string, headers: Record<string, string | string[] | undefined> = {}) {
   return {
