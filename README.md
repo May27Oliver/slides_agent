@@ -147,6 +147,28 @@ curl -I http://localhost:5173/                                 # frontend up
 curl -i http://localhost:3000/api/slides/preview-jobs/example   # → 404 PREVIEW_JOB_UNAVAILABLE
 ```
 
+### Database console
+
+Two ways to inspect the persisted accounts/decks from the terminal (both need only `DATABASE_URL`):
+
+```bash
+pnpm db:repl     # NestJS REPL — interactive terminal console
+pnpm db:studio   # Drizzle Studio — visual browser at local.drizzle.studio
+```
+
+`db:repl` boots a DB-only NestJS context (no Redis/worker — just `DATABASE_URL`). Inside it:
+
+```js
+> help()                                          // list the REPL commands
+> debug()                                          // modules / providers
+> methods(DrizzleDeckStore)                        // a provider's methods
+> await get(DbService).pool.query('select id, title, status from decks')  // raw SQL
+> await get(DrizzleDeckStore).listByAccount('user_owner')                 // typed store
+> await get(DbUserAccountStore).findByUsername('owner@example.com')
+```
+
+> `db:studio` edits write immediately with no undo — be careful against real data.
+
 ---
 
 ## API

@@ -145,6 +145,28 @@ curl -I http://localhost:5173/                                 # 前端存活
 curl -i http://localhost:3000/api/slides/preview-jobs/example   # → 404 PREVIEW_JOB_UNAVAILABLE
 ```
 
+### 資料庫 console
+
+兩種方式可在 terminal 檢視已存的帳號／簡報(兩者只需 `DATABASE_URL`):
+
+```bash
+pnpm db:repl     # NestJS REPL — 互動式 terminal console
+pnpm db:studio   # Drizzle Studio — 瀏覽器視覺化介面(local.drizzle.studio)
+```
+
+`db:repl` 會啟動「只含 DB」的 NestJS context(不連 Redis／worker,只需 `DATABASE_URL`)。進去後:
+
+```js
+> help()                                          // 列出 REPL 指令
+> debug()                                          // modules / providers
+> methods(DrizzleDeckStore)                        // 某 provider 的方法
+> await get(DbService).pool.query('select id, title, status from decks')  // 原生 SQL
+> await get(DrizzleDeckStore).listByAccount('user_owner')                 // 型別化查詢
+> await get(DbUserAccountStore).findByUsername('owner@example.com')
+```
+
+> `db:studio` 的編輯是即時寫入、無 undo——操作正式資料請小心。
+
 ---
 
 ## API
