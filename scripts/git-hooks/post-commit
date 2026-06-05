@@ -1,0 +1,48 @@
+#!/bin/sh
+#
+# GitNexus auto-refresh — runs `gitnexus analyze` in the background after each
+# commit so the knowledge graph follows HEAD (no more "index is stale" nag, and
+# the context AI pulls during planning stays current).
+#
+# Installed by scripts/install-git-hooks.sh (symlinked into .git/hooks/). This
+# file is version-controlled and portable: machine-specific runner paths live in
+# local git config (gitnexus.node / gitnexus.cli), never in the repo.
+#
+# Design notes:
+#   - Detached background run → `git commit` returns instantly.
+#   - mkdir lock → overlapping runs (rapid commits) are skipped; the index
+#     self-heals on the next commit.
+#   - gitnexus 1.6.5+ analyze is incremental (~2.5s), so per-commit cost is tiny.
+
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+
+# Resolve the gitnexus runner, in priority order.
+NODE_BIN="$(git config --get gitnexus.node 2>/dev/null || true)"
+CLI_JS="$(git config --get gitnexus.cli 2>/dev/null || true)"
+
+run_analyze() {
+  if [ -n "$NODE_BIN" ] && [ -n "$CLI_JS" ] && [ -x "$NODE_BIN" ] && [ -f "$CLI_JS" ]; then
+    "$NODE_BIN" "$CLI_JS" analyze            # 1. pinned runner (set by installer)
+  elif command -v gitnexus >/dev/null 2>&1; then
+    gitnexus analyze                          # 2. gitnexus on PATH
+  else
+    npx --yes gitnexus analyze                # 3. last resort
+  fi
+}
+
+LOCK_DIR="$REPO_ROOT/.git/gitnexus-analyze.lock"   # outside .gitnexus/ so analyze never clobbers it
+LOG="$REPO_ROOT/.git/gitnexus-analyze.log"
+
+(
+  if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+    exit 0   # another analyze is already in flight
+  fi
+  trap 'rmdir "$LOCK_DIR" 2>/dev/null' EXIT
+  cd "$REPO_ROOT" || exit 0
+  {
+    echo "=== gitnexus analyze @ $(date) (commit $(git rev-parse --short HEAD)) ==="
+    run_analyze
+  } >"$LOG" 2>&1
+) </dev/null >/dev/null 2>&1 &
+
+exit 0

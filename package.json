@@ -9,6 +9,7 @@
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "dev:iterm": "scripts/dev.sh",
+    "hooks:install": "bash scripts/install-git-hooks.sh",
     "auth:hash": "node --import tsx scripts/auth-hash.ts",
     "db:generate": "pnpm --filter @slides-agent/api db:generate",
     "db:migrate": "pnpm --filter @slides-agent/api db:migrate",
