@@ -1,5 +1,12 @@
-import type { JobStage, PreviewJob, PreviewJobStore } from "@slides-agent/domain";
+import type {
+  DeckStore,
+  JobStage,
+  PreviewJob,
+  PreviewJobStore,
+  PreviewResult
+} from "@slides-agent/domain";
 import {
+  createDeckFromPreviewResult,
   createGenerationFailure,
   createTimeoutFailure,
   hasPreviewJobTimedOut
@@ -18,6 +25,12 @@ export interface RunPreviewJobGenerationOptions {
   job: PreviewJob;
   now?: () => Date;
   logger?: PreviewJobLogger;
+  /**
+   * Optional deck persistence (feature 006). When present and the job carries an
+   * accountId, a successful result is also saved as a deck. Persistence failure
+   * is logged but never turns a successful generation into a failure.
+   */
+  deckStore?: DeckStore;
 }
 
 /**
@@ -31,7 +44,8 @@ export async function runPreviewJobGeneration({
   slidesService,
   job,
   now = () => new Date(),
-  logger = console
+  logger = console,
+  deckStore
 }: RunPreviewJobGenerationOptions): Promise<void> {
   let currentStage: JobStage = "content_planning";
 
@@ -53,7 +67,9 @@ export async function runPreviewJobGeneration({
         }
       }
     });
-    await store.markSucceeded(job.id, toPreviewResult(result), now());
+    const previewResult = toPreviewResult(result);
+    await store.markSucceeded(job.id, previewResult, now());
+    await persistDeck({ deckStore, job, previewResult, logger });
   } catch (error) {
     if (error instanceof PreviewJobTimeoutHandled) {
       return;
@@ -66,6 +82,40 @@ export async function runPreviewJobGeneration({
   }
 
   logger.log(`${job.id} succeeded`);
+}
+
+/**
+ * Persist a successful result as a deck for the owning account. Best-effort: a DB
+ * failure is logged but does not change the job's succeeded outcome (006 DR-006).
+ */
+async function persistDeck({
+  deckStore,
+  job,
+  previewResult,
+  logger
+}: {
+  deckStore: DeckStore | undefined;
+  job: PreviewJob;
+  previewResult: PreviewResult;
+  logger: PreviewJobLogger;
+}): Promise<void> {
+  const accountId = job.request.accountId;
+  if (!deckStore || !accountId) {
+    return;
+  }
+  try {
+    await deckStore.saveNewDeck(
+      createDeckFromPreviewResult({
+        accountId,
+        request: job.request,
+        result: previewResult,
+        sourceJobId: job.id
+      })
+    );
+    logger.log(`${job.id} deck_persisted account=${accountId}`);
+  } catch {
+    logger.error(`${job.id} deck_persist_failed`);
+  }
 }
 
 class PreviewJobTimeoutHandled extends Error {}

@@ -72,6 +72,8 @@ describe("module bootstrap boundaries", () => {
     moduleRef = await Test.createTestingModule({ imports: [WorkerModule] })
       .overrideProvider(RedisService)
       .useValue(fakeRedisService)
+      .overrideProvider(DbService)
+      .useValue(fakeDbService)
       .compile();
 
     expect(moduleRef.get(PreviewWorkerRuntime, { strict: false })).toBeInstanceOf(

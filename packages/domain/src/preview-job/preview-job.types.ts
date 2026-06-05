@@ -24,6 +24,12 @@ export interface PreviewJobRequest {
     segmentationGuidance?: string;
     language?: string;
   };
+  /**
+   * Owning account (feature 006). Set when the job is created from an
+   * authenticated request so the worker can persist the result to that account.
+   * Optional for backward compatibility with jobs serialized before 006.
+   */
+  accountId?: string;
 }
 
 export interface PreviewResult {

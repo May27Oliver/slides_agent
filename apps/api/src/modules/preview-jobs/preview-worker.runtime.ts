@@ -7,12 +7,14 @@ import {
 } from "@nestjs/common";
 import type IORedis from "ioredis";
 import { Worker } from "bullmq";
+import type { DeckStore } from "@slides-agent/domain";
 import { SlidesService } from "@/modules/slides/slides.service";
 import { runPreviewJobGeneration } from "@/modules/preview-jobs/preview-job-execution";
 import type { RedisPreviewJobStore } from "@/modules/preview-jobs/redis-preview-job-store";
 import type { PreviewJobQueuePayload } from "@/modules/preview-jobs/bullmq-preview-job-runner";
 import type { QueueConfig } from "@/modules/preview-jobs/queue.config";
 import { PREVIEW_JOB_STORE, QUEUE_CONFIG } from "@/modules/preview-jobs/preview-jobs.tokens";
+import { DECK_STORE } from "@/modules/decks/decks.tokens";
 import { REDIS_CONNECTION } from "@/infra/redis/redis.tokens";
 
 /**
@@ -32,7 +34,8 @@ export class PreviewWorkerRuntime implements OnApplicationBootstrap, OnModuleDes
     @Inject(QUEUE_CONFIG) private readonly config: QueueConfig,
     @Inject(PREVIEW_JOB_STORE) private readonly store: RedisPreviewJobStore,
     @Inject(REDIS_CONNECTION) private readonly redis: IORedis,
-    @Inject(SlidesService) private readonly slidesService: SlidesService
+    @Inject(SlidesService) private readonly slidesService: SlidesService,
+    @Inject(DECK_STORE) private readonly deckStore: DeckStore
   ) {}
 
   // Start the consumer only after all providers are initialized.
@@ -57,7 +60,8 @@ export class PreviewWorkerRuntime implements OnApplicationBootstrap, OnModuleDes
           store: this.store,
           slidesService: this.slidesService,
           job,
-          logger: this.logger
+          logger: this.logger,
+          deckStore: this.deckStore
         });
       },
       { connection: this.connection, concurrency: this.config.workerConcurrency }
