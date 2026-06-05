@@ -31,6 +31,8 @@ export type * from "@/design/types";
 export { clampFontSizeCss, defaultDesignStyleKit } from "@/design/default-design-style-kit";
 export type { DefaultDesignStyleKitInput } from "@/design/default-design-style-kit";
 export type * from "@/design/design-style-kit.types";
+export type * from "@/design/theme.types";
+export type { ThemeStore } from "@/design/theme-store.port";
 export { selectDesignStyleKit } from "@/design/select-design-style-kit";
 export type { SelectDesignStyleKitInput } from "@/design/select-design-style-kit";
 export { renderTemplateDeckArtifact } from "@/rendering/html-deck-renderer";

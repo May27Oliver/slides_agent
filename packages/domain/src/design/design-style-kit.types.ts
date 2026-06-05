@@ -60,6 +60,16 @@ export interface DesignEffects {
   readonly cardSurface: string;
   /** Accent gradient used for highlights, bars, and chips. */
   readonly accentGradient: string;
+  /**
+   * 007 B-grade: backdrop-filter blur radius in px (Glassmorphism). Optional —
+   * when absent the renderer emits no backdrop-filter. Sanitized via safeNumber.
+   */
+  readonly cardBackdropBlurPx?: number;
+  /**
+   * 007 B-grade: extra glow layered onto the card box-shadow (Y2K). Optional;
+   * sanitized via safeCssValue/safeHex before interpolation.
+   */
+  readonly glow?: string;
 }
 
 export interface DesignFontFamily {
@@ -83,6 +93,18 @@ export interface AccentHue {
 export interface DesignBackground {
   /** Full CSS `background` value (layered radial gradients + base). */
   readonly css: string;
+  /**
+   * 007 B-grade: built-in texture overlay applied at `.deck::before` (E-Ink,
+   * Vintage Analog). Enum, not free CSS — the engine owns the actual layer so a
+   * malicious value cannot inject CSS. Optional.
+   */
+  readonly textureOverlay?: "grain" | "noise" | "paper";
+  /**
+   * 007 B-grade: animated gradient background (Aurora, Gradient Mesh). Enum
+   * preset + numeric duration; the engine emits the matching @keyframes guarded
+   * by prefers-reduced-motion. Optional.
+   */
+  readonly gradientAnimation?: { readonly preset: "aurora" | "mesh"; readonly durationMs: number };
 }
 
 export interface PatternLayoutHint {

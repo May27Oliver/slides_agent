@@ -4,12 +4,13 @@ import { themes } from "@/infra/db/schema";
 import { createTestDb, type TestDb } from "./helpers/pglite-db";
 
 /**
- * 006 US4: the `themes` table is created by the same migration as the rest of the
- * schema, but 006 ships it empty — the ui-ux-pro-max seeds land in feature 007.
- * This proves the structure (the seed-ready columns) exists and that no row was
- * inserted, so 007 can rely on the table being present and clean.
+ * 006 US4 reserved the `themes` table (empty). 007 adds the `kind` column
+ * (font | palette | style) and rebuilds the selection index to lead with `kind`
+ * — see specs/007-design-theme-system/data-model.md (DR-007). This test proves
+ * the 007 structure: the seed-ready columns + `kind`, and a selection index
+ * covering (kind, applies_to, support).
  */
-describe("themes table structure (reserved for feature 007 seeds)", () => {
+describe("themes table structure (007: kind column + selection index)", () => {
   let testDb: TestDb;
 
   beforeEach(async () => {
@@ -20,7 +21,7 @@ describe("themes table structure (reserved for feature 007 seeds)", () => {
     await testDb.close();
   });
 
-  it("exists with the seed-ready columns and starts empty", async () => {
+  it("exists with the seed-ready columns including 007's kind, and starts empty", async () => {
     const result = await testDb.db.execute(
       sql`select column_name from information_schema.columns where table_name = 'themes'`
     );
@@ -30,6 +31,7 @@ describe("themes table structure (reserved for feature 007 seeds)", () => {
       expect.arrayContaining([
         "id",
         "scope",
+        "kind",
         "account_id",
         "name",
         "description",
@@ -47,14 +49,28 @@ describe("themes table structure (reserved for feature 007 seeds)", () => {
     expect(rows).toHaveLength(0);
   });
 
-  it("indexes the columns 007 will select themes by", async () => {
+  it("requires kind to be NOT NULL", async () => {
     const result = await testDb.db.execute(
-      sql`select indexname from pg_indexes where tablename = 'themes'`
+      sql`select is_nullable from information_schema.columns
+          where table_name = 'themes' and column_name = 'kind'`
     );
-    const indexes = (result.rows as Array<{ indexname: string }>).map((row) => row.indexname);
+    const [row] = result.rows as Array<{ is_nullable: string }>;
+    expect(row?.is_nullable).toBe("NO");
+  });
+
+  it("indexes the columns 007 selects themes by, with kind leading", async () => {
+    const result = await testDb.db.execute(
+      sql`select indexname, indexdef from pg_indexes where tablename = 'themes'`
+    );
+    const rows = result.rows as Array<{ indexname: string; indexdef: string }>;
+    const indexes = rows.map((row) => row.indexname);
 
     expect(indexes).toEqual(
       expect.arrayContaining(["themes_scope_idx", "themes_account_idx", "themes_select_idx"])
     );
+
+    const selectIdx = rows.find((row) => row.indexname === "themes_select_idx");
+    // Selection index leads with kind, then applies_to, then support (DR-007).
+    expect(selectIdx?.indexdef).toMatch(/\bkind\b.*\bapplies_to\b.*\bsupport\b/);
   });
 });

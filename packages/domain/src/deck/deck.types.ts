@@ -145,4 +145,14 @@ export interface GenerationSummary {
   sourceFactCount: number;
   chartIntentCount: number;
   uncertainClaimCount: number;
+  /**
+   * 007: the three theme axes selectTheme chose (FR-013). `fallback` is true when
+   * any axis (or all) had no candidate and fell back to defaultDesignStyleKit.
+   */
+  selectedTheme?: {
+    style: string | null;
+    palette: string | null;
+    font: string | null;
+    fallback: boolean;
+  };
 }

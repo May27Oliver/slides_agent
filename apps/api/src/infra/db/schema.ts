@@ -69,17 +69,23 @@ export const deckRevisions = pgTable(
   })
 );
 
-// Structure reserved for feature 007 (ui-ux-pro-max theme seeds). 006 creates the
-// table but writes no rows. See THEME_SEED_INVENTORY.md.
+// Builtin theme catalogue (feature 007). 006 reserved this table empty; 007 adds
+// the `kind` column (font | palette | style) so the three selection axes live in
+// one table, and rebuilds the selection index to lead with `kind`. See
+// specs/007-design-theme-system/data-model.md (DR-001 / DR-007).
 export const themes = pgTable(
   "themes",
   {
     id: text("id").primaryKey(),
     scope: text("scope").notNull(),
+    // 007: distinguishes the three selection axes (font / palette / style).
+    kind: text("kind").notNull(),
     accountId: text("account_id").references(() => accounts.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     description: text("description"),
-    keywords: jsonb("keywords").notNull().default(sql`'[]'::jsonb`),
+    keywords: jsonb("keywords")
+      .notNull()
+      .default(sql`'[]'::jsonb`),
     appliesTo: text("applies_to").notNull(),
     support: text("support").notNull(),
     styleKit: jsonb("style_kit").notNull(),
@@ -90,6 +96,7 @@ export const themes = pgTable(
   (table) => ({
     scopeIdx: index("themes_scope_idx").on(table.scope),
     accountIdx: index("themes_account_idx").on(table.accountId),
-    selectIdx: index("themes_select_idx").on(table.appliesTo, table.support)
+    // kind leads: it is the strongest filter for selectTheme's per-kind queries.
+    selectIdx: index("themes_select_idx").on(table.kind, table.appliesTo, table.support)
   })
 );
