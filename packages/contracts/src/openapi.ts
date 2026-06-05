@@ -192,6 +192,7 @@ export const PREVIEW_QUEUE_UNAVAILABLE_SCHEMA: OpenApiSchema = errorSchema(
 
 const DECK_SUMMARY_SCHEMA: OpenApiSchema = {
   type: "object",
+  required: ["id", "title", "status", "updatedAt"],
   properties: {
     id: { type: "string", format: "uuid" },
     title: { type: "string" },
@@ -202,6 +203,7 @@ const DECK_SUMMARY_SCHEMA: OpenApiSchema = {
 
 export const DECK_LIST_RESPONSE_SCHEMA: OpenApiSchema = {
   type: "object",
+  required: ["decks"],
   properties: {
     decks: { type: "array", items: DECK_SUMMARY_SCHEMA }
   }
@@ -209,6 +211,7 @@ export const DECK_LIST_RESPONSE_SCHEMA: OpenApiSchema = {
 
 const DECK_REVISION_SCHEMA: OpenApiSchema = {
   type: "object",
+  required: ["revision", "slideDeck", "html", "origin", "sourceJobId", "createdAt"],
   properties: {
     revision: { type: "integer" },
     slideDeck: { type: "object", additionalProperties: true },
@@ -223,6 +226,7 @@ const DECK_REVISION_SCHEMA: OpenApiSchema = {
 
 export const DECK_DETAIL_RESPONSE_SCHEMA: OpenApiSchema = {
   type: "object",
+  required: ["id", "title", "status", "sourceContent", "deckBrief", "currentRevision"],
   properties: {
     id: { type: "string", format: "uuid" },
     title: { type: "string" },

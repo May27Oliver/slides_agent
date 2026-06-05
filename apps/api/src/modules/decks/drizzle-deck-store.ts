@@ -12,6 +12,11 @@ import type { AppDatabase } from "@/infra/db/db.service";
 import { DRIZZLE } from "@/infra/db/db.tokens";
 import { deckRevisions, decks } from "@/infra/db/schema";
 
+// Defensive upper bound on the un-paginated "my decks" list so a single account
+// with an unexpectedly large number of decks can't trigger a huge scan/payload.
+// Pagination proper is a later enhancement (the contract documents "not paginated").
+const LIST_LIMIT = 200;
+
 /**
  * Drizzle-backed DeckStore (feature 006). Writes go through a transaction so a
  * deck and its first revision are atomic and `current_revision_id` is set. Reads
@@ -75,7 +80,8 @@ export class DrizzleDeckStore implements DeckStore {
       })
       .from(decks)
       .where(eq(decks.accountId, accountId))
-      .orderBy(desc(decks.updatedAt));
+      .orderBy(desc(decks.updatedAt))
+      .limit(LIST_LIMIT);
 
     return rows.map((row) => ({
       id: row.id,
@@ -86,36 +92,25 @@ export class DrizzleDeckStore implements DeckStore {
   }
 
   async findByIdForAccount(accountId: string, deckId: string): Promise<DeckDetail | null> {
-    const [deckRow] = await this.db
-      .select()
+    // One round-trip: the deck row (scoped to the owner) left-joined to its
+    // current revision. The join is keyed on BOTH ids, so a `current_revision_id`
+    // that ever pointed at another deck's revision (corruption / bad migration)
+    // would yield a null revision here rather than leaking foreign content.
+    const [row] = await this.db
+      .select({ deck: decks, revision: deckRevisions })
       .from(decks)
+      .leftJoin(
+        deckRevisions,
+        and(eq(deckRevisions.id, decks.currentRevisionId), eq(deckRevisions.deckId, decks.id))
+      )
       .where(and(eq(decks.id, deckId), eq(decks.accountId, accountId)))
       .limit(1);
 
-    if (!deckRow) {
+    if (!row) {
       return null;
     }
 
-    let currentRevision: DeckDetail["currentRevision"] = null;
-    if (deckRow.currentRevisionId) {
-      const [revisionRow] = await this.db
-        .select()
-        .from(deckRevisions)
-        .where(eq(deckRevisions.id, deckRow.currentRevisionId))
-        .limit(1);
-      if (revisionRow) {
-        currentRevision = {
-          revision: revisionRow.revision,
-          slideDeck: revisionRow.slideDeck,
-          designPlan: revisionRow.designPlan ?? null,
-          html: revisionRow.html,
-          generationSummary: revisionRow.generationSummary ?? null,
-          origin: revisionRow.origin as DeckOrigin,
-          sourceJobId: revisionRow.sourceJobId,
-          createdAt: revisionRow.createdAt.toISOString()
-        };
-      }
-    }
+    const { deck: deckRow, revision: revisionRow } = row;
 
     return {
       id: deckRow.id,
@@ -123,7 +118,18 @@ export class DrizzleDeckStore implements DeckStore {
       status: deckRow.status,
       sourceContent: deckRow.sourceContent,
       deckBrief: deckRow.deckBrief as DeckBrief,
-      currentRevision
+      currentRevision: revisionRow
+        ? {
+            revision: revisionRow.revision,
+            slideDeck: revisionRow.slideDeck,
+            designPlan: revisionRow.designPlan ?? null,
+            html: revisionRow.html,
+            generationSummary: revisionRow.generationSummary ?? null,
+            origin: revisionRow.origin as DeckOrigin,
+            sourceJobId: revisionRow.sourceJobId,
+            createdAt: revisionRow.createdAt.toISOString()
+          }
+        : null
     };
   }
 }

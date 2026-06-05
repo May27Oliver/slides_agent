@@ -6,14 +6,12 @@ import {
   NotFoundException,
   Param,
   Req,
+  UnauthorizedException,
   UseGuards
 } from "@nestjs/common";
 import { JwtAuthGuard } from "@/modules/auth/jwt-auth.guard";
 import type { AuthedRequestUser } from "@/modules/auth/jwt.strategy";
-import type {
-  DeckDetailResponseContract,
-  DeckListResponseContract
-} from "@slides-agent/contracts";
+import type { DeckDetailResponseContract, DeckListResponseContract } from "@slides-agent/contracts";
 import type { DeckStore } from "@slides-agent/domain";
 import { DECK_STORE } from "@/modules/decks/decks.tokens";
 import { assertValidDeckId } from "@/modules/decks/deck-request.parser";
@@ -57,11 +55,16 @@ export class DecksController {
   }
 
   // JwtAuthGuard guarantees req.user at runtime; this guards the unit-test path
-  // and any future mis-wiring rather than letting `undefined.id` throw opaquely.
+  // and any future mis-wiring. A missing principal is an authentication failure
+  // (401 AUTH_REQUIRED) — not a data miss — so it surfaces with the same shape
+  // JwtAuthGuard itself uses rather than being masked as a 404.
   private requireAccountId(req: { user?: AuthedRequestUser }): string {
     const accountId = req?.user?.id;
     if (!accountId) {
-      throw new NotFoundException({ code: "DECK_NOT_FOUND", message: "Deck not found." });
+      throw new UnauthorizedException({
+        code: "AUTH_REQUIRED",
+        message: "Authentication required."
+      });
     }
     return accountId;
   }

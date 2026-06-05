@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import type { DeckDetail, DeckStore, DeckSummary } from "@slides-agent/domain";
 import { DecksController } from "@/modules/decks/decks.controller";
 import { JwtAuthGuard } from "@/modules/auth/jwt-auth.guard";
@@ -60,9 +60,7 @@ describe("DecksController", () => {
         createdAt: "2026-06-05T00:00:00.000Z"
       }
     };
-    const controller = new DecksController(
-      makeStore({ findByIdForAccount: async () => detail })
-    );
+    const controller = new DecksController(makeStore({ findByIdForAccount: async () => detail }));
 
     expect(await controller.detail(VALID_UUID, reqFor("user_a"))).toEqual(detail);
   });
@@ -87,6 +85,15 @@ describe("DecksController", () => {
     await expect(controller.detail("not-a-uuid", reqFor("user_a"))).rejects.toBeInstanceOf(
       BadRequestException
     );
+  });
+
+  it("rejects a request with no authenticated principal as 401 AUTH_REQUIRED", async () => {
+    const controller = new DecksController(makeStore());
+
+    await expect(controller.list({})).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(controller.detail(VALID_UUID, {})).rejects.toMatchObject({
+      response: { code: "AUTH_REQUIRED" }
+    });
   });
 
   it("never queries another account's deck when the id is malformed", async () => {
