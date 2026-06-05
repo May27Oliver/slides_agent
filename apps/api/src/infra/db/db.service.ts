@@ -19,8 +19,16 @@ export class DbService implements OnModuleDestroy {
   readonly db: AppDatabase;
 
   constructor() {
-    const { databaseUrl } = loadDbConfig();
-    this.pool = new Pool({ connectionString: databaseUrl });
+    const config = loadDbConfig();
+    this.pool = new Pool({
+      connectionString: config.databaseUrl,
+      // Conservative, tunable, fail-fast pooling (see loadDbConfig). Role-aware
+      // max keeps total connections low across API + worker processes.
+      max: config.poolMax,
+      idleTimeoutMillis: config.idleTimeoutMs,
+      connectionTimeoutMillis: config.connectionTimeoutMs,
+      maxLifetimeSeconds: config.maxLifetimeSeconds
+    });
     this.db = drizzle(this.pool, { schema });
   }
 

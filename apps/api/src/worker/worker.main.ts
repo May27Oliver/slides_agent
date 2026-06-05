@@ -3,6 +3,11 @@ import { Logger } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { WorkerModule } from "@/app/worker.module";
 
+// Declare this process as the worker before any provider is constructed, so
+// DbService (via loadDbConfig) picks the smaller worker pool default. The worker
+// only hits the DB to auto-save a deck after a successful generation.
+process.env.DB_POOL_ROLE ??= "worker";
+
 /**
  * Standalone, non-HTTP worker process. It bootstraps WorkerModule (shared
  * Redis + slides feature + the BullMQ consumer). PreviewWorkerRuntime starts the
