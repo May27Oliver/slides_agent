@@ -19,7 +19,7 @@ description: "Task list for feature 007 design-theme-system"
 ## Phase 1: Setup(共用基礎)
 
 - [x] T001 [P] 轉換腳本相依:`pnpm --filter @slides-agent/api add -D csv-parse`(供 `convert-csv-to-theme-seeds.ts` 解析 CSV;dev-time only)。
-- [ ] T002 [P] 確認既有 `db:generate`/`db:migrate`/`db:seed` script(006 已有)可用;`db:seed` 待 US2 擴充以含 themes。
+- [x] T002 [P] 確認既有 `db:generate`/`db:migrate`/`db:seed` script(006 已有)可用;`db:seed` 待 US2 擴充以含 themes。
 
 ---
 
@@ -27,13 +27,13 @@ description: "Task list for feature 007 design-theme-system"
 
 **⚠️ 完成前任何 user story 不得開工。** 純型別/schema 為下游共用。
 
-- [ ] T003 `apps/api/src/infra/db/schema.ts`:`themes` 加 `kind` text NOT NULL;`themes_select_idx` 以 `kind` 為前導重建為 `(kind, applies_to, support)`(依 data-model.md / DR-007)。
-- [ ] T004 產生並檢入 migration:`pnpm db:generate` → `apps/api/src/infra/db/migrations/0001_*.sql`(ADD COLUMN kind + 重建索引;006 表為空,無回填問題)。
-- [ ] T005 [P] `packages/domain/src/design/theme.types.ts`:`ThemeKind`/`ThemeSupport`/`ThemeAppliesTo`、`SelectableTheme`、`SelectedTheme`,及 `FontStyleKit`/`PaletteStyleKit`/`StyleStyleKit`/`RawStyleKit`(partial kit 形狀,依 data-model.md)。
-- [ ] T006 [P] `packages/domain/src/design/theme-store.port.ts`:`ThemeStore`(`listSelectable(): Promise<SelectableTheme[]>`)。
-- [ ] T007 [P] `packages/domain/src/design/design-style-kit.types.ts`:擴充 `DesignEffects.cardBackdropBlurPx?`/`glow?`、`DesignBackground.textureOverlay?`/`gradientAnimation?`(皆 optional;DR-008)。
-- [ ] T008 [P] `packages/domain/src/deck/deck.types.ts`:`GenerationSummary` 加 optional `selectedTheme { style/palette/font: string|null; fallback: boolean }`。
-- [ ] T009 更新 `apps/api/test/themes-schema.test.ts`:驗 `kind` 欄存在、選擇索引含 `(kind, applies_to, support)`(先失敗 → T003/T004 後綠)。
+- [x] T003 `apps/api/src/infra/db/schema.ts`:`themes` 加 `kind` text NOT NULL;`themes_select_idx` 以 `kind` 為前導重建為 `(kind, applies_to, support)`(依 data-model.md / DR-007)。
+- [x] T004 產生並檢入 migration:`pnpm db:generate` → `apps/api/src/infra/db/migrations/0001_*.sql`(ADD COLUMN kind + 重建索引;006 表為空,無回填問題)。
+- [x] T005 [P] `packages/domain/src/design/theme.types.ts`:`ThemeKind`/`ThemeSupport`/`ThemeAppliesTo`、`SelectableTheme`、`SelectedTheme`,及 `FontStyleKit`/`PaletteStyleKit`/`StyleStyleKit`/`RawStyleKit`(partial kit 形狀,依 data-model.md)。
+- [x] T006 [P] `packages/domain/src/design/theme-store.port.ts`:`ThemeStore`(`listSelectable(): Promise<SelectableTheme[]>`)。
+- [x] T007 [P] `packages/domain/src/design/design-style-kit.types.ts`:擴充 `DesignEffects.cardBackdropBlurPx?`/`glow?`、`DesignBackground.textureOverlay?`/`gradientAnimation?`(皆 optional;DR-008)。
+- [x] T008 [P] `packages/domain/src/deck/deck.types.ts`:`GenerationSummary` 加 optional `selectedTheme { style/palette/font: string|null; fallback: boolean }`。
+- [x] T009 更新 `apps/api/test/themes-schema.test.ts`:驗 `kind` 欄存在、選擇索引含 `(kind, applies_to, support)`(先失敗 → T003/T004 後綠)。
 
 **Checkpoint**:schema + 共用型別就緒,user story 可開工。
 
@@ -46,20 +46,20 @@ description: "Task list for feature 007 design-theme-system"
 **Independent Test**:灌幾筆 A 級 theme(測試內直接 insert)後,兩路徑都套具名 theme 且 HTML 帶對應 token;DB 空 → 退回 default 不報錯。
 
 ### Tests(先寫,須失敗)⚠️
-- [ ] T010 [P] [US1] `packages/domain/test/design/compose-kit.test.ts`:三軸 partial kit 合併順序(default→style→palette→font);缺某軸 → 該部分用 default;輸出為完整合法 `DesignStyleKit`。
-- [ ] T011 [P] [US1] `packages/domain/test/design/select-theme.test.ts`:三 kind 各 `pickBest`;`styleDirection` 強於 purpose/audience;無命中/平手取第一筆(候選依 id 排序時即 `00` 序位安全預設);某 kind 無候選 → 該軸 null + `fallback=true`;全空 → `defaultDesignStyleKit`;**確定性**(同輸入同輸出)。
-- [ ] T012 [P] [US1] `apps/api/test/drizzle-theme-store.test.ts`(pglite):`listSelectable` 只回 `scope='builtin'` + active + `applies_to in (presentation,universal)`、`style` 排除 `support=raw`(明確排除 `scope='account'` fixture);`ORDER BY id` 穩定排序使 `00` 序位安全預設排首位;直接 insert 列為 fixture。
-- [ ] T013 [US1] `apps/api/test/slides-service.theme-selection.test.ts`:LLM 成功與 fallback 兩路徑都把 `result.styleKit` 設為 selectTheme 結果;`generationSummary.selectedTheme` 記三軸 id;DB 空 → `fallback=true` 且不拋。
+- [x] T010 [P] [US1] `packages/domain/test/design/compose-kit.test.ts`:三軸 partial kit 合併順序(default→style→palette→font);缺某軸 → 該部分用 default;輸出為完整合法 `DesignStyleKit`。
+- [x] T011 [P] [US1] `packages/domain/test/design/select-theme.test.ts`:三 kind 各 `pickBest`;`styleDirection` 強於 purpose/audience;無命中/平手取第一筆(候選依 id 排序時即 `00` 序位安全預設);某 kind 無候選 → 該軸 null + `fallback=true`;全空 → `defaultDesignStyleKit`;**確定性**(同輸入同輸出)。
+- [x] T012 [P] [US1] `apps/api/test/drizzle-theme-store.test.ts`(pglite):`listSelectable` 只回 `scope='builtin'` + active + `applies_to in (presentation,universal)`、`style` 排除 `support=raw`(明確排除 `scope='account'` fixture);`ORDER BY id` 穩定排序使 `00` 序位安全預設排首位;直接 insert 列為 fixture。
+- [x] T013 [US1] `apps/api/test/slides-service.theme-selection.test.ts`:LLM 成功與 fallback 兩路徑都把 `result.styleKit` 設為 selectTheme 結果;`generationSummary.selectedTheme` 記三軸 id;DB 空 → `fallback=true` 且不拋。
 
 ### Implementation
-- [ ] T014 [US1] `packages/domain/src/design/compose-kit.ts`:`composeKit(parts)`;從 `select-design-style-kit.ts` 移入並重用 `buildPaletteHues`/`buildCuratedEffects`/`buildBackground`/`pickBest`(引擎留下)。
-- [ ] T015 [US1] `packages/domain/src/design/select-theme.ts`:`selectTheme(brief, candidates)`——分組三 kind、各 `pickBest`、呼叫 `composeKit`、組 `SelectedTheme`(ids + fallback)。
-- [ ] T016 [US1] `packages/domain/src/design/ui-ux-pro-max-knowledge.ts`:移除 `CURATED_FONT_PAIRINGS`/`CURATED_PALETTES` 寫死資料(型別視轉換腳本需要保留);`select-design-style-kit.ts` 移除或重構為薄包裝(DR-005)。
-- [ ] T017 [US1] `packages/domain/src/design/design-planner.ts`:planner 不再注入 `styleKit`(移除 `withCuratedStyleKit`/`selectDesignStyleKit` 注入);`buildFallbackDesignPlanningResult` 不帶 styleKit。
-- [ ] T018 [P] [US1] `apps/api/src/modules/themes/themes.tokens.ts`(`THEME_STORE`)+ `drizzle-theme-store.ts`(實作 `ThemeStore`,`@Inject(DRIZZLE)`,穩定排序)+ `themes.module.ts`(提供 `THEME_STORE`,import `DbModule`)。
-- [ ] T019 [US1] `apps/api/src/modules/slides/slides.service.ts`:design 階段 `await themeStore.listSelectable()` → `selectTheme(deckBrief, candidates)` → 設 `result.styleKit` + 填 `generationSummary.selectedTheme`(DR-006)。
-- [ ] T020 [US1] `apps/api/src/modules/slides/slides.module.ts` 與 `apps/api/src/app/worker.module.ts`:import `ThemesModule` / 注入 `THEME_STORE`(生成在 worker)。
-- [ ] T021 [US1] 更新受影響既有測試:`packages/domain/test/design/select-design-style-kit.test.ts`(移除或改寫)、`design-planner.test.ts`(planner 不再帶 styleKit 的斷言)。
+- [x] T014 [US1] `packages/domain/src/design/compose-kit.ts`:`composeKit(parts)`;從 `select-design-style-kit.ts` 移入並重用 `buildPaletteHues`/`buildCuratedEffects`/`buildBackground`/`pickBest`(引擎留下)。
+- [x] T015 [US1] `packages/domain/src/design/select-theme.ts`:`selectTheme(brief, candidates)`——分組三 kind、各 `pickBest`、呼叫 `composeKit`、組 `SelectedTheme`(ids + fallback)。
+- [x] T016 [US1] `packages/domain/src/design/ui-ux-pro-max-knowledge.ts`:移除 `CURATED_FONT_PAIRINGS`/`CURATED_PALETTES` 寫死資料(型別視轉換腳本需要保留);`select-design-style-kit.ts` 移除或重構為薄包裝(DR-005)。
+- [x] T017 [US1] `packages/domain/src/design/design-planner.ts`:planner 不再注入 `styleKit`(移除 `withCuratedStyleKit`/`selectDesignStyleKit` 注入);`buildFallbackDesignPlanningResult` 不帶 styleKit。
+- [x] T018 [P] [US1] `apps/api/src/modules/themes/themes.tokens.ts`(`THEME_STORE`)+ `drizzle-theme-store.ts`(實作 `ThemeStore`,`@Inject(DRIZZLE)`,穩定排序)+ `themes.module.ts`(提供 `THEME_STORE`,import `DbModule`)。
+- [x] T019 [US1] `apps/api/src/modules/slides/slides.service.ts`:design 階段 `await themeStore.listSelectable()` → `selectTheme(deckBrief, candidates)` → 設 `result.styleKit` + 填 `generationSummary.selectedTheme`(DR-006)。
+- [x] T020 [US1] `apps/api/src/modules/slides/slides.module.ts` 與 `apps/api/src/app/worker.module.ts`:import `ThemesModule` / 注入 `THEME_STORE`(生成在 worker)。
+- [x] T021 [US1] 更新受影響既有測試:`packages/domain/test/design/select-design-style-kit.test.ts`(移除或改寫)、`design-planner.test.ts`(planner 不再帶 styleKit 的斷言)。
 
 **Checkpoint**:US1 可獨立 demo——幾筆 theme 即可示範不同 brief→不同 theme、fallback 仍有風格。
 
