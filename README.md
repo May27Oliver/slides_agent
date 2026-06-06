@@ -204,7 +204,7 @@ fallback paths.
 ```bash
 pnpm db:convert-seeds                       # ui-ux-pro-max CSVs → src/infra/db/seeds/*.json
 pnpm db:seed                                # idempotent upsert (also seeds accounts)
-pnpm --filter @slides-agent/api preview:bgrade   # render B-grade styles → /tmp/bgrade-preview/
+pnpm --filter @slides-agent/api preview:themes   # render all full styles → apps/api/preview/themes/
 ```
 
 - The CSV→seed converter is non-destructive: hand-authored full `style` tokens
