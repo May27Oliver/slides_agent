@@ -291,5 +291,103 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
         "Do not over-animate; keep motion gentle."
       ]
     }
+  },
+
+  // ── B-grade (007 US3): styles whose identity needs an engine token the base
+  // four (radius/shadow/motion/typeScale) cannot express. Each carries exactly
+  // the one token that defines it — backdrop blur, glow, animated gradient, or a
+  // built-in texture — and is flipped to support:"full" so selection can pick it.
+
+  "style-10-glassmorphism": {
+    support: "full",
+    styleKit: {
+      effects: {
+        cardRadiusPx: 16,
+        cardShadow: "0 12px 40px -12px rgba(15,23,42,.35)",
+        // The frosted-glass signature: real backdrop blur over a vibrant bg.
+        cardBackdropBlurPx: 18
+      },
+      motion: motion({ slideTransitionMs: 320, entranceMs: 420, staggerStepMs: 80, microMs: 220 }),
+      antiPatterns: [
+        "Do not place glass over flat/low-contrast backgrounds; the blur needs a vibrant scene.",
+        "Do not stack many glass layers; keep depth to two planes for legibility."
+      ]
+    }
+  },
+
+  "style-10-liquid-glass": {
+    support: "full",
+    styleKit: {
+      effects: {
+        cardRadiusPx: 22,
+        cardShadow: "0 16px 48px -14px rgba(15,23,42,.4)",
+        cardBackdropBlurPx: 24
+      },
+      // Flowing, morphing glass — pair the blur with a slow animated background.
+      motion: motion({ slideTransitionMs: 420, entranceMs: 520, staggerStepMs: 90, microMs: 260 }),
+      backgroundStructure: { gradientAnimation: { preset: "aurora", durationMs: 22000 } },
+      antiPatterns: [
+        "Do not speed up the flow; liquid motion must stay slow and calm.",
+        "Do not drop the prefers-reduced-motion guard on the animated layer."
+      ]
+    }
+  },
+
+  "style-10-aurora-ui": {
+    support: "full",
+    styleKit: {
+      effects: { cardRadiusPx: 18, cardShadow: "0 18px 44px -16px rgba(30,27,75,.45)" },
+      motion: motion({ slideTransitionMs: 360, entranceMs: 460, staggerStepMs: 80, microMs: 240 }),
+      // Northern-lights mesh: the engine animates the gradient background.
+      backgroundStructure: { gradientAnimation: { preset: "aurora", durationMs: 18000 } },
+      antiPatterns: [
+        "Do not use hard-edged cards; let them float over the luminous gradient.",
+        "Do not pick a duration short enough to read as flicker."
+      ]
+    }
+  },
+
+  "style-10-gradient-mesh-aurora-evolved": {
+    support: "full",
+    styleKit: {
+      effects: { cardRadiusPx: 20, cardShadow: "0 20px 50px -18px rgba(76,29,149,.45)" },
+      motion: motion({ slideTransitionMs: 380, entranceMs: 480, staggerStepMs: 90, microMs: 240 }),
+      backgroundStructure: { gradientAnimation: { preset: "mesh", durationMs: 20000 } },
+      antiPatterns: [
+        "Do not over-saturate every hue at once; keep one or two dominant.",
+        "Do not animate so fast the mesh becomes distracting behind text."
+      ]
+    }
+  },
+
+  "style-10-y2k-aesthetic": {
+    support: "full",
+    styleKit: {
+      effects: {
+        cardRadiusPx: 14,
+        cardShadow: "0 10px 28px -12px rgba(0,0,0,.35)",
+        // Chrome / neon iridescence: a coloured glow layered onto the shadow.
+        glow: "0 0 28px rgba(255,0,170,.55)"
+      },
+      motion: motion({ slideTransitionMs: 240, entranceMs: 320, staggerStepMs: 60, microMs: 180 }),
+      antiPatterns: [
+        "Do not desaturate; Y2K leans on glossy neon and chrome.",
+        "Do not let the glow bleed onto body text — keep it on card surfaces."
+      ]
+    }
+  },
+
+  "style-10-vintage-analog-retro-film": {
+    support: "full",
+    styleKit: {
+      effects: { cardRadiusPx: 6, cardShadow: "0 8px 24px -10px rgba(60,50,40,.4)" },
+      motion: motion({ slideTransitionMs: 320, entranceMs: 420, staggerStepMs: 70, microMs: 200 }),
+      // Film grain over the whole deck — engine-owned texture, not free CSS.
+      backgroundStructure: { textureOverlay: "grain" },
+      antiPatterns: [
+        "Do not use crisp pure-white surfaces; keep faded, warm analog tones.",
+        "Do not pair with sharp neon; stay in muted retro-film palettes."
+      ]
+    }
   }
 };

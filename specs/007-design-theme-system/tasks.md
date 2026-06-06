@@ -92,12 +92,12 @@ description: "Task list for feature 007 design-theme-system"
 **Independent Test**:用新 token 的 B 級 theme 渲染,CSS 帶對應輸出且 sanitize、漸層動畫受 reduced-motion 守衛;既有 A 級渲染不變(回歸)。
 
 ### Tests(先寫,須失敗)⚠️
-- [ ] T028 [P] [US3] `packages/domain/test/rendering/deck-style-css-bgrade.test.ts`:`cardBackdropBlurPx`→`backdrop-filter: blur(...)`(safeNumber)、`glow`→疊加陰影(safeCssValue/safeHex)、`textureOverlay`→`.deck::before` 內建紋理(enum)、`gradientAnimation`→`@keyframes` 受 `prefers-reduced-motion` 守衛;非法值被擋。
-- [ ] T029 [P] [US3] `apps/api/test/seed-themes.test.ts` 擴充或新增:B 級 style seed 以 `support=full` 載入且通過驗證。
+- [x] T028 [P] [US3] `packages/domain/test/rendering/deck-style-css-bgrade.test.ts`:`cardBackdropBlurPx`→`backdrop-filter: blur(...)`(safeNumber)、`glow`→疊加陰影(safeCssValue/safeHex)、`textureOverlay`→`.deck::before` 內建紋理(enum)、`gradientAnimation`→`@keyframes` 受 `prefers-reduced-motion` 守衛;非法值被擋。
+- [x] T029 [P] [US3] `apps/api/test/seed-themes.test.ts` 擴充或新增:B 級 style seed 以 `support=full` 載入且通過驗證。
 
 ### Implementation
-- [ ] T030 [US3] `packages/domain/src/rendering/deck-style-css.ts`:渲染四類新 token(`--card-backdrop-blur`、glow 陰影、`::before` 紋理疊層、漸層 `@keyframes`),全部走既有 `safeNumber`/`safeCssValue`/`safeHex`;keyframe 受 `motion.respectReducedMotion`/媒體查詢守衛。
-- [ ] T031 [US3] 把 B 級 style seed(Glassmorphism/Aurora/Y2K/Gradient Mesh/Vintage Analog 等)補上新 token 並改 `support=full`(更新 `theme-styles.json`)。
+- [x] T030 [US3] `packages/domain/src/rendering/deck-style-css.ts`:渲染四類新 token(`--card-backdrop-blur`、glow 陰影、`::before` 紋理疊層、漸層 `@keyframes`),全部走既有 `safeNumber`/`safeCssValue`/`safeHex`;keyframe 受 `motion.respectReducedMotion`/媒體查詢守衛。
+- [x] T031 [US3] 把 B 級 style seed(Glassmorphism/Aurora/Y2K/Gradient Mesh/Vintage Analog 等)補上新 token 並改 `support=full`(更新 `theme-styles.json`)。
 
 **Checkpoint**:B 級風格 full 渲染;玻璃/漸層效果可肉眼驗。
 

@@ -258,4 +258,60 @@ describe("seedThemes (007 US2)", () => {
     const issues = validateThemeSeeds([emptyKeyword]);
     expect(issues[0]?.problems.some((p) => p.includes("keywords"))).toBe(true);
   });
+
+  it("accepts a B-grade style as support=full with engine tokens (007 US3)", async () => {
+    // Glassmorphism-style row: backdrop blur + glow + animated gradient + texture
+    // must all validate so selection can pick the upgraded B-grade theme.
+    const bGrade: ThemeSeed = {
+      id: "style-10-glass-bgrade",
+      kind: "style",
+      scope: "builtin",
+      name: "Glass B-grade",
+      keywords: ["frosted glass", "aurora"],
+      appliesTo: "presentation",
+      support: "full",
+      styleKit: {
+        effects: {
+          cardRadiusPx: 16,
+          cardShadow: "0 12px 40px -12px rgba(15,23,42,.35)",
+          cardBackdropBlurPx: 18,
+          glow: "0 0 28px rgba(255,0,170,.55)"
+        },
+        motion: styleFullSeed.styleKit.motion,
+        backgroundStructure: {
+          textureOverlay: "grain",
+          gradientAnimation: { preset: "aurora", durationMs: 18000 }
+        }
+      } as ThemeSeed["styleKit"]
+    };
+
+    expect(validateThemeSeeds([bGrade])).toEqual([]);
+
+    const result = await seedThemes(testDb.db, [bGrade]);
+    expect(result.total).toBe(1);
+    const [row] = await testDb.db
+      .select()
+      .from(themes)
+      .where(eq(themes.id, "style-10-glass-bgrade"));
+    expect(row?.support).toBe("full");
+    expect(
+      (row?.styleKit as { effects: { cardBackdropBlurPx?: number } }).effects.cardBackdropBlurPx
+    ).toBe(18);
+  });
+
+  it("rejects a non-finite cardBackdropBlurPx (B-grade token sanitation)", async () => {
+    const badBlur: ThemeSeed = {
+      ...styleFullSeed,
+      id: "style-10-badblur",
+      styleKit: {
+        ...(styleFullSeed.styleKit as object),
+        effects: {
+          ...(styleFullSeed.styleKit as { effects: object }).effects,
+          cardBackdropBlurPx: "18px);}body{x"
+        }
+      } as never
+    };
+    const issues = validateThemeSeeds([badBlur]);
+    expect(issues[0]?.problems.some((p) => p.includes("cardBackdropBlurPx"))).toBe(true);
+  });
 });

@@ -25,6 +25,76 @@ function safeNumber(value: number, fallback: number): number {
   return Number.isFinite(value) ? value : fallback;
 }
 
+// 007 US3 — built-in B-grade overlays. These are ENGINE-OWNED static CSS keyed by
+// a closed enum: a tampered kit can only select a preset (or none), never inject
+// its own CSS. The renderer guards the lookup with hasOwnProperty so prototype
+// keys (e.g. "toString") cannot resolve to inherited members (DR-008).
+const TEXTURE_OVERLAYS: Record<string, string> = {
+  grain: "repeating-radial-gradient(circle at 0 0, rgba(0,0,0,.05) 0 1px, transparent 1px 3px)",
+  noise: "repeating-conic-gradient(rgba(0,0,0,.035) 0% 25%, transparent 0% 50%)",
+  paper: "repeating-linear-gradient(45deg, rgba(0,0,0,.03) 0 2px, transparent 2px 5px)"
+};
+
+const GRADIENT_ANIMATIONS: Record<string, { readonly keyframes: string; readonly layer: string }> =
+  {
+    aurora: {
+      keyframes:
+        "@keyframes deck-aurora{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}",
+      layer: "linear-gradient(120deg, var(--hue-0), var(--hue-1), var(--hue-2), var(--hue-3))"
+    },
+    mesh: {
+      keyframes:
+        "@keyframes deck-mesh{0%{background-position:0% 0%}50%{background-position:100% 100%}100%{background-position:0% 0%}}",
+      layer:
+        "radial-gradient(circle at 20% 25%, var(--hue-0), transparent 45%), radial-gradient(circle at 80% 75%, var(--hue-2), transparent 45%)"
+    }
+  };
+
+/** Renders the engine-owned `.deck::before` texture for a known enum preset, else "". */
+function buildTextureOverlayCss(overlay: unknown): string {
+  if (
+    typeof overlay !== "string" ||
+    !Object.prototype.hasOwnProperty.call(TEXTURE_OVERLAYS, overlay)
+  ) {
+    return "";
+  }
+  return `
+.deck::before{
+  content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:${TEXTURE_OVERLAYS[overlay]};opacity:.55;mix-blend-mode:multiply;
+}`;
+}
+
+/**
+ * Renders the engine-owned animated gradient (`@keyframes` + a fixed `body::before`
+ * layer behind content) for a known enum preset. The keyframes are killed by the
+ * always-emitted prefers-reduced-motion guard; the duration is sanitized.
+ */
+function buildGradientAnimationCss(animation: unknown): string {
+  if (typeof animation !== "object" || animation === null) {
+    return "";
+  }
+  const preset = (animation as { preset?: unknown }).preset;
+  if (
+    typeof preset !== "string" ||
+    !Object.prototype.hasOwnProperty.call(GRADIENT_ANIMATIONS, preset)
+  ) {
+    return "";
+  }
+  const spec = GRADIENT_ANIMATIONS[preset];
+  if (spec === undefined) {
+    return "";
+  }
+  const duration = safeNumber((animation as { durationMs?: number }).durationMs as number, 14000);
+  return `
+${spec.keyframes}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:${spec.layer};background-size:300% 300%;
+  animation:deck-${preset} ${duration}ms ease-in-out infinite;
+}`;
+}
+
 function hexToRgba(hex: string, alpha: number): string {
   const raw = hex.replace("#", "");
   const expanded =
@@ -68,6 +138,21 @@ export function buildDeckStyleCss(styleKit: DesignStyleKit, designSystem: Design
     })
     .join("\n");
 
+  // 007 US3 B-grade tokens. Each is optional and sanitized/enum-owned before it
+  // reaches the <style> block; absent tokens emit nothing.
+  const baseShadow = safeCssValue(effects.cardShadow, "0 18px 44px rgba(31,41,51,.12)");
+  const glow = effects.glow !== undefined ? safeCssValue(effects.glow, "") : "";
+  const cardShadow = glow.length > 0 ? `${baseShadow}, ${glow}` : baseShadow;
+  const backdropBlur =
+    effects.cardBackdropBlurPx !== undefined ? safeNumber(effects.cardBackdropBlurPx, 12) : null;
+  const backdropVar = backdropBlur !== null ? `\n  --card-backdrop-blur: ${backdropBlur}px;` : "";
+  const backdropCss =
+    backdropBlur !== null
+      ? `\n.bullet,.eyebrow,.btn{backdrop-filter:blur(var(--card-backdrop-blur));-webkit-backdrop-filter:blur(var(--card-backdrop-blur))}`
+      : "";
+  const textureCss = buildTextureOverlayCss(styleKit.background.textureOverlay);
+  const animationCss = buildGradientAnimationCss(styleKit.background.gradientAnimation);
+
   return `
 :root{
   --font-heading: ${safeCssValue(styleKit.fonts.heading, "system-ui, sans-serif")};
@@ -85,13 +170,13 @@ export function buildDeckStyleCss(styleKit: DesignStyleKit, designSystem: Design
   --accent-grad: ${safeCssValue(effects.accentGradient, "linear-gradient(110deg, #FF6B6B, #FFC93C)")};
   --card-radius: ${safeNumber(effects.cardRadiusPx, 22)}px;
   --card-border: ${safeCssValue(effects.cardBorder, "1.5px solid rgba(0,0,0,.08)")};
-  --card-shadow: ${safeCssValue(effects.cardShadow, "0 18px 44px rgba(31,41,51,.12)")};
+  --card-shadow: ${cardShadow};
   --card-surface: ${safeCssValue(effects.cardSurface, "rgba(255,255,255,.82)")};
   --focus-ring: ${focusRing};
   --t-dur: ${safeNumber(motion.slideTransitionMs, 550)}ms;
   --t-ease: ${safeCssValue(motion.slideEasing, "ease")};
   --e-dur: ${safeNumber(motion.entranceMs, 600)}ms;
-  --micro: ${safeNumber(motion.microMs, 220)}ms;
+  --micro: ${safeNumber(motion.microMs, 220)}ms;${backdropVar}
 ${hueVars}
 }
 *{box-sizing:border-box}
@@ -182,7 +267,7 @@ body{
 .sidedots button.on{background:var(--accent-grad);transform:scale(1.35)}
 .anim{opacity:0;transform:translateY(14px)}
 .slide.active .anim{animation:rise var(--e-dur) ease both;animation-delay:calc(var(--d, 0) * ${stagger}ms)}
-@keyframes rise{to{opacity:1;transform:none}}
+@keyframes rise{to{opacity:1;transform:none}}${backdropCss}${textureCss}${animationCss}
 @media (max-width:640px){.controls{right:16px;bottom:16px}.sidedots{display:none}}
 @media (prefers-reduced-motion: reduce){
   *{animation:none !important;transition:none !important}
