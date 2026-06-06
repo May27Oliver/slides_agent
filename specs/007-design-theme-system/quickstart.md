@@ -64,15 +64,21 @@ psql slides_agent -c "SELECT applies_to, count(*) FROM themes GROUP BY applies_t
 
 ## 實作狀態清單
 
-- [ ] US1 selectTheme 必經 + 兩路徑套具名 theme(`selectedTheme` 入 summary)
-- [ ] US2 轉換腳本 + 全量 seed(font/palette/style;idempotent;kind-aware 驗證)
-- [ ] US3 B 級四類 token(blur/glow/grain/漸層動畫)+ B 級升 full
-- [ ] schema kind 欄 + 0001 migration + 選擇索引
-- [ ] 移除 CURATED_* 寫死資料、保留 compose 引擎、`selectDesignStyleKit`→`selectTheme`+`composeKit`
-- [ ] 全 monorepo 回歸綠燈
+- [x] US1 selectTheme 必經 + 兩路徑套具名 theme(`selectedTheme` 入 summary)
+- [x] US2 轉換腳本 + 全量 seed(font/palette/style;idempotent;kind-aware 驗證)
+- [x] US3 B 級四類 token(blur/glow/grain/漸層動畫)+ B 級升 full
+- [x] schema kind 欄 + 0001 migration + 選擇索引
+- [x] 移除 CURATED_* 寫死資料、保留 compose 引擎、`selectDesignStyleKit`→`selectTheme`+`composeKit`
+- [x] 全 monorepo 回歸綠燈
 
-## 驗證證據
+## 驗證證據(2026-06-06 回填)
 
-- `0001_*.sql`(kind 欄 + 索引)、轉換腳本輸出、`db:seed` 列數/標籤分佈。
-- `selectedTheme` 記錄(可由唯讀 API 回看)、不同 brief→不同 theme 的兩份 HTML、B 級效果快照。
-- `listSelectable` 的 EXPLAIN 走 `(kind, applies_to, support)` 索引。
+- **0001 migration**(`0001_steep_mach_iv.sql`):`DROP INDEX themes_select_idx` → `ADD COLUMN kind text NOT NULL` → `CREATE INDEX themes_select_idx ON themes (kind, applies_to, support)`。
+- **轉換腳本輸出**(`pnpm db:convert-seeds`):`fonts=57, palettes=96, styles=67`。
+- **`pnpm db:seed` 列數/分佈**:`Seeded 220 theme(s): font=57, palette=96, style=67`;`style` 分佈 `full=20 / raw=47`(A 級 14 + B 級 6 升 full)。
+- **`selectedTheme` 記錄**:兩路徑由 `slides-service.theme-selection.test.ts` 覆蓋(LLM-success 與 fallback 皆寫入 summary)。對 **live seeded DB**(173 個可選候選)跑 `selectTheme`,不同 brief → 不同三軸,且 B 級可被選中:
+  - `"frosted glass dashboard"` → `style-10-glassmorphism` + `font-10-dashboard-data`(B 級)
+  - `"brutalist raw poster"` → `style-10-brutalism` + `font-10-brutalist-raw`
+  - `"aurora luminous gradient"` → `style-10-aurora-ui`(B 級);皆 `fallback=false`。
+- **B 級效果快照**:`pnpm --filter @slides-agent/api preview:bgrade` 產出 6 份 HTML,Chrome 實測 blur/glow/grain/aurora/mesh 皆如預期(mesh 已修 `no-repeat` 不破圖、動畫層錨 `.deck::after` 確實顯示)。
+- **`listSelectable` EXPLAIN(實測修正)**:在 220 列規模下,planner 走 **`themes_scope_idx`**(`Bitmap Index Scan on scope='builtin'` + Filter,Execution ~1.5ms),**並未**走 `(kind, applies_to, support)` 索引——因為 `listSelectable` 沒有 `kind =` 等值前綴(WHERE 為 `scope/active/applies_to IN/(kind<>style OR support<>raw)`)。此索引在現行查詢形狀下休眠;待 008 `scope=account` 列把表撐大時,依 US2 review 的 **M-1** 重設計索引(改 partial index 或以 `scope` 領頭)。資料量小時 planner 選 scope 索引屬正確行為,非缺陷。

@@ -193,6 +193,27 @@ pnpm db:migrate    # applies pending migrations to DATABASE_URL
 > Destructive changes (drop/rename column) can lose data — drizzle-kit may prompt;
 > review the SQL and back up real data first.
 
+### Theme catalogue (feature 007)
+
+Design styles are **data, not code**: the builtin theme catalogue lives in the
+`themes` table (three selection axes — `font` / `palette` / `style` — keyed by a
+`kind` column). At generation time `selectTheme` reads the catalogue from the DB
+and composes a `DesignStyleKit` deterministically, on both the LLM-success and
+fallback paths.
+
+```bash
+pnpm db:convert-seeds                       # ui-ux-pro-max CSVs → src/infra/db/seeds/*.json
+pnpm db:seed                                # idempotent upsert (also seeds accounts)
+pnpm --filter @slides-agent/api preview:bgrade   # render B-grade styles → /tmp/bgrade-preview/
+```
+
+- The CSV→seed converter is non-destructive: hand-authored full `style` tokens
+  (A-grade + the B-grade upgrades) live in `src/infra/db/seeds/authored-style-kits.ts`
+  and are merged over the generated skeleton. Re-running `db:convert-seeds` is safe.
+- Seeding is **all-or-nothing**: a kind-aware validator rejects the whole batch
+  (zero writes) if any row is invalid, so the catalogue never half-loads.
+- Current catalogue: **220 rows** — font 57, palette 96, style 67 (20 `full` + 47 `raw`).
+
 ---
 
 ## API

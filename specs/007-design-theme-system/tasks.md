@@ -105,11 +105,11 @@ description: "Task list for feature 007 design-theme-system"
 
 ## Phase 6: Polish & 回歸
 
-- [ ] T032 對照 plan「新增物件的消費者」移除未被消費的 artifact(如殘留的 `select-design-style-kit.ts`)。
-- [ ] T033 全 monorepo 回歸:`pnpm -r test` + 各包 `tsc --noEmit` 全綠。
-- [ ] T034 code-review + security pass(B 級新 token sanitize、無 keyframe/CSS 注入、`DATABASE_URL` 不外洩)。
-- [ ] T035 跑 `quickstart.md` 全流程並回填證據(0001 migration、轉換輸出、seed 列數分佈、`selectedTheme` 記錄、B 級快照、`listSelectable` EXPLAIN)。
-- [ ] T036 [P] 同步 `quickstart.md` 實作狀態勾選;README 補 theme seed 段(若需要)。
+- [x] T032 對照 plan「新增物件的消費者」移除未被消費的 artifact(如殘留的 `select-design-style-kit.ts`)。
+- [x] T033 全 monorepo 回歸:`pnpm -r test` + 各包 `tsc --noEmit` 全綠。
+- [x] T034 code-review + security pass(B 級新 token sanitize、無 keyframe/CSS 注入、`DATABASE_URL` 不外洩)。
+- [x] T035 跑 `quickstart.md` 全流程並回填證據(0001 migration、轉換輸出、seed 列數分佈、`selectedTheme` 記錄、B 級快照、`listSelectable` EXPLAIN)。
+- [x] T036 [P] 同步 `quickstart.md` 實作狀態勾選;README 補 theme seed 段(若需要)。
 
 ---
 
