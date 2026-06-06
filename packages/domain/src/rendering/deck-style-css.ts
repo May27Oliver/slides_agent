@@ -138,6 +138,76 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${red}, ${green}, ${blue}, ${safeAlpha})`;
 }
 
+// Engine-owned ambient blobs (per-style opt-in). Large, soft, low-opacity radial
+// circles placed in the negative space of the left-weighted layout — top-right,
+// lower-right, bottom-left — coloured from the palette accent hues. Mirrors the
+// ui-ux-pro-max "organic shapes / blob" background guidance.
+const AMBIENT_BLOBS: ReadonlyArray<{
+  readonly size: string;
+  readonly pos: string;
+  readonly alpha: number;
+}> = [
+  { size: "560px 560px", pos: "86% 14%", alpha: 0.36 },
+  { size: "460px 460px", pos: "70% 82%", alpha: 0.3 },
+  { size: "420px 420px", pos: "6% 90%", alpha: 0.28 }
+];
+// The tint holds solid to CORE% then fades to nothing by EDGE% — a defined orb
+// core with a soft halo, rather than an all-the-way-out blur that reads as fog.
+const BLOB_CORE_STOP = 24;
+const BLOB_EDGE_STOP = 58;
+
+/**
+ * Whether a hex is "colourful" enough to wash a blob with. A near-black, near-white,
+ * or greyish accent (e.g. a luxury/neutral palette whose accent is #1C1917) would
+ * smear the background into a dirty grey, so we skip it and keep that area clean.
+ */
+function isColourfulHue(hex: string): boolean {
+  const raw = hex.replace("#", "");
+  const expanded =
+    raw.length === 3
+      ? raw
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : raw.slice(0, 6);
+  const parsed = Number.parseInt(expanded, 16);
+  if (!Number.isFinite(parsed)) {
+    return false;
+  }
+  const r = ((parsed >> 16) & 255) / 255;
+  const g = ((parsed >> 8) & 255) / 255;
+  const b = (parsed & 255) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const lightness = (max + min) / 2;
+  const delta = max - min;
+  const saturation = delta === 0 ? 0 : delta / (1 - Math.abs(2 * lightness - 1));
+  return lightness >= 0.22 && lightness <= 0.9 && saturation >= 0.25;
+}
+
+/**
+ * Builds the comma-separated ambient blob background layers for a known enum, else
+ * "". Blobs are coloured only from the palette's *colourful* accent hues (sanitized
+ * hex → rgba); a fully neutral palette yields no blobs so the background stays clean
+ * rather than muddy. No attacker string can reach the value.
+ */
+function buildAmbientBlobs(ambient: unknown, accentHues: DesignStyleKit["accentHues"]): string {
+  if (ambient !== "blobs") {
+    return "";
+  }
+  const colourful = accentHues
+    .map((hue) => safeHex(hue.base, ""))
+    .filter((hex) => hex.length > 0 && isColourfulHue(hex));
+  if (colourful.length === 0) {
+    return "";
+  }
+  return AMBIENT_BLOBS.map((blob, index) => {
+    const hex = colourful[index % colourful.length]!;
+    const tint = hexToRgba(hex, blob.alpha);
+    return `radial-gradient(${blob.size} at ${blob.pos}, ${tint} 0%, ${tint} ${BLOB_CORE_STOP}%, transparent ${BLOB_EDGE_STOP}%)`;
+  }).join(", ");
+}
+
 /**
  * Builds the reference-grade, self-contained deck CSS from a DesignStyleKit.
  *
@@ -179,6 +249,16 @@ export function buildDeckStyleCss(styleKit: DesignStyleKit, designSystem: Design
   const textureCss = buildTextureOverlayCss(styleKit.background.textureOverlay);
   const animationCss = buildGradientAnimationCss(styleKit.background.gradientAnimation);
 
+  // Ambient blobs (when on) layer *over* the base background so they read as soft
+  // accent depth filling the negative space; the base wash stays underneath.
+  const baseBackground = safeCssValue(
+    styleKit.background.css,
+    safeHex(designSystem.palette.background, "#FFF8EE")
+  );
+  const ambientBlobs = buildAmbientBlobs(styleKit.background.ambient, styleKit.accentHues);
+  const bodyBackground =
+    ambientBlobs.length > 0 ? `${ambientBlobs}, ${baseBackground}` : baseBackground;
+
   return `
 :root{
   --font-heading: ${safeCssValue(styleKit.fonts.heading, "system-ui, sans-serif")};
@@ -208,7 +288,7 @@ ${hueVars}
 *{box-sizing:border-box}
 html,body{width:100%;height:100%;margin:0;overflow:hidden}
 body{
-  background:${safeCssValue(styleKit.background.css, safeHex(designSystem.palette.background, "#FFF8EE"))};
+  background:${bodyBackground};
   color:var(--text);
   font-family:var(--font-body);
   -webkit-font-smoothing:antialiased;

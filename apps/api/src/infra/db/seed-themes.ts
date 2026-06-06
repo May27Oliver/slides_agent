@@ -61,6 +61,7 @@ const SUPPORTS: readonly ThemeSupport[] = ["full", "partial", "raw"];
 const APPLIES_TO: readonly ThemeAppliesTo[] = ["presentation", "landing", "dashboard", "universal"];
 const TEXTURE_OVERLAYS = ["grain", "noise", "paper"];
 const GRADIENT_PRESETS = ["aurora", "mesh"];
+const AMBIENT_PRESETS = ["blobs"];
 // Mirrors the renderer's UNSAFE_CSS_VALUE guard (deck-style-css.ts): free-CSS
 // string tokens reaching the <style> block must not be able to break out of a
 // declaration/rule. Render-time safeCssValue is the live guard; this rejects such
@@ -362,6 +363,9 @@ function validateBackgroundStructure(structure: unknown): string[] {
         problems.push("backgroundStructure.gradientAnimation.durationMs must be a number");
       }
     }
+  }
+  if (structure.ambient !== undefined && !AMBIENT_PRESETS.includes(structure.ambient as string)) {
+    problems.push(`backgroundStructure.ambient must be one of ${AMBIENT_PRESETS.join(" | ")}`);
   }
   return problems;
 }

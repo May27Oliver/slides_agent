@@ -48,6 +48,9 @@ export function composeKit(parts: ComposeKitParts): DesignStyleKit {
       : {}),
     ...(style?.backgroundStructure?.gradientAnimation !== undefined
       ? { gradientAnimation: style.backgroundStructure.gradientAnimation }
+      : {}),
+    ...(style?.backgroundStructure?.ambient !== undefined
+      ? { ambient: style.backgroundStructure.ambient }
       : {})
   };
 

@@ -181,6 +181,29 @@ describe("seedThemes (007 US2)", () => {
     expect(issues[0]?.problems.some((p) => p.includes("textureOverlay"))).toBe(true);
   });
 
+  it("accepts ambient:blobs and flags an out-of-enum ambient value", async () => {
+    const ok: ThemeSeed = {
+      ...styleFullSeed,
+      id: "style-10-ambient-ok",
+      styleKit: {
+        ...(styleFullSeed.styleKit as object),
+        backgroundStructure: { ambient: "blobs" }
+      } as never
+    };
+    expect(validateThemeSeeds([ok])).toEqual([]);
+
+    const bad: ThemeSeed = {
+      ...styleFullSeed,
+      id: "style-10-ambient-bad",
+      styleKit: {
+        ...(styleFullSeed.styleKit as object),
+        backgroundStructure: { ambient: "sparkles" }
+      } as never
+    };
+    const issues = validateThemeSeeds([bad]);
+    expect(issues[0]?.problems.some((p) => p.includes("ambient"))).toBe(true);
+  });
+
   it("rejects a CSS-breakout in a free-CSS string field (cardShadow / glow)", async () => {
     const breakout = "0 0 8px red } body { background: red"; // '}' escapes the rule
     const badShadow: ThemeSeed = {

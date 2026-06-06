@@ -196,4 +196,74 @@ describe("buildDeckStyleCss B-grade tokens (007 US3)", () => {
       expect(css).not.toContain("evil{}");
     });
   });
+
+  describe("ambient blobs (organic depth) — fills negative space", () => {
+    // Engine-owned blob positions (top-right, lower-right, bottom-left) that fill
+    // the empty zones of the left-weighted layout.
+    const BLOB_MARKER = "at 86% 14%";
+
+    it("prepends soft accent-hue blob layers onto the body background when on", () => {
+      const css = buildDeckStyleCss(
+        kitWith({ background: { ambient: "blobs" } }),
+        baseDesignSystem
+      );
+      const bodyBg =
+        css.split("\n").find((line) => line.trimStart().startsWith("background:")) ?? "";
+      expect(bodyBg).toContain(BLOB_MARKER);
+      // Built from the palette accent hues as soft rgba (not raw hex), and still
+      // layered over the original base background.
+      expect(bodyBg).toMatch(/radial-gradient\([^)]*rgba\(/u);
+      expect(bodyBg).toContain("transparent");
+    });
+
+    it("omits the blobs when absent (default kit)", () => {
+      const css = buildDeckStyleCss(defaultDesignStyleKit(), baseDesignSystem);
+      expect(css).not.toContain(BLOB_MARKER);
+    });
+
+    it("ignores an out-of-enum ambient value (no injection)", () => {
+      const css = buildDeckStyleCss(
+        kitWith({ background: { ambient: "}body{x" as unknown as "blobs" } }),
+        baseDesignSystem
+      );
+      expect(css).not.toContain(BLOB_MARKER);
+      expect(css).not.toContain("}body{x");
+    });
+
+    it("skips blobs entirely when every accent is neutral (no muddy grey wash)", () => {
+      // A luxury/neutral palette whose accents are near-black/grey must NOT smear
+      // the background into a dirty grey — those hues are skipped, leaving it clean.
+      const base = defaultDesignStyleKit();
+      const neutralKit: DesignStyleKit = {
+        ...base,
+        accentHues: [
+          { name: "ink", base: "#1C1917", gradient: "linear-gradient(135deg,#1C1917,#44403C)" },
+          { name: "taupe", base: "#44403C", gradient: "linear-gradient(135deg,#44403C,#1C1917)" }
+        ],
+        background: { ...base.background, ambient: "blobs" }
+      };
+      const css = buildDeckStyleCss(neutralKit, baseDesignSystem);
+      expect(css).not.toContain(BLOB_MARKER);
+    });
+
+    it("colours blobs only from the colourful accents, skipping the neutral ones", () => {
+      // Mixed palette (ink, taupe, gold): only the gold should tint a blob.
+      const base = defaultDesignStyleKit();
+      const mixedKit: DesignStyleKit = {
+        ...base,
+        accentHues: [
+          { name: "ink", base: "#1C1917", gradient: "linear-gradient(135deg,#1C1917,#44403C)" },
+          { name: "taupe", base: "#44403C", gradient: "linear-gradient(135deg,#44403C,#1C1917)" },
+          { name: "gold", base: "#CA8A04", gradient: "linear-gradient(135deg,#CA8A04,#EAB308)" }
+        ],
+        background: { ...base.background, ambient: "blobs" }
+      };
+      const css = buildDeckStyleCss(mixedKit, baseDesignSystem);
+      const bodyBg =
+        css.split("\n").find((line) => line.trimStart().startsWith("background:")) ?? "";
+      expect(bodyBg).toContain(BLOB_MARKER); // gold drives the blobs
+      // The near-black ink accent must never appear as a blob colour.
+      expect(bodyBg).not.toContain("rgba(28, 25, 23");
+    });
+  });
 });

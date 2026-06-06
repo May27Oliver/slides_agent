@@ -113,6 +113,7 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
         staggerStepMs: 80,
         microMs: 240
       }),
+      backgroundStructure: { ambient: "blobs" },
       antiPatterns: [
         "Do not crowd blocks; preserve large 48px+ gaps.",
         "Do not drop below 7:1 contrast on vibrant fills."
@@ -152,6 +153,7 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
         staggerStepMs: 80,
         microMs: 200
       }),
+      backgroundStructure: { ambient: "blobs" },
       antiPatterns: [
         "Do not use hard lines; keep edges soft and puffy.",
         "Do not pair with harsh high-contrast palettes."
@@ -179,6 +181,7 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
     styleKit: {
       effects: { cardRadiusPx: 10, cardShadow: "0 12px 28px -16px rgba(15,23,42,.22)" },
       motion: motion({ slideTransitionMs: 260, entranceMs: 360, staggerStepMs: 70, microMs: 200 }),
+      backgroundStructure: { ambient: "blobs" },
       antiPatterns: [
         "Do not drop below WCAG AA contrast for the sake of softness.",
         "Do not deepen shadows into neumorphism's low-contrast emboss."
@@ -218,6 +221,8 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
         staggerStepMs: 90,
         microMs: 240
       }),
+      // Organic = soft blob shapes filling the canvas (ui-ux-pro-max guidance).
+      backgroundStructure: { ambient: "blobs" },
       antiPatterns: [
         "Do not use sharp geometric corners; favour organic curves.",
         "Do not use harsh neon palettes."
@@ -233,6 +238,7 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
         cardShadow: "0 10px 20px rgba(0,0,0,.10), 0 20px 40px rgba(0,0,0,.10)"
       },
       motion: motion({ slideTransitionMs: 480, entranceMs: 520, staggerStepMs: 100, microMs: 240 }),
+      backgroundStructure: { ambient: "blobs" },
       antiPatterns: [
         "Do not flatten the elevation hierarchy; preserve distinct z-levels.",
         "Do not animate layout-shifting parallax that ignores reduced-motion."
@@ -286,6 +292,8 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
         staggerStepMs: 90,
         microMs: 240
       }),
+      // Soft natural depth — distilled organic shapes in the negative space.
+      backgroundStructure: { ambient: "blobs" },
       antiPatterns: [
         "Do not use cold neon palettes; stay in warm natural tones.",
         "Do not over-animate; keep motion gentle."
@@ -308,6 +316,8 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
         cardBackdropBlurPx: 18
       },
       motion: motion({ slideTransitionMs: 320, entranceMs: 420, staggerStepMs: 80, microMs: 220 }),
+      // Blobs give the backdrop blur a vibrant scene to refract (per the antiPattern).
+      backgroundStructure: { ambient: "blobs" },
       antiPatterns: [
         "Do not place glass over flat/low-contrast backgrounds; the blur needs a vibrant scene.",
         "Do not stack many glass layers; keep depth to two planes for legibility."

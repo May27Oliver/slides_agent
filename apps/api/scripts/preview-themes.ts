@@ -106,9 +106,18 @@ function tokenNote(kit: DesignStyleKit): { grade: "A" | "B"; note: string } {
   if (kit.background.gradientAnimation !== undefined) {
     tokens.push(`anim:${kit.background.gradientAnimation.preset}`);
   }
-  return tokens.length > 0
-    ? { grade: "B", note: `B 級 — ${tokens.join(", ")}` }
-    : { grade: "A", note: "A 級 — 結構(radius / shadow / motion)" };
+  // Grade is decided by the B-grade engine tokens above; `ambient` is a background
+  // treatment that A-grade styles can also opt into, so append it without re-grading.
+  const grade: "A" | "B" = tokens.length > 0 ? "B" : "A";
+  if (kit.background.ambient !== undefined) {
+    tokens.push(`ambient:${kit.background.ambient}`);
+  }
+  if (tokens.length === 0) {
+    return { grade, note: "A 級 — 結構(radius / shadow / motion)" };
+  }
+  return grade === "B"
+    ? { grade, note: `B 級 — ${tokens.join(", ")}` }
+    : { grade, note: `A 級 — 結構 + ${tokens.join(", ")}` };
 }
 
 const FONT = byId(fonts, "font-00-sans-default");
@@ -118,7 +127,11 @@ const SAMPLE_SLIDES = [
     id: "s1",
     title: "設計風格一覽",
     message: "同一份範例簡報,套上不同的內建風格,用來肉眼比較整體調性。",
-    outline: ["封面標題走 coverTitle 尺度", "背景由配對的 palette 提供", "卡片表面半透明,blur 才看得見"]
+    outline: [
+      "封面標題走 coverTitle 尺度",
+      "背景由配對的 palette 提供",
+      "卡片表面半透明,blur 才看得見"
+    ]
   },
   {
     id: "s2",

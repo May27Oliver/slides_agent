@@ -105,6 +105,13 @@ export interface DesignBackground {
    * by prefers-reduced-motion. Optional.
    */
   readonly gradientAnimation?: { readonly preset: "aurora" | "mesh"; readonly durationMs: number };
+  /**
+   * 007 follow-up: ambient background depth — large, soft, low-opacity accent-hue
+   * blobs filling the negative space (per ui-ux-pro-max "organic shapes / blob"
+   * guidance). Enum, engine-owned (the renderer builds the radial layers from the
+   * palette hues), so it cannot inject CSS. Opt-in per style; off for flat/minimal.
+   */
+  readonly ambient?: "blobs";
 }
 
 export interface PatternLayoutHint {

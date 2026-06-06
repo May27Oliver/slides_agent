@@ -108,6 +108,9 @@
         "microMs": 220,
         "respectReducedMotion": true
       },
+      "backgroundStructure": {
+        "ambient": "blobs"
+      },
       "antiPatterns": [
         "Do not place glass over flat/low-contrast backgrounds; the blur needs a vibrant scene.",
         "Do not stack many glass layers; keep depth to two planes for legibility."
@@ -221,6 +224,9 @@
         "microMs": 240,
         "respectReducedMotion": true
       },
+      "backgroundStructure": {
+        "ambient": "blobs"
+      },
       "antiPatterns": [
         "Do not crowd blocks; preserve large 48px+ gaps.",
         "Do not drop below 7:1 contrast on vibrant fills."
@@ -316,6 +322,9 @@
         "staggerStepMs": 80,
         "microMs": 200,
         "respectReducedMotion": true
+      },
+      "backgroundStructure": {
+        "ambient": "blobs"
       },
       "antiPatterns": [
         "Do not use hard lines; keep edges soft and puffy.",
@@ -607,6 +616,9 @@
         "staggerStepMs": 70,
         "microMs": 200,
         "respectReducedMotion": true
+      },
+      "backgroundStructure": {
+        "ambient": "blobs"
       },
       "antiPatterns": [
         "Do not drop below WCAG AA contrast for the sake of softness.",
@@ -1155,6 +1167,9 @@
         "microMs": 240,
         "respectReducedMotion": true
       },
+      "backgroundStructure": {
+        "ambient": "blobs"
+      },
       "antiPatterns": [
         "Do not use sharp geometric corners; favour organic curves.",
         "Do not use harsh neon palettes."
@@ -1264,6 +1279,9 @@
         "staggerStepMs": 100,
         "microMs": 240,
         "respectReducedMotion": true
+      },
+      "backgroundStructure": {
+        "ambient": "blobs"
       },
       "antiPatterns": [
         "Do not flatten the elevation hierarchy; preserve distinct z-levels.",
@@ -1636,6 +1654,9 @@
         "staggerStepMs": 90,
         "microMs": 240,
         "respectReducedMotion": true
+      },
+      "backgroundStructure": {
+        "ambient": "blobs"
       },
       "antiPatterns": [
         "Do not use cold neon palettes; stay in warm natural tones.",

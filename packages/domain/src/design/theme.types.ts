@@ -39,6 +39,8 @@ export interface PaletteStyleKit {
 export interface BackgroundStructure {
   readonly textureOverlay?: "grain" | "noise" | "paper";
   readonly gradientAnimation?: { readonly preset: "aurora" | "mesh"; readonly durationMs: number };
+  /** Engine-owned ambient depth: large soft accent-hue blobs filling negative space. */
+  readonly ambient?: "blobs";
 }
 
 /** Partial effects an A/B-grade style row contributes (B-grade tokens optional). */
@@ -79,7 +81,11 @@ export interface SelectableTheme {
 /** The composed result selectTheme returns: a full kit + the three chosen ids. */
 export interface SelectedTheme {
   readonly styleKit: DesignStyleKit;
-  readonly ids: { readonly style: string | null; readonly palette: string | null; readonly font: string | null };
+  readonly ids: {
+    readonly style: string | null;
+    readonly palette: string | null;
+    readonly font: string | null;
+  };
   /** true when any axis (or all) had no candidate and fell back to default. */
   readonly fallback: boolean;
 }
