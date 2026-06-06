@@ -2,12 +2,13 @@
  * Dev-only visual harness for feature 007 US3 B-grade tokens. Composes each
  * upgraded B-grade `style` seed with a fitting `palette` + `font` seed via the
  * real `composeKit`, renders a sample deck with `renderTemplateDeck`, and writes
- * standalone HTML to /tmp/bgrade-preview/ for eyeball verification (backdrop blur,
- * glow, grain texture, animated aurora/mesh gradient). Not wired into the app.
+ * standalone HTML to apps/api/preview/bgrade/ for eyeball verification (backdrop
+ * blur, glow, grain texture, animated aurora/mesh gradient). Not wired into the app.
  *
  * Run: node --import tsx scripts/preview-bgrade.ts
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { composeKit, renderTemplateDeck } from "@slides-agent/domain";
 import type {
   FontStyleKit,
@@ -17,7 +18,10 @@ import type {
 } from "@slides-agent/domain";
 
 const SEED_DIR = new URL("../src/infra/db/seeds/", import.meta.url);
-const OUT_DIR = "/tmp/bgrade-preview/";
+// Output lives inside the repo (apps/api/preview/bgrade/) so it's easy to find in
+// Finder and survives reboots — unlike /tmp. Resolved from this script's location
+// so it works no matter what cwd `pnpm` runs from. The folder is git-ignored.
+const OUT_DIR = fileURLToPath(new URL("../preview/bgrade/", import.meta.url));
 
 interface Seed {
   readonly id: string;

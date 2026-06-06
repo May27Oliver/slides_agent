@@ -19,3 +19,6 @@ test-results/
 .npmrc.local
 .pnpm-store/
 .gitnexus
+
+# Local visual-preview output (preview-bgrade.ts) — generated, not versioned
+apps/api/preview/
