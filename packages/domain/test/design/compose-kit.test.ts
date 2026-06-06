@@ -8,7 +8,9 @@ const FONT: FontStyleKit = {
 };
 
 const PALETTE: PaletteStyleKit = {
-  accentHues: [{ name: "violet", base: "#7C3AED", gradient: "linear-gradient(135deg, #7C3AED, #4F46E5)" }],
+  accentHues: [
+    { name: "violet", base: "#7C3AED", gradient: "linear-gradient(135deg, #7C3AED, #4F46E5)" }
+  ],
   accentGradient: "linear-gradient(110deg, #7C3AED 0%, #4F46E5 100%)",
   background: { css: "#0B0B12" },
   cardSurface: "rgba(20, 20, 30, .7)",
@@ -16,7 +18,12 @@ const PALETTE: PaletteStyleKit = {
 };
 
 const STYLE: StyleStyleKit = {
-  effects: { cardRadiusPx: 0, cardShadow: "4px 4px 0 #000", cardBackdropBlurPx: 12, glow: "0 0 24px #7C3AED" },
+  effects: {
+    cardRadiusPx: 0,
+    cardShadow: "4px 4px 0 #000",
+    cardBackdropBlurPx: 12,
+    glow: "0 0 24px #7C3AED"
+  },
   motion: {
     slideTransitionMs: 0,
     slideEasing: "linear",
@@ -28,7 +35,10 @@ const STYLE: StyleStyleKit = {
   typeScale: { coverTitle: { min: 60, preferredVw: 8, max: 120, weight: 900, lineHeight: 1 } },
   patternLayouts: [{ pattern: "title-summary", layout: "cover", description: "brutalist cover" }],
   antiPatterns: ["No soft shadows."],
-  backgroundStructure: { textureOverlay: "grain", gradientAnimation: { preset: "aurora", durationMs: 8000 } }
+  backgroundStructure: {
+    textureOverlay: "grain",
+    gradientAnimation: { preset: "aurora", durationMs: 8000 }
+  }
 };
 
 describe("composeKit", () => {
@@ -74,8 +84,32 @@ describe("composeKit", () => {
     expect(kit.effects.glow).toBe("0 0 24px #7C3AED");
   });
 
+  it("lets a style reclaim the card border (structural) over the palette's", () => {
+    const framedStyle: StyleStyleKit = {
+      effects: {
+        cardRadiusPx: 0,
+        cardShadow: "8px 8px 0 #141414",
+        cardBorder: "3px solid #141414"
+      },
+      motion: STYLE.motion
+    };
+    const kit = composeKit({ style: framedStyle, palette: PALETTE, font: FONT });
+    // The brutalist frame wins over the palette's soft border.
+    expect(kit.effects.cardBorder).toBe("3px solid #141414");
+    // ...but the rest of the colour axis still comes from the palette.
+    expect(kit.effects.cardSurface).toBe(PALETTE.cardSurface);
+  });
+
+  it("keeps the palette border when the style does not set one", () => {
+    const kit = composeKit({ style: STYLE, palette: PALETTE });
+    expect(kit.effects.cardBorder).toBe(PALETTE.cardBorder);
+  });
+
   it("omits B-grade tokens when the style part does not set them", () => {
-    const plainStyle: StyleStyleKit = { effects: { cardRadiusPx: 8, cardShadow: "none" }, motion: STYLE.motion };
+    const plainStyle: StyleStyleKit = {
+      effects: { cardRadiusPx: 8, cardShadow: "none" },
+      motion: STYLE.motion
+    };
     const kit = composeKit({ style: plainStyle });
     expect(kit.effects.cardBackdropBlurPx).toBeUndefined();
     expect(kit.effects.glow).toBeUndefined();

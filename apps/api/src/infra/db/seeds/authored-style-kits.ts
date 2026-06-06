@@ -83,7 +83,13 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
   "style-10-brutalism": {
     support: "full",
     styleKit: {
-      effects: { cardRadiusPx: 0, cardShadow: "8px 8px 0 rgba(0,0,0,1)" },
+      // Brutalist card = a hard outlined block: thick dark frame + same-colour hard
+      // offset shadow. The frame is structural, so it overrides the palette border.
+      effects: {
+        cardRadiusPx: 0,
+        cardBorder: "3px solid #141414",
+        cardShadow: "8px 8px 0 #141414"
+      },
       motion: motion({
         slideTransitionMs: 0,
         slideEasing: "linear",
@@ -192,7 +198,12 @@ export const AUTHORED_STYLE_KITS: Record<string, AuthoredStyleKit> = {
   "style-10-neubrutalism": {
     support: "full",
     styleKit: {
-      effects: { cardRadiusPx: 0, cardShadow: "4px 4px 0 rgba(0,0,0,1)" },
+      // Neubrutalism: same outlined-block idea, a touch tighter than brutalism.
+      effects: {
+        cardRadiusPx: 0,
+        cardBorder: "2px solid #141414",
+        cardShadow: "4px 4px 0 #141414"
+      },
       motion: motion({
         slideTransitionMs: 120,
         slideEasing: "cubic-bezier(.2,.8,.2,1)",

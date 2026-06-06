@@ -273,6 +273,9 @@ function validateStructuralKit(kit: Record<string, unknown>): string[] {
     if (!isSafeCssValue(effects.cardShadow)) {
       problems.push("style styleKit.effects.cardShadow must be a safe, non-empty CSS value");
     }
+    if (effects.cardBorder !== undefined && !isSafeCssValue(effects.cardBorder)) {
+      problems.push("style styleKit.effects.cardBorder must be a safe CSS value when present");
+    }
     if (effects.cardBackdropBlurPx !== undefined && !isFiniteNumber(effects.cardBackdropBlurPx)) {
       problems.push("style styleKit.effects.cardBackdropBlurPx must be a number when present");
     }

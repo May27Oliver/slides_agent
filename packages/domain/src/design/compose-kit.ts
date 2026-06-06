@@ -38,7 +38,10 @@ export function composeKit(parts: ComposeKitParts): DesignStyleKit {
           cardBorder: palette.cardBorder,
           accentGradient: palette.accentGradient
         }
-      : {})
+      : {}),
+    // A style may reclaim the card border when it is structural (brutalism's frame),
+    // overriding the palette's colour-axis border.
+    ...(style?.effects.cardBorder !== undefined ? { cardBorder: style.effects.cardBorder } : {})
   };
 
   const background: DesignStyleKit["background"] = {

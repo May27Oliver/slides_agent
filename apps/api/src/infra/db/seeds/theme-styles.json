@@ -139,7 +139,8 @@
     "styleKit": {
       "effects": {
         "cardRadiusPx": 0,
-        "cardShadow": "8px 8px 0 rgba(0,0,0,1)"
+        "cardBorder": "3px solid #141414",
+        "cardShadow": "8px 8px 0 #141414"
       },
       "motion": {
         "slideTransitionMs": 0,
@@ -1025,7 +1026,8 @@
     "styleKit": {
       "effects": {
         "cardRadiusPx": 0,
-        "cardShadow": "4px 4px 0 rgba(0,0,0,1)"
+        "cardBorder": "2px solid #141414",
+        "cardShadow": "4px 4px 0 #141414"
       },
       "motion": {
         "slideTransitionMs": 120,

@@ -47,6 +47,13 @@ export interface BackgroundStructure {
 export interface StyleEffects {
   readonly cardRadiusPx: number;
   readonly cardShadow: string;
+  /**
+   * Full CSS `border` shorthand that *overrides* the palette's card border when the
+   * border is part of the style's structural identity (e.g. brutalism's thick dark
+   * frame that must match its hard offset shadow). Optional — when absent the palette
+   * supplies the border. Sanitized as a safe CSS value at seed time + render time.
+   */
+  readonly cardBorder?: string;
   /** B-grade: backdrop-filter blur radius in px. */
   readonly cardBackdropBlurPx?: number;
   /** B-grade: extra glow layered onto box-shadow. */
