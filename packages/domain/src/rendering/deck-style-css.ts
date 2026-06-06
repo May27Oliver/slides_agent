@@ -27,37 +27,60 @@ function safeNumber(value: number, fallback: number): number {
 
 // 007 US3 — built-in B-grade overlays. These are ENGINE-OWNED static CSS keyed by
 // a closed enum: a tampered kit can only select a preset (or none), never inject
-// its own CSS. The renderer guards the lookup with hasOwnProperty so prototype
-// keys (e.g. "toString") cannot resolve to inherited members (DR-008).
-const TEXTURE_OVERLAYS: Record<string, string> = {
+// its own CSS. The maps use literal-union keys so tsc enforces the closed set and
+// the type guards below (hasOwnProperty) reject any prototype key (e.g. "toString",
+// "__proto__") before it can reach a template literal (DR-008).
+type TextureKey = "grain" | "noise" | "paper";
+type GradientPreset = "aurora" | "mesh";
+
+const TEXTURE_OVERLAYS: Record<TextureKey, string> = {
   grain: "repeating-radial-gradient(circle at 0 0, rgba(0,0,0,.05) 0 1px, transparent 1px 3px)",
-  noise: "repeating-conic-gradient(rgba(0,0,0,.035) 0% 25%, transparent 0% 50%)",
+  noise:
+    "repeating-linear-gradient(0deg, rgba(0,0,0,.035) 0 1px, transparent 1px 2px), repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 1px, transparent 1px 2px)",
   paper: "repeating-linear-gradient(45deg, rgba(0,0,0,.03) 0 2px, transparent 2px 5px)"
 };
 
-const GRADIENT_ANIMATIONS: Record<string, { readonly keyframes: string; readonly layer: string }> =
-  {
-    aurora: {
-      keyframes:
-        "@keyframes deck-aurora{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}",
-      layer: "linear-gradient(120deg, var(--hue-0), var(--hue-1), var(--hue-2), var(--hue-3))"
-    },
-    mesh: {
-      keyframes:
-        "@keyframes deck-mesh{0%{background-position:0% 0%}50%{background-position:100% 100%}100%{background-position:0% 0%}}",
-      layer:
-        "radial-gradient(circle at 20% 25%, var(--hue-0), transparent 45%), radial-gradient(circle at 80% 75%, var(--hue-2), transparent 45%)"
-    }
-  };
+const GRADIENT_ANIMATIONS: Record<
+  GradientPreset,
+  { readonly keyframes: string; readonly layer: string }
+> = {
+  aurora: {
+    keyframes:
+      "@keyframes deck-aurora{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}",
+    layer: "linear-gradient(120deg, var(--hue-0), var(--hue-1), var(--hue-2), var(--hue-3))"
+  },
+  mesh: {
+    keyframes:
+      "@keyframes deck-mesh{0%{background-position:0% 0%}50%{background-position:100% 100%}100%{background-position:0% 0%}}",
+    layer:
+      "radial-gradient(circle at 20% 25%, var(--hue-0), transparent 45%), radial-gradient(circle at 80% 75%, var(--hue-2), transparent 45%)"
+  }
+};
+
+// Sane animation bounds: 0ms would repaint every frame (CPU churn); an absurd
+// value just looks frozen. Clamp regardless of source (LLM or DB jsonb).
+const MIN_ANIMATION_MS = 500;
+const MAX_ANIMATION_MS = 60000;
+const DEFAULT_ANIMATION_MS = 14000;
+
+function isTextureKey(value: unknown): value is TextureKey {
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(TEXTURE_OVERLAYS, value);
+}
+
+function isGradientPreset(value: unknown): value is GradientPreset {
+  return (
+    typeof value === "string" && Object.prototype.hasOwnProperty.call(GRADIENT_ANIMATIONS, value)
+  );
+}
 
 /** Renders the engine-owned `.deck::before` texture for a known enum preset, else "". */
 function buildTextureOverlayCss(overlay: unknown): string {
-  if (
-    typeof overlay !== "string" ||
-    !Object.prototype.hasOwnProperty.call(TEXTURE_OVERLAYS, overlay)
-  ) {
+  if (!isTextureKey(overlay)) {
     return "";
   }
+  // mix-blend-mode:multiply blends the grain against the body background painted
+  // below the (transparent) deck. The deck must NOT establish an isolated group
+  // or the texture would have nothing local to multiply against and vanish.
   return `
 .deck::before{
   content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
@@ -66,31 +89,31 @@ function buildTextureOverlayCss(overlay: unknown): string {
 }
 
 /**
- * Renders the engine-owned animated gradient (`@keyframes` + a fixed `body::before`
- * layer behind content) for a known enum preset. The keyframes are killed by the
- * always-emitted prefers-reduced-motion guard; the duration is sanitized.
+ * Renders the engine-owned animated gradient (`@keyframes` + a `.deck::after` layer
+ * behind the slide content) for a known enum preset. Anchoring to `.deck::after`
+ * (paired with `.deck{z-index:0}`) keeps the layer reliably below content without
+ * depending on slides being transparent. The keyframes are killed by the
+ * always-emitted prefers-reduced-motion guard; the duration is sanitized + clamped.
  */
 function buildGradientAnimationCss(animation: unknown): string {
   if (typeof animation !== "object" || animation === null) {
     return "";
   }
   const preset = (animation as { preset?: unknown }).preset;
-  if (
-    typeof preset !== "string" ||
-    !Object.prototype.hasOwnProperty.call(GRADIENT_ANIMATIONS, preset)
-  ) {
+  if (!isGradientPreset(preset)) {
     return "";
   }
   const spec = GRADIENT_ANIMATIONS[preset];
-  if (spec === undefined) {
-    return "";
-  }
-  const duration = safeNumber((animation as { durationMs?: number }).durationMs as number, 14000);
+  const rawDuration = safeNumber(
+    (animation as { durationMs?: number }).durationMs as number,
+    DEFAULT_ANIMATION_MS
+  );
+  const duration = Math.min(MAX_ANIMATION_MS, Math.max(MIN_ANIMATION_MS, rawDuration));
   return `
 ${spec.keyframes}
-body::before{
-  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background:${spec.layer};background-size:300% 300%;
+.deck::after{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:${spec.layer};background-repeat:no-repeat;background-size:300% 300%;
   animation:deck-${preset} ${duration}ms ease-in-out infinite;
 }`;
 }
@@ -146,9 +169,12 @@ export function buildDeckStyleCss(styleKit: DesignStyleKit, designSystem: Design
   const backdropBlur =
     effects.cardBackdropBlurPx !== undefined ? safeNumber(effects.cardBackdropBlurPx, 12) : null;
   const backdropVar = backdropBlur !== null ? `\n  --card-backdrop-blur: ${backdropBlur}px;` : "";
+  // Frosted glass belongs on the card surfaces only — not the eyebrow chip or the
+  // corner nav buttons (wrong intent + Safari drops positioned ::before children
+  // inside a backdrop-filter container).
   const backdropCss =
     backdropBlur !== null
-      ? `\n.bullet,.eyebrow,.btn{backdrop-filter:blur(var(--card-backdrop-blur));-webkit-backdrop-filter:blur(var(--card-backdrop-blur))}`
+      ? `\n.bullet{backdrop-filter:blur(var(--card-backdrop-blur));-webkit-backdrop-filter:blur(var(--card-backdrop-blur))}`
       : "";
   const textureCss = buildTextureOverlayCss(styleKit.background.textureOverlay);
   const animationCss = buildGradientAnimationCss(styleKit.background.gradientAnimation);
@@ -188,7 +214,7 @@ body{
   -webkit-font-smoothing:antialiased;
   letter-spacing:.01em;
 }
-.deck{position:relative;width:100vw;height:100vh;overflow:hidden}
+.deck{position:relative;width:100vw;height:100vh;overflow:hidden;z-index:0}
 .slide{
   position:absolute;
   inset:0;
