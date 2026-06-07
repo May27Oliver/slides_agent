@@ -311,17 +311,18 @@ Output：
 | | |
 |---|---|
 | **Input** | `SlideDeckPlannerInput` = `{ sourceContent: string; deckBrief: DeckBrief }` |
-| **Output** | `SlideDeck` |
+| **Output** | `SlideDeckPlanningResult` = `{ slideDeck: SlideDeck; chartIntents: ChartIntent[]; sourceFacts: SourceFact[] }` |
 
 行為：依序 `segmentSourceContent` → `extractSourceFacts` → `ChartIntentPlanner.plan` → `createDeckPlanProposal` → `buildReviewReport` → `compileDeckPlanProposal`。
 - deck 標題會再嘗試用來源第一個 Markdown `#` 標題覆蓋 proposal 標題。
+- 回傳的 `chartIntents` / `sourceFacts` 與 `slideDeck` 內的 `chart_placeholder` 來源同一輪 planning,避免 preview summary 與 slide references 漂移。
 - 若 compile 失敗，目前是 **throw `Error`**（附 issues），而非回傳 fallback。
 
 ### 3.4 `generatePreviewDeck(input)` — 對外預覽入口
 | | |
 |---|---|
 | **Input** | `GeneratePreviewDeckInput` = `{ sourceContent: string; deckBrief: DeckBrief }` |
-| **Output** | `GeneratePreviewDeckResult` = `{ slideDeck: SlideDeck; generationSummary: GenerationSummary }` |
+| **Output** | `GeneratePreviewDeckResult` = `{ slideDeck: SlideDeck; chartIntents: ChartIntent[]; generationSummary: GenerationSummary }` |
 
 `GenerationSummary`：
 | property | 型別 | 意義 |
@@ -331,7 +332,7 @@ Output：
 | `chartIntentCount` | `number` | 圖表意圖數 |
 | `uncertainClaimCount` | `number` | review 中不確定 claim 數 |
 
-> 維護注意：`generatePreviewDeck` 目前為了算 summary，自己又跑了一次 segmentation / facts / chartIntents，接著 `planSlideDeck` 內部會**再算一次**同樣三步。重構時可讓 `planSlideDeck` 一併回傳這些計數，消除重複計算。
+> 維護注意：`generatePreviewDeck` 只負責取得 segmentation，facts / chart intents / slide deck 由 `planSlideDeck` 同一輪 planning 回傳，summary 使用同一份資料。
 
 ---
 
@@ -388,5 +389,26 @@ Output：
 | `LlmAssistedHtmlDeckGenerator.generate(input)` | ⚠️ stub（`throw "not implemented yet"`）；input `HtmlDeckGenerationInput`（`{ deck: SlideDeck; designPlanningResult: DesignPlanningResult }`）、output `PreviewArtifact`（`{ html; htmlGenerationValidation; generationSummary }`），待實作後整理 |
 
 補充時請涵蓋：`PreviewArtifact`（已定義於 `deck.types.ts`）、HTML generation validation / scoped CSS / keyboard navigation / responsive / downloadable HTML 的輸出約定，並說明「HTML generation 不重新理解內容、不抽 facts、不決定 chart intent」這條邊界。
+
+### 6.3 `rendering` — 圖表渲染（008，✅ 已實作）
+
+把已規劃的 `ChartIntent`（內含 `sourceFacts`）在 deck 裡畫成**自包含 inline SVG / HTML 真圖表**，不引入任何前端圖表套件。全部為 domain 純函式（無 SQL、無 DOM、無第三方圖表庫），輸出為逐值 sanitize 過的字串。
+
+資料流：`ChartIntent + ChartTreatment → extractChartSeries → ChartSeries → validate(Pie/Line/Bar) → render(Pie/Line/Bar/Metric/Group/Table/Fallback)`。
+
+對外介面（`src/index.ts`）：
+| 函式 | 用途 |
+|---|---|
+| `parseMetricValue(value)` | 從 `SourceFact.value`（如 `$2.3M`、`45%`）保守解析 `{ display, numericValue, unit, prefix, suffix }`；無法解析回 `null`（不捏造） |
+| `extractChartSeries({ intent, treatment })` | 只讀 `intent.sourceFacts`，抽出最小 `ChartSeries`；每點帶 `sourceFactId` 溯源；單位不一致 / 點數不足 / 時間不可排序記 warning |
+| `validatePieSeries` / `validateLineSeries` / `validateBarSeries` | 各真圖最低資料條件（pie：2+、非負、總和>0、同單位；line：2+、同單位、可排序；bar：2+、同單位） |
+| `renderPieChart` / `renderLineChart` / `renderBarChart` | engine-owned inline SVG 片段（+ pie 的 HTML legend） |
+| `renderMetricCard` / `renderMetricGroup` / `renderFactTable` / `renderFallbackText` | 非真圖的 sanitized HTML 片段 |
+| `renderChartIntent({ intent, treatmentPlan?, styleKit, designSystem })` | orchestrator：treatment → visual kind → render → 安全 fallback；回傳 `RenderedChart`（含 `data-chart-*` 溯源屬性與 review notes） |
+| `mapVisualizationTypeToTreatment` / `resolveTreatmentForVisuals` | **決策 B** 的 `VisualizationType → ChartTreatment` 單向映射（單一真實來源；`design-planner` 也經此映射） |
+
+整合點：`renderTemplateDeck` 接收 optional `chartIntents`，把 slide 的 `chart_placeholder` content block（由 `compileDeckPlanProposal` 依 `chartIntentIds` 產生）渲染成真圖；無 `chartIntents` 時略過（向後相容）。配色取自 007 `DesignStyleKit.accentHues`。preview matrix：`apps/api/scripts/preview-chart-matrix.ts`（`pnpm --filter @slides-agent/api preview:chart-matrix`）覆蓋每個 style × 每種 chart visual。
+
+邊界：008 純引擎渲染、**不呼叫 LLM**、不新增 DB schema、不引入圖表套件；series 只從既有 facts 可靠抽取，資料不足一律安全 fallback 並記 review note。
 
 > 補完一個 node 後，請把第 0 節進度標記與第 4 節總表一併更新，讓本檔保持「整份 domain 的單一 I/O 入口」。

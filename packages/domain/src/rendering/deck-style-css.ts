@@ -1,28 +1,17 @@
 import { clampFontSizeCss } from "@/design/default-design-style-kit";
 import type { DesignStyleKit } from "@/design/design-style-kit.types";
 import type { DesignSystem } from "@/design/design.types";
+import { safeHex, safeNumber } from "@/rendering/sanitize";
 
-const HEX_PATTERN = /^#[0-9a-fA-F]{3,8}$/u;
 // A legitimate CSS *value* never needs these. They are exactly what a breakout
 // payload uses to escape the declaration / <style> context or load resources.
 const UNSAFE_CSS_VALUE = /[;{}<>\\@]|url\(|\/\*|\*\/|expression\(|\r|\n/iu;
-
-/** Returns the value only if it is a safe hex colour, else the fallback. */
-function safeHex(value: string | undefined, fallback: string): string {
-  const trimmed = (value ?? "").trim();
-  return HEX_PATTERN.test(trimmed) ? trimmed : fallback;
-}
 
 /** Returns the value only if it has no CSS-injection characters, else fallback. */
 function safeCssValue(value: string | undefined, fallback: string): string {
   return typeof value === "string" && value.length > 0 && !UNSAFE_CSS_VALUE.test(value)
     ? value
     : fallback;
-}
-
-/** Coerces to a finite number, else returns the fallback. */
-function safeNumber(value: number, fallback: number): number {
-  return Number.isFinite(value) ? value : fallback;
 }
 
 // 007 US3 — built-in B-grade overlays. These are ENGINE-OWNED static CSS keyed by
@@ -56,6 +45,76 @@ const GRADIENT_ANIMATIONS: Record<
       "radial-gradient(circle at 20% 25%, var(--hue-0), transparent 45%), radial-gradient(circle at 80% 75%, var(--hue-2), transparent 45%)"
   }
 };
+
+// 008: engine-owned, fully static chart styles. No interpolation — every colour
+// is a CSS var already sanitized at :root, and the chart fragments themselves are
+// per-value sanitized by the chart renderers. Charts inherit the deck palette via
+// var(--accent)/var(--text)/var(--muted) and stay inside their card, responsive.
+const CHART_CSS = `
+.charts{display:grid;gap:clamp(12px,1.6vw,20px);grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
+.chart-split{display:grid;gap:clamp(20px,3vw,56px);grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:center;margin-top:clamp(10px,1.6vh,20px)}
+.chart-split-media{min-width:0}
+.chart-split-media .charts{grid-template-columns:1fr}
+.chart-split-text{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:clamp(12px,1.8vh,22px)}
+.chart-takeaway{margin:0;position:relative;padding-left:clamp(16px,1.2vw,22px);font-family:var(--font-heading);font-weight:700;font-size:clamp(20px,2vw,30px);line-height:1.4;color:var(--text);letter-spacing:-.01em}
+.chart-takeaway::before{content:"";position:absolute;left:0;top:.2em;bottom:.2em;width:5px;border-radius:99px;background:var(--accent-grad)}
+.chart-points{grid-template-columns:1fr!important;gap:clamp(8px,1.1vh,14px)}
+.chart-points .bullet{background:none;border:none;box-shadow:none;padding:2px 0 2px clamp(20px,1.6vw,26px);font-size:var(--type-bullet);color:var(--muted);line-height:1.5}
+.chart-points .bullet::before{content:"";left:0;top:.62em;transform:none;width:8px;height:8px;border-radius:3px}
+/* Chart-feature slides earn more of the canvas: widen the body and scale the
+   chart + takeaway up so a full-screen 16:9 slide isn't mostly negative space. */
+.has-chart-split .slide-body{max-width:min(1780px,94vw)}
+.has-chart-split .chart-split{gap:clamp(28px,4.5vw,96px)}
+.has-chart-split .chart{padding:clamp(22px,2.2vw,40px);max-width:820px}
+.has-chart-split .chart-svg{max-height:clamp(320px,42vh,520px)}
+.has-chart-split .chart-pie{gap:clamp(18px,2.4vw,44px);justify-content:center}
+.has-chart-split .chart-pie .chart-svg{flex:0 0 auto;width:clamp(260px,26vw,420px);max-width:clamp(260px,26vw,420px);max-height:none}
+.has-chart-split .chart-legend{flex:1 1 220px}
+.has-chart-split .chart-legend-item{font-size:clamp(15px,1.15vw,20px)}
+.has-chart-split .chart-takeaway{font-size:clamp(26px,2.9vw,46px);line-height:1.34}
+.has-chart-split .chart-points .bullet{font-size:clamp(16px,1.25vw,22px)}
+@media (max-width:900px){.chart-split{grid-template-columns:1fr}.has-chart-split .slide-body{max-width:none}}
+.chart{margin:0;background:var(--card-surface);border:var(--card-border);border-radius:var(--card-radius);box-shadow:var(--card-shadow);padding:clamp(14px,1.6vw,22px);min-width:0;overflow:hidden}
+.chart-title{font-family:var(--font-heading);font-size:var(--type-caption);font-weight:700;color:var(--text);margin:0 0 10px}
+.chart-svg{display:block;width:100%;height:auto;max-height:260px;overflow:visible}
+.chart-axis{stroke:var(--muted);stroke-width:1;opacity:.4}
+.chart-line{stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1 1;stroke-dashoffset:0}
+.chart-svg .chart-value{fill:var(--text);font-size:11px;font-weight:700;font-family:var(--font-body)}
+.chart-svg .chart-label{fill:var(--muted);font-size:10px;font-family:var(--font-body)}
+.chart-pie-slice{stroke-dashoffset:0}
+.chart-pie{display:flex;flex-wrap:wrap;align-items:center;gap:clamp(10px,1.4vw,20px)}
+.chart-pie .chart-svg{flex:1 1 180px;max-width:240px}
+.chart-legend{flex:1 1 160px;list-style:none;margin:0;padding:0;display:grid;gap:7px;min-width:0}
+.chart-legend-item{display:flex;align-items:center;gap:8px;font-size:var(--type-caption);color:var(--text);min-width:0}
+.chart-swatch{width:12px;height:12px;border-radius:3px;flex:0 0 auto}
+.chart-legend-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chart-legend-value{color:var(--muted);font-variant-numeric:tabular-nums;flex:0 0 auto}
+.chart-metric-group{display:grid;gap:clamp(10px,1.4vw,16px);grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.chart-metric{display:flex;flex-direction:column;gap:6px;padding:clamp(12px,1.4vw,18px);border-radius:calc(var(--card-radius) * .7);background:rgba(255,255,255,.5);border-left:4px solid var(--chart-accent,var(--accent))}
+.chart-metric-value{font-family:var(--font-heading);font-size:clamp(26px,3vw,40px);font-weight:800;line-height:1.05;color:var(--text)}
+.chart-metric-context{font-size:var(--type-caption);color:var(--muted);line-height:1.4}
+.chart-table{width:100%;border-collapse:collapse;font-size:var(--type-caption)}
+.chart-table th,.chart-table td{text-align:left;padding:7px 10px;border-bottom:1px solid rgba(0,0,0,.08);vertical-align:top}
+.chart-table th{font-weight:600;color:var(--text)}
+.chart-table td{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chart-table-note,.chart-fallback{margin:8px 0 0;font-size:var(--type-caption);color:var(--muted);line-height:1.5}
+/* 008 entrance motion — every chart's resting state is the FINISHED visual, so a
+   no-JS / print / reduced-motion render shows complete charts; the keyframes only
+   add a hidden "from" state, played when the slide becomes .active (and replayed
+   on every revisit). The global prefers-reduced-motion guard kills them all. */
+@keyframes chart-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes chart-grow{from{transform:scaleY(0)}}
+@keyframes chart-sweep{from{stroke-dashoffset:var(--frac,1)}to{stroke-dashoffset:0}}
+@keyframes chart-fade{from{opacity:0;transform:translateY(6px)}}
+.chart-bar{transform-box:fill-box;transform-origin:bottom}
+.chart-bar-neg{transform-origin:top}
+.chart-value,.chart-dot{opacity:1}
+.slide.active .chart-line{animation:chart-draw 1000ms ease both;animation-delay:250ms}
+.slide.active .chart-bar{animation:chart-grow 650ms cubic-bezier(.2,.8,.2,1) both;animation-delay:250ms}
+.slide.active .chart-pie-slice{animation:chart-sweep calc(var(--frac,1) * 1100ms) linear both;animation-delay:calc(var(--slice-start,0) * 1100ms + 200ms)}
+.slide.active .chart-value,.slide.active .chart-dot{animation:chart-fade 460ms ease both;animation-delay:780ms}
+@media print{.chart-line,.chart-bar,.chart-pie-slice,.chart-value,.chart-dot{animation:none !important}}
+`;
 
 // Sane animation bounds: 0ms would repaint every frame (CPU churn); an absurd
 // value just looks frozen. Clamp regardless of source (LLM or DB jsonb).
@@ -118,7 +177,8 @@ ${spec.keyframes}
 }`;
 }
 
-function hexToRgba(hex: string, alpha: number): string {
+/** Parses a #RGB / #RRGGBB hex into [r,g,b] 0–255 channels, or null if invalid. */
+function hexToChannels(hex: string): [number, number, number] | null {
   const raw = hex.replace("#", "");
   const expanded =
     raw.length === 3
@@ -129,13 +189,55 @@ function hexToRgba(hex: string, alpha: number): string {
       : raw.slice(0, 6);
   const parsed = Number.parseInt(expanded, 16);
   if (!Number.isFinite(parsed)) {
-    return `rgba(0, 0, 0, ${alpha})`;
+    return null;
   }
-  const red = (parsed >> 16) & 255;
-  const green = (parsed >> 8) & 255;
-  const blue = parsed & 255;
+  return [(parsed >> 16) & 255, (parsed >> 8) & 255, parsed & 255];
+}
+
+/** WCAG relative luminance (0 = black, 1 = white) of a #RGB/#RRGGBB hex. */
+function relativeLuminance(hex: string): number {
+  const channels = hexToChannels(hex);
+  if (!channels) {
+    return 1;
+  }
+  const linear = channels.map((value) => {
+    const c = value / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * linear[0]! + 0.7152 * linear[1]! + 0.0722 * linear[2]!;
+}
+
+/** WCAG contrast ratio (1–21) between two hex colours. */
+function contrastRatio(a: string, b: string): number {
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  const [hi, lo] = la >= lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/**
+ * The deck's effective canvas colour. The 007 palette gradients are translucent
+ * accent washes over the page (white) canvas, so unless the background paints an
+ * OPAQUE 6-digit hex fill we treat the canvas as white. 8-digit (#RRGGBBAA)
+ * translucent stops are intentionally excluded by the trailing boundary.
+ */
+function resolveCanvasHex(backgroundCss: string): string {
+  const opaque = backgroundCss.match(/#[0-9a-fA-F]{6}(?![0-9a-fA-F])/gu);
+  return opaque && opaque.length > 0 ? opaque[opaque.length - 1]! : "#FFFFFF";
+}
+
+/** Keeps `candidate` when it meets the contrast ratio on `canvas`, else `fallback`. */
+function readableOn(canvas: string, candidate: string, fallback: string, minRatio: number): string {
+  return contrastRatio(candidate, canvas) >= minRatio ? candidate : fallback;
+}
+
+function hexToRgba(hex: string, alpha: number): string {
   const safeAlpha = Math.min(1, Math.max(0, alpha));
-  return `rgba(${red}, ${green}, ${blue}, ${safeAlpha})`;
+  const channels = hexToChannels(hex);
+  if (!channels) {
+    return `rgba(0, 0, 0, ${safeAlpha})`;
+  }
+  return `rgba(${channels[0]}, ${channels[1]}, ${channels[2]}, ${safeAlpha})`;
 }
 
 // Engine-owned ambient blobs (per-style opt-in). Large, soft, low-opacity radial
@@ -162,21 +264,13 @@ const BLOB_EDGE_STOP = 58;
  * smear the background into a dirty grey, so we skip it and keep that area clean.
  */
 function isColourfulHue(hex: string): boolean {
-  const raw = hex.replace("#", "");
-  const expanded =
-    raw.length === 3
-      ? raw
-          .split("")
-          .map((char) => `${char}${char}`)
-          .join("")
-      : raw.slice(0, 6);
-  const parsed = Number.parseInt(expanded, 16);
-  if (!Number.isFinite(parsed)) {
+  const channels = hexToChannels(hex);
+  if (!channels) {
     return false;
   }
-  const r = ((parsed >> 16) & 255) / 255;
-  const g = ((parsed >> 8) & 255) / 255;
-  const b = (parsed & 255) / 255;
+  const r = channels[0] / 255;
+  const g = channels[1] / 255;
+  const b = channels[2] / 255;
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   const lightness = (max + min) / 2;
@@ -259,6 +353,27 @@ export function buildDeckStyleCss(styleKit: DesignStyleKit, designSystem: Design
   const bodyBackground =
     ambientBlobs.length > 0 ? `${ambientBlobs}, ${baseBackground}` : baseBackground;
 
+  // Contrast safety net. The visible canvas comes from the 007 palette
+  // (`styleKit.background.css`), but --text/--muted come from the design-system
+  // palette — which may have been authored for the opposite light/dark mode (an
+  // LLM "dark" theme paired with a light palette renders light text on a light
+  // canvas, unreadable). Resolve the canvas, then keep the design-system colour
+  // ONLY when it actually contrasts; otherwise fall back to a readable default.
+  const canvas = resolveCanvasHex(baseBackground);
+  const canvasDark = relativeLuminance(canvas) < 0.4;
+  const textHex = readableOn(
+    canvas,
+    safeHex(designSystem.palette.text, canvasDark ? "#F8FAFC" : "#1F2937"),
+    canvasDark ? "#F8FAFC" : "#1F2937",
+    4.5
+  );
+  const mutedHex = readableOn(
+    canvas,
+    safeHex(designSystem.palette.mutedText, canvasDark ? "#CBD5E1" : "#475569"),
+    canvasDark ? "#CBD5E1" : "#475569",
+    3
+  );
+
   return `
 :root{
   --font-heading: ${safeCssValue(styleKit.fonts.heading, "system-ui, sans-serif")};
@@ -269,9 +384,8 @@ export function buildDeckStyleCss(styleKit: DesignStyleKit, designSystem: Design
   --type-bullet: ${clampFontSizeCss(typeScale.bullet)};
   --type-eyebrow: ${clampFontSizeCss(typeScale.eyebrow)};
   --type-caption: ${clampFontSizeCss(typeScale.caption)};
-  --bg: ${safeHex(designSystem.palette.background, "#FFF8EE")};
-  --text: ${safeHex(designSystem.palette.text, "#1F2937")};
-  --muted: ${safeHex(designSystem.palette.mutedText, "#475569")};
+  --text: ${textHex};
+  --muted: ${mutedHex};
   --accent: ${accent};
   --accent-grad: ${safeCssValue(effects.accentGradient, "linear-gradient(110deg, #FF6B6B, #FFC93C)")};
   --card-radius: ${safeNumber(effects.cardRadiusPx, 22)}px;
@@ -373,7 +487,7 @@ body{
 .sidedots button.on{background:var(--accent-grad);transform:scale(1.35)}
 .anim{opacity:0;transform:translateY(14px)}
 .slide.active .anim{animation:rise var(--e-dur) ease both;animation-delay:calc(var(--d, 0) * ${stagger}ms)}
-@keyframes rise{to{opacity:1;transform:none}}${backdropCss}${textureCss}${animationCss}
+@keyframes rise{to{opacity:1;transform:none}}${backdropCss}${textureCss}${animationCss}${CHART_CSS}
 @media (max-width:640px){.controls{right:16px;bottom:16px}.sidedots{display:none}}
 @media (prefers-reduced-motion: reduce){
   *{animation:none !important;transition:none !important}

@@ -9,6 +9,9 @@ vi.mock("@slides-agent/domain", () => ({
   generatePreviewDeck,
   parseSourceSections,
   segmentSourceContentWithRepair,
+  // 008: this suite stubs the whole domain module, so the chart review-note
+  // collector must be stubbed too (no charts in these fixtures → no notes).
+  collectChartReviewNotes: () => [],
   LlmDeckOutlinePlanner: class {
     async plan(input: { deck: unknown }) {
       deckOutlinePlannerInputs.push(input);

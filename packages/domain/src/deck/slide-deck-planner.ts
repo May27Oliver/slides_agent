@@ -4,11 +4,10 @@ import type { SegmentationValidation } from "@/content-core/semantic-segmentatio
 import { segmentSourceContent } from "@/content-core/semantic-segmentation-validator";
 import { compileDeckPlanProposal } from "@/deck/deck-compiler";
 import { createDeckPlanProposal } from "@/deck/deck-planner";
-import type { SlideDeck } from "@/deck/deck.types";
-import type { SlideDeckPlannerInput } from "@/deck/deck-generation.types";
+import type { SlideDeckPlannerInput, SlideDeckPlanningResult } from "@/deck/deck-generation.types";
 import { buildReviewReport, buildSegmentationReviewNotes } from "@/review/review-report-builder";
 
-export function planSlideDeck(input: SlideDeckPlannerInput): SlideDeck {
+export function planSlideDeck(input: SlideDeckPlannerInput): SlideDeckPlanningResult {
   const segmentation = input.sourceSections
     ? {
         sections: input.sourceSections,
@@ -19,6 +18,7 @@ export function planSlideDeck(input: SlideDeckPlannerInput): SlideDeck {
   const facts = extractSourceFacts(input.sourceContent, sections);
   const chartIntents = new ChartIntentPlanner().plan({
     sourceFacts: facts,
+    sections,
     ...(input.deckBrief.chartEmphasis ? { chartEmphasis: input.deckBrief.chartEmphasis } : {})
   });
   const proposal = createDeckPlanProposal({
@@ -61,7 +61,11 @@ export function planSlideDeck(input: SlideDeckPlannerInput): SlideDeck {
     throw new Error(`Deck plan proposal failed validation: ${compiled.issues.join("; ")}`);
   }
 
-  return compiled.slideDeck;
+  return {
+    slideDeck: compiled.slideDeck,
+    chartIntents: chartIntents.intents,
+    sourceFacts: facts
+  };
 }
 
 function documentTitle(sourceContent: string): string | undefined {

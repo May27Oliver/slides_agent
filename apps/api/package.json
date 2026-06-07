@@ -14,6 +14,7 @@
     "db:seed": "node --env-file=../../.env --import tsx scripts/db-seed.ts",
     "db:convert-seeds": "node --import tsx scripts/convert-csv-to-theme-seeds.ts",
     "preview:themes": "node --import tsx scripts/preview-themes.ts",
+    "preview:chart-matrix": "node --import tsx scripts/preview-chart-matrix.ts",
     "db:repl": "node --env-file=../../.env --import tsx src/repl.ts",
     "db:studio": "node --env-file=../../.env node_modules/.bin/drizzle-kit studio"
   },

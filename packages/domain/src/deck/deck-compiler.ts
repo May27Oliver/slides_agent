@@ -49,7 +49,15 @@ export function compileDeckPlanProposal(
               content: {
                 items: slide.outline.map((item) => item.text)
               }
-            }
+            },
+            // 008: preserve each slide↔chartIntent link as a chart_placeholder
+            // block so the renderer can draw the planned visual (and the
+            // generation summary can count it). Additive — bullets are untouched.
+            ...slide.chartIntentIds.map((chartIntentId): Slide["contentBlocks"][number] => ({
+              kind: "chart_placeholder",
+              content: {},
+              chartIntentId
+            }))
           ],
           sourceTrace,
           speakerNotesDraft: slide.speakerNotesDraft

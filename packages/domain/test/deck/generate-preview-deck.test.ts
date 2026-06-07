@@ -32,7 +32,7 @@ describe("generate preview deck", () => {
     expect(result.generationSummary).toEqual(
       expect.objectContaining({
         sourceFactCount: 8,
-        chartIntentCount: 4
+        chartIntentCount: 2
       })
     );
   });

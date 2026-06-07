@@ -206,6 +206,18 @@ export interface DesignKitProvider {
 
 ---
 
+## 5.1 圖表視覺（008 chart rendering）
+
+008 把規劃好的 `ChartIntent` 在 deck 裡畫成 **engine-owned inline SVG / HTML 真圖表**（pie/donut、line、bar、metric card、metric group、table、fallback），全部消費 007 的 `DesignStyleKit`：
+
+- **配色**取自 `accentHues`（slices / bars / line / legend swatch / metric accent 都循環取色），與當前風格一致。
+- **排版/密度**沿用 deck CSS 變數（`--text` / `--muted` / `--card-surface` / `--card-border` / `--card-radius` / `--type-caption`），不自帶字型或顏色常數。
+- **單一決策來源**：`VisualizationType → ChartTreatment` 由 `chart-treatment-mapping.ts` 映射（決策 B），`design-planner` 與渲染器都經此映射，避免兩個 enum 漂移。
+- **不變條件**：圖表同樣遵守上面 5 條（來源忠實、self-contained、結構契約、可降級、無祕密）；資料不足以成真圖時安全 fallback 並寫 review note，絕不畫誤導性或空白圖。
+- **每個風格都要能預覽**：`pnpm --filter @slides-agent/api preview:chart-matrix` 產生「每個 `support=full` 風格 × 每種 chart visual」的矩陣，新增風格或視覺未補對應組合時 smoke test 會 fail。
+
+---
+
 ## 6. 名詞對照
 
 | 詞 | 意義 |
