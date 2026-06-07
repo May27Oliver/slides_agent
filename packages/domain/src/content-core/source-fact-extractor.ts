@@ -13,7 +13,7 @@ export function extractSourceFacts(
   const facts: SourceFact[] = [];
 
   for (const section of sections) {
-    for (const sourceText of section.text.split("\n")) {
+    for (const sourceText of splitSentences(section.text)) {
       const candidates = factCandidatesForLine(section.heading, sourceText);
 
       for (const candidate of candidates) {
@@ -29,6 +29,22 @@ export function extractSourceFacts(
   }
 
   return facts;
+}
+
+/**
+ * Splits a section into sentence-level units so each fact's `sourceText` is its
+ * own sentence — not the whole paragraph. Without this, a prose paragraph like
+ * "截至 2026 年底…成長 18%。…NRR 112%" would give the unrelated 18% and 112% the
+ * same sourceText, so the chart planner reads the stray "2026" as a shared period
+ * and forces a bogus 18%→112% timeline. Splits on CJK sentence enders and
+ * newlines only — NOT the ASCII "." so currency/decimals (`$1.1M`, `52.5%`) stay
+ * intact; bulleted lines (no enders) pass through unchanged.
+ */
+function splitSentences(text: string): string[] {
+  return text
+    .split(/[。！？；\n]+/u)
+    .map((sentence) => sentence.trim())
+    .filter((sentence) => sentence.length > 0);
 }
 
 function factCandidatesForLine(sectionHeading: string, sourceText: string): FactCandidate[] {

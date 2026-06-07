@@ -45,4 +45,18 @@ describe("source fact extraction", () => {
       expect(fact.kind).toBe("metric");
     }
   });
+
+  it("gives each prose fact a sentence-scoped sourceText, not the whole paragraph", () => {
+    // A mixed-metric paragraph: a stray "2026" must not bleed onto the 112% fact,
+    // or the chart planner would force an unrelated 18%→112% timeline.
+    const facts = extractSourceFacts(
+      "# 年度總覽\n\n截至 2026 年底，較前一年成長 18%。淨收入留存率維持在 112%，顯示體質改善。\n"
+    );
+    const growth = facts.find((fact) => fact.value === "18%");
+    const retention = facts.find((fact) => fact.value === "112%");
+    expect(growth?.sourceText).toContain("2026");
+    expect(growth?.sourceText).not.toContain("112%");
+    expect(retention?.sourceText).not.toContain("2026");
+    expect(retention?.sourceText).not.toContain("18%");
+  });
 });
