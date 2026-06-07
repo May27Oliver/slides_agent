@@ -32,6 +32,20 @@ describe("chart SVG renderers", () => {
     expect(html).toContain("45%");
   });
 
+  it("does not repeat the percentage in the legend (45%, not '45% · 45.0%')", () => {
+    const html = renderPieChart({ series: seriesFor(pieFacts, "chart"), hues });
+    // The display value is already a percentage, so the recomputed share is redundant.
+    expect(html).toContain("45%");
+    expect(html).not.toMatch(/·\s*\d+\.\d+%/u);
+  });
+
+  it("still shows the proportion in the legend for non-percentage values", () => {
+    const html = renderPieChart({ series: seriesFor(barFacts, "chart"), hues });
+    // $2.3M carries no percentage, so the legend appends the computed share.
+    expect(html).toContain("$2.3M");
+    expect(html).toMatch(/·\s*\d+\.\d+%/u);
+  });
+
   it("draws a single 100% slice as a full ring (no degenerate blank arc)", () => {
     const oneSlice = intent({
       sourceFacts: [

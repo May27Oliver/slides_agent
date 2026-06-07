@@ -222,15 +222,40 @@ pnpm db:migrate    # 把待套用的 migration 套到 DATABASE_URL
 
 ---
 
-## 測試
+## 測試與驗證
+
+### 單元／整合測試（vitest）
 
 ```bash
-pnpm test                                   # 全部套件（domain、contracts、api、web）
-pnpm --filter @slides-agent/domain test     # 單一套件
-pnpm --filter @slides-agent/web test:e2e    # Playwright E2E
+pnpm test                                   # 全部套件，依序：domain → contracts → api → web
+pnpm test:domain                            # 單一套件（另有 test:contracts / test:api / test:web）
+pnpm --filter @slides-agent/domain test     # 等價的 per-package 寫法
+pnpm --filter @slides-agent/web test:e2e    # Playwright E2E（web）
 ```
 
-型別檢查:`pnpm --filter <name> exec tsc --noEmit`(各套件的 `build` script 即為 no-emit 型別檢查)。
+型別檢查用各套件的 `build` script（no-emit `tsc`），例如 `pnpm --filter @slides-agent/domain build`。
+
+### 驗證 harness（`apps/api`）
+
+確定性 dev 腳本——**不需前端、LLM 或 DB**。它們讀已 commit 的 theme 種子，把可預覽 HTML 寫到 `apps/api/preview/`（git-ignored）。
+
+| 腳本 | 目的 | 執行 |
+|------|------|------|
+| `preview:deck` | 把一份 markdown 餵進**確定性** deck pipeline；印出每張圖判到的「語意 → 具體圖型（bar/line/pie/…）」與選到的主題，並寫出 `preview/deck.html`。用來驗證**你的內容**會不會正確成圖。 | `pnpm --filter @slides-agent/api preview:deck [檔案.md] [styleDirection]`<br>（預設 `sample-deck-input.md`） |
+| `preview:chart-matrix` | 渲染「每種支援圖表 × 每個已啟用風格」（20 × 7）到 `preview/chart-matrix/index.html`；遇到非預期 fallback 或外部資源就**失敗**。用來抓某風格下圖表壞掉。 | `pnpm --filter @slides-agent/api preview:chart-matrix` |
+| `preview:themes` | 渲染所有已啟用風格的主題畫廊——肉眼檢視設計系統。 | `pnpm --filter @slides-agent/api preview:themes` |
+
+範例：
+
+```bash
+# 驗證範例 deck（區域 → bar、季度 → line、裝置 → pie）
+pnpm --filter @slides-agent/api preview:deck
+
+# 驗證 preset 區隔（例如給一個科技風格方向）
+pnpm --filter @slides-agent/api preview:deck sample-deck-input.md "tech startup developer 科技"
+```
+
+> 改了 theme 種子 JSON（`apps/api/src/infra/db/seeds/*.json`）後，要跑 `pnpm db:seed` 才會在執行中的 app 與 `preview:deck` 的主題選擇生效。
 
 ---
 

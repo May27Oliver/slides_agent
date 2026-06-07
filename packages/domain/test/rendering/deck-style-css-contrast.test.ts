@@ -52,12 +52,32 @@ describe("buildDeckStyleCss contrast safety net", () => {
   });
 
   it("keeps well-contrasted dark text on a light canvas unchanged", () => {
-    const css = buildDeckStyleCss(kitWithBackground(LIGHT_WASH), designSystemWith({ text: "#1F2937" }));
+    const css = buildDeckStyleCss(
+      kitWithBackground(LIGHT_WASH),
+      designSystemWith({ text: "#1F2937" })
+    );
     expect(cssVar(css, "text")).toBe("#1F2937");
   });
 
   it("keeps light text on a genuinely dark (opaque) canvas", () => {
-    const css = buildDeckStyleCss(kitWithBackground(DARK_FILL), designSystemWith({ text: "#F8FAFC" }));
+    const css = buildDeckStyleCss(
+      kitWithBackground(DARK_FILL),
+      designSystemWith({ text: "#F8FAFC" })
+    );
     expect(cssVar(css, "text")).toBe("#F8FAFC");
+  });
+});
+
+describe("buildDeckStyleCss chart-feature bullets", () => {
+  it("suppresses the closing-layout counter on chart-split support bullets", () => {
+    const css = buildDeckStyleCss(defaultDesignStyleKit(), designSystemWith({}));
+    // The closing layout numbers bullets via `content:counter(step)`; in the
+    // chart-feature split right column that leaks a clipped number behind the dot,
+    // so the chart-points override must blank the ::before content...
+    expect(css).toContain('.chart-points .bullet::before{content:""');
+    // ...and it must come AFTER the closing rule so equal-specificity order wins.
+    expect(css.indexOf(".chart-points .bullet::before")).toBeGreaterThan(
+      css.indexOf(".layout-closing .bullet::before")
+    );
   });
 });

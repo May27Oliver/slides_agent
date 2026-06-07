@@ -248,15 +248,40 @@ The two POST endpoints share a per-IP rate-limit budget. Source/brief fields are
 
 ---
 
-## Testing
+## Testing & verification
+
+### Unit / integration tests (vitest)
 
 ```bash
-pnpm test                                   # all packages (domain, contracts, api, web)
-pnpm --filter @slides-agent/domain test     # one package
-pnpm --filter @slides-agent/web test:e2e    # Playwright E2E
+pnpm test                                   # all packages, in order: domain → contracts → api → web
+pnpm test:domain                            # one package (also: test:contracts / test:api / test:web)
+pnpm --filter @slides-agent/domain test     # equivalent per-package form
+pnpm --filter @slides-agent/web test:e2e    # Playwright E2E (web)
 ```
 
-Type-check a package with `pnpm --filter <name> exec tsc --noEmit` (each `build` script is a no-emit type-check).
+Type-check a package with its `build` script (no-emit `tsc`), e.g. `pnpm --filter @slides-agent/domain build`.
+
+### Verification harnesses (`apps/api`)
+
+Deterministic dev scripts — **no front-end, LLM, or DB needed**. They read the committed theme seeds and write previewable HTML under `apps/api/preview/` (git-ignored).
+
+| Script | Purpose | Run |
+|--------|---------|-----|
+| `preview:deck` | Run a markdown file through the deterministic deck pipeline; prints each chart's planned → concrete visual (bar/line/pie/…) and the selected theme, then writes `preview/deck.html`. Verifies **your content** charts correctly. | `pnpm --filter @slides-agent/api preview:deck [file.md] [styleDirection]`<br>(defaults to `sample-deck-input.md`) |
+| `preview:chart-matrix` | Renders every supported chart visual × every enabled style (20 × 7) to `preview/chart-matrix/index.html`; **fails** on any unintended fallback or external resource. Catches a chart breaking under some style. | `pnpm --filter @slides-agent/api preview:chart-matrix` |
+| `preview:themes` | Renders the theme gallery across all enabled styles — eyeball the design system. | `pnpm --filter @slides-agent/api preview:themes` |
+
+Examples:
+
+```bash
+# verify the sample deck (region → bar, quarter → line, device → pie)
+pnpm --filter @slides-agent/api preview:deck
+
+# verify preset differentiation (e.g. a tech style direction)
+pnpm --filter @slides-agent/api preview:deck sample-deck-input.md "tech startup developer 科技"
+```
+
+> After editing theme seed JSON (`apps/api/src/infra/db/seeds/*.json`), run `pnpm db:seed` for the change to take effect in the running app and in `preview:deck`'s theme selection.
 
 ---
 
