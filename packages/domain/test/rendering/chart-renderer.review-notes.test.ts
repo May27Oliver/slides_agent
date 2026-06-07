@@ -11,7 +11,10 @@ function deckWith(chartIntentId: string): SlideDeck {
   return { slides: [slide] } as unknown as SlideDeck;
 }
 
-function plan(chartIntentId: string, treatment: ChartTreatmentPlan["treatment"]): ChartTreatmentPlan {
+function plan(
+  chartIntentId: string,
+  treatment: ChartTreatmentPlan["treatment"]
+): ChartTreatmentPlan {
   return { chartIntentId, treatment, labelingNotes: [], preservedContext: [] };
 }
 

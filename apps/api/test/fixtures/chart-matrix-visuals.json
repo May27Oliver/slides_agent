@@ -1,11 +1,3 @@
 {
-  "visuals": [
-    "pie_donut",
-    "line",
-    "bar",
-    "metric_card",
-    "metric_group",
-    "table",
-    "fallback_text"
-  ]
+  "visuals": ["pie_donut", "line", "bar", "metric_card", "metric_group", "table", "fallback_text"]
 }

@@ -6,9 +6,11 @@
 ## 009 候選（三大項）
 
 ### 1. 前端主題選擇重設計
+
 **問題**：後端 theme 空間極大（full style 20 × palette 96 × font 57 ≈ 109,440 組合），前端只有 6 個 preset 按鈕，且透過「自由文字 styleDirection → 比對種子關鍵字 → 選最高分」這條**模糊比對**鏈選擇。這條鏈是這次所有選擇 bug 的根源（EV 子字串誤判、科技/商務同化、6 個 preset 有 4 個都掉進 minimalism）。
 
 **方向**：
+
 - preset／gallery 改走**明確 theme ID**（確定性，按鈕不再經模糊 scorer）。
 - 只有「風格方向（自訂）」文字框保留關鍵字模糊比對。
 - 定義「**具名主題**」資料結構＝明確的 style+palette+font 綁定（例：企業藍／科技玻璃／溫暖陶土…，約 12–16 個）。
@@ -18,14 +20,17 @@
 **立即止血（009 前可先做）**：`pnpm --filter @slides-agent/api db:seed` 套用本次新增的關鍵字；必要時補各 preset 的差異化關鍵字。
 
 ### 2. LLM 簡報品質評審關卡
+
 **動機**：機械可判定的（對比/溢版/外部資源/sanitize/來源保真）用確定性 validator；主觀品質（視覺層次、文案、圖型是否恰當）才交給 LLM 評審。
 
 **方向（分層）**：
+
 - ① 確定性硬關卡先擋（可自動修就修，如對比保險）。
 - ② LLM 只評**主觀品質** → 對被標記的 slide **定向重產上游輸入**（design plan / outline / chart treatment），而非直接改 HTML。
 - 護欄：有界重試（每張 ≤2 次）、重產後**必過**硬關卡、不可回退（更差就丟棄）、成本/延遲上限、可關。
 
 ### 3. Palette 帶文字色 + 007 整套覆蓋（對比接縫治本）
+
 **問題**：背景來自 007 palette、`--text` 來自 LLM designSystem，兩來源對 light/dark 認知會打架。目前在 `buildDeckStyleCss` 用對比保險（依畫布亮度校正）band-aid。
 
 **治本**：讓 palette 種子帶 `text`/`mutedText`；007 選主題時**連文字色一起換**（全有或全無），而非只換背景。前提：`PaletteStyleKit` 目前沒有文字色欄位，需擴充 + 補所有 palette 種子。

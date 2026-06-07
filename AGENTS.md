@@ -58,7 +58,7 @@ HTML is derived cache); every deck read scoped to `req.user.id`; migrations run 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **slides_agent** (4420 symbols, 8151 relationships, 272 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **slides_agent** (4428 symbols, 8164 relationships, 272 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

@@ -24,12 +24,12 @@
 
 pnpm monorepo,核心領域邏輯乾淨、App 外殼輕薄。
 
-| 套件 | 名稱 | 角色 |
-|---|---|---|
-| `packages/domain` | `@slides-agent/domain` | 純領域邏輯:切段、大綱/版面規劃、設計系統、渲染、預覽工作生命週期。無 I/O。 |
-| `packages/contracts` | `@slides-agent/contracts` | 共用的請求/回應契約 + 執行期驗證器。 |
-| `apps/api` | `@slides-agent/api` | NestJS 後端:REST 端點、LLM adapter(port)、預覽工作 store/runner。 |
-| `apps/web` | `@slides-agent/web` | React + Vite 前端:輸入表單、風格預設、工作輪詢、預覽。 |
+| 套件                 | 名稱                      | 角色                                                                       |
+| -------------------- | ------------------------- | -------------------------------------------------------------------------- |
+| `packages/domain`    | `@slides-agent/domain`    | 純領域邏輯:切段、大綱/版面規劃、設計系統、渲染、預覽工作生命週期。無 I/O。 |
+| `packages/contracts` | `@slides-agent/contracts` | 共用的請求/回應契約 + 執行期驗證器。                                       |
+| `apps/api`           | `@slides-agent/api`       | NestJS 後端:REST 端點、LLM adapter(port)、預覽工作 store/runner。          |
+| `apps/web`           | `@slides-agent/web`       | React + Vite 前端:輸入表單、風格預設、工作輪詢、預覽。                     |
 
 ### 生成 pipeline
 
@@ -67,24 +67,24 @@ pnpm install
 
 所有 LLM 設定都是**後端專用**,不會外洩到前端或 API 回應。設在根目錄 `.env`:
 
-| 變數 | 預設 | 說明 |
-|---|---|---|
-| `PORT` | `3000` | API 伺服器埠號。 |
-| `LLM_PROVIDER` | `openai` | LLM 供應商(僅支援 `openai`)。 |
-| `OPENAI_API_KEY` | — | OpenAI 金鑰。**留空 → 走確定性 fallback**(App 仍可用)。 |
-| `LLM_MODEL` | — | 所有 LLM 操作的預設模型。 |
-| `SEMANTIC_SEGMENTATION_MODEL` | `LLM_MODEL` | 可選的單一操作模型覆寫。 |
-| `DESIGN_PLANNING_MODEL` | `LLM_MODEL` | 可選的單一操作模型覆寫。 |
-| `LLM_MAX_REPAIR_ATTEMPTS` | `1` | 驗證型 LLM 輸出的修補次數上限。 |
-| `PREVIEW_RATE_LIMIT_MAX` | `5` | 每個來源 IP 在時間窗內的預覽 POST 上限。 |
-| `PREVIEW_RATE_LIMIT_WINDOW_MS` | `60000` | rate-limit 時間窗(毫秒)。 |
-| `REDIS_URL` | — | **必要**(004)。預覽 job 佇列用的 Redis;沒有則 API/worker fail-fast。 |
-| `AUTH_JWT_SECRET` | — | **必要**(005)。簽發登入 JWT 的密鑰;沒有則 API fail-fast。 |
-| `AUTH_JWT_EXPIRES_IN` | `30d` | JWT 有效期。 |
-| `AUTH_ACCOUNTS` | `[]` | JSON 帳號白名單 `[{ id, username, displayName, passwordHash, active }]`;`passwordHash` 用 `pnpm auth:hash <密碼>` 產生。 |
-| `AUTH_LOGIN_RATE_LIMIT_MAX` | `10` | 每 IP 每時間窗 `POST /api/auth/login` 上限。 |
-| `AUTH_LOGIN_RATE_LIMIT_WINDOW_MS` | `60000` | 登入 rate-limit 時間窗(毫秒)。 |
-| `VITE_API_PROXY_TARGET` | `http://localhost:3000` | (web)dev 伺服器的 API proxy 目標。 |
+| 變數                              | 預設                    | 說明                                                                                                                     |
+| --------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `PORT`                            | `3000`                  | API 伺服器埠號。                                                                                                         |
+| `LLM_PROVIDER`                    | `openai`                | LLM 供應商(僅支援 `openai`)。                                                                                            |
+| `OPENAI_API_KEY`                  | —                       | OpenAI 金鑰。**留空 → 走確定性 fallback**(App 仍可用)。                                                                  |
+| `LLM_MODEL`                       | —                       | 所有 LLM 操作的預設模型。                                                                                                |
+| `SEMANTIC_SEGMENTATION_MODEL`     | `LLM_MODEL`             | 可選的單一操作模型覆寫。                                                                                                 |
+| `DESIGN_PLANNING_MODEL`           | `LLM_MODEL`             | 可選的單一操作模型覆寫。                                                                                                 |
+| `LLM_MAX_REPAIR_ATTEMPTS`         | `1`                     | 驗證型 LLM 輸出的修補次數上限。                                                                                          |
+| `PREVIEW_RATE_LIMIT_MAX`          | `5`                     | 每個來源 IP 在時間窗內的預覽 POST 上限。                                                                                 |
+| `PREVIEW_RATE_LIMIT_WINDOW_MS`    | `60000`                 | rate-limit 時間窗(毫秒)。                                                                                                |
+| `REDIS_URL`                       | —                       | **必要**(004)。預覽 job 佇列用的 Redis;沒有則 API/worker fail-fast。                                                     |
+| `AUTH_JWT_SECRET`                 | —                       | **必要**(005)。簽發登入 JWT 的密鑰;沒有則 API fail-fast。                                                                |
+| `AUTH_JWT_EXPIRES_IN`             | `30d`                   | JWT 有效期。                                                                                                             |
+| `AUTH_ACCOUNTS`                   | `[]`                    | JSON 帳號白名單 `[{ id, username, displayName, passwordHash, active }]`;`passwordHash` 用 `pnpm auth:hash <密碼>` 產生。 |
+| `AUTH_LOGIN_RATE_LIMIT_MAX`       | `10`                    | 每 IP 每時間窗 `POST /api/auth/login` 上限。                                                                             |
+| `AUTH_LOGIN_RATE_LIMIT_WINDOW_MS` | `60000`                 | 登入 rate-limit 時間窗(毫秒)。                                                                                           |
+| `VITE_API_PROXY_TARGET`           | `http://localhost:3000` | (web)dev 伺服器的 API proxy 目標。                                                                                       |
 
 ### 登入(功能 005)
 
@@ -196,24 +196,24 @@ pnpm db:migrate    # 把待套用的 migration 套到 DATABASE_URL
 
 基底路徑:`/api/slides`
 
-| 方法 | 路徑 | 說明 |
-|---|---|---|
-| `POST` | `/preview` | 同步生成預覽,回傳完整 artifact。 |
-| `POST` | `/preview-jobs` | 建立非同步預覽工作 → `202`,含 `jobId` 與 `statusUrl`。 |
-| `GET` | `/preview-jobs/:jobId` | 輪詢工作狀態/結果(未知或過期 → `404 PREVIEW_JOB_UNAVAILABLE`)。 |
+| 方法   | 路徑                   | 說明                                                            |
+| ------ | ---------------------- | --------------------------------------------------------------- |
+| `POST` | `/preview`             | 同步生成預覽,回傳完整 artifact。                                |
+| `POST` | `/preview-jobs`        | 建立非同步預覽工作 → `202`,含 `jobId` 與 `statusUrl`。          |
+| `GET`  | `/preview-jobs/:jobId` | 輪詢工作狀態/結果(未知或過期 → `404 PREVIEW_JOB_UNAVAILABLE`)。 |
 
 請求 body(兩個 POST 通用):
 
 ```jsonc
 {
-  "sourceContent": "…你的筆記/逐字稿…",        // 必填,≤ 50,000 字
+  "sourceContent": "…你的筆記/逐字稿…", // 必填,≤ 50,000 字
   "deckBrief": {
-    "purpose": "面試",                          // 必填
-    "audience": "長官",                         // 必填
-    "styleDirection": "專業商務",               // 可選,引導設計 kit
-    "chartEmphasis": "…",                       // 可選
-    "segmentationGuidance": "…",                // 可選
-    "language": "zh-TW"                          // 可選
+    "purpose": "面試", // 必填
+    "audience": "長官", // 必填
+    "styleDirection": "專業商務", // 可選,引導設計 kit
+    "chartEmphasis": "…", // 可選
+    "segmentationGuidance": "…", // 可選
+    "language": "zh-TW" // 可選
   }
 }
 ```
@@ -239,11 +239,11 @@ pnpm --filter @slides-agent/web test:e2e    # Playwright E2E（web）
 
 確定性 dev 腳本——**不需前端、LLM 或 DB**。它們讀已 commit 的 theme 種子，把可預覽 HTML 寫到 `apps/api/preview/`（git-ignored）。
 
-| 腳本 | 目的 | 執行 |
-|------|------|------|
-| `preview:deck` | 把一份 markdown 餵進**確定性** deck pipeline；印出每張圖判到的「語意 → 具體圖型（bar/line/pie/…）」與選到的主題，並寫出 `preview/deck.html`。用來驗證**你的內容**會不會正確成圖。 | `pnpm --filter @slides-agent/api preview:deck [檔案.md] [styleDirection]`<br>（預設 `sample-deck-input.md`） |
-| `preview:chart-matrix` | 渲染「每種支援圖表 × 每個已啟用風格」（20 × 7）到 `preview/chart-matrix/index.html`；遇到非預期 fallback 或外部資源就**失敗**。用來抓某風格下圖表壞掉。 | `pnpm --filter @slides-agent/api preview:chart-matrix` |
-| `preview:themes` | 渲染所有已啟用風格的主題畫廊——肉眼檢視設計系統。 | `pnpm --filter @slides-agent/api preview:themes` |
+| 腳本                   | 目的                                                                                                                                                                              | 執行                                                                                                         |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `preview:deck`         | 把一份 markdown 餵進**確定性** deck pipeline；印出每張圖判到的「語意 → 具體圖型（bar/line/pie/…）」與選到的主題，並寫出 `preview/deck.html`。用來驗證**你的內容**會不會正確成圖。 | `pnpm --filter @slides-agent/api preview:deck [檔案.md] [styleDirection]`<br>（預設 `sample-deck-input.md`） |
+| `preview:chart-matrix` | 渲染「每種支援圖表 × 每個已啟用風格」（20 × 7）到 `preview/chart-matrix/index.html`；遇到非預期 fallback 或外部資源就**失敗**。用來抓某風格下圖表壞掉。                           | `pnpm --filter @slides-agent/api preview:chart-matrix`                                                       |
+| `preview:themes`       | 渲染所有已啟用風格的主題畫廊——肉眼檢視設計系統。                                                                                                                                  | `pnpm --filter @slides-agent/api preview:themes`                                                             |
 
 範例：
 

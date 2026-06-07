@@ -3,7 +3,9 @@ import { renderMetricGroup } from "@/rendering/chart-html-renderer";
 import type { ChartPoint } from "@/rendering/chart-rendering.types";
 import { styleKit } from "./chart-rendering-fixtures";
 
-function point(partial: Partial<ChartPoint> & { displayValue: string; sourceFactId: string }): ChartPoint {
+function point(
+  partial: Partial<ChartPoint> & { displayValue: string; sourceFactId: string }
+): ChartPoint {
   return {
     label: partial.label ?? "label",
     displayValue: partial.displayValue,

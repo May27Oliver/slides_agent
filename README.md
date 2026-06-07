@@ -11,7 +11,7 @@ Paste or upload content, pick a presentation style, and the app plans the deck, 
 ## Features
 
 - **Source → deck pipeline**: semantic segmentation → deck-outline planning → design planning → HTML rendering → validation.
-- **LLM-assisted, deterministic-rendered**: the LLM handles language/structure/design *selection*; the final HTML is produced by a deterministic, reference-grade template renderer (fast, free, consistent, always valid).
+- **LLM-assisted, deterministic-rendered**: the LLM handles language/structure/design _selection_; the final HTML is produced by a deterministic, reference-grade template renderer (fast, free, consistent, always valid).
 - **UIUX Pro Max design system**: curated palettes + font pairings + a concrete style kit (type scale, motion, effects) selected from the deck brief. See [`docs/design.md`](docs/design.md).
 - **Async preview jobs**: submit a job, poll for progress, get the result — with timeouts, failure reporting, and a cancellable polling UI.
 - **Self-contained output**: one HTML file, inline CSS/JS, keyboard navigation, the only external resource being Google Fonts.
@@ -24,12 +24,12 @@ Paste or upload content, pick a presentation style, and the app plans the deck, 
 
 A pnpm monorepo with a clean domain core and thin app shells.
 
-| Package | Name | Role |
-|---|---|---|
-| `packages/domain` | `@slides-agent/domain` | Pure domain logic: segmentation, deck/outline planning, design system, rendering, preview-job lifecycle. No I/O. |
-| `packages/contracts` | `@slides-agent/contracts` | Shared request/response contracts + runtime validators. |
-| `apps/api` | `@slides-agent/api` | NestJS backend: REST endpoints, LLM adapters (ports), preview-job store/runner. |
-| `apps/web` | `@slides-agent/web` | React + Vite frontend: input form, style presets, job polling, preview. |
+| Package              | Name                      | Role                                                                                                             |
+| -------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `packages/domain`    | `@slides-agent/domain`    | Pure domain logic: segmentation, deck/outline planning, design system, rendering, preview-job lifecycle. No I/O. |
+| `packages/contracts` | `@slides-agent/contracts` | Shared request/response contracts + runtime validators.                                                          |
+| `apps/api`           | `@slides-agent/api`       | NestJS backend: REST endpoints, LLM adapters (ports), preview-job store/runner.                                  |
+| `apps/web`           | `@slides-agent/web`       | React + Vite frontend: input form, style presets, job polling, preview.                                          |
 
 ### Generation pipeline
 
@@ -67,24 +67,24 @@ pnpm install
 
 All LLM settings are **backend-only** and never exposed to the frontend or API responses. Set them in the root `.env`:
 
-| Variable | Default | Description |
-|---|---|---|
-| `PORT` | `3000` | API server port. |
-| `LLM_PROVIDER` | `openai` | LLM provider (only `openai` supported). |
-| `OPENAI_API_KEY` | — | OpenAI key. **Empty → deterministic fallbacks** (app still works). |
-| `LLM_MODEL` | — | Default model for all LLM operations. |
-| `SEMANTIC_SEGMENTATION_MODEL` | `LLM_MODEL` | Optional per-operation model override. |
-| `DESIGN_PLANNING_MODEL` | `LLM_MODEL` | Optional per-operation model override. |
-| `LLM_MAX_REPAIR_ATTEMPTS` | `1` | Bounded repair attempts for validation-backed LLM outputs. |
-| `PREVIEW_RATE_LIMIT_MAX` | `5` | Max preview POSTs per window per client IP. |
-| `PREVIEW_RATE_LIMIT_WINDOW_MS` | `60000` | Rate-limit window in ms. |
-| `REDIS_URL` | — | **Required** (feature 004). Redis for the preview-job queue; API/worker fail fast without it. |
-| `AUTH_JWT_SECRET` | — | **Required** (feature 005). Secret for signing login JWTs; API fails fast without it. |
-| `AUTH_JWT_EXPIRES_IN` | `30d` | JWT lifetime. |
-| `AUTH_ACCOUNTS` | `[]` | JSON allowlist `[{ id, username, displayName, passwordHash, active }]`. Generate `passwordHash` with `pnpm auth:hash <password>`. |
-| `AUTH_LOGIN_RATE_LIMIT_MAX` | `10` | Max `POST /api/auth/login` per window per IP. |
-| `AUTH_LOGIN_RATE_LIMIT_WINDOW_MS` | `60000` | Login rate-limit window in ms. |
-| `VITE_API_PROXY_TARGET` | `http://localhost:3000` | (web) API proxy target for the dev server. |
+| Variable                          | Default                 | Description                                                                                                                       |
+| --------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`                            | `3000`                  | API server port.                                                                                                                  |
+| `LLM_PROVIDER`                    | `openai`                | LLM provider (only `openai` supported).                                                                                           |
+| `OPENAI_API_KEY`                  | —                       | OpenAI key. **Empty → deterministic fallbacks** (app still works).                                                                |
+| `LLM_MODEL`                       | —                       | Default model for all LLM operations.                                                                                             |
+| `SEMANTIC_SEGMENTATION_MODEL`     | `LLM_MODEL`             | Optional per-operation model override.                                                                                            |
+| `DESIGN_PLANNING_MODEL`           | `LLM_MODEL`             | Optional per-operation model override.                                                                                            |
+| `LLM_MAX_REPAIR_ATTEMPTS`         | `1`                     | Bounded repair attempts for validation-backed LLM outputs.                                                                        |
+| `PREVIEW_RATE_LIMIT_MAX`          | `5`                     | Max preview POSTs per window per client IP.                                                                                       |
+| `PREVIEW_RATE_LIMIT_WINDOW_MS`    | `60000`                 | Rate-limit window in ms.                                                                                                          |
+| `REDIS_URL`                       | —                       | **Required** (feature 004). Redis for the preview-job queue; API/worker fail fast without it.                                     |
+| `AUTH_JWT_SECRET`                 | —                       | **Required** (feature 005). Secret for signing login JWTs; API fails fast without it.                                             |
+| `AUTH_JWT_EXPIRES_IN`             | `30d`                   | JWT lifetime.                                                                                                                     |
+| `AUTH_ACCOUNTS`                   | `[]`                    | JSON allowlist `[{ id, username, displayName, passwordHash, active }]`. Generate `passwordHash` with `pnpm auth:hash <password>`. |
+| `AUTH_LOGIN_RATE_LIMIT_MAX`       | `10`                    | Max `POST /api/auth/login` per window per IP.                                                                                     |
+| `AUTH_LOGIN_RATE_LIMIT_WINDOW_MS` | `60000`                 | Login rate-limit window in ms.                                                                                                    |
+| `VITE_API_PROXY_TARGET`           | `http://localhost:3000` | (web) API proxy target for the dev server.                                                                                        |
 
 ### Auth (feature 005)
 
@@ -222,24 +222,24 @@ Interactive OpenAPI docs (Swagger UI): **`/api/docs`** (raw spec at `/api/docs-j
 
 Base path: `/api/slides`
 
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/preview` | Synchronous preview generation. Returns the full artifact. |
-| `POST` | `/preview-jobs` | Enqueue an async preview job → `202` with `jobId` + `statusUrl`. |
-| `GET` | `/preview-jobs/:jobId` | Poll job status/result (`404 PREVIEW_JOB_UNAVAILABLE` if unknown/expired). |
+| Method | Path                   | Description                                                                |
+| ------ | ---------------------- | -------------------------------------------------------------------------- |
+| `POST` | `/preview`             | Synchronous preview generation. Returns the full artifact.                 |
+| `POST` | `/preview-jobs`        | Enqueue an async preview job → `202` with `jobId` + `statusUrl`.           |
+| `GET`  | `/preview-jobs/:jobId` | Poll job status/result (`404 PREVIEW_JOB_UNAVAILABLE` if unknown/expired). |
 
 Request body (both POSTs):
 
 ```jsonc
 {
-  "sourceContent": "…your notes/transcript…",   // required, ≤ 50,000 chars
+  "sourceContent": "…your notes/transcript…", // required, ≤ 50,000 chars
   "deckBrief": {
-    "purpose": "面試",                            // required
-    "audience": "長官",                           // required
-    "styleDirection": "專業商務",                 // optional, steers the design kit
-    "chartEmphasis": "…",                         // optional
-    "segmentationGuidance": "…",                  // optional
-    "language": "zh-TW"                            // optional
+    "purpose": "面試", // required
+    "audience": "長官", // required
+    "styleDirection": "專業商務", // optional, steers the design kit
+    "chartEmphasis": "…", // optional
+    "segmentationGuidance": "…", // optional
+    "language": "zh-TW" // optional
   }
 }
 ```
@@ -265,11 +265,11 @@ Type-check a package with its `build` script (no-emit `tsc`), e.g. `pnpm --filte
 
 Deterministic dev scripts — **no front-end, LLM, or DB needed**. They read the committed theme seeds and write previewable HTML under `apps/api/preview/` (git-ignored).
 
-| Script | Purpose | Run |
-|--------|---------|-----|
-| `preview:deck` | Run a markdown file through the deterministic deck pipeline; prints each chart's planned → concrete visual (bar/line/pie/…) and the selected theme, then writes `preview/deck.html`. Verifies **your content** charts correctly. | `pnpm --filter @slides-agent/api preview:deck [file.md] [styleDirection]`<br>(defaults to `sample-deck-input.md`) |
-| `preview:chart-matrix` | Renders every supported chart visual × every enabled style (20 × 7) to `preview/chart-matrix/index.html`; **fails** on any unintended fallback or external resource. Catches a chart breaking under some style. | `pnpm --filter @slides-agent/api preview:chart-matrix` |
-| `preview:themes` | Renders the theme gallery across all enabled styles — eyeball the design system. | `pnpm --filter @slides-agent/api preview:themes` |
+| Script                 | Purpose                                                                                                                                                                                                                          | Run                                                                                                               |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `preview:deck`         | Run a markdown file through the deterministic deck pipeline; prints each chart's planned → concrete visual (bar/line/pie/…) and the selected theme, then writes `preview/deck.html`. Verifies **your content** charts correctly. | `pnpm --filter @slides-agent/api preview:deck [file.md] [styleDirection]`<br>(defaults to `sample-deck-input.md`) |
+| `preview:chart-matrix` | Renders every supported chart visual × every enabled style (20 × 7) to `preview/chart-matrix/index.html`; **fails** on any unintended fallback or external resource. Catches a chart breaking under some style.                  | `pnpm --filter @slides-agent/api preview:chart-matrix`                                                            |
+| `preview:themes`       | Renders the theme gallery across all enabled styles — eyeball the design system.                                                                                                                                                 | `pnpm --filter @slides-agent/api preview:themes`                                                                  |
 
 Examples:
 

@@ -5,7 +5,6 @@ import type { ChartTreatment, ChartTreatmentPlan, DesignSystem } from "@/design/
 import type { AccentHue, DesignStyleKit } from "@/design/design-style-kit.types";
 import { resolveTreatmentForVisuals } from "@/design/chart-treatment-mapping";
 import type {
-  ChartPoint,
   ChartRenderingNote,
   ChartSeries,
   ChartVisualKind,
