@@ -181,4 +181,32 @@ describe("selectTheme", () => {
     const selected = selectTheme({ styleDirection: "brutalist" }, withRaw);
     expect(selected.ids.style).toBe("style-10-brutalism");
   });
+
+  it("matches keywords on word boundaries, not as loose substrings", () => {
+    const palettes: SelectableTheme[] = [
+      {
+        id: "palette-00-safe-default",
+        kind: "palette",
+        keywords: ["neutral"],
+        support: "full",
+        styleKit: paletteKit("#111111")
+      },
+      {
+        id: "palette-10-ev",
+        kind: "palette",
+        keywords: ["ev"],
+        support: "full",
+        styleKit: paletteKit("#0891B2")
+      }
+    ];
+    // "ev" must NOT spuriously match the substring inside "developer" — the EV
+    // palette stays a non-match, so selection falls back to the safe default.
+    expect(selectTheme({ styleDirection: "tech developer" }, palettes).ids.palette).toBe(
+      "palette-00-safe-default"
+    );
+    // A real whole-word "ev" still matches.
+    expect(selectTheme({ styleDirection: "ev charging" }, palettes).ids.palette).toBe(
+      "palette-10-ev"
+    );
+  });
 });

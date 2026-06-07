@@ -39,6 +39,13 @@ function factCandidatesForLine(sectionHeading: string, sourceText: string): Fact
     candidates.push({ kind: "metric", value });
   }
 
+  // 008 US6: currency amounts ($1.1M / €2,300 / ¥500K) are prime chartable
+  // metrics; extract them so the chart-intent planner has same-unit groups to
+  // compare. Whitespace is collapsed so "$ 1.0 M" canonicalises to "$1.0M".
+  for (const value of sourceText.match(/[$€£¥]\s?\d[\d,]*(?:\.\d+)?\s?[KMBkmb]?/gu) ?? []) {
+    candidates.push({ kind: "metric", value: value.replace(/\s+/gu, "") });
+  }
+
   for (const value of sourceText.match(/\d+(?:\.\d+)?\s*小時/gu) ?? []) {
     candidates.push({ kind: "metric", value: value.replace(/\s+/gu, " ") });
   }

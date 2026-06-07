@@ -1,5 +1,3 @@
-import { ChartIntentPlanner } from "@/content-core/chart-intent-planner";
-import { extractSourceFacts } from "@/content-core/source-fact-extractor";
 import type { SegmentationValidation } from "@/content-core/semantic-segmentation.types";
 import { segmentSourceContent } from "@/content-core/semantic-segmentation-validator";
 import type {
@@ -15,12 +13,7 @@ export function generatePreviewDeck(input: GeneratePreviewDeckInput): GeneratePr
         validation: input.segmentationValidation ?? validExternalSegmentation()
       }
     : segmentSourceContent({ sourceContent: input.sourceContent });
-  const facts = extractSourceFacts(input.sourceContent, segmentation.sections);
-  const chartIntents = new ChartIntentPlanner().plan({
-    sourceFacts: facts,
-    ...(input.deckBrief.chartEmphasis ? { chartEmphasis: input.deckBrief.chartEmphasis } : {})
-  });
-  const slideDeck = planSlideDeck({
+  const planning = planSlideDeck({
     sourceContent: input.sourceContent,
     deckBrief: input.deckBrief,
     sourceSections: segmentation.sections,
@@ -28,13 +21,13 @@ export function generatePreviewDeck(input: GeneratePreviewDeckInput): GeneratePr
   });
 
   return {
-    slideDeck,
-    chartIntents: chartIntents.intents,
+    slideDeck: planning.slideDeck,
+    chartIntents: planning.chartIntents,
     generationSummary: {
-      slideCount: slideDeck.slides.length,
-      sourceFactCount: facts.length,
-      chartIntentCount: chartIntents.intents.length,
-      uncertainClaimCount: slideDeck.reviewReport.uncertainClaims.length
+      slideCount: planning.slideDeck.slides.length,
+      sourceFactCount: planning.sourceFacts.length,
+      chartIntentCount: planning.chartIntents.length,
+      uncertainClaimCount: planning.slideDeck.reviewReport.uncertainClaims.length
     }
   };
 }

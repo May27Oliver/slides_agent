@@ -20,6 +20,8 @@ export interface ChartIntent {
 export interface ChartIntentInput {
   sourceFacts: SourceFact[];
   chartEmphasis?: string;
+  /** Section id → heading, used to title an intent from its source section. */
+  sections?: ReadonlyArray<{ id: string; heading: string }>;
 }
 
 export interface ChartIntentPlannerResult {

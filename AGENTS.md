@@ -1,7 +1,7 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-specs/005-user-auth-jwt/plan.md
+specs/008-chart-rendering/plan.md
 <!-- SPECKIT END -->
 
 <!-- project-structure:start (hand-maintained — keep in sync when adding modules/features) -->
@@ -46,7 +46,7 @@ packages/
     src/  test/  schemas/
 docs/                          design.md (design-system architecture)
 scripts/                       repo-level scripts (dev.sh, auth-hash.ts)
-specs/                         feature specs 001 → 006 (spec-kit); current: 006-db-persistence
+specs/                         feature specs 001 → 008 (spec-kit); current: 008-chart-rendering
 tests/                         cross-cutting / shared test assets
 ```
 
@@ -58,7 +58,7 @@ HTML is derived cache); every deck read scoped to `req.user.id`; migrations run 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **slides_agent** (3744 symbols, 6958 relationships, 235 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **slides_agent** (3762 symbols, 6976 relationships, 235 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

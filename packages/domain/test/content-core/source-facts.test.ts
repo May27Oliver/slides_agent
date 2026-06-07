@@ -35,4 +35,14 @@ describe("source fact extraction", () => {
       ])
     );
   });
+
+  it("extracts currency amounts as chartable metric facts (008 US6)", () => {
+    const facts = extractSourceFacts("# 區域營收\n\n- 北美：$1.1M\n- 歐洲：$0.6M\n- 亞太：$0.4M\n");
+    expect(facts.map((fact) => fact.value)).toEqual(
+      expect.arrayContaining(["$1.1M", "$0.6M", "$0.4M"])
+    );
+    for (const fact of facts) {
+      expect(fact.kind).toBe("metric");
+    }
+  });
 });

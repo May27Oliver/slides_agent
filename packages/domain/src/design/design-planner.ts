@@ -1,5 +1,6 @@
 import type { ChartIntent, VisualizationType } from "@/content-core/chart-intent.types";
 import type { Slide, SlideOutlineItem } from "@/deck/deck.types";
+import { mapVisualizationTypeToTreatment } from "@/design/chart-treatment-mapping";
 import { defaultDesignSystem } from "@/design/default-design-system";
 import type { DesignPlanner, DesignPlanningGenerationPort } from "@/design/design-planner.port";
 import type {
@@ -145,23 +146,27 @@ function planChartTreatment(intent: ChartIntent): ChartTreatmentPlan {
   };
 }
 
+// 008 decision B: the planner only chooses WHICH recommended visual is primary
+// (precedence); the VisualizationType → ChartTreatment translation itself routes
+// through the single-source-of-truth mapping so the two enums cannot drift.
+const VISUAL_PRECEDENCE: readonly VisualizationType[] = [
+  "metric_card",
+  "table",
+  "timeline",
+  "milestone",
+  "comparison",
+  "callout",
+  "none"
+];
+
+// NOTE: intentionally distinct from `resolveTreatmentForVisuals` in
+// chart-treatment-mapping.ts. That one is the RENDERER's no-plan fallback
+// (first-recommended wins, empties → "fallback_text"). This is the design
+// PLANNER's classification: precedence-ordered, and empties → "review_note" so a
+// human is asked rather than silently degrading. Do not merge them.
 function treatmentFor(recommendedVisuals: VisualizationType[]): ChartTreatment {
-  if (recommendedVisuals.includes("metric_card")) {
-    return "metric_card";
-  }
-  if (recommendedVisuals.includes("table")) {
-    return "table";
-  }
-  if (recommendedVisuals.includes("timeline") || recommendedVisuals.includes("milestone")) {
-    return "timeline";
-  }
-  if (recommendedVisuals.includes("comparison")) {
-    return "chart";
-  }
-  if (recommendedVisuals.includes("callout")) {
-    return "fallback_text";
-  }
-  return "review_note";
+  const primary = VISUAL_PRECEDENCE.find((type) => recommendedVisuals.includes(type));
+  return primary ? mapVisualizationTypeToTreatment(primary) : "review_note";
 }
 
 function planVisualHierarchy(slide: Slide): VisualHierarchyPlan {

@@ -1,14 +1,24 @@
+import type { ChartIntent } from "@/content-core/chart-intent.types";
 import type { Slide, SlideDeck } from "@/deck/deck.types";
+import type { ChartTreatmentPlan } from "@/design/design.types";
 import type { DesignPlanningResult } from "@/design/types";
 import { resolveStyleKit } from "@/design/default-design-style-kit";
 import type { DesignStyleKit } from "@/design/design-style-kit.types";
+import { renderChartIntent } from "@/rendering/chart-renderer";
 import { buildDeckRuntimeScript } from "@/rendering/deck-runtime-script";
 import { buildDeckStyleCss } from "@/rendering/deck-style-css";
+import { escapeAttribute, escapeHtml } from "@/rendering/sanitize";
 import { cleanDisplayText } from "@/shared/clean-display-text";
 
 export interface TemplateDeckInput {
   deck: SlideDeck;
   designPlanningResult: DesignPlanningResult;
+  /**
+   * 008: the planned chart intents (carry the source facts). When present, each
+   * slide's `chart_placeholder` block is rendered as a real inline SVG/HTML
+   * visual; when absent the renderer simply omits charts (backward compatible).
+   */
+  chartIntents?: ChartIntent[];
 }
 
 /**
@@ -26,8 +36,9 @@ export function renderTemplateDeck(input: TemplateDeckInput): string {
     ? `\n  <link rel="preconnect" href="https://fonts.googleapis.com">\n  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n  <link href="${escapeAttribute(styleKit.fonts.googleFontsHref)}" rel="stylesheet">`
     : "";
 
+  const chartContext = buildChartContext(input);
   const slides = input.deck.slides
-    .map((slide, index) => renderSlide(input, styleKit, slide, index, total))
+    .map((slide, index) => renderSlide(input, styleKit, slide, index, total, chartContext))
     .join("\n");
 
   return `<!doctype html>
@@ -58,7 +69,8 @@ function renderSlide(
   styleKit: DesignStyleKit,
   slide: Slide,
   index: number,
-  total: number
+  total: number,
+  chartContext: ChartRenderContext | null
 ): string {
   const assignment = input.designPlanningResult.slidePatternAssignments.find(
     (candidate) => candidate.slideId === slide.id
@@ -81,23 +93,160 @@ function renderSlide(
   }
 
   const eyebrow = `${String(index + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
-  const bullets = slide.outline
+
+  // 008 layout: a content slide with a chart switches to a chart-feature split
+  // (chart on the media side, summary/insight bullets on the text side). The
+  // per-value bullets that merely restate the chart's data are dropped — the
+  // chart + legend already carry those numbers — so the text side stays a summary.
+  const chartIntents = slideChartIntents(slide, chartContext);
+  const useChartSplit = chartIntents.length > 0 && !isCover;
+  if (useChartSplit) {
+    classes.push("has-chart-split");
+  }
+
+  const chartValues = new Set(
+    chartIntents.flatMap((intent) => intent.sourceFacts.map((fact) => fact.value))
+  );
+  const visibleOutline = useChartSplit
+    ? slide.outline.filter((item) => !bulletEchoesChart(cleanDisplayText(item.text), chartValues))
+    : slide.outline;
+  const bullets = visibleOutline
     .map(
       (item, itemIndex) =>
         `          <li class="bullet anim" style="--d:${itemIndex + 2}">${escapeHtml(cleanDisplayText(item.text))}</li>`
     )
     .join("\n");
+  const chartsHtml = chartContext
+    ? renderChartFragments(input, styleKit, chartContext, chartIntents, useChartSplit)
+    : "";
+
+  const messageHtml = escapeHtml(cleanDisplayText(slide.message));
+  // In the chart-feature split the message becomes the prominent right-side
+  // takeaway, so it is NOT also shown as a header subtitle (no duplication).
+  const headerMessage = useChartSplit
+    ? ""
+    : `\n        <p class="message anim" style="--d:1">${messageHtml}</p>`;
+  const body = useChartSplit
+    ? renderChartSplitBody(messageHtml, bullets, visibleOutline.length > 0, chartsHtml)
+    : renderStackedBody(bullets, chartsHtml);
 
   return `    <section class="${classes.join(" ")}" data-slide-id="${escapeAttribute(slide.id)}" data-pattern="${escapeAttribute(pattern)}" data-bg="${escapeAttribute(layout)}" aria-label="第 ${index + 1} 張：${escapeAttribute(cleanDisplayText(slide.title))}" tabindex="-1">
       <div class="slide-body">
         <span class="eyebrow anim" style="--d:0"><span class="dot"></span>${eyebrow}</span>
-        <${titleTag} class="slide-title anim" style="--d:1">${escapeHtml(cleanDisplayText(slide.title))}</${titleTag}>
-        <p class="message anim" style="--d:1">${escapeHtml(cleanDisplayText(slide.message))}</p>
-        <ul class="bullets">
-${bullets}
-        </ul>
+        <${titleTag} class="slide-title anim" style="--d:1">${escapeHtml(cleanDisplayText(slide.title))}</${titleTag}>${headerMessage}
+        ${body}
       </div>
     </section>`;
+}
+
+/** Default layout: bullets, then any charts stacked full-width below. */
+function renderStackedBody(bullets: string, chartsHtml: string): string {
+  const charts = chartsHtml
+    ? `\n        <div class="charts anim" style="--d:2">${chartsHtml}</div>`
+    : "";
+  return `<ul class="bullets">
+${bullets}
+        </ul>${charts}`;
+}
+
+/**
+ * Chart-feature layout: chart on the media side; a weighty takeaway panel on the
+ * text side — the slide message as a bold conclusion, with any surviving insight
+ * bullets as supporting points — so the two sides carry comparable visual weight.
+ */
+function renderChartSplitBody(
+  messageHtml: string,
+  bullets: string,
+  hasInsights: boolean,
+  chartsHtml: string
+): string {
+  const points = hasInsights
+    ? `
+            <ul class="bullets chart-points">
+${bullets}
+            </ul>`
+    : "";
+  return `<div class="chart-split anim" style="--d:2">
+          <div class="chart-split-media"><div class="charts">${chartsHtml}</div></div>
+          <div class="chart-split-text">
+            <p class="chart-takeaway">${messageHtml}</p>${points}
+          </div>
+        </div>`;
+}
+
+/** True when a bullet merely restates one of the chart's data values. */
+function bulletEchoesChart(text: string, chartValues: Set<string>): boolean {
+  for (const value of chartValues) {
+    if (value.length > 0 && text.includes(value)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * 008: per-deck lookup tables for chart rendering. Built once in
+ * `renderTemplateDeck` (not per slide) so a many-slide deck does not rebuild the
+ * same intent/plan maps for every slide. Null when no chart intents are wired,
+ * keeping the renderer backward compatible.
+ */
+interface ChartRenderContext {
+  intentById: Map<string, ChartIntent>;
+  planByIntentId: Map<string, ChartTreatmentPlan>;
+}
+
+function buildChartContext(input: TemplateDeckInput): ChartRenderContext | null {
+  const intents = input.chartIntents;
+  if (!intents || intents.length === 0) {
+    return null;
+  }
+  return {
+    intentById: new Map(intents.map((intent) => [intent.id, intent])),
+    planByIntentId: new Map(
+      input.designPlanningResult.chartTreatmentPlans.map((plan) => [plan.chartIntentId, plan])
+    )
+  };
+}
+
+/** 008: the ChartIntents wired to a slide via its `chart_placeholder` blocks. */
+function slideChartIntents(slide: Slide, context: ChartRenderContext | null): ChartIntent[] {
+  if (!context) {
+    return [];
+  }
+  const intents: ChartIntent[] = [];
+  for (const block of slide.contentBlocks) {
+    if (block.kind !== "chart_placeholder" || !block.chartIntentId) {
+      continue;
+    }
+    const intent = context.intentById.get(block.chartIntentId);
+    if (intent) {
+      intents.push(intent);
+    }
+  }
+  return intents;
+}
+
+/** Renders the slide's chart intents to sanitized inline SVG/HTML fragments. */
+function renderChartFragments(
+  input: TemplateDeckInput,
+  styleKit: DesignStyleKit,
+  context: ChartRenderContext,
+  intents: ChartIntent[],
+  hideTitle: boolean
+): string {
+  return intents
+    .map((intent) => {
+      const plan = context.planByIntentId.get(intent.id);
+      return renderChartIntent({
+        intent,
+        ...(plan ? { treatmentPlan: plan } : {}),
+        styleKit,
+        designSystem: input.designPlanningResult.designSystem,
+        hideTitle
+      }).html;
+    })
+    .filter((fragment) => fragment.length > 0)
+    .join("");
 }
 
 function chevronLeftSvg(): string {
@@ -106,17 +255,4 @@ function chevronLeftSvg(): string {
 
 function chevronRightSvg(): string {
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/gu, "&amp;")
-    .replace(/</gu, "&lt;")
-    .replace(/>/gu, "&gt;")
-    .replace(/"/gu, "&quot;")
-    .replace(/'/gu, "&#39;");
-}
-
-function escapeAttribute(value: string): string {
-  return escapeHtml(value).replace(/\s+/gu, " ").trim();
 }

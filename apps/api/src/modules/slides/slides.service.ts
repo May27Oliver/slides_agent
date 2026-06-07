@@ -11,6 +11,7 @@ import type {
   GeneratePreviewResponseContract
 } from "@slides-agent/contracts";
 import {
+  collectChartReviewNotes,
   type DeckOutlinePlanningPort,
   type DesignPlanningGenerationPort,
   type GeneratePreviewDeckInput,
@@ -131,12 +132,37 @@ export class SlidesService {
       this.logger.log(
         `[SlidesPipeline] node=theme_selection done theme=${selectedTheme.styleKit.kitName} fallback=${selectedTheme.fallback} candidates=${themeCandidates.length}`
       );
+      // 008 (CR-002/FR-004): surface the chart renderer's fallback / extraction /
+      // truncation / uncertain-parse decisions as visible human review notes on
+      // the deck the caller receives, so a degraded chart is never silent.
+      const chartReviewNotes = collectChartReviewNotes({
+        deck: deckResult.slideDeck,
+        chartIntents: deckResult.chartIntents,
+        chartTreatmentPlans: themedDesignPlanningResult.chartTreatmentPlans,
+        styleKit: themedDesignPlanningResult.styleKit,
+        designSystem: themedDesignPlanningResult.designSystem
+      });
+      const reviewedSlideDeck =
+        chartReviewNotes.length > 0
+          ? {
+              ...deckResult.slideDeck,
+              reviewReport: {
+                ...deckResult.slideDeck.reviewReport,
+                humanReviewNotes: [
+                  ...deckResult.slideDeck.reviewReport.humanReviewNotes,
+                  ...chartReviewNotes
+                ]
+              }
+            }
+          : deckResult.slideDeck;
+
       currentNode = "html_generation";
       await notifyStage(progress, "html_generation");
       this.logger.log("[SlidesPipeline] node=html_generation start renderer=template");
       const previewArtifact = renderTemplateDeckArtifact({
-        deck: deckResult.slideDeck,
+        deck: reviewedSlideDeck,
         designPlanningResult: themedDesignPlanningResult,
+        chartIntents: deckResult.chartIntents,
         selectedTheme: { ...selectedTheme.ids, fallback: selectedTheme.fallback }
       });
       this.logger.log(
@@ -148,7 +174,7 @@ export class SlidesService {
       this.logger.log("[SlidesPipeline] node=preview_generation succeeded");
 
       return {
-        slideDeck: deckResult.slideDeck,
+        slideDeck: reviewedSlideDeck,
         designPlanningResult: themedDesignPlanningResult,
         previewArtifact
       };

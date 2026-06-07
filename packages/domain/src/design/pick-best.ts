@@ -32,12 +32,39 @@ export function scoreKeywords(
         return total;
       }
       return {
-        strong: total.strong + (strong.includes(needle) ? 1 : 0),
-        weak: total.weak + (weak.includes(needle) ? 1 : 0)
+        strong: total.strong + (matchesKeyword(strong, needle) ? 1 : 0),
+        weak: total.weak + (matchesKeyword(weak, needle) ? 1 : 0)
       };
     },
     { strong: 0, weak: 0 }
   );
+}
+
+/**
+ * Whole-token keyword match. A naive `includes` over-matches across word
+ * boundaries — e.g. the EV palette keyword "ev" spuriously hits "dEVeloper" in a
+ * tech brief. We require the keyword to sit on ASCII word boundaries; CJK has no
+ * spaces, so a non-[a-z0-9] neighbour (a CJK character or a string edge) counts
+ * as a boundary, preserving Chinese substring matches like "科技".
+ */
+function matchesKeyword(haystack: string, needle: string): boolean {
+  let from = 0;
+  for (;;) {
+    const index = haystack.indexOf(needle, from);
+    if (index < 0) {
+      return false;
+    }
+    const before = index === 0 ? "" : haystack[index - 1]!;
+    const after = index + needle.length >= haystack.length ? "" : haystack[index + needle.length]!;
+    if (!isAsciiWordChar(before) && !isAsciiWordChar(after)) {
+      return true;
+    }
+    from = index + 1;
+  }
+}
+
+function isAsciiWordChar(char: string): boolean {
+  return char.length > 0 && /[a-z0-9]/u.test(char);
 }
 
 /** Strong (styleDirection) count dominates; the weak count only breaks ties. */

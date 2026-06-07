@@ -45,6 +45,30 @@ export { buildDeckStyleCss } from "@/rendering/deck-style-css";
 export { buildDeckRuntimeScript } from "@/rendering/deck-runtime-script";
 export { renderTemplateDeck } from "@/rendering/template-html-renderer";
 export type { TemplateDeckInput } from "@/rendering/template-html-renderer";
+export type * from "@/rendering/chart-rendering.types";
+export {
+  mapVisualizationTypeToTreatment,
+  resolveTreatmentForVisuals,
+  MAPPED_VISUALIZATION_TYPES
+} from "@/design/chart-treatment-mapping";
+export { parseMetricValue } from "@/content-core/metric-fact-parser";
+export { extractChartSeries } from "@/rendering/chart-series-extractor";
+export type { ExtractChartSeriesInput } from "@/rendering/chart-series-extractor";
+export {
+  validatePieSeries,
+  validateLineSeries,
+  validateBarSeries
+} from "@/rendering/chart-series-validator";
+export { renderPieChart, renderLineChart, renderBarChart } from "@/rendering/chart-svg-renderer";
+export type { ChartSvgInput } from "@/rendering/chart-svg-renderer";
+export {
+  renderMetricCard,
+  renderMetricGroup,
+  renderFactTable,
+  renderFallbackText
+} from "@/rendering/chart-html-renderer";
+export { collectChartReviewNotes, renderChartIntent } from "@/rendering/chart-renderer";
+export type { ChartReviewNotesInput, RenderChartIntentInput } from "@/rendering/chart-renderer";
 export { validateGeneratedHtml } from "@/rendering/html-generation-validator";
 export type { HtmlGenerationValidationInput } from "@/rendering/html-generation-validator";
 export type * from "@/rendering/html-generation.types";
