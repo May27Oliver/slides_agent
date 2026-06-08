@@ -26,6 +26,21 @@ export function safeHex(value: string | undefined, fallback: string): string {
   return HEX_PATTERN.test(trimmed) ? trimmed : fallback;
 }
 
+/**
+ * Rejects any CSS value that could break out of a declaration or pull in an
+ * external/active resource (`;{}<>@`, `url(`, comments, `expression(`, newlines).
+ * Shared by `buildDeckStyleCss` and the `selectedTheme` projection so a token is
+ * never surfaced raw to a style attribute consumer (009 FR — defence in depth).
+ */
+const UNSAFE_CSS_VALUE = /[;{}<>\\@]|url\(|\/\*|\*\/|expression\(|\r|\n/iu;
+
+/** Returns the value only if it is a safe inline-CSS value, else the fallback. */
+export function safeCssValue(value: string | undefined, fallback: string): string {
+  return typeof value === "string" && value.length > 0 && !UNSAFE_CSS_VALUE.test(value)
+    ? value
+    : fallback;
+}
+
 /** Escapes text for safe interpolation into HTML/SVG text nodes and attributes. */
 export function escapeHtml(value: string): string {
   return value

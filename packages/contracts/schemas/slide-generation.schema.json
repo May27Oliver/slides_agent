@@ -680,7 +680,14 @@
     },
     "GenerationSummary": {
       "type": "object",
-      "required": ["slideCount", "sourceFactCount", "chartIntentCount", "uncertainClaimCount"],
+      "required": [
+        "slideCount",
+        "sourceFactCount",
+        "chartIntentCount",
+        "uncertainClaimCount",
+        "selectedTheme",
+        "renderedCharts"
+      ],
       "properties": {
         "slideCount": {
           "type": "integer",
@@ -697,6 +704,119 @@
         "uncertainClaimCount": {
           "type": "integer",
           "minimum": 0
+        },
+        "selectedTheme": {
+          "type": "object",
+          "description": "007/009: readonly applied-theme evidence (projection of the composed style kit).",
+          "required": ["kitName", "ids", "fallback", "accentHues", "fonts", "structureFeatures"],
+          "properties": {
+            "kitName": { "type": "string" },
+            "ids": {
+              "type": "object",
+              "required": ["style", "palette", "font"],
+              "properties": {
+                "style": { "type": ["string", "null"] },
+                "palette": { "type": ["string", "null"] },
+                "font": { "type": ["string", "null"] }
+              },
+              "additionalProperties": false
+            },
+            "fallback": { "type": "boolean" },
+            "accentHues": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "base"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "base": { "type": "string" }
+                },
+                "additionalProperties": false
+              }
+            },
+            "fonts": {
+              "type": "object",
+              "required": ["heading", "body"],
+              "properties": {
+                "heading": { "type": "string" },
+                "body": { "type": "string" }
+              },
+              "additionalProperties": false
+            },
+            "visualDensity": { "type": "string", "enum": ["low", "medium", "high"] },
+            "structureFeatures": {
+              "type": "object",
+              "required": ["radiusPx", "shadow"],
+              "properties": {
+                "radiusPx": { "type": "number" },
+                "shadow": { "type": "boolean" },
+                "backdropBlurPx": { "type": "number" },
+                "glow": { "type": "boolean" },
+                "texture": { "type": "string", "enum": ["grain", "noise", "paper"] },
+                "animation": {
+                  "type": "object",
+                  "required": ["preset", "durationMs"],
+                  "properties": {
+                    "preset": { "type": "string", "enum": ["aurora", "mesh"] },
+                    "durationMs": { "type": "number" }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "renderedCharts": {
+          "type": "array",
+          "description": "009: per-chart render evidence from the single render pass ([] when no charts).",
+          "items": {
+            "type": "object",
+            "required": ["slideId", "chartIntentId", "visualKind", "fallback", "notes"],
+            "properties": {
+              "slideId": { "type": "string" },
+              "chartIntentId": { "type": "string" },
+              "visualKind": {
+                "type": "string",
+                "enum": [
+                  "pie_donut",
+                  "line",
+                  "bar",
+                  "metric_card",
+                  "metric_group",
+                  "table",
+                  "fallback_text"
+                ]
+              },
+              "fallback": { "type": "boolean" },
+              "notes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["code", "message"],
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "series_extracted",
+                        "series_insufficient",
+                        "unit_mismatch",
+                        "invalid_pie_total",
+                        "time_sort_failed",
+                        "table_truncated",
+                        "fallback_used",
+                        "value_parse_uncertain"
+                      ]
+                    },
+                    "message": { "type": "string" }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
         }
       },
       "additionalProperties": false

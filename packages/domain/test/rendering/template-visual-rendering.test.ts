@@ -83,7 +83,7 @@ describe("renderTemplateDeck non-chart visuals", () => {
       title: "營收",
       sourceFacts: [fact({ id: "f_rev", value: "$2.3M", sourceText: "營收 $2.3M" })]
     });
-    const html = renderTemplateDeck({
+    const { html } = renderTemplateDeck({
       deck: deckOf([chartSlide("s1", "rev"), chartSlide("s2", "rev")]),
       designPlanningResult: planningResult([plan("rev", "metric_card")]),
       chartIntents: [metricIntent]
@@ -102,7 +102,7 @@ describe("renderTemplateDeck non-chart visuals", () => {
         fact({ id: "b", value: "$1.8M", sourceText: "南區 $1.8M" })
       ]
     });
-    const html = renderTemplateDeck({
+    const { html } = renderTemplateDeck({
       deck: deckOf([chartSlide("s1", "tbl")]),
       designPlanningResult: planningResult([plan("tbl", "table")]),
       chartIntents: [tableIntent]

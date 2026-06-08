@@ -1,5 +1,7 @@
 import type { ReviewReport } from "@/review/types";
 import type { HtmlGenerationValidation } from "@/rendering/html-generation.types";
+import type { RenderedChartSummary } from "@/rendering/chart-rendering.types";
+import type { SelectedThemeSummary } from "@/design/selected-theme-summary.types";
 
 export type SourceFactKind = "metric" | "date" | "decision" | "risk" | "constraint" | "claim";
 
@@ -140,19 +142,30 @@ export interface PreviewArtifact {
   generationSummary: GenerationSummary;
 }
 
-export interface GenerationSummary {
+/**
+ * Planning-stage summary: the deck counts known BEFORE the deck is rendered (no
+ * theme selected, no charts drawn yet). The pipeline's render stage upgrades this
+ * to a full `GenerationSummary`. Kept separate so the public response contract can
+ * require `selectedTheme`/`renderedCharts` without weakening it for planning (009).
+ */
+export interface PreRenderSummary {
   slideCount: number;
   sourceFactCount: number;
   chartIntentCount: number;
   uncertainClaimCount: number;
+}
+
+export interface GenerationSummary extends PreRenderSummary {
   /**
-   * 007: the three theme axes selectTheme chose (FR-013). `fallback` is true when
-   * any axis (or all) had no candidate and fell back to defaultDesignStyleKit.
+   * 007/009: the theme selectTheme + composeKit actually applied, projected as
+   * readonly result evidence (kitName, three axis ids, accent swatches, fonts,
+   * density, structure features). `fallback` is true when any axis fell back to
+   * the default kit. Always present on a rendered (pipeline) summary.
    */
-  selectedTheme?: {
-    style: string | null;
-    palette: string | null;
-    font: string | null;
-    fallback: boolean;
-  };
+  selectedTheme: SelectedThemeSummary;
+  /**
+   * 009: per-chart render evidence collected during the single deck render pass.
+   * Always present; `[]` when the deck has no charts.
+   */
+  renderedCharts: RenderedChartSummary[];
 }

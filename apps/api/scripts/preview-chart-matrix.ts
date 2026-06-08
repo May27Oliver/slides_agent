@@ -279,7 +279,7 @@ export function buildChartMatrix(): ChartMatrix {
         styleKit,
         designSystem
       });
-      const docHtml = renderTemplateDeck({
+      const { html: docHtml } = renderTemplateDeck({
         deck: deckFor(sample),
         designPlanningResult: {
           designSystem,

@@ -115,12 +115,12 @@ describe("SlidesService theme selection (US1)", () => {
     expect(response.designPlanningResult.styleKit?.kitName).toBe(
       "style-10-brutalism+palette-10-acid+font-10-display"
     );
-    expect(response.previewArtifact.generationSummary.selectedTheme).toEqual({
+    expect(response.previewArtifact.generationSummary.selectedTheme?.ids).toEqual({
       style: "style-10-brutalism",
       palette: "palette-10-acid",
-      font: "font-10-display",
-      fallback: false
+      font: "font-10-display"
     });
+    expect(response.previewArtifact.generationSummary.selectedTheme?.fallback).toBe(false);
   });
 
   it("applies the DB-selected theme on the LLM-success path, not just the fallback path", async () => {
@@ -140,12 +140,12 @@ describe("SlidesService theme selection (US1)", () => {
     expect(response.designPlanningResult.styleKit?.kitName).toBe(
       "style-10-brutalism+palette-10-acid+font-10-display"
     );
-    expect(response.previewArtifact.generationSummary.selectedTheme).toEqual({
+    expect(response.previewArtifact.generationSummary.selectedTheme?.ids).toEqual({
       style: "style-10-brutalism",
       palette: "palette-10-acid",
-      font: "font-10-display",
-      fallback: false
+      font: "font-10-display"
     });
+    expect(response.previewArtifact.generationSummary.selectedTheme?.fallback).toBe(false);
   });
 
   it("selects different themes for different style directions (deterministic, brief-driven)", async () => {
@@ -154,7 +154,7 @@ describe("SlidesService theme selection (US1)", () => {
       deckBrief: { ...request.deckBrief, styleDirection: "minimal" }
     };
     const response = await serviceWith(storeReturning(CANDIDATES)).generatePreview(minimalReq);
-    expect(response.previewArtifact.generationSummary.selectedTheme?.style).toBe(
+    expect(response.previewArtifact.generationSummary.selectedTheme?.ids.style).toBe(
       "style-00-minimal"
     );
   });
@@ -163,12 +163,12 @@ describe("SlidesService theme selection (US1)", () => {
     const response = await serviceWith(storeReturning([])).generatePreview(request);
 
     expect(response.designPlanningResult.styleKit?.kitName).toBe("default");
-    expect(response.previewArtifact.generationSummary.selectedTheme).toEqual({
+    expect(response.previewArtifact.generationSummary.selectedTheme?.ids).toEqual({
       style: null,
       palette: null,
-      font: null,
-      fallback: true
+      font: null
     });
+    expect(response.previewArtifact.generationSummary.selectedTheme?.fallback).toBe(true);
   });
 
   it("treats direct construction without a store as no candidates (DI now requires it)", async () => {

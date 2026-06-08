@@ -68,13 +68,112 @@ const HTML_GENERATION_VALIDATION_SCHEMA: OpenApiSchema = {
   }
 };
 
+const SELECTED_THEME_SUMMARY_SCHEMA: OpenApiSchema = {
+  type: "object",
+  description: "007/009: readonly applied-theme evidence (projection of the composed style kit).",
+  required: ["kitName", "ids", "fallback", "accentHues", "fonts", "structureFeatures"],
+  properties: {
+    kitName: { type: "string" },
+    ids: {
+      type: "object",
+      required: ["style", "palette", "font"],
+      properties: {
+        style: { type: "string", nullable: true },
+        palette: { type: "string", nullable: true },
+        font: { type: "string", nullable: true }
+      }
+    },
+    fallback: { type: "boolean" },
+    accentHues: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["name", "base"],
+        properties: { name: { type: "string" }, base: { type: "string" } }
+      }
+    },
+    fonts: {
+      type: "object",
+      required: ["heading", "body"],
+      properties: { heading: { type: "string" }, body: { type: "string" } }
+    },
+    visualDensity: { type: "string", enum: ["low", "medium", "high"] },
+    structureFeatures: {
+      type: "object",
+      required: ["radiusPx", "shadow"],
+      properties: {
+        radiusPx: { type: "number" },
+        shadow: { type: "boolean" },
+        backdropBlurPx: { type: "number" },
+        glow: { type: "boolean" },
+        texture: { type: "string", enum: ["grain", "noise", "paper"] },
+        animation: {
+          type: "object",
+          required: ["preset", "durationMs"],
+          properties: {
+            preset: { type: "string", enum: ["aurora", "mesh"] },
+            durationMs: { type: "number" }
+          }
+        }
+      }
+    }
+  }
+};
+
+const CHART_NOTE_CODE_ENUM = [
+  "series_extracted",
+  "series_insufficient",
+  "unit_mismatch",
+  "invalid_pie_total",
+  "time_sort_failed",
+  "table_truncated",
+  "fallback_used",
+  "value_parse_uncertain"
+];
+
+const RENDERED_CHART_SUMMARY_SCHEMA: OpenApiSchema = {
+  type: "object",
+  description: "009: per-chart render evidence from the single render pass.",
+  required: ["slideId", "chartIntentId", "visualKind", "fallback", "notes"],
+  properties: {
+    slideId: { type: "string" },
+    chartIntentId: { type: "string" },
+    visualKind: {
+      type: "string",
+      enum: ["pie_donut", "line", "bar", "metric_card", "metric_group", "table", "fallback_text"]
+    },
+    fallback: { type: "boolean" },
+    notes: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["code", "message"],
+        properties: {
+          code: { type: "string", enum: CHART_NOTE_CODE_ENUM },
+          message: { type: "string" }
+        }
+      }
+    }
+  }
+};
+
 const GENERATION_SUMMARY_SCHEMA: OpenApiSchema = {
   type: "object",
+  required: [
+    "slideCount",
+    "sourceFactCount",
+    "chartIntentCount",
+    "uncertainClaimCount",
+    "selectedTheme",
+    "renderedCharts"
+  ],
   properties: {
     slideCount: { type: "integer" },
     sourceFactCount: { type: "integer" },
     chartIntentCount: { type: "integer" },
-    uncertainClaimCount: { type: "integer" }
+    uncertainClaimCount: { type: "integer" },
+    selectedTheme: SELECTED_THEME_SUMMARY_SCHEMA,
+    renderedCharts: { type: "array", items: RENDERED_CHART_SUMMARY_SCHEMA }
   }
 };
 

@@ -20,6 +20,7 @@ import {
   LlmDeckOutlinePlanner,
   renderTemplateDeckArtifact,
   parseSourceSections,
+  projectSelectedThemeSummary,
   type SemanticSegmentationRepairer,
   type SemanticSegmenter,
   segmentSourceContentWithRepair,
@@ -132,15 +133,27 @@ export class SlidesService {
       this.logger.log(
         `[SlidesPipeline] node=theme_selection done theme=${selectedTheme.styleKit.kitName} fallback=${selectedTheme.fallback} candidates=${themeCandidates.length}`
       );
-      // 008 (CR-002/FR-004): surface the chart renderer's fallback / extraction /
-      // truncation / uncertain-parse decisions as visible human review notes on
-      // the deck the caller receives, so a degraded chart is never silent.
-      const chartReviewNotes = collectChartReviewNotes({
+      currentNode = "html_generation";
+      await notifyStage(progress, "html_generation");
+      this.logger.log("[SlidesPipeline] node=html_generation start renderer=template");
+      // 009: one deck render produces the html AND the per-chart result evidence
+      // (generationSummary.renderedCharts). The applied theme is projected into
+      // readonly summary tokens here (CR-004: result evidence in the response).
+      const previewArtifact = renderTemplateDeckArtifact({
         deck: deckResult.slideDeck,
+        designPlanningResult: themedDesignPlanningResult,
         chartIntents: deckResult.chartIntents,
-        chartTreatmentPlans: themedDesignPlanningResult.chartTreatmentPlans,
-        styleKit: themedDesignPlanningResult.styleKit,
-        designSystem: themedDesignPlanningResult.designSystem
+        selectedTheme: projectSelectedThemeSummary(
+          selectedTheme,
+          themedDesignPlanningResult.designSystem.visualDensity
+        )
+      });
+      // 008/009 (CR-002/FR-004): derive the chart fallback / extraction / truncation
+      // review notes from that SAME render's evidence — no second render — so the
+      // review report can never diverge from what was actually drawn.
+      const chartReviewNotes = collectChartReviewNotes({
+        renderedCharts: previewArtifact.generationSummary.renderedCharts,
+        chartIntents: deckResult.chartIntents
       });
       const reviewedSlideDeck =
         chartReviewNotes.length > 0
@@ -155,16 +168,6 @@ export class SlidesService {
               }
             }
           : deckResult.slideDeck;
-
-      currentNode = "html_generation";
-      await notifyStage(progress, "html_generation");
-      this.logger.log("[SlidesPipeline] node=html_generation start renderer=template");
-      const previewArtifact = renderTemplateDeckArtifact({
-        deck: reviewedSlideDeck,
-        designPlanningResult: themedDesignPlanningResult,
-        chartIntents: deckResult.chartIntents,
-        selectedTheme: { ...selectedTheme.ids, fallback: selectedTheme.fallback }
-      });
       this.logger.log(
         `[SlidesPipeline] node=html_generation done renderer=template validation=${previewArtifact.htmlGenerationValidation.status ?? "unknown"}`
       );

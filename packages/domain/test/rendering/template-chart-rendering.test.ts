@@ -77,7 +77,11 @@ const designPlanningResult: DesignPlanningResult = {
 
 describe("renderTemplateDeck chart integration", () => {
   it("renders a slide's chart_placeholder as a real chart visual, not a bullet", () => {
-    const html = renderTemplateDeck({ deck, designPlanningResult, chartIntents: [chartIntent] });
+    const { html } = renderTemplateDeck({
+      deck,
+      designPlanningResult,
+      chartIntents: [chartIntent]
+    });
     expect(html).toContain('data-chart-visual="pie_donut"');
     expect(html).toContain('data-chart-intent-id="chart_share"');
     expect(html).toContain("<svg");
@@ -85,12 +89,16 @@ describe("renderTemplateDeck chart integration", () => {
   });
 
   it("omits charts when no chart intents are supplied (backward compatible)", () => {
-    const html = renderTemplateDeck({ deck, designPlanningResult });
+    const { html } = renderTemplateDeck({ deck, designPlanningResult });
     expect(html).not.toContain("data-chart-visual");
   });
 
   it("keeps the output self-contained (no external chart runtime)", () => {
-    const html = renderTemplateDeck({ deck, designPlanningResult, chartIntents: [chartIntent] });
+    const { html } = renderTemplateDeck({
+      deck,
+      designPlanningResult,
+      chartIntents: [chartIntent]
+    });
     const start = html.indexOf('<div class="charts');
     const charts = html.slice(start, html.indexOf("</section>", start));
     expect(charts).not.toMatch(/<script|onclick=/iu);
@@ -112,7 +120,7 @@ describe("renderTemplateDeck chart integration", () => {
         }
       ]
     };
-    const html = renderTemplateDeck({
+    const { html } = renderTemplateDeck({
       deck: splitDeck,
       designPlanningResult,
       chartIntents: [chartIntent]

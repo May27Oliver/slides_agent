@@ -1,18 +1,7 @@
 import { clampFontSizeCss } from "@/design/default-design-style-kit";
 import type { DesignStyleKit } from "@/design/design-style-kit.types";
 import type { DesignSystem } from "@/design/design.types";
-import { safeHex, safeNumber } from "@/rendering/sanitize";
-
-// A legitimate CSS *value* never needs these. They are exactly what a breakout
-// payload uses to escape the declaration / <style> context or load resources.
-const UNSAFE_CSS_VALUE = /[;{}<>\\@]|url\(|\/\*|\*\/|expression\(|\r|\n/iu;
-
-/** Returns the value only if it has no CSS-injection characters, else fallback. */
-function safeCssValue(value: string | undefined, fallback: string): string {
-  return typeof value === "string" && value.length > 0 && !UNSAFE_CSS_VALUE.test(value)
-    ? value
-    : fallback;
-}
+import { safeCssValue, safeHex, safeNumber } from "@/rendering/sanitize";
 
 // 007 US3 — built-in B-grade overlays. These are ENGINE-OWNED static CSS keyed by
 // a closed enum: a tampered kit can only select a preset (or none), never inject

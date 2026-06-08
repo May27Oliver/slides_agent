@@ -5,6 +5,7 @@ import type { DesignPlanningResult } from "@/design/types";
 import { resolveStyleKit } from "@/design/default-design-style-kit";
 import type { DesignStyleKit } from "@/design/design-style-kit.types";
 import { renderChartIntent } from "@/rendering/chart-renderer";
+import type { RenderedChartSummary } from "@/rendering/chart-rendering.types";
 import { buildDeckRuntimeScript } from "@/rendering/deck-runtime-script";
 import { buildDeckStyleCss } from "@/rendering/deck-style-css";
 import { escapeAttribute, escapeHtml } from "@/rendering/sanitize";
@@ -22,12 +23,23 @@ export interface TemplateDeckInput {
 }
 
 /**
+ * 009: the deck render is the single source of truth for chart visuals. One pass
+ * produces both the slide html and the per-chart result evidence
+ * (`renderedCharts`), so the control-panel summary and the review notes can never
+ * diverge from what was actually drawn.
+ */
+export interface RenderedTemplateDeck {
+  html: string;
+  renderedCharts: RenderedChartSummary[];
+}
+
+/**
  * Deterministic, reference-grade renderer. It is both the conservative fallback
  * for the LLM HTML path and the source of the house style: layered gradient
  * background, one shared title scale, hue-tinted cards, entrance motion with a
  * prefers-reduced-motion guard, and icon-only navigation with progress + dots.
  */
-export function renderTemplateDeck(input: TemplateDeckInput): string {
+export function renderTemplateDeck(input: TemplateDeckInput): RenderedTemplateDeck {
   const styleKit = resolveStyleKit(input.designPlanningResult);
   const css = buildDeckStyleCss(styleKit, input.designPlanningResult.designSystem);
   const script = buildDeckRuntimeScript();
@@ -37,11 +49,13 @@ export function renderTemplateDeck(input: TemplateDeckInput): string {
     : "";
 
   const chartContext = buildChartContext(input);
-  const slides = input.deck.slides
-    .map((slide, index) => renderSlide(input, styleKit, slide, index, total, chartContext))
-    .join("\n");
+  const rendered = input.deck.slides.map((slide, index) =>
+    renderSlide(input, styleKit, slide, index, total, chartContext)
+  );
+  const slides = rendered.map((slideRender) => slideRender.html).join("\n");
+  const renderedCharts = rendered.flatMap((slideRender) => slideRender.charts);
 
-  return `<!doctype html>
+  const html = `<!doctype html>
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
@@ -62,6 +76,13 @@ ${slides}
   <script>${script}</script>
 </body>
 </html>`;
+
+  return { html, renderedCharts };
+}
+
+interface RenderedSlide {
+  html: string;
+  charts: RenderedChartSummary[];
 }
 
 function renderSlide(
@@ -71,7 +92,7 @@ function renderSlide(
   index: number,
   total: number,
   chartContext: ChartRenderContext | null
-): string {
+): RenderedSlide {
   const assignment = input.designPlanningResult.slidePatternAssignments.find(
     (candidate) => candidate.slideId === slide.id
   );
@@ -116,9 +137,10 @@ function renderSlide(
         `          <li class="bullet anim" style="--d:${itemIndex + 2}">${escapeHtml(cleanDisplayText(item.text))}</li>`
     )
     .join("\n");
-  const chartsHtml = chartContext
-    ? renderChartFragments(input, styleKit, chartContext, chartIntents, useChartSplit)
-    : "";
+  const chartRender = chartContext
+    ? renderChartFragments(input, styleKit, chartContext, chartIntents, useChartSplit, slide.id)
+    : { html: "", charts: [] as RenderedChartSummary[] };
+  const chartsHtml = chartRender.html;
 
   const messageHtml = escapeHtml(cleanDisplayText(slide.message));
   // In the chart-feature split the message becomes the prominent right-side
@@ -130,13 +152,15 @@ function renderSlide(
     ? renderChartSplitBody(messageHtml, bullets, visibleOutline.length > 0, chartsHtml)
     : renderStackedBody(bullets, chartsHtml);
 
-  return `    <section class="${classes.join(" ")}" data-slide-id="${escapeAttribute(slide.id)}" data-pattern="${escapeAttribute(pattern)}" data-bg="${escapeAttribute(layout)}" aria-label="第 ${index + 1} 張：${escapeAttribute(cleanDisplayText(slide.title))}" tabindex="-1">
+  const html = `    <section class="${classes.join(" ")}" data-slide-id="${escapeAttribute(slide.id)}" data-pattern="${escapeAttribute(pattern)}" data-bg="${escapeAttribute(layout)}" aria-label="第 ${index + 1} 張：${escapeAttribute(cleanDisplayText(slide.title))}" tabindex="-1">
       <div class="slide-body">
         <span class="eyebrow anim" style="--d:0"><span class="dot"></span>${eyebrow}</span>
         <${titleTag} class="slide-title anim" style="--d:1">${escapeHtml(cleanDisplayText(slide.title))}</${titleTag}>${headerMessage}
         ${body}
       </div>
     </section>`;
+
+  return { html, charts: chartRender.charts };
 }
 
 /** Default layout: bullets, then any charts stacked full-width below. */
@@ -226,27 +250,46 @@ function slideChartIntents(slide: Slide, context: ChartRenderContext | null): Ch
   return intents;
 }
 
-/** Renders the slide's chart intents to sanitized inline SVG/HTML fragments. */
+/**
+ * Renders the slide's chart intents to sanitized inline SVG/HTML fragments AND,
+ * in the same pass, collects each chart's result evidence (009). The html and the
+ * `RenderedChartSummary[]` come from the same `renderChartIntent` call, so the
+ * deck html, `generationSummary.renderedCharts`, and the review notes cannot drift.
+ */
 function renderChartFragments(
   input: TemplateDeckInput,
   styleKit: DesignStyleKit,
   context: ChartRenderContext,
   intents: ChartIntent[],
-  hideTitle: boolean
-): string {
-  return intents
-    .map((intent) => {
-      const plan = context.planByIntentId.get(intent.id);
-      return renderChartIntent({
-        intent,
-        ...(plan ? { treatmentPlan: plan } : {}),
-        styleKit,
-        designSystem: input.designPlanningResult.designSystem,
-        hideTitle
-      }).html;
-    })
-    .filter((fragment) => fragment.length > 0)
-    .join("");
+  hideTitle: boolean,
+  slideId: string
+): { html: string; charts: RenderedChartSummary[] } {
+  const fragments: string[] = [];
+  const charts: RenderedChartSummary[] = [];
+  for (const intent of intents) {
+    const plan = context.planByIntentId.get(intent.id);
+    const rendered = renderChartIntent({
+      intent,
+      ...(plan ? { treatmentPlan: plan } : {}),
+      styleKit,
+      designSystem: input.designPlanningResult.designSystem,
+      hideTitle
+    });
+    if (rendered.html.length === 0) {
+      continue;
+    }
+    fragments.push(rendered.html);
+    charts.push({
+      slideId,
+      chartIntentId: intent.id,
+      visualKind: rendered.visualKind,
+      // `fallback` is decided once, canonically, by renderChartIntent (single
+      // source) — a chart/timeline that didn't draw a real chart, or any degrade.
+      fallback: rendered.fallback,
+      notes: rendered.notes.map((note) => ({ code: note.code, message: note.message }))
+    });
+  }
+  return { html: fragments.join(""), charts };
 }
 
 function chevronLeftSvg(): string {

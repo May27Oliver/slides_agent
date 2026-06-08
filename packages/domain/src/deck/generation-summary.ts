@@ -1,8 +1,10 @@
 import type { GenerationSummary, SlideDeck } from "@/deck/deck.types";
+import type { RenderedChartSummary } from "@/rendering/chart-rendering.types";
 
 export function buildGenerationSummary(
   deck: SlideDeck,
-  selectedTheme?: GenerationSummary["selectedTheme"]
+  renderedCharts: RenderedChartSummary[],
+  selectedTheme: GenerationSummary["selectedTheme"]
 ): GenerationSummary {
   const sourceTraceIds = new Set(deck.slides.flatMap((slide) => slide.sourceTrace));
   const chartIntentIds = new Set(
@@ -16,6 +18,7 @@ export function buildGenerationSummary(
     sourceFactCount: sourceTraceIds.size,
     chartIntentCount: chartIntentIds.size,
     uncertainClaimCount: deck.reviewReport.uncertainClaims.length,
-    ...(selectedTheme ? { selectedTheme } : {})
+    renderedCharts,
+    selectedTheme
   };
 }

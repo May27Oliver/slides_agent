@@ -10,8 +10,8 @@ export interface HtmlDeckGenerationInput {
   designPlanningResult: DesignPlanningResult;
   /** 008: planned chart intents (source facts) used to draw real chart visuals. */
   chartIntents?: ChartIntent[];
-  /** 007: the three theme axes selectTheme chose, recorded in the summary (FR-013). */
-  selectedTheme?: GenerationSummary["selectedTheme"];
+  /** 007/009: the applied theme projected as readonly summary evidence (FR-005). */
+  selectedTheme: GenerationSummary["selectedTheme"];
 }
 
 /**
@@ -19,7 +19,9 @@ export interface HtmlDeckGenerationInput {
  * Fast, free, and always validation-clean — this is the pipeline's html stage.
  */
 export function renderTemplateDeckArtifact(input: HtmlDeckGenerationInput): PreviewArtifact {
-  const html = renderTemplateDeck({
+  // 009: the single deck render pass yields both the html and the per-chart
+  // result evidence; the evidence flows into generationSummary.renderedCharts.
+  const { html, renderedCharts } = renderTemplateDeck({
     deck: input.deck,
     designPlanningResult: input.designPlanningResult,
     ...(input.chartIntents ? { chartIntents: input.chartIntents } : {})
@@ -37,6 +39,6 @@ export function renderTemplateDeckArtifact(input: HtmlDeckGenerationInput): Prev
       repairAttempted: false,
       fallbackUsed: false
     },
-    generationSummary: buildGenerationSummary(input.deck, input.selectedTheme)
+    generationSummary: buildGenerationSummary(input.deck, renderedCharts, input.selectedTheme)
   };
 }

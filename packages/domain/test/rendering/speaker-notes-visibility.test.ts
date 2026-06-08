@@ -4,7 +4,7 @@ import { renderingDeck, renderingDesignPlanningResult } from "./rendering-fixtur
 
 describe("fallback HTML speaker notes visibility", () => {
   it("does not render speakerNotesDraft in presentation view", () => {
-    const html = renderTemplateDeck({
+    const { html } = renderTemplateDeck({
       deck: renderingDeck,
       designPlanningResult: renderingDesignPlanningResult
     });

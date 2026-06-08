@@ -37,6 +37,8 @@ export { composeKit } from "@/design/compose-kit";
 export type { ComposeKitParts } from "@/design/compose-kit";
 export { selectTheme } from "@/design/select-theme";
 export type { SelectThemeBrief } from "@/design/select-theme";
+export { projectSelectedThemeSummary } from "@/design/selected-theme-summary";
+export type * from "@/design/selected-theme-summary.types";
 export { expandFontPairing, expandPalette } from "@/design/style-kit-engine";
 export type { CuratedFontPairing, CuratedPalette } from "@/design/ui-ux-pro-max-knowledge";
 export { renderTemplateDeckArtifact } from "@/rendering/html-deck-renderer";
@@ -44,7 +46,7 @@ export type { HtmlDeckGenerationInput } from "@/rendering/html-deck-renderer";
 export { buildDeckStyleCss } from "@/rendering/deck-style-css";
 export { buildDeckRuntimeScript } from "@/rendering/deck-runtime-script";
 export { renderTemplateDeck } from "@/rendering/template-html-renderer";
-export type { TemplateDeckInput } from "@/rendering/template-html-renderer";
+export type { RenderedTemplateDeck, TemplateDeckInput } from "@/rendering/template-html-renderer";
 export type * from "@/rendering/chart-rendering.types";
 export {
   mapVisualizationTypeToTreatment,

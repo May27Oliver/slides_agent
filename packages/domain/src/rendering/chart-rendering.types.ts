@@ -77,4 +77,32 @@ export interface RenderedChart {
   html: string;
   sourceFactIds: string[];
   notes: ChartRenderingNote[];
+  /**
+   * True iff the renderer did NOT produce the intent's primary visual — i.e. a
+   * `chart`/`timeline` intent that fell back to a non-chart visual (metric group,
+   * table, or text), or any intent that degraded to `fallback_text`. Computed by
+   * `renderChartIntent` (the canonical single source) from the resolved treatment
+   * + the chosen visual + the `fallback_used` note.
+   */
+  fallback: boolean;
+}
+
+/**
+ * 009: readonly per-chart result evidence, collected during the single deck
+ * render pass (NOT a re-render). Distinct from `RenderedChart` (the fragment):
+ * this drops the html and adds `slideId` + a `fallback` flag so the control panel
+ * can honestly show which chart types were drawn and which truly degraded.
+ *
+ * `fallback === true` iff the renderer did NOT produce the intent's primary
+ * visual: a `chart`/`timeline` intent that landed on a non-chart visual
+ * (`metric_group`/`table`/`fallback_text`), or any intent that degraded to
+ * `fallback_text`. A *planned* `table`/`metric_card` (and `table_truncated` /
+ * `series_extracted` notes on it) is NOT a fallback. See `RenderedChart.fallback`.
+ */
+export interface RenderedChartSummary {
+  slideId: string;
+  chartIntentId: string;
+  visualKind: ChartVisualKind;
+  fallback: boolean;
+  notes: Array<{ code: ChartRenderingNote["code"]; message: string }>;
 }

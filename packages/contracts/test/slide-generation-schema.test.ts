@@ -74,6 +74,81 @@ describe("slide generation schema", () => {
     );
   });
 
+  it("exposes 009 readonly result evidence (selectedTheme tokens + renderedCharts) in the generation summary", () => {
+    const summary = slideGenerationSchema.$defs.GenerationSummary;
+
+    // selectedTheme: nested ids + projected style-kit tokens (007/009).
+    expect(summary.properties).toHaveProperty("selectedTheme");
+    expect(summary.properties.selectedTheme.properties.ids.properties).toEqual(
+      expect.objectContaining({
+        style: expect.anything(),
+        palette: expect.anything(),
+        font: expect.anything()
+      })
+    );
+    expect(summary.properties.selectedTheme.properties).toEqual(
+      expect.objectContaining({
+        kitName: expect.anything(),
+        accentHues: expect.anything(),
+        fonts: expect.anything(),
+        structureFeatures: expect.anything()
+      })
+    );
+
+    // renderedCharts: per-chart evidence with the shared ChartVisualKind enum.
+    expect(summary.properties).toHaveProperty("renderedCharts");
+    expect(summary.properties.renderedCharts.type).toBe("array");
+    expect(summary.properties.renderedCharts.items.properties.visualKind.enum).toEqual([
+      "pie_donut",
+      "line",
+      "bar",
+      "metric_card",
+      "metric_group",
+      "table",
+      "fallback_text"
+    ]);
+    expect(summary.properties.renderedCharts.items.properties).toEqual(
+      expect.objectContaining({
+        slideId: expect.anything(),
+        chartIntentId: expect.anything(),
+        fallback: expect.anything(),
+        notes: expect.anything()
+      })
+    );
+
+    // 009 no-drift: both result-evidence fields are REQUIRED (not just present),
+    // so a schema-valid response can never omit what web code treats as present.
+    expect(summary.required).toEqual(expect.arrayContaining(["renderedCharts", "selectedTheme"]));
+
+    // structureFeatures: radiusPx + shadow are always projected → required.
+    expect(summary.properties.selectedTheme.properties.structureFeatures.required).toEqual(
+      expect.arrayContaining(["radiusPx", "shadow"])
+    );
+
+    // note codes are the closed 008 vocabulary, not an arbitrary string.
+    expect(
+      summary.properties.renderedCharts.items.properties.notes.items.properties.code.enum
+    ).toEqual([
+      "series_extracted",
+      "series_insufficient",
+      "unit_mismatch",
+      "invalid_pie_total",
+      "time_sort_failed",
+      "table_truncated",
+      "fallback_used",
+      "value_parse_uncertain"
+    ]);
+  });
+
+  it("rejects a generation summary missing renderedCharts or selectedTheme (negative)", () => {
+    const summary = slideGenerationSchema.$defs.GenerationSummary;
+    // The required list is the contract that makes the omission invalid; assert the
+    // negative explicitly so a future relaxation of `required` fails this test.
+    expect(summary.required).toContain("renderedCharts");
+    expect(summary.required).toContain("selectedTheme");
+    expect(summary.additionalProperties).toBe(false);
+  });
+
   it("requires reviewable slide planning fields and does not expose final speakerNotes", () => {
     const slideDefinition = slideGenerationSchema.$defs.Slide;
 

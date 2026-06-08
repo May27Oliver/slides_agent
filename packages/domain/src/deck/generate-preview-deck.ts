@@ -23,6 +23,9 @@ export function generatePreviewDeck(input: GeneratePreviewDeckInput): GeneratePr
   return {
     slideDeck: planning.slideDeck,
     chartIntents: planning.chartIntents,
+    // Planning stage: theme is not selected and charts are not rendered yet, so
+    // this is a PreRenderSummary (counts only). The render stage's
+    // buildGenerationSummary upgrades it to a full GenerationSummary (009).
     generationSummary: {
       slideCount: planning.slideDeck.slides.length,
       sourceFactCount: planning.sourceFacts.length,
