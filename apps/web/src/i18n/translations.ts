@@ -91,6 +91,10 @@ const zhTW = {
   "preset.chart.comparison": "比較",
   "preset.chart.trend": "趨勢",
   "preset.chart.metric": "指標",
+  "preset.chart.none.desc": "不特別強調圖表，交由內容決定是否成圖。",
+  "preset.chart.comparison.desc": "偏好以長條／圓餅呈現比較，是否成圖仍由內容決定。",
+  "preset.chart.trend.desc": "偏好以折線呈現趨勢，是否成圖仍由內容決定。",
+  "preset.chart.metric.desc": "偏好以指標卡突顯關鍵數字，是否成圖仍由內容決定。",
 
   "error.generic": "簡報生成失敗，請稍後再試。",
 
@@ -257,6 +261,11 @@ const enUS: Dictionary = {
   "preset.chart.comparison": "Comparison",
   "preset.chart.trend": "Trend",
   "preset.chart.metric": "Metric",
+  "preset.chart.none.desc": "No chart emphasis — the content decides whether a chart appears.",
+  "preset.chart.comparison.desc": "Leans toward bar / pie comparisons; the content still decides.",
+  "preset.chart.trend.desc": "Leans toward line trends; the content still decides.",
+  "preset.chart.metric.desc":
+    "Leans toward metric cards for key numbers; the content still decides.",
 
   "error.generic": "Preview generation failed. Please try again.",
 
@@ -420,6 +429,10 @@ const jaJP: Dictionary = {
   "preset.chart.comparison": "比較",
   "preset.chart.trend": "トレンド",
   "preset.chart.metric": "指標",
+  "preset.chart.none.desc": "チャートを特に強調せず、内容に応じて表示を委ねます。",
+  "preset.chart.comparison.desc": "棒・円での比較を試みますが、表示は内容次第です。",
+  "preset.chart.trend.desc": "折れ線で傾向を示そうとしますが、表示は内容次第です。",
+  "preset.chart.metric.desc": "指標カードで主要数値を強調しますが、表示は内容次第です。",
 
   "error.generic": "プレビューの生成に失敗しました。もう一度お試しください。",
 

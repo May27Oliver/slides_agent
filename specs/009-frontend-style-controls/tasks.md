@@ -120,14 +120,14 @@ description: "Task list — 009 Frontend Style Controls"
 
 ### Tests（先寫）⚠️
 
-- [ ] T031 [P] [US3] 寫失敗測試 `apps/web/src/features/slide-generation/ChartPresetPreview.test.tsx`：每個 preset 顯示代表圖型示意（comparison→`["bar","pie_donut"]`、trend→`["line"]`、metric→`["metric_card"]`、none→`[]`）+ 一句說明（不暗示必成圖）；選取→回呼帶 `chartEmphasis`。
+- [x] T031 [P] [US3] 寫失敗測試 `apps/web/src/features/slide-generation/ChartPresetPreview.test.tsx`：每個 preset 顯示代表圖型示意（comparison→`["bar","pie_donut"]`、trend→`["line"]`、metric→`["metric_card"]`、none→`[]`）+ 一句說明（不暗示必成圖）；選取→回呼帶 `chartEmphasis`。
 
 ### Implementation（`ui-ux-pro-max` 設計）
 
-- [ ] T032 [P] [US3] 新增 `apps/web/src/features/slide-generation/chart-presets.ts`：4 preset metadata（`chartEmphasis` + `exampleVisualKinds: ChartVisualKind[]`；見 data-model.md §3）。
-- [ ] T033 [US3] 新增 `apps/web/src/features/slide-generation/ChartPresetPreview.tsx`，使 T031 通過。
-- [ ] T034 [US3] 修改 `apps/web/src/features/slide-generation/SlideGenerationForm.tsx`：以 `ChartPresetPreview` 呈現 4 個 chart preset，選取仍寫既有 `chartEmphasis`。
-- [ ] T035 [P] [US3] 修改 `apps/web/src/i18n/translations.ts`：preset 說明文案三語。
+- [x] T032 [P] [US3] 新增 `apps/web/src/features/slide-generation/chart-presets.ts`：4 preset metadata（`chartEmphasis` + `exampleVisualKinds: ChartVisualKind[]`；見 data-model.md §3）。
+- [x] T033 [US3] 新增 `apps/web/src/features/slide-generation/ChartPresetPreview.tsx`，使 T031 通過。
+- [x] T034 [US3] 修改 `apps/web/src/features/slide-generation/SlideGenerationForm.tsx`：以 `ChartPresetPreview` 呈現 4 個 chart preset，選取仍寫既有 `chartEmphasis`。
+- [x] T035 [P] [US3] 修改 `apps/web/src/i18n/translations.ts`：preset 說明文案三語。
 
 **Checkpoint**：三條 user story 皆可獨立運作。
 

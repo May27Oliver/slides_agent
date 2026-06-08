@@ -38,11 +38,14 @@ test("surfaces applied theme tokens and rendered-chart evidence (honest fallback
   await expect(page.getByText("陰影")).toBeVisible();
   await expect(page.getByText("光暈")).toBeVisible();
 
-  // Rendered-chart evidence: a real bar, and an honest fallback with its note
-  await expect(page.getByText("長條圖")).toBeVisible();
-  await expect(page.getByText("文字", { exact: true })).toBeVisible();
-  await expect(page.getByText("退回")).toBeVisible();
-  await expect(page.getByText("資料不足以成圖，改以文字呈現。")).toBeVisible();
+  // Rendered-chart evidence: a real bar, and an honest fallback with its note.
+  // Scoped to the results region so the form's chart-preset preview chips (which
+  // share the same visual-kind labels, e.g. 長條圖) never collide with this assertion.
+  const results = page.getByLabel("生成結果");
+  await expect(results.getByText("長條圖")).toBeVisible();
+  await expect(results.getByText("文字", { exact: true })).toBeVisible();
+  await expect(results.getByText("退回")).toBeVisible();
+  await expect(results.getByText("資料不足以成圖，改以文字呈現。")).toBeVisible();
 });
 
 function succeeded() {

@@ -1,21 +1,11 @@
 import { PanelCard } from "@/features/slide-generation/PanelCard";
+import { CHART_VISUAL_KIND_LABEL_KEY } from "@/features/slide-generation/chart-visual-kind";
 import type { GeneratedPreviewArtifact } from "@/features/slide-generation/slide-generation.types";
-import { useI18n, type TranslationKey } from "@/i18n";
+import { useI18n } from "@/i18n";
 
 type RenderedCharts = NonNullable<
   GeneratedPreviewArtifact["previewArtifact"]["generationSummary"]["renderedCharts"]
 >;
-type VisualKind = RenderedCharts[number]["visualKind"];
-
-const VISUAL_KIND_LABEL_KEY: Record<VisualKind, TranslationKey> = {
-  pie_donut: "chart.kind.pie_donut",
-  line: "chart.kind.line",
-  bar: "chart.kind.bar",
-  metric_card: "chart.kind.metric_card",
-  metric_group: "chart.kind.metric_group",
-  table: "chart.kind.table",
-  fallback_text: "chart.kind.fallback_text"
-};
 
 interface RenderedChartsPanelProps {
   renderedCharts?: RenderedCharts | undefined;
@@ -38,7 +28,7 @@ export function RenderedChartsPanel({ renderedCharts }: RenderedChartsPanelProps
             >
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-ink">
-                  {t(VISUAL_KIND_LABEL_KEY[chart.visualKind])}
+                  {t(CHART_VISUAL_KIND_LABEL_KEY[chart.visualKind])}
                 </span>
                 <span className="block text-[11px] text-ink-soft">
                   {t("renderedCharts.slide")}: {chart.slideId}
