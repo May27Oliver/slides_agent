@@ -135,12 +135,12 @@ description: "Task list — 009 Frontend Style Controls"
 
 ## Phase 6：Polish & 跨切面
 
-- [ ] T036 [P] a11y 稽核：所有新 UI 之色票/文字/按鈕/卡片對比達 WCAG AA；鍵盤導覽與可見 focus（FR-011/CR-016）。
-- [ ] T037 [P] RWD 檢查：card gallery 與透明度面板於窄視窗（<768px）可用、不退化純文字。
-- [ ] T038 [P] 三語完整性檢查（zh-TW/en/ja）：新文案無缺漏鍵；`visualKind` 一律 enum、label 才翻譯（CR-013）。
-- [ ] T039 [P] 移除冗餘/重疊測試；補未覆蓋的 domain 規則單元測試（投影邊界值）。
-- [ ] T040 依 quickstart.md 跑完整手動驗證（US1/US2/US3 + reduced-motion + 三語 + 窄視窗），擷取截圖證據（card gallery / 設計面板 / 圖表面板含 fallback / reduced-motion 靜態）。
-- [ ] T041 跑 `gitnexus_detect_changes()` 確認改動範圍符合預期後再 commit（依專案 CLAUDE.md）。
+- [x] T036 [P] a11y 稽核：所有新 UI 之色票/文字/按鈕/卡片對比達 WCAG AA；鍵盤導覽與可見 focus（FR-011/CR-016）。
+- [x] T037 [P] RWD 檢查：card gallery 與透明度面板於窄視窗（<768px）可用、不退化純文字。
+- [x] T038 [P] 三語完整性檢查（zh-TW/en/ja）：新文案無缺漏鍵；`visualKind` 一律 enum、label 才翻譯（CR-013）。
+- [x] T039 [P] 移除冗餘/重疊測試；補未覆蓋的 domain 規則單元測試（投影邊界值）。
+- [x] T040 依 quickstart.md 跑完整手動驗證（US1/US2/US3 + reduced-motion + 三語 + 窄視窗），擷取截圖證據（card gallery / 設計面板 / 圖表面板含 fallback / reduced-motion 靜態）。
+- [x] T041 跑 `gitnexus_detect_changes()` 確認改動範圍符合預期後再 commit（依專案 CLAUDE.md）。
 
 ---
 
