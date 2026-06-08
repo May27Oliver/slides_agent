@@ -142,9 +142,7 @@ function designPlanningResult(): DesignPlanningResult {
         blockGap: 12
       },
       visualDensity: "high",
-      layoutGrid: "16:9",
-      slidePatterns: ["metric-comparison"],
-      chartStyle: "minimal"
+      slidePatterns: ["metric-comparison"]
     },
     slidePatternAssignments: [
       {

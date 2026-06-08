@@ -103,16 +103,7 @@ function designPlanningResultSchema(): Record<string, unknown> {
 
 function designSystemSchema(): Record<string, unknown> {
   return objectSchema(
-    [
-      "themeName",
-      "palette",
-      "typography",
-      "spacing",
-      "visualDensity",
-      "layoutGrid",
-      "slidePatterns",
-      "chartStyle"
-    ],
+    ["themeName", "palette", "typography", "spacing", "visualDensity", "slidePatterns"],
     {
       themeName: { type: "string" },
       palette: objectSchema(
@@ -130,9 +121,7 @@ function designSystemSchema(): Record<string, unknown> {
         blockGap: { type: "number" }
       }),
       visualDensity: { enum: ["low", "medium", "high"] },
-      layoutGrid: { type: "string" },
-      slidePatterns: stringArraySchema(),
-      chartStyle: { type: "string" }
+      slidePatterns: stringArraySchema()
     }
   );
 }

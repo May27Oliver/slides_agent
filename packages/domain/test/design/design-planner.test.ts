@@ -217,7 +217,6 @@ describe("design planner", () => {
     expect(result.slidePatternAssignments).toBe(generatedResult.slidePatternAssignments);
     expect(result.styleKit).toBeUndefined();
     expect(result.designSystem.themeName).toBe("llm-designed-operational-review");
-    expect(result.designSystem.chartStyle).toBe("ui-ux-pro-max-dashboard");
     expect(result.designSystem.palette).toMatchObject({
       background: "#f8fafc",
       accent: "#2563eb",
@@ -285,15 +284,13 @@ function uiUxProMaxGeneratedDesignResult(
         blockGap: 12
       },
       visualDensity: "high",
-      layoutGrid: "16:9 ui-ux-pro-max grid",
       slidePatterns: [
         "title-summary",
         "content-summary",
         "metric-comparison",
         "risk-matrix",
         "action-summary"
-      ],
-      chartStyle: "ui-ux-pro-max-dashboard"
+      ]
     },
     slidePatternAssignments: [
       {

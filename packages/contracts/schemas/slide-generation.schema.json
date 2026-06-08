@@ -110,9 +110,7 @@
         "typography",
         "spacing",
         "visualDensity",
-        "layoutGrid",
-        "slidePatterns",
-        "chartStyle"
+        "slidePatterns"
       ],
       "properties": {
         "themeName": {
@@ -130,17 +128,11 @@
         "visualDensity": {
           "enum": ["low", "medium", "high"]
         },
-        "layoutGrid": {
-          "type": "string"
-        },
         "slidePatterns": {
           "type": "array",
           "items": {
             "type": "string"
           }
-        },
-        "chartStyle": {
-          "type": "string"
         }
       },
       "additionalProperties": false

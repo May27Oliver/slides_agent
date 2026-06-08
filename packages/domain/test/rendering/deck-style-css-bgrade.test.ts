@@ -24,9 +24,7 @@ const baseDesignSystem: DesignSystem = {
   typography: { headingFamily: "Inter", bodyFamily: "Inter", scale: "compact" },
   spacing: { unit: 8, slidePadding: 48, blockGap: 16 },
   visualDensity: "medium",
-  layoutGrid: "16:9",
-  slidePatterns: [],
-  chartStyle: "minimal"
+  slidePatterns: []
 };
 
 function kitWith(overrides: {

@@ -22,14 +22,12 @@ export function defaultDesignSystem(styleDirection?: string): DesignSystem {
       blockGap: 16
     },
     visualDensity: styleDirection?.includes("高密度") ? "high" : "medium",
-    layoutGrid: "16:9",
     slidePatterns: [
       "title-summary",
       "content-summary",
       "metric-comparison",
       "risk-matrix",
       "action-summary"
-    ],
-    chartStyle: "minimal"
+    ]
   };
 }

@@ -183,9 +183,7 @@ function designSystemFor(
     typography: { headingFamily: "", bodyFamily: "", scale: "presentation" },
     spacing: { unit: 8, slidePadding: 64, blockGap: 16 },
     visualDensity: "medium",
-    layoutGrid: "16:9",
-    slidePatterns: [],
-    chartStyle: "minimal"
+    slidePatterns: []
   };
 }
 
