@@ -81,11 +81,6 @@ function previewResponse() {
       }
     },
     designPlanningResult: {
-      designSystem: {
-        themeName: "test",
-        visualDensity: "medium",
-        chartStyle: "minimal"
-      },
       slidePatternAssignments: [
         {
           slideId: "slide_001",

@@ -32,12 +32,6 @@ export interface GeneratedPreviewArtifact {
     };
   };
   designPlanningResult: {
-    designSystem?: {
-      themeName?: string;
-      visualDensity?: string;
-      chartStyle?: string;
-      layoutGrid?: string;
-    };
     slidePatternAssignments?: Array<{
       slideId: string;
       primaryPattern: string;
@@ -90,6 +84,38 @@ export interface GeneratedPreviewArtifact {
       sourceFactCount: number;
       chartIntentCount: number;
       uncertainClaimCount: number;
+      // 009 readonly result evidence (mirrors the response contract). Optional on
+      // the read side so the panel tolerates planning-only / older payloads.
+      selectedTheme?: {
+        kitName: string;
+        ids: { style: string | null; palette: string | null; font: string | null };
+        fallback: boolean;
+        accentHues: Array<{ name: string; base: string }>;
+        fonts: { heading: string; body: string };
+        visualDensity?: "low" | "medium" | "high";
+        structureFeatures: {
+          radiusPx: number;
+          shadow: boolean;
+          backdropBlurPx?: number;
+          glow?: boolean;
+          texture?: "grain" | "noise" | "paper";
+          animation?: { preset: "aurora" | "mesh"; durationMs: number };
+        };
+      };
+      renderedCharts?: Array<{
+        slideId: string;
+        chartIntentId: string;
+        visualKind:
+          | "pie_donut"
+          | "line"
+          | "bar"
+          | "metric_card"
+          | "metric_group"
+          | "table"
+          | "fallback_text";
+        fallback: boolean;
+        notes: Array<{ code: string; message: string }>;
+      }>;
     };
   };
 }

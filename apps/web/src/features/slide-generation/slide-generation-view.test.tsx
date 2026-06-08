@@ -23,11 +23,6 @@ const previewArtifact = {
     }
   },
   designPlanningResult: {
-    designSystem: {
-      themeName: "llm-designed-operational-review",
-      visualDensity: "high",
-      chartStyle: "ui-ux-pro-max-dashboard"
-    },
     slidePatternAssignments: [
       {
         slideId: "slide_001",
@@ -63,7 +58,6 @@ describe("slide generation view", () => {
     expect(screen.getByRole("heading", { name: "簡報預覽" })).toBeTruthy();
     expect(screen.getAllByText("PM planning review").length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: "設計規劃" })).toBeTruthy();
-    expect(screen.getByText("llm-designed-operational-review")).toBeTruthy();
     expect(screen.getByText("title-summary")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "HTML 驗證" })).toBeTruthy();
     expect(screen.getByText("fallback_used")).toBeTruthy();

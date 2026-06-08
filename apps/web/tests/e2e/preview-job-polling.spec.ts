@@ -71,9 +71,7 @@ function succeededResponse() {
           humanReviewNotes: []
         }
       },
-      designPlanningResult: {
-        designSystem: { themeName: "test", visualDensity: "medium", chartStyle: "minimal" }
-      },
+      designPlanningResult: {},
       previewArtifact: {
         html: "<!doctype html><html><body>Slide One</body></html>",
         htmlGenerationValidation: {
