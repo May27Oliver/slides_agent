@@ -15,8 +15,8 @@ export interface SelectedThemeSummary {
   fonts: { heading: string; body: string };
   visualDensity?: string;
   structureFeatures: {
-    radiusPx?: number;
-    shadow?: boolean;
+    radiusPx: number;
+    shadow: boolean;
     backdropBlurPx?: number;
     glow?: boolean;
     texture?: "grain" | "noise" | "paper";

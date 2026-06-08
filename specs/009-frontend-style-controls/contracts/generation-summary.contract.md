@@ -4,7 +4,7 @@
 
 變更點：`packages/contracts/src/index.ts`（`GenerationSummaryContract`）+ `packages/contracts/src/openapi.ts`（`GENERATION_SUMMARY_SCHEMA`），並與 `packages/domain/src/deck/deck.types.ts` 的 `GenerationSummary` 同步。
 
-## Before（現況）
+## Before（009 前）
 
 ```ts
 interface GenerationSummary {
@@ -42,9 +42,9 @@ interface GenerationSummary {
 
 ## OpenAPI schema 要點
 
-- `selectedTheme`：object，含 `kitName`(string)、`ids`(object: style/palette/font nullable string)、`fallback`(boolean)、`accentHues`(array of {name,base})、`fonts`({heading,body})、`visualDensity`(string, optional)、`structureFeatures`(object: radiusPx?/shadow?/backdropBlurPx?/glow?/texture? enum/animation?{preset enum,durationMs})。
+- `selectedTheme`：object，含 `kitName`(string)、`ids`(object: style/palette/font nullable string)、`fallback`(boolean)、`accentHues`(array of {name,base})、`fonts`({heading,body})、`visualDensity`(string, optional)、`structureFeatures`(object: radiusPx/shadow **required**；backdropBlurPx?/glow?/texture? enum/animation?{preset enum,durationMs} 為 B 級 optional)。
 - `renderedCharts`：array of object（型別 `RenderedChartSummary`，**恆存在**，無圖表為 `[]`），含 `slideId`(string)、`chartIntentId`(string)、`visualKind`(enum: pie_donut|line|bar|metric_card|metric_group|table|fallback_text)、`fallback`(boolean，**僅真實降級＝含 `fallback_used` note 時為 true**；`table`/`table_truncated` 不算)、`notes`(array of {code(enum: ChartRenderingNote code),message})。
-- 兩者皆 optional/nullable，向後相容（舊消費者忽略新欄位；本 repo 內 web 為唯一消費者，同步更新）。
+- response 端兩者皆 **required**（rendered pipeline 恆產出；對齊 plan A 與 openapi）。web（repo 內唯一消費者）讀取側仍宣告為 optional，以容忍 planning-only / 舊 payload，並非契約弱化。
 
 ## 遷移與測試
 
