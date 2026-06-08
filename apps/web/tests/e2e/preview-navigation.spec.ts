@@ -1,8 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { seedAuthenticatedSession } from "./auth-session";
 
 test("generated preview route supports keyboard navigation inside the HTML deck", async ({
   page
 }) => {
+  await seedAuthenticatedSession(page);
+
   await page.route("**/api/slides/preview-jobs", async (route) => {
     await route.fulfill({
       status: 202,
