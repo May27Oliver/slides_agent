@@ -1,6 +1,6 @@
 import { DefinitionRow, IssueList, PanelCard } from "@/features/slide-generation/PanelCard";
 import type { GeneratedPreviewArtifact } from "@/features/slide-generation/slide-generation.types";
-import { useI18n } from "@/i18n";
+import { useI18n, type TranslationKey } from "@/i18n";
 
 type SelectedTheme = NonNullable<
   GeneratedPreviewArtifact["previewArtifact"]["generationSummary"]["selectedTheme"]
@@ -62,9 +62,12 @@ export function DesignPlanningPanel({
           <EffectChips features={selectedTheme.structureFeatures} />
 
           {selectedTheme.fallback ? (
-            <p className="mt-2 text-[11px] font-semibold text-accent-600">
-              {t("design.fallbackNote")}
-            </p>
+            <div className="mt-2">
+              <p className="text-[11px] font-semibold text-accent-600">
+                {t("design.fallbackNote")}
+              </p>
+              <FallbackAxes ids={selectedTheme.ids} />
+            </div>
           ) : null}
         </>
       ) : null}
@@ -74,6 +77,43 @@ export function DesignPlanningPanel({
         items={designPlanningResult.consistencyValidation?.issues ?? []}
       />
     </PanelCard>
+  );
+}
+
+/** The three theme axes, in display order, with their i18n label keys. */
+const THEME_AXES: ReadonlyArray<{ key: keyof SelectedTheme["ids"]; labelKey: TranslationKey }> = [
+  { key: "style", labelKey: "design.axis.style" },
+  { key: "palette", labelKey: "design.axis.palette" },
+  { key: "font", labelKey: "design.axis.font" }
+];
+
+/**
+ * 009/US2 scenario 4: honest per-axis fallback disclosure. Reads the result
+ * evidence `selectedTheme.ids` — a `null` id means that axis had no candidate and
+ * fell back to the default kit. Hit axes are shown neutral; fell-back axes carry
+ * the accent "退回" marker, so the panel never hides which axis was defaulted.
+ */
+function FallbackAxes({ ids }: { ids: SelectedTheme["ids"] }) {
+  const { t } = useI18n();
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1.5">
+      {THEME_AXES.map((axis) => {
+        const fellBack = ids[axis.key] === null;
+        return (
+          <span
+            key={axis.key}
+            className={
+              fellBack
+                ? "rounded-full border border-accent-400 bg-accent-500/10 px-2 py-0.5 text-[11px] font-bold text-accent-600"
+                : "rounded-full border border-line bg-surface px-2 py-0.5 text-[11px] font-bold text-ink-soft"
+            }
+          >
+            {t(axis.labelKey)}
+            {fellBack ? ` · ${t("design.axis.fellBack")}` : null}
+          </span>
+        );
+      })}
+    </div>
   );
 }
 

@@ -66,15 +66,24 @@ describe("DesignPlanningPanel", () => {
     expect(screen.queryByText("紋理")).toBeNull();
   });
 
-  it("honestly discloses a fallback when a theme axis fell back to default", () => {
+  it("discloses which theme axes fell back (null id) and which were honored", () => {
     render(
       <DesignPlanningPanel
         designPlanningResult={designPlanningResult}
-        selectedTheme={theme({ fallback: true, ids: { style: null, palette: null, font: null } })}
+        selectedTheme={theme({
+          fallback: true,
+          // style was honored; palette + font had no candidate and fell back
+          ids: { style: "style-01-minimalism", palette: null, font: null }
+        })}
       />
     );
 
     expect(screen.getByText("部分風格軸未命中，已套用預設值")).toBeTruthy();
+    // the two fell-back axes carry the 退回 marker; the honored axis does not
+    expect(screen.getByText("配色 · 退回")).toBeTruthy();
+    expect(screen.getByText("字體 · 退回")).toBeTruthy();
+    expect(screen.getByText("風格")).toBeTruthy();
+    expect(screen.queryByText("風格 · 退回")).toBeNull();
   });
 
   it("shows placeholders and no theme evidence when selectedTheme is absent", () => {
