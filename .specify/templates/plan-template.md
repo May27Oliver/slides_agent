@@ -72,7 +72,12 @@ The plan MUST explicitly answer each gate below:
   `*.service.ts`. For every new domain type, field, enum value, service, planner,
   validator, adapter boundary, or intermediate artifact, identify the current consumer or
   the near-term independently testable task that will consume it; otherwise choose the
-  rejected simpler alternative.
+  rejected simpler alternative. **No dead code / shims / legacy coexistence**: when this
+  change replaces a behavior, type, path, or contract shape, confirm the old one is fully
+  removed in the same change (no alias / compat shim / "support both shapes" param), no
+  unused code remains (imports, exports, props, type fields, enum values, branches, dead
+  UI, unreferenced i18n / config / schema keys — verified manually since `noUnusedLocals`
+  is off), and no type encodes a constraint stricter than the code exercises.
 - **TDD and DDD**: Identify the first failing tests or verification tasks, the main
   domain concepts, bounded context, where domain behavior will live, and which files hold
   domain language (`*.types.ts`), adapter boundaries (`*.port.ts`), and executable domain
