@@ -9,7 +9,12 @@ describe("deck contracts", () => {
 
     const populated: DeckListResponseContract = {
       decks: [
-        { id: "f3c-uuid", title: "Q2 業務回顧", status: "ready", updatedAt: "2026-06-05T08:12:00.000Z" }
+        {
+          id: "f3c-uuid",
+          title: "Q2 業務回顧",
+          status: "ready",
+          updatedAt: "2026-06-05T08:12:00.000Z"
+        }
       ]
     };
     expect(validateDeckListResponse(populated)).toEqual({ ok: true, value: populated });
@@ -38,6 +43,7 @@ describe("deck contracts", () => {
         designPlan: null,
         html: "<!doctype html>",
         generationSummary: null,
+        chartIntents: null,
         origin: "generation",
         sourceJobId: "preview_job_1",
         createdAt: "2026-06-05T08:12:00.000Z"

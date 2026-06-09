@@ -68,8 +68,11 @@ export async function runPreviewJobGeneration({
       }
     });
     const previewResult = toPreviewResult(result);
-    await store.markSucceeded(job.id, previewResult, now());
-    await persistDeck({ deckStore, job, previewResult, logger });
+    // 010: persist BEFORE marking succeeded so the deckId is available atomically when
+    // the client first sees "succeeded" (enables auto-navigation into the editor). Still
+    // best-effort — a persistence failure yields a null deckId, not a job failure.
+    const deckId = await persistDeck({ deckStore, job, previewResult, logger });
+    await store.markSucceeded(job.id, { ...previewResult, deckId }, now());
   } catch (error) {
     if (error instanceof PreviewJobTimeoutHandled) {
       return;
@@ -98,13 +101,13 @@ async function persistDeck({
   job: PreviewJob;
   previewResult: PreviewResult;
   logger: PreviewJobLogger;
-}): Promise<void> {
+}): Promise<string | null> {
   const accountId = job.request.accountId;
   if (!deckStore || !accountId) {
-    return;
+    return null;
   }
   try {
-    await deckStore.saveNewDeck(
+    const { deckId } = await deckStore.saveNewDeck(
       createDeckFromPreviewResult({
         accountId,
         request: job.request,
@@ -112,18 +115,22 @@ async function persistDeck({
         sourceJobId: job.id
       })
     );
-    logger.log(`${job.id} deck_persisted account=${accountId}`);
+    logger.log(`${job.id} deck_persisted account=${accountId} deck=${deckId}`);
+    return deckId;
   } catch {
     logger.error(`${job.id} deck_persist_failed`);
+    return null;
   }
 }
 
 class PreviewJobTimeoutHandled extends Error {}
 
-function toPreviewResult(result: GeneratePreviewResponseContract) {
+function toPreviewResult(result: GeneratePreviewResponseContract): PreviewResult {
   return {
     slideDeck: result.slideDeck,
     designPlanningResult: result.designPlanningResult,
-    previewArtifact: result.previewArtifact
+    previewArtifact: result.previewArtifact,
+    // 010 (C1/FR-006a): carry chart intents through to persistence.
+    chartIntents: result.chartIntents
   };
 }

@@ -11,6 +11,8 @@ export interface SlideGenerationRequest {
 }
 
 export interface GeneratedPreviewArtifact {
+  /** 010: id of the deck persisted from this generation, for editor auto-navigation. */
+  deckId?: string | null;
   slideDeck: {
     title?: string;
     slides?: Array<{

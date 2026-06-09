@@ -36,7 +36,7 @@ describe("SlideGenerationForm style cards", () => {
     });
   });
 
-  it("submits the curated chartEmphasis keyword for the selected chart preset", () => {
+  it("submits the free-text chartEmphasis when provided", () => {
     const onSubmit = vi.fn();
     render(<SlideGenerationForm onSubmit={onSubmit} />);
 
@@ -49,7 +49,9 @@ describe("SlideGenerationForm style cards", () => {
     fireEvent.change(screen.getByLabelText("目標受眾"), {
       target: { value: "產品與工程主管" }
     });
-    fireEvent.click(screen.getByRole("radio", { name: /趨勢/ }));
+    fireEvent.change(screen.getByLabelText("圖表強調（自訂）"), {
+      target: { value: "強調留存率趨勢" }
+    });
     fireEvent.click(screen.getByRole("button", { name: "生成簡報" }));
 
     expect(onSubmit).toHaveBeenCalledWith({
@@ -57,7 +59,7 @@ describe("SlideGenerationForm style cards", () => {
       deckBrief: {
         purpose: "季度營運回顧",
         audience: "產品與工程主管",
-        chartEmphasis: "trend over time 趨勢 時間",
+        chartEmphasis: "強調留存率趨勢",
         language: "zh-TW"
       }
     });

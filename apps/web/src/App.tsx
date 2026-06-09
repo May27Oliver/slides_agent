@@ -1,7 +1,9 @@
-import { Link, Navigate, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { LoginView } from "@/features/auth/LoginView";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
+import { DeckEditorView } from "@/features/deck-editor/DeckEditorView";
+import { DeckSwitcher } from "@/features/deck-switcher/DeckSwitcher";
 import { MyDecksView } from "@/features/decks/MyDecksView";
 import { SlideGenerationFeature } from "@/features/slide-generation";
 import { useI18n } from "@/i18n";
@@ -12,12 +14,16 @@ import { useI18n } from "@/i18n";
 function GenerationRoute() {
   const { authFetch, logout, user } = useAuth();
   const { t } = useI18n();
+  const navigate = useNavigate();
   return (
     <>
       <div className="flex items-center justify-between gap-3 border-b border-line bg-panel px-5 py-2 text-sm">
-        <Link to="/decks" className="font-medium text-brand-700 hover:underline">
-          {t("decks.nav")}
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link to="/decks" className="font-medium text-brand-700 hover:underline">
+            {t("decks.nav")}
+          </Link>
+          <DeckSwitcher fetchImpl={authFetch} />
+        </div>
         <div className="flex items-center gap-3">
           {user ? <span className="text-ink-soft">{user.displayName}</span> : null}
           <button
@@ -29,7 +35,10 @@ function GenerationRoute() {
           </button>
         </div>
       </div>
-      <SlideGenerationFeature fetchImpl={authFetch} />
+      <SlideGenerationFeature
+        fetchImpl={authFetch}
+        onGenerated={(deckId) => navigate(`/decks/${deckId}/edit`)}
+      />
     </>
   );
 }
@@ -41,6 +50,7 @@ export function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<GenerationRoute />} />
         <Route path="/decks" element={<MyDecksView />} />
+        <Route path="/decks/:id/edit" element={<DeckEditorView />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

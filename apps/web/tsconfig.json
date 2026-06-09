@@ -5,7 +5,9 @@
     "jsx": "react-jsx",
     "noEmit": true,
     "paths": {
-      "@/*": ["apps/web/src/*"],
+      // Web app modules first; domain internals second so the shared domain renderer's
+      // own `@/<subdir>` imports resolve when bundled into the client (010 T002).
+      "@/*": ["apps/web/src/*", "packages/domain/src/*"],
       "@slides-agent/contracts": ["packages/contracts/src/index.ts"],
       "@slides-agent/contracts/*": ["packages/contracts/src/*"],
       "@slides-agent/domain": ["packages/domain/src/index.ts"],

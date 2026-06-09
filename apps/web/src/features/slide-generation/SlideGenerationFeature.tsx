@@ -21,11 +21,18 @@ interface SlideGenerationFeatureProps {
   initialPreview?: GeneratedPreviewArtifact;
   /** Injected by the protected route as the auth-aware fetch (adds the bearer token, clears on 401). */
   fetchImpl?: typeof fetch;
+  /**
+   * 010: called with the persisted deckId when generation succeeds. The route wires
+   * this to navigation (→ editor). Injected (not useNavigate here) so the component
+   * stays renderable outside a Router in tests.
+   */
+  onGenerated?: (deckId: string) => void;
 }
 
 export function SlideGenerationFeature({
   initialPreview,
-  fetchImpl = fetch
+  fetchImpl = fetch,
+  onGenerated
 }: SlideGenerationFeatureProps = {}) {
   const { t } = useI18n();
   const [preview, setPreview] = useState<GeneratedPreviewArtifact | undefined>(initialPreview);
@@ -75,6 +82,11 @@ export function SlideGenerationFeature({
       if (current.status === "succeeded" && current.result) {
         setPreview(current.result);
         setPreviewJob(undefined);
+        // 010: jump straight into the editor for the freshly persisted deck. Falls back
+        // to the inline preview when no deckId came back (persistence skipped/failed).
+        if (current.result.deckId) {
+          onGenerated?.(current.result.deckId);
+        }
       }
     } catch (error) {
       if (isAbortError(error)) {

@@ -37,19 +37,27 @@ export {
   PREVIEW_QUEUE_UNAVAILABLE_SCHEMA,
   DECK_LIST_RESPONSE_SCHEMA,
   DECK_DETAIL_RESPONSE_SCHEMA,
+  DECK_REVISION_SCHEMA,
   INVALID_DECK_ID_ERROR_SCHEMA,
   DECK_NOT_FOUND_SCHEMA,
-  AUTH_REQUIRED_SCHEMA
+  AUTH_REQUIRED_SCHEMA,
+  EDIT_REVISION_REQUEST_SCHEMA,
+  INVALID_EDIT_SCHEMA,
+  REVISION_CONFLICT_SCHEMA
 } from "./openapi";
 
 export {
   validateDeckListResponse,
   validateDeckDetailResponse,
+  validateEditRevisionRequest,
   type DeckSummaryContract,
   type DeckListResponseContract,
   type DeckRevisionContract,
   type DeckDetailResponseContract,
   type DeckNotFoundContract,
+  type EditRevisionRequestContract,
+  type RevisionConflictContract,
+  type InvalidEditContract,
   type DeckContractValidationResult
 } from "./deck";
 
@@ -159,6 +167,18 @@ export interface GeneratePreviewResponseContract {
   slideDeck: unknown;
   designPlanningResult: unknown;
   previewArtifact: PreviewArtifactContract;
+  /**
+   * 010 (C1/FR-006a): the planned chart intents (source facts) used to draw the
+   * deck's charts. Surfaced so the persistence path can store them on the revision
+   * and the editor can redraw charts deterministically (no re-derivation / no LLM).
+   * Opaque array; `[]` when the deck has no charts.
+   */
+  chartIntents: unknown;
+  /**
+   * 010: id of the deck persisted from this generation (async job path), so the client
+   * can auto-navigate into the editor. Absent on the synchronous preview endpoint.
+   */
+  deckId?: string | null;
 }
 
 export {

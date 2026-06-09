@@ -15,6 +15,13 @@
       "when": 1780679527559,
       "tag": "0001_steep_mach_iv",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780981526893,
+      "tag": "0002_nebulous_roland_deschain",
+      "breakpoints": true
     }
   ]
 }

@@ -179,7 +179,10 @@ export class SlidesService {
       return {
         slideDeck: reviewedSlideDeck,
         designPlanningResult: themedDesignPlanningResult,
-        previewArtifact
+        previewArtifact,
+        // 010 (C1/FR-006a): surface the planned chart intents so the persistence
+        // path can store them on the revision for deterministic edit re-render.
+        chartIntents: deckResult.chartIntents
       };
     } catch (error) {
       this.logger.error(

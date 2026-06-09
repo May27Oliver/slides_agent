@@ -11,6 +11,7 @@ function makeStore(overrides: Partial<DeckStore> = {}): DeckStore {
     saveNewDeck: async () => ({ deckId: "x" }),
     listByAccount: async () => [],
     findByIdForAccount: async () => null,
+    appendEditRevision: async () => ({ ok: false, conflict: true, currentRevision: 0 }),
     ...overrides
   };
 }

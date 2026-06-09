@@ -60,6 +60,10 @@ export const deckRevisions = pgTable(
     designPlan: jsonb("design_plan"),
     html: text("html"),
     generationSummary: jsonb("generation_summary"),
+    // 010 (C1/FR-006a): the planned chart intents (source facts) the renderer needs
+    // to redraw real charts on edit. Additive + nullable — revisions written before
+    // 010 are null and degrade to the renderer's deterministic chart fallback.
+    chartIntents: jsonb("chart_intents"),
     origin: text("origin").notNull(),
     sourceJobId: text("source_job_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()

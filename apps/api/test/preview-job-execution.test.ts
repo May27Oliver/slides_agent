@@ -79,6 +79,45 @@ describe("runPreviewJobGeneration", () => {
     );
   });
 
+  it("persists the deck before succeeding and surfaces deckId on the result (010)", async () => {
+    const store = new RedisPreviewJobStore({ redis: new RedisMock(), now: clock() });
+    const job = await seed(store, {
+      ...queuedJob("preview_job_deck"),
+      request: {
+        sourceContent: "S",
+        deckBrief: { purpose: "P", audience: "A" },
+        accountId: "acc_1"
+      }
+    });
+    const logger = testLogger();
+    const generatePreview = vi.fn().mockImplementation(async (_request, progress) => {
+      await progress.onStage("content_planning");
+      return RESULT;
+    });
+    const saveNewDeck = vi.fn().mockResolvedValue({ deckId: "deck_persisted_1" });
+    const deckStore = {
+      saveNewDeck,
+      listByAccount: vi.fn(),
+      findByIdForAccount: vi.fn(),
+      appendEditRevision: vi.fn()
+    };
+
+    await runPreviewJobGeneration({
+      store,
+      slidesService: { generatePreview },
+      job,
+      now: clock(),
+      logger,
+      deckStore
+    });
+
+    expect(saveNewDeck).toHaveBeenCalledTimes(1);
+    const stored = await store.findById(job.id);
+    expect(stored?.status).toBe("succeeded");
+    // deckId is on the stored result the moment the job is succeeded (persist ran first).
+    expect((stored?.result as { deckId?: string }).deckId).toBe("deck_persisted_1");
+  });
+
   it("maps generation exceptions to a sanitized JobFailure (US3)", async () => {
     const store = new RedisPreviewJobStore({ redis: new RedisMock(), now: clock() });
     const job = await seed(store, queuedJob("preview_job_fail"));
