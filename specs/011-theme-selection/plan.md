@@ -26,7 +26,11 @@
 - `slides.service.generatePreview`：在 render 階段把 `themedDesignPlanningResult.styleKit = selectedTheme.styleKit`——本批改成用 `applyThemeSelection` 的結果。
 - 010 `applyDeckEdit`：目前沿用 base `designPlan`/styleKit；本批讓它在帶 `themeSelection` 時**重組 styleKit**（其餘文字/chartIntents 不變）。
 
-**Performance**：瀏覽器用**輕量 swatch**（色票/字體樣本/風格縮影），不對 220 做 live 全 deck 渲染；只有「選定後」走完整預覽（生成結果 / 010 LivePreview）。
+**Performance（可驗收目標）**：
+- `GET /api/themes`：單次 DB 讀 ~220 列(或依軸)。測試資料 **p95 < 150ms**;payload 估數百 KB,超過則依軸 lazy load(data-model §5)。
+- `ThemeBrowserModal` 開啟初次 render **< 150ms**;軸內搜尋/篩選為 client 端,輸入到結果 **< 50ms**。
+- palette 軸(96 筆)清單 **虛擬化或分頁**,同時掛載 DOM swatch **≤ 50** 個;清單**絕不**做 deck 渲染(只畫 swatch:色票方塊/字體樣本/風格標籤)。
+- 完整 WYSIWYG 只在「選定後」:生成結果 / 010 LivePreview(client composeKit + 重渲染,沿用 010 的 debounce)。換主題**零額外 LLM/ token**。
 
 ## Constitution Check
 

@@ -55,49 +55,64 @@ themedDesignPlanningResult.styleKit = selected.styleKit;
 ```
 **LLM 步驟完全不變**；只換 render 階段套用的 styleKit。
 
-## §4 編輯路徑串接（010 applyDeckEdit）
+## §4 編輯路徑串接（010 applyDeckEdit）— **明確的 baseline 還原演算法**
 
-`applyDeckEdit` 帶 `themeSelection` 時：
+> **問題（修正）**：base revision 的 `generationSummary.selectedTheme` 是 009 的投影摘要,**只有三軸 id、沒有 partial styleKit**;不能只靠 ids + 現行 candidates 就保證「只換 palette、font/style 原樣保留」（base id 可能停用/刪除/為 null）。故定義明確演算法 + fallback 政策:
+
 ```
-baseline = 從 base revision 還原的 selectedTheme（base.generationSummary.selectedTheme 的三軸）作為 baseline，
-           或對 base deck 重跑 selectTheme(baseBrief)；以 base 既有三軸為準較穩。
-selected = applyThemeSelection(baseline, themeSelection, candidates)
-designPlan = { ...baseDesignPlan, styleKit: selected.styleKit }   // 只換 styleKit
-→ 重渲染（render→validate→summary，I3 順序不變），其餘（文字/結構/chartIntents）一律沿用 base。
+輸入: base revision、themeSelection、catalog(= listBrowsable 的三軸 partial kits)
+baseIds = base.generationSummary.selectedTheme.ids        // {font,palette,style}，可能含 null
+
+# 1) 還原 base 三軸的 partial（用 catalog 依 id 查；無法 resolve 則退預設 + note）
+resolvedBase[axis] =
+   baseIds[axis] 可在 catalog 查到 → 該 partial
+   否則（null / 已停用 / 已刪除）→ 該軸預設 partial + warning{axis, reason:"base_unresolved"}
+
+# 2) 套用使用者覆寫（同 §2 規則：指定軸用 catalog 查；查不到退該軸 resolvedBase + warning）
+applied[axis] =
+   themeSelection.<axis>Id 有值 →
+        catalog 查到 → 該 partial（ids[axis]=該值）
+        查不到 → resolvedBase[axis] + warning{axis, requestedId, reason:"invalid_id"}
+   無值 → resolvedBase[axis]（沿用 base，達成「只換指定軸」）
+
+styleKit = composeKit(applied 三軸)
+designPlan = { ...baseDesignPlan, styleKit }              // 只換 styleKit
+→ 重渲染（render→validate→summary，I3 順序不變）；文字/結構/chartIntents 一律沿用 base
 ```
-- 編輯頁換主題 = 新 `origin="edit"` revision（與 010 一致）；**不跑 LLM、不改內容**。
-- 需要 candidates（themes）→ 編輯端點載入 themeStore.listSelectable()（或瀏覽讀取）供 applyThemeSelection。
 
-## §5 瀏覽讀取（browse）形狀
+- **「只換 palette、font/style 保留」** 在 base 三軸 id 皆可 resolve 時成立;某軸 base id 無法 resolve → 該軸退預設並**誠實標 warning**(§8),不靜默、不亂套。
+- 編輯頁換主題 = 新 `origin="edit"` revision(與 010 一致);**不跑 LLM、不改內容**。
+- 需要 catalog → 編輯端點載入 `listBrowsable()`(含 partial kits)供還原 + 覆寫。
+- client 端即時預覽走**同一演算法**(catalog 已在前端,§5),與 server 存檔結果一致(parity)。
 
-`listSelectable()` 回 `SelectableTheme{ id, kind, keywords, support, styleKit }`——**缺 name/description**，瀏覽器需要可讀標籤 + swatch 欄位。新增瀏覽讀取：
+## §5 瀏覽讀取（browse）形狀 — **回傳完整 partial styleKit**（修正：原本「只回 swatch」無法支撐編輯頁 client 即時重渲染）
+
+> **設計裁決**：編輯頁要 client 端即時 WYSIWYG 換主題（沿用 010 client renderer），就需要 `composeKit` 三軸的**完整 partial styleKit**——swatch 不足以 compose/render。因此 `GET /api/themes` MUST 回傳每個主題**經 sanitize 的完整 partial styleKit**（就是 `SelectableTheme.styleKit`）。安全性：這些 styleKit 是 builtin 主題庫、**已在 007 seed 階段驗證過**（`seedThemes` 擋 CSS-breakout / 非法 token），是「伺服器自己拿來 render 的同一份資料」，非使用者輸入——回傳它與回傳 slideDeck/designPlan 同樣安全。**swatch 改由 client 從 partial styleKit 萃取**（不需後端額外投影）。
 
 ```ts
 export interface BrowsableTheme {
   id: string;
   kind: "font" | "palette" | "style";
-  name: string;            // themes.name（DB 有）
+  name: string;            // themes.name
   description?: string;    // themes.description
   keywords: string[];
-  // swatch 用：從該軸 styleKit 萃取的輕量呈現資料（不送整包 styleKit）
-  swatch: {
-    // palette：主要顏色們；font：字體家族名 + googleFontsHref；style：結構標籤/縮影提示
-    colors?: string[];
-    fontFamilies?: string[];
-    googleFontsHref?: string;
-    styleLabel?: string;
-  };
+  /**
+   * 經 sanitize 的 *partial* DesignStyleKit（該軸），= SelectableTheme.styleKit。
+   * client 用它：① 萃取 swatch 顯示；② 編輯頁 composeKit + 即時重渲染（010 parity）。
+   */
+  styleKit: unknown;
 }
 
 export interface ThemeCatalogResponseContract {
-  font: BrowsableTheme[];
-  palette: BrowsableTheme[];
-  style: BrowsableTheme[];
+  font: BrowsableTheme[];      // 57
+  palette: BrowsableTheme[];   // 96
+  style: BrowsableTheme[];     // 67
 }
 ```
 
-- 後端 `ThemeStore` 加 `listBrowsable()`（或擴充 listSelectable 回傳 name/description），`DrizzleThemeStore` 從 `themes` 表讀 name/description + 由 styleKit 萃取 swatch。
-- swatch 萃取為**純投影**（不洩漏可注入 CSS；只取顏色 hex / 字體名 / 結構 enum 標籤）。
+- 後端 `ThemeStore` 加 `listBrowsable()`（= listSelectable 同來源 + name/description），`DrizzleThemeStore` 從 `themes` 表讀 name/description/keywords/style_kit。
+- payload 上限考量：220 個 partial kit JSON（多為小物件，估數百 KB）；單次 GET 可接受。若實測過大，**改為依軸 lazy load**（`GET /api/themes?kind=palette`）——modal 開啟才抓、且本就分軸瀏覽。
+- swatch（顏色 hex / 字體家族名 / 風格標籤）由 client 從 `styleKit` 萃取顯示，不在後端做縮減投影。
 
 ## §6 前端模型
 
@@ -109,7 +124,23 @@ export interface ThemeCatalogResponseContract {
 
 ## §7 失敗安全 / Edge
 
-- 指定 id 不存在/停用 → 該軸退回 baseline + fallback note（§2），不報錯、不擋生成。
+- 指定 id 不存在/停用 → 該軸退回 baseline + **warning（§8）**，不報錯、不擋生成。
 - 只指定部分軸 → 未指定軸走 baseline（§2）。
 - 無 themeSelection → 現況（§1）。
-- 編輯頁對 legacy deck（base 無三軸 id）→ baseline 退回對 base 重跑 selectTheme 或預設；換主題仍可運作。
+- 編輯頁對 legacy deck（base 無三軸 id）→ 該軸退預設 + warning（§4/§8）；換主題仍可運作。
+
+## §8 結果證據：themeSelectionWarnings（修正：fallback 需有 contract 承載）
+
+> **問題（修正）**：spec/quickstart 要求「指定 id 無效 → 退 baseline 並有明確提示」,但 `SelectedThemeSummary.fallback` 只表示「軸為 null/預設」,**無法表達「使用者指定的 id 被拒、但 baseline 有值」**。需要明確的唯讀結果證據（與 008/009 圖表 fallback review note 同精神:誠實揭露、不靜默）。
+
+```ts
+export interface ThemeSelectionWarning {
+  axis: "font" | "palette" | "style";
+  requestedId?: string;                 // 使用者要的 id（base 無法 resolve 時可省略）
+  reason: "invalid_id" | "disabled" | "base_unresolved";
+}
+```
+
+- **承載位置**：`GenerationSummary` 新增 `themeSelectionWarnings: ThemeSelectionWarning[]`（`[]` 表示全部照指定套用）。同時用於生成回應與 edit revision 回應（兩條路徑都會 fallback）。
+- **行為**：有 warning 時仍**正常產生/儲存**（不報錯）;前端依此**誠實提示**使用者「你選的色票已停用,已退回自動」。
+- malformed（非字串型別等）仍走既有 **400** 請求驗證（contract §2）——warning 只處理「型別合法但 id 解析不到」。

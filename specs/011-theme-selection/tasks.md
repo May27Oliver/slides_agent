@@ -19,15 +19,15 @@ description: "Task list — 011 主題庫手動選擇（生成頁 + 編輯頁，
 - [ ] T001a 編輯前 impact（CLAUDE.md）：對將動的既有 symbol 跑 `gitnexus_impact`：`selectTheme`、`composeKit`、`ThemeStore`/`DrizzleThemeStore`、`SlidesService.generatePreview`、`applyDeckEdit`、`GeneratePreviewRequestContract`、`SlideGenerationForm`。HIGH/CRITICAL 先警示。
 
 ## Phase 2：Domain — 依 id 套用（純函式，先寫）
-- [ ] T002 [P] 型別：`ManualThemeSelection`（contracts + domain 對應）；`BrowsableTheme` / `ThemeCatalogResponseContract`（data-model §1/§5）。
+- [ ] T002 [P] 型別：`ManualThemeSelection`、`BrowsableTheme`（含完整 partial `styleKit`，data-model §5）、`ThemeCatalogResponseContract`、`ThemeSelectionWarning` + `GenerationSummary.themeSelectionWarnings`（data-model §8）。
 - [ ] T003 失敗測試 `packages/domain/test/design/apply-theme-selection.test.ts`：只覆寫一軸 / 全覆寫 / 無效 id 退 baseline+fallback / 無 selection===baseline / 純函式零外呼。
 - [ ] T004 實作 `packages/domain/src/design/apply-theme-selection.ts`（baseline→override→composeKit，data-model §2）；`index.ts` 匯出。**先跑 `gitnexus_impact({target:"selectTheme"})`**（確認不動 selectTheme）。
 
 ## Phase 3：Backend — 瀏覽讀取 + 套用串接
-- [ ] T005 `ThemeStore` 加 `listBrowsable()`（含 name/description + swatch 投影）；`DrizzleThemeStore` 實作（從 `themes` 讀 name/description，由 styleKit 安全萃取 swatch）。**先跑 `gitnexus_impact({target:"ThemeStore"})`**。
-- [ ] T006 `GET /api/themes`（JWT）回 `ThemeCatalogResponseContract`（依 kind 分組）；contract + endpoint 測試。
-- [ ] T007 生成路徑：`GeneratePreviewRequestContract` 加 `themeSelection?`；`slides.service.generatePreview` 改用 `applyThemeSelection(selectTheme(...), themeSelection, candidates)`（data-model §3）。**先跑 `gitnexus_impact({target:"generatePreview"})`**。測試：帶 selection→套用、不帶→現況不變、零額外 LLM 呼叫。
-- [ ] T008 編輯路徑：edit-revision request 加 `themeSelection?`；`applyDeckEdit`（010）帶 selection 時重組 styleKit（data-model §4），其餘沿用 base；端點載入 themes 供 candidates。**先跑 `gitnexus_impact({target:"applyDeckEdit"})`**。測試：換主題→新 revision styleKit 改、文字/chartIntents 不變、零 LLM。
+- [ ] T005 `ThemeStore` 加 `listBrowsable()`（name/description/keywords + **完整 partial `styleKit`**，data-model §5）；`DrizzleThemeStore` 從 `themes` 讀。**先跑 `gitnexus_impact({target:"ThemeStore"})`**。
+- [ ] T006 `GET /api/themes`（JWT，可選 `?kind=`）回 `ThemeCatalogResponseContract`（依 kind 分組，含 partial styleKit）；contract + endpoint 測試（含「回傳 partial kit 可被 composeKit 接受」）。
+- [ ] T007 生成路徑：`GeneratePreviewRequestContract` 加 `themeSelection?`；`slides.service.generatePreview` 用 `applyThemeSelection(selectTheme(...), themeSelection, candidates)`（§3），並把 fallback 收集成 `generationSummary.themeSelectionWarnings`（§8）。**先跑 `gitnexus_impact({target:"generatePreview"})`**。測試：帶 selection→套用、不帶→現況不變、無效 id→退 baseline+warning、零額外 LLM。
+- [ ] T008 編輯路徑：edit-revision request 加 `themeSelection?`；`applyDeckEdit`（010）依 **§4 演算法**（base 三軸用 catalog 還原 + 覆寫 + composeKit）重組 styleKit，其餘沿用 base，並帶 `themeSelectionWarnings`；端點載入 `listBrowsable()` 供 catalog。**先跑 `gitnexus_impact({target:"applyDeckEdit"})`**。測試：只換 palette→font/style 保留、base id 不可 resolve→退預設+warning、文字/chartIntents 不變、零 LLM。
 - [ ] T009 OpenAPI 補登 `GET /api/themes` + request `themeSelection`（contracts §4）+ smoke。
 
 **✅ Checkpoint A**：後端可瀏覽主題 + 兩入口依 id 套用，零額外 LLM。
@@ -36,8 +36,9 @@ description: "Task list — 011 主題庫手動選擇（生成頁 + 編輯頁，
 - [ ] T010 [P] `themes-client`（GET /api/themes）+ 測試。
 - [ ] T011 `ThemeBrowserModal`（共用彈窗）：三軸分頁 + swatch + 頂部組合摘要 + 搜尋/篩選/分頁（palette 96 用虛擬列表/分頁）+ 套用；a11y：focus trap、Esc 關閉、鍵盤/focus。輸出 `ManualThemeSelection`。＋ `ThemeSummary`（常駐摘要，未選=「自動」，含「瀏覽全部 →」開 modal）。元件測試。
 - [ ] T012 生成頁：保留 6 張快速卡；表單側邊欄掛 `ThemeSummary` → 開 `ThemeBrowserModal` 選定 → 送出帶 request `themeSelection`。**先跑 `gitnexus_impact({target:"SlideGenerationForm"})`**。測試：選三軸→request 帶正確 ids；未開 modal→現況。
-- [ ] T013 編輯頁：右側版面掛 `ThemeSummary`（沿用 010 版面）→ 開 `ThemeBrowserModal` → 套用 → 經 `createEditRevision` 帶 `themeSelection` → 即時預覽 + 存新版本。測試：換主題→預覽變、存後版本+1。
-- [ ] T014 [P] i18n（zh-TW/en/ja）：picker 標籤、三軸名、組合摘要、瀏覽全部、swatch 提示。
+- [ ] T013 編輯頁：右側版面掛 `ThemeSummary`（沿用 010 版面）→ 開 `ThemeBrowserModal` → 套用 → **client 端用 catalog 的 partial kits composeKit + 即時重渲染**（§4/§5，與 server parity）→ `createEditRevision` 帶 `themeSelection` 存新版本。測試：換主題→預覽即時變、存後版本+1。
+- [ ] T013a 前端誠實提示：`themeSelectionWarnings`（§8）→ 顯示「指定主題已停用/無效，已退回自動」於生成結果與編輯頁。
+- [ ] T014 [P] i18n（zh-TW/en/ja）：picker 標籤、三軸名、組合摘要、瀏覽全部、swatch、warning 提示。
 
 **✅ Checkpoint B**：生成頁/編輯頁皆可瀏覽 220 主題、每軸挑選、即時看到效果。
 

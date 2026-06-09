@@ -12,11 +12,11 @@
   style: BrowsableTheme[];     // 67（排除 support='raw'）
 }
 ```
-- 每筆 `BrowsableTheme = { id, kind, name, description?, keywords[], swatch }`。
-- `swatch` 僅含安全投影（colors hex / fontFamilies / googleFontsHref / styleLabel）——**不回傳整包 styleKit、不含可注入 CSS**。
-- 排序沿用 `listSelectable` 的穩定 id 排序（`00`-前綴安全預設排前）。
+- 每筆 `BrowsableTheme = { id, kind, name, description?, keywords[], styleKit }`。
+- `styleKit` = 該軸**經 sanitize 的完整 partial DesignStyleKit**（= `SelectableTheme.styleKit`，007 seed 階段已驗證）。**回傳完整 partial（非 swatch 縮減）**,因為編輯頁需 client `composeKit` + 即時重渲染（data-model §5 裁決）;swatch 由 client 從 styleKit 萃取。
+- 排序沿用 `listSelectable` 的穩定 id 排序。可選 `?kind=font|palette|style` 依軸 lazy load（modal 分軸瀏覽時）。
 
-**不變式**：不呼叫 LLM；不依帳號過濾；資料源為既有 `themes` 表（active=true、applies_to in presentation/universal、style 排除 raw）。
+**不變式**：不呼叫 LLM；不依帳號過濾；資料源為既有 `themes` 表（active=true、applies_to in presentation/universal、style 排除 raw）。回傳的是 builtin、已驗證、伺服器自身 render 用的同一份 tokens。
 
 ## 2. `POST /api/slides/preview-jobs`（與 sync `/preview`）— 加 themeSelection
 
@@ -31,7 +31,9 @@
 - 後端 render 階段：`applyThemeSelection(selectTheme(brief), themeSelection, candidates)`（data-model §2/§3）。
 - **無 themeSelection → 行為與現況 100% 相同**（關鍵字 selectTheme）。
 - 指定主題**不增加 LLM 呼叫**（render 後段套用）。
-- 驗證：`themeSelection` 若提供，三個欄位皆 optional string；非法型別 → 既有 400 路徑。
+- 驗證：`themeSelection` 若提供，三個欄位皆 optional string；**非法型別 → 既有 400**；型別合法但 id 解析不到 → 退 baseline + `themeSelectionWarnings`（下方）。
+
+**Response**：沿用既有 `GeneratePreviewResponseContract`，其 `generationSummary` **新增** `themeSelectionWarnings: ThemeSelectionWarning[]`（data-model §8；`[]` = 全照指定套用）。前端據此誠實提示「指定主題已停用,退回自動」。
 
 ## 3. `POST /api/decks/:id/revisions`（010 編輯端點）— 加 themeSelection
 
@@ -43,9 +45,9 @@
   themeSelection?: { fontId?: string; paletteId?: string; styleId?: string };
 }
 ```
-- 帶 `themeSelection` → `applyDeckEdit` 重組 styleKit（data-model §4）：只換 styleKit，文字/結構/chartIntents 沿用 base。
+- 帶 `themeSelection` → `applyDeckEdit` 依 **data-model §4 演算法**重組 styleKit：base 三軸用 catalog 還原 + 使用者覆寫指定軸 + composeKit;只換 styleKit,文字/結構/chartIntents 沿用 base。
 - 無 `themeSelection` → 010 現況（沿用 base designPlan/styleKit）。
-- 回應沿用 `DeckRevisionContract`（新版 `selectedTheme` 三軸 id 反映換後主題）。
+- 回應沿用 `DeckRevisionContract`（新版 `selectedTheme` 三軸 id 反映換後主題）;其 `generationSummary.themeSelectionWarnings` 帶 base 軸無法 resolve / 指定 id 無效的證據（§8）。
 - 不變式：**不呼叫 LLM**；唯讀塊/並發/保真保證沿用 010。
 
 ## 4. OpenAPI

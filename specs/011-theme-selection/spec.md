@@ -1,13 +1,13 @@
 # Feature Specification: 主題庫手動選擇（讓使用者瀏覽並挑選完整主題庫，生成頁與編輯頁皆可，確定性、零額外 LLM）
 
 <!-- This project writes Spec Kit artifacts in Traditional Chinese by default. -->
-<!-- STATUS: 大概草稿（draft outline）。細節（data-model / contracts / tasks）待正式展開。 -->
+<!-- STATUS: Planned — plan / data-model / contracts / tasks 已展開；待 010 merge 後實作。 -->
 
 **Feature Branch**: `011-theme-selection`
 
 **Created**: 2026-06-09
 
-**Status**: Draft（outline）
+**Status**: Planned（plan / data-model / contracts / tasks 已完成；ready for implementation，待 010 merge）
 
 **Input**: User description：「DB 裡的風格有 220 個（font 57 / palette 96 / style 67），但現在只有 6 張前端預設卡 + 關鍵字自動選，導致絕大多數主題永遠選不到（死庫存）。需要一個 panel 讓使用者完整看到並挑選這些主題；而且**生成頁也要放**，不然浪費『第一次就做對』的機會、也浪費重新生成的 token。」
 
@@ -124,10 +124,12 @@
 
 ---
 
-## 待正式展開時要產出
+## 規劃產物（已完成）
 
-- `plan.md`（technical context：themes 表讀取、依 id 套用路徑、生成頁 request 帶 theme ids、編輯頁重渲染串接）
-- `data-model.md`（list-themes 回應形狀、request 的 theme ids 欄位、swatch 所需欄位）
-- `contracts/`（list themes endpoint、generate request + theme ids、edit revision + theme ids）
-- `research.md`（量化「死庫存」：跑 selectTheme 統計 220 裡實際幾個選得到，當動機數據）
-- `quickstart.md` / `tasks.md`
+- `plan.md` — technical context、整合點、Phase A–D、performance 可驗收目標、憲章檢查。
+- `data-model.md` — `ManualThemeSelection`、`applyThemeSelection` 演算法、生成/編輯串接、編輯 baseline 還原演算法（§4）、browse 回傳完整 partial styleKit（§5）、`themeSelectionWarnings`（§8）。
+- `contracts/theme-selection.contract.md` — `GET /api/themes`、preview/edit request `themeSelection` + response warnings、OpenAPI。
+- `research.md` — baseline+覆寫策略、零 token、partial-kit 回傳裁決、死庫存量化待辦。
+- `quickstart.md` / `tasks.md` — 手動驗證路徑 / T001–T019。
+
+> 實作前 gate：待 010（PR #2）merge 後 rebase；先做 T017 死庫存量化作動機數據（可選）。
