@@ -37,6 +37,8 @@ export { composeKit } from "@/design/compose-kit";
 export type { ComposeKitParts } from "@/design/compose-kit";
 export { selectTheme } from "@/design/select-theme";
 export type { SelectThemeBrief } from "@/design/select-theme";
+export { applyThemeSelection } from "@/design/apply-theme-selection";
+export type * from "@/design/theme-selection.types";
 export { projectSelectedThemeSummary } from "@/design/selected-theme-summary";
 export type * from "@/design/selected-theme-summary.types";
 export { expandFontPairing, expandPalette } from "@/design/style-kit-engine";

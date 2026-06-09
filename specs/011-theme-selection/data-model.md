@@ -40,14 +40,14 @@ warnings = []
 for axis in [font, palette, style]:
   requestedId = selection?.<axis>Id            # 使用者覆寫（可能 undefined）
   effectiveId = requestedId ?? baselineIds[axis]
-  if effectiveId == null:                       # 該軸無 baseline、也沒覆寫
-      partial[axis] = 省略 → composeKit 對該軸用預設
-      continue
-  hit = candidates.find(id===effectiveId && kind===axis)
+  hit = effectiveId != null
+        ? candidates.find(id===effectiveId && kind===axis)
+        : undefined
   if hit:
       partial[axis] = hit.styleKit;  ids[axis] = effectiveId
-  else:                                         # effectiveId 解析不到（不在現行可選目錄）
+  else:                                         # 解析不到（不在可選目錄）或 effectiveId 為 null
       partial[axis] = 省略（用預設）;  ids[axis] = null
+      # 鎖定語意：任一軸退預設都留證據（誠實、不靜默，對齊 008/009 fallback note）
       warnings.push({ axis,
                       ...(requestedId ? { requestedId } : {}),
                       reason: requestedId ? "invalid_id" : "base_unresolved" })
