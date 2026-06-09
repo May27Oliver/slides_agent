@@ -34,7 +34,7 @@
 - 指定主題**不增加 LLM 呼叫**（render 後段套用）。
 - 驗證：`themeSelection` 若提供，三個欄位皆 optional string；**非法型別 → 既有 400**；型別合法但 id 解析不到 → **該軸退預設**（非 baseline）+ `themeSelectionWarnings`（下方）。
 
-**Response**：沿用既有 `GeneratePreviewResponseContract`，其 `generationSummary` **新增** `themeSelectionWarnings: ThemeSelectionWarning[]`（data-model §8；`[]` = 全照指定套用）。前端據此誠實提示「指定主題已停用,退回自動」。
+**Response**：沿用既有 `GeneratePreviewResponseContract`，其 `generationSummary` **新增** `themeSelectionWarnings: ThemeSelectionWarning[]`（data-model §8；`[]` = 全照指定套用）。前端據此誠實提示「你選的主題已無法使用,該軸已改用預設主題」。
 
 ## 3. `POST /api/decks/:id/revisions`（010 編輯端點）— 加 themeSelection
 

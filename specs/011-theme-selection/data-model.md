@@ -156,5 +156,5 @@ export interface ThemeSelectionWarning {
   - `base_unresolved`：**base 軸** id 不在可選目錄或為 null（編輯既有 deck 時）。
   - （不設 `disabled`——現行過濾下不可觀測；若日後要區分,需另開「可查 inactive」的伺服器路徑。）
 - **承載位置**：`GenerationSummary` 新增 `themeSelectionWarnings: ThemeSelectionWarning[]`（`[]` 表示全部照 baseline+覆寫套用）。生成回應與 edit revision 回應共用。
-- **行為**：有 warning 時仍**正常產生/儲存**（不報錯）;前端依此**誠實提示**「你選的主題已無法使用,已退回自動」。
+- **行為**：有 warning 時仍**正常產生/儲存**（不報錯）;前端依此**誠實提示**「你選的主題已無法使用,該軸已改用**預設**主題」（**不可寫「自動」**——fallback 是退預設,非 baseline）。
 - malformed（非字串型別等）仍走既有 **400** 請求驗證（contract §2）——warning 只處理「型別合法但 id 解析不到」。

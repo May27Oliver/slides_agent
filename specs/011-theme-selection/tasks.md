@@ -37,7 +37,7 @@ description: "Task list — 011 主題庫手動選擇（生成頁 + 編輯頁，
 - [ ] T011 `ThemeBrowserModal`（共用彈窗）：三軸分頁 + swatch + 頂部組合摘要 + 搜尋/篩選/分頁（palette 96 用虛擬列表/分頁）+ 套用；a11y：focus trap、Esc 關閉、鍵盤/focus。輸出 `ManualThemeSelection`。＋ `ThemeSummary`（常駐摘要，未選=「自動」，含「瀏覽全部 →」開 modal）。元件測試。
 - [ ] T012 生成頁：保留 6 張快速卡；表單側邊欄掛 `ThemeSummary` → 開 `ThemeBrowserModal` 選定 → 送出帶 request `themeSelection`。**先跑 `gitnexus_impact({target:"SlideGenerationForm"})`**。測試：選三軸→request 帶正確 ids；未開 modal→現況。
 - [ ] T013 編輯頁：右側版面掛 `ThemeSummary`（沿用 010 版面）→ 開 `ThemeBrowserModal` → 套用 → **client 端用 catalog 的 partial kits composeKit + 即時重渲染**（§4/§5，與 server parity）→ `createEditRevision` 帶 `themeSelection` 存新版本。測試：換主題→預覽即時變、存後版本+1。
-- [ ] T013a 前端誠實提示：`themeSelectionWarnings`（§8）→ 顯示「指定主題已停用/無效，已退回自動」於生成結果與編輯頁。
+- [ ] T013a 前端誠實提示：`themeSelectionWarnings`（§8）→ 顯示「你選的主題已無法使用，該軸已改用**預設**主題」（**不可寫「自動/baseline」**——fallback 是退預設）於生成結果與編輯頁。
 - [ ] T014 [P] i18n（zh-TW/en/ja）：picker 標籤、三軸名、組合摘要、瀏覽全部、swatch、warning 提示。
 
 **✅ Checkpoint B**：生成頁/編輯頁皆可瀏覽 220 主題、每軸挑選、即時看到效果。
