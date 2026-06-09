@@ -191,7 +191,9 @@ export const GENERATE_PREVIEW_RESPONSE_SCHEMA: OpenApiSchema = {
   properties: {
     slideDeck: { type: "object", additionalProperties: true },
     designPlanningResult: { type: "object", additionalProperties: true },
-    previewArtifact: PREVIEW_ARTIFACT_SCHEMA
+    previewArtifact: PREVIEW_ARTIFACT_SCHEMA,
+    // 010 (C1/FR-006a): planned chart intents surfaced for persistence.
+    chartIntents: { type: "array", items: { type: "object", additionalProperties: true } }
   }
 };
 
@@ -308,15 +310,21 @@ export const DECK_LIST_RESPONSE_SCHEMA: OpenApiSchema = {
   }
 };
 
-const DECK_REVISION_SCHEMA: OpenApiSchema = {
+export const DECK_REVISION_SCHEMA: OpenApiSchema = {
   type: "object",
-  required: ["revision", "slideDeck", "html", "origin", "sourceJobId", "createdAt"],
+  required: ["revision", "slideDeck", "html", "chartIntents", "origin", "sourceJobId", "createdAt"],
   properties: {
     revision: { type: "integer" },
     slideDeck: { type: "object", additionalProperties: true },
     designPlan: { type: "object", additionalProperties: true, nullable: true },
     html: { type: "string", nullable: true },
     generationSummary: { type: "object", additionalProperties: true, nullable: true },
+    // 010 (C1/FR-006a): planned chart intents for deterministic redraw; null for legacy.
+    chartIntents: {
+      type: "array",
+      items: { type: "object", additionalProperties: true },
+      nullable: true
+    },
     origin: { type: "string", enum: ["generation", "edit"] },
     sourceJobId: { type: "string", nullable: true },
     createdAt: { type: "string", format: "date-time" }
@@ -350,3 +358,37 @@ export const AUTH_REQUIRED_SCHEMA: OpenApiSchema = errorSchema(
   ["AUTH_REQUIRED"],
   "Authentication required."
 );
+
+// --- Deck edit revisions (feature 010 US1) ---
+
+export const EDIT_REVISION_REQUEST_SCHEMA: OpenApiSchema = {
+  type: "object",
+  required: ["baseRevision", "slideDeck"],
+  properties: {
+    baseRevision: {
+      type: "integer",
+      minimum: 0,
+      description: "Revision the client edited from (optimistic concurrency, FR-020)."
+    },
+    slideDeck: {
+      type: "object",
+      additionalProperties: true,
+      description: "Edited deck (text + structure). Read-only blocks are re-derived server-side."
+    }
+  }
+};
+
+export const INVALID_EDIT_SCHEMA: OpenApiSchema = errorSchema(
+  ["INVALID_EDIT"],
+  "Edit could not be applied."
+);
+
+export const REVISION_CONFLICT_SCHEMA: OpenApiSchema = {
+  type: "object",
+  required: ["code", "message", "currentRevision"],
+  properties: {
+    code: { type: "string", enum: ["REVISION_CONFLICT"] },
+    message: { type: "string", example: "This deck was updated elsewhere." },
+    currentRevision: { type: "integer", description: "Latest revision so the client can rebase." }
+  }
+};

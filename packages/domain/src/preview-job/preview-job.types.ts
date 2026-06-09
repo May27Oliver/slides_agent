@@ -36,6 +36,17 @@ export interface PreviewResult {
   slideDeck: unknown;
   designPlanningResult: unknown;
   previewArtifact: unknown;
+  /**
+   * 010 (C1/FR-006a): planned chart intents carried from generation so a persisted
+   * revision keeps the source facts the renderer needs to redraw charts on edit.
+   * Opaque here; null when the upstream result predates this field.
+   */
+  chartIntents?: unknown;
+  /**
+   * 010: id of the deck persisted from this result, so the client can navigate into
+   * the editor on generation success. Null when persistence was skipped/failed.
+   */
+  deckId?: string | null;
 }
 
 export interface StageTransition {

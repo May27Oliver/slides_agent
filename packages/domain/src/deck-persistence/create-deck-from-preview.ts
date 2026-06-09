@@ -33,6 +33,9 @@ export function createDeckFromPreviewResult(input: CreateDeckFromPreviewInput): 
       designPlan: result.designPlanningResult ?? null,
       html: typeof artifact.html === "string" ? artifact.html : null,
       generationSummary: artifact.generationSummary ?? null,
+      // 010 (C1/FR-006a): persist the chart intents so an edit re-render can redraw
+      // the same charts deterministically (no LLM re-derivation). Null when absent.
+      chartIntents: result.chartIntents ?? null,
       origin: "generation",
       sourceJobId
     }

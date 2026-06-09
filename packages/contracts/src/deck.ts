@@ -22,6 +22,13 @@ export interface DeckRevisionContract {
   designPlan: unknown | null;
   html: string | null;
   generationSummary: unknown | null;
+  /**
+   * 010 (C1/FR-006a): planned chart intents for this revision, so the client
+   * LivePreview can redraw charts with the same domain renderer the server uses.
+   * Opaque here (the web layer forwards it to the renderer, never re-declares it);
+   * null for legacy revisions written before the column existed.
+   */
+  chartIntents: unknown | null;
   origin: "generation" | "edit";
   sourceJobId: string | null;
   createdAt: string;
@@ -42,6 +49,32 @@ export interface DeckDetailResponseContract {
 export interface DeckNotFoundContract {
   code: "DECK_NOT_FOUND";
   message: string;
+}
+
+/**
+ * 010 (US1, FR-007): body for `POST /api/decks/:id/revisions`. Locked to the base
+ * revision the client edited from (optimistic concurrency, FR-020) plus the edited
+ * deck. `slideDeck` stays opaque here — the server re-loads the base and merges by
+ * slide id (FR-021), so it never trusts the client's read-only blocks / structure.
+ */
+export interface EditRevisionRequestContract {
+  baseRevision: number;
+  slideDeck: unknown;
+}
+
+/** 409: the base the client edited from is no longer current (FR-020). */
+export interface RevisionConflictContract {
+  code: "REVISION_CONFLICT";
+  message: string;
+  /** Current (latest) revision number, so the client can reload and rebase. */
+  currentRevision: number;
+}
+
+/** 400: malformed body, or read-only/structure tampering rejected by merge (FR-021). */
+export interface InvalidEditContract {
+  code: "INVALID_EDIT";
+  message: string;
+  fields?: string[];
 }
 
 export type DeckContractValidationResult<T> =
@@ -95,6 +128,79 @@ export function validateDeckDetailResponse(
     : invalid(issues);
 }
 
+// Defensive upper bounds on user-editable text so a single request can't store a
+// multi-megabyte JSONB blob or feed an oversized render (storage/CPU abuse). Generous
+// vs. realistic slide content; exceeding these is a 400, never silent truncation.
+const MAX_SLIDES = 200;
+const MAX_BULLETS_PER_SLIDE = 100;
+const FIELD_LIMITS = { title: 400, message: 2000, bullet: 1000, notes: 8000 } as const;
+
+/**
+ * 010 (FR-007 step 1): validate the request body shape before the server loads the
+ * base or merges. A malformed body is a 400 `INVALID_EDIT`. Deeper rules (read-only
+ * tampering, structure injection) are enforced by the domain merge, not here.
+ */
+export function validateEditRevisionRequest(
+  input: unknown
+): DeckContractValidationResult<EditRevisionRequestContract> {
+  if (!isRecord(input)) {
+    return invalid(["request must be an object"]);
+  }
+
+  const issues: string[] = [];
+  if (!Number.isInteger(input.baseRevision) || (input.baseRevision as number) < 0) {
+    issues.push("baseRevision must be a non-negative integer");
+  }
+
+  const slides = (input.slideDeck as { slides?: unknown } | undefined)?.slides;
+  if (!isRecord(input.slideDeck) || !Array.isArray(slides)) {
+    issues.push("slideDeck must be an object with a slides array");
+  } else {
+    if (slides.length > MAX_SLIDES) {
+      issues.push(`slideDeck.slides exceeds ${MAX_SLIDES}`);
+    }
+    slides.forEach((slide, index) => validateSlideShape(slide, index, issues));
+  }
+
+  return issues.length === 0
+    ? { ok: true, value: input as unknown as EditRevisionRequestContract }
+    : invalid(issues);
+}
+
+function validateSlideShape(slide: unknown, index: number, issues: string[]): void {
+  if (!isRecord(slide)) {
+    issues.push(`slides[${index}] must be an object`);
+    return;
+  }
+  if (typeof slide.id !== "string" || slide.id.length === 0) {
+    issues.push(`slides[${index}].id must be a non-empty string`);
+  }
+  if (overLimit(slide.title, FIELD_LIMITS.title)) {
+    issues.push(`slides[${index}].title too long`);
+  }
+  if (overLimit(slide.message, FIELD_LIMITS.message)) {
+    issues.push(`slides[${index}].message too long`);
+  }
+  if (overLimit(slide.speakerNotesDraft, FIELD_LIMITS.notes)) {
+    issues.push(`slides[${index}].speakerNotesDraft too long`);
+  }
+  if (Array.isArray(slide.outline)) {
+    if (slide.outline.length > MAX_BULLETS_PER_SLIDE) {
+      issues.push(`slides[${index}].outline exceeds ${MAX_BULLETS_PER_SLIDE}`);
+    }
+    slide.outline.forEach((item, i) => {
+      const text = isRecord(item) ? item.text : undefined;
+      if (overLimit(text, FIELD_LIMITS.bullet)) {
+        issues.push(`slides[${index}].outline[${i}].text too long`);
+      }
+    });
+  }
+}
+
+function overLimit(value: unknown, max: number): boolean {
+  return typeof value === "string" && value.length > max;
+}
+
 function isValidSummary(value: unknown): value is DeckSummaryContract {
   return (
     isRecord(value) &&
@@ -110,6 +216,7 @@ function isValidRevision(value: unknown): value is DeckRevisionContract {
     isRecord(value) &&
     typeof value.revision === "number" &&
     "slideDeck" in value &&
+    "chartIntents" in value &&
     (value.html === null || typeof value.html === "string") &&
     isStringInSet(value.origin, ORIGINS) &&
     (value.sourceJobId === null || typeof value.sourceJobId === "string") &&

@@ -18,6 +18,7 @@ const deck: Deck = {
     designPlan: { designSystem: {} },
     html: "<html></html>",
     generationSummary: { slideCount: 3 },
+    chartIntents: [{ id: "chart-0" }],
     origin: "generation",
     sourceJobId: "preview_job_1"
   }
@@ -30,7 +31,13 @@ describe("DrizzleDeckStore.saveNewDeck", () => {
   beforeEach(async () => {
     testDb = await createTestDb();
     await seedAccounts(testDb.db, [
-      { id: "user_owner", username: "o@e.com", displayName: "Owner", passwordHash: "s:h", active: true }
+      {
+        id: "user_owner",
+        username: "o@e.com",
+        displayName: "Owner",
+        passwordHash: "s:h",
+        active: true
+      }
     ]);
     store = new DrizzleDeckStore(testDb.db);
   });
@@ -56,6 +63,7 @@ describe("DrizzleDeckStore.saveNewDeck", () => {
     expect(rev.origin).toBe("generation");
     expect(rev.sourceJobId).toBe("preview_job_1");
     expect(rev.html).toBe("<html></html>");
+    expect(rev.chartIntents).toEqual([{ id: "chart-0" }]); // 010 C1: persisted (T002f)
     expect(deckRow.currentRevisionId).toBe(rev.id);
   });
 });

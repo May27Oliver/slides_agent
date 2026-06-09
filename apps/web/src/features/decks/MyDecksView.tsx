@@ -4,6 +4,7 @@ import type { DeckDetailResponseContract, DeckSummaryContract } from "@slides-ag
 import { useAuth } from "@/features/auth/AuthProvider";
 import { AuthError } from "@/features/auth/auth-client";
 import { getDeck, listDecks } from "@/features/decks/decks-client";
+import { filterDecksByTitle } from "@/features/deck-switcher/recent-decks";
 import { useI18n } from "@/i18n";
 
 type LoadState = "loading" | "ready" | "error";
@@ -93,6 +94,8 @@ function DeckList({
   onOpen: (id: string) => void;
 }) {
   const { t } = useI18n();
+  const [query, setQuery] = useState("");
+  const filtered = filterDecksByTitle(decks, query);
 
   return (
     <section>
@@ -101,15 +104,28 @@ function DeckList({
         <p className="mt-1 text-sm text-ink-soft">{t("decks.subtitle")}</p>
       </header>
 
+      {state === "ready" && decks.length > 0 ? (
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t("switcher.search")}
+          aria-label={t("switcher.search")}
+          className="mb-4 w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
+        />
+      ) : null}
+
       {state === "loading" ? <p className="text-sm text-ink-soft">{t("decks.loading")}</p> : null}
       {state === "error" ? <p className="text-sm text-red-600">{t("decks.error")}</p> : null}
       {state === "ready" && decks.length === 0 ? (
         <p className="text-sm text-ink-soft">{t("decks.empty")}</p>
       ) : null}
+      {state === "ready" && decks.length > 0 && filtered.length === 0 ? (
+        <p className="text-sm text-ink-soft">{t("switcher.empty")}</p>
+      ) : null}
 
-      {state === "ready" && decks.length > 0 ? (
+      {state === "ready" && filtered.length > 0 ? (
         <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-panel">
-          {decks.map((deck) => (
+          {filtered.map((deck) => (
             <li key={deck.id} className="flex items-center justify-between gap-4 px-5 py-4">
               <div className="min-w-0">
                 <p className="truncate font-medium text-ink">{deck.title}</p>
@@ -117,13 +133,21 @@ function DeckList({
                   {statusLabel(deck.status, t)} · {formatDate(deck.updatedAt)}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => onOpen(deck.id)}
-                className="shrink-0 cursor-pointer rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink transition-colors duration-200 hover:bg-canvas"
-              >
-                {t("decks.open")}
-              </button>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onOpen(deck.id)}
+                  className="cursor-pointer rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink transition-colors duration-200 hover:bg-canvas"
+                >
+                  {t("decks.open")}
+                </button>
+                <Link
+                  to={`/decks/${deck.id}/edit`}
+                  className="rounded-lg bg-brand-700 px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-brand-800"
+                >
+                  {t("switcher.edit")}
+                </Link>
+              </div>
             </li>
           ))}
         </ul>

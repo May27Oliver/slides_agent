@@ -14,6 +14,7 @@ export default defineConfig({
       "@/deck-persistence": fileURLToPath(
         new URL("../../packages/domain/src/deck-persistence", import.meta.url)
       ),
+      "@/deck-edit": fileURLToPath(new URL("../../packages/domain/src/deck-edit", import.meta.url)),
       "@/deck": fileURLToPath(new URL("../../packages/domain/src/deck", import.meta.url)),
       "@/design": fileURLToPath(new URL("../../packages/domain/src/design", import.meta.url)),
       "@/preview-job": fileURLToPath(

@@ -73,6 +73,16 @@ export function buildDeckRuntimeScript(): string {
     if (event.key === "f" || event.key === "F") { toggleFullscreen(); }
   });
 
+  // 010: allow an embedding editor preview to drive which slide is shown, so the
+  // left preview stays in sync with the slide being edited on the right. Additive and
+  // inert for standalone decks (nobody posts to them); the rendered html is unchanged.
+  window.addEventListener("message", function (event) {
+    var data = event.data;
+    if (data && data.type === "deck:goToSlide" && typeof data.index === "number") {
+      show(data.index);
+    }
+  });
+
   var prevBtn = document.getElementById("prevBtn");
   var nextBtn = document.getElementById("nextBtn");
   if (prevBtn) { prevBtn.addEventListener("click", prev); }

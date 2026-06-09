@@ -1,0 +1,1 @@
+ALTER TABLE "deck_revisions" ADD COLUMN "chart_intents" jsonb;

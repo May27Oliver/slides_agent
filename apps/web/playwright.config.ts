@@ -9,7 +9,8 @@ export default defineConfig({
   webServer: {
     command: "pnpm exec vite --host 127.0.0.1 --port 4173",
     url: "http://127.0.0.1:4173",
-    reuseExistingServer: true
+    // Reuse a locally-running dev server, but always start a fresh one in CI.
+    reuseExistingServer: !process.env.CI
   },
   projects: [
     {

@@ -6,10 +6,14 @@ import {
   DECK_DETAIL_RESPONSE_SCHEMA,
   DECK_LIST_RESPONSE_SCHEMA,
   DECK_NOT_FOUND_SCHEMA,
+  DECK_REVISION_SCHEMA,
+  EDIT_REVISION_REQUEST_SCHEMA,
   GENERATE_PREVIEW_REQUEST_SCHEMA,
   GENERATE_PREVIEW_RESPONSE_SCHEMA,
   INVALID_DECK_ID_ERROR_SCHEMA,
+  INVALID_EDIT_SCHEMA,
   INVALID_JOB_ID_ERROR_SCHEMA,
+  REVISION_CONFLICT_SCHEMA,
   PREVIEW_JOB_STATUS_RESPONSE_SCHEMA,
   PREVIEW_JOB_UNAVAILABLE_SCHEMA,
   PREVIEW_QUEUE_UNAVAILABLE_SCHEMA,
@@ -72,6 +76,48 @@ export function buildOpenApiDocument(): OpenAPIObject {
             "404": {
               description: "Not found or owned by another account",
               content: json(DECK_NOT_FOUND_SCHEMA)
+            },
+            "500": { description: "Unexpected server error." }
+          }
+        }
+      },
+      "/api/decks/{id}/revisions": {
+        post: {
+          tags: ["decks"],
+          summary: "Apply an edit and append a new revision (010 US1)",
+          description:
+            "JWT-protected; scoped to the owner. Deterministic re-render (no LLM). Optimistic " +
+            "concurrency on baseRevision; read-only blocks/structure are enforced server-side.",
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" },
+              example: "11111111-2222-3333-4444-555555555555"
+            }
+          ],
+          requestBody: {
+            required: true,
+            content: json(EDIT_REVISION_REQUEST_SCHEMA)
+          },
+          responses: {
+            "201": {
+              description: "The new edit revision",
+              content: json(DECK_REVISION_SCHEMA)
+            },
+            "400": {
+              description: "Malformed body, read-only tampering, or unrenderable deck",
+              content: json(INVALID_EDIT_SCHEMA)
+            },
+            "401": { description: "Missing/invalid JWT", content: json(AUTH_REQUIRED_SCHEMA) },
+            "404": {
+              description: "Not found or owned by another account",
+              content: json(DECK_NOT_FOUND_SCHEMA)
+            },
+            "409": {
+              description: "Base revision is stale (edited elsewhere)",
+              content: json(REVISION_CONFLICT_SCHEMA)
             },
             "500": { description: "Unexpected server error." }
           }

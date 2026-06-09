@@ -9,10 +9,20 @@ describe("buildOpenApiDocument", () => {
     expect(Object.keys(doc.paths)).toEqual([
       "/api/decks",
       "/api/decks/{id}",
+      "/api/decks/{id}/revisions",
       "/api/slides/preview",
       "/api/slides/preview-jobs",
       "/api/slides/preview-jobs/{jobId}"
     ]);
+  });
+
+  it("documents the 010 edit-revision endpoint (request body + 201/400/404/409)", () => {
+    const post = doc.paths["/api/decks/{id}/revisions"]!.post!;
+    const requestSchema = (
+      post.requestBody as { content: Record<string, { schema: { properties: object } }> }
+    ).content["application/json"]!.schema;
+    expect(Object.keys(requestSchema.properties)).toEqual(["baseRevision", "slideDeck"]);
+    expect(Object.keys(post.responses).sort()).toEqual(["201", "400", "401", "404", "409", "500"]);
   });
 
   it("documents the decks read endpoints with ownership-aware response codes", () => {

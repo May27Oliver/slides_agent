@@ -1,5 +1,10 @@
 import type { DeckBrief } from "@/deck/deck.types";
-import type { Deck, DeckRevision } from "@/deck-persistence/deck.types";
+import type {
+  AppendEditResult,
+  Deck,
+  DeckRevision,
+  EditRevisionInput
+} from "@/deck-persistence/deck.types";
 
 /** Row shape for the "my decks" list (no heavy html/jsonb columns). */
 export interface DeckSummary {
@@ -31,4 +36,16 @@ export interface DeckStore {
   listByAccount(accountId: string): Promise<DeckSummary[]>;
   /** Fetch one deck the account owns, or null (never another account's). */
   findByIdForAccount(accountId: string, deckId: string): Promise<DeckDetail | null>;
+  /**
+   * 010 (US1, FR-020): append an edit revision under optimistic concurrency. The
+   * base-revision check and the insert happen in ONE transaction (no TOCTOU): if
+   * `expectedBaseRevision` no longer matches the deck's current revision, nothing is
+   * written and a conflict is returned. Ownership is enforced via `accountId`.
+   */
+  appendEditRevision(
+    accountId: string,
+    deckId: string,
+    expectedBaseRevision: number,
+    payload: EditRevisionInput
+  ): Promise<AppendEditResult>;
 }

@@ -8,8 +8,6 @@ import {
   type ReactNode
 } from "react";
 import { AlertIcon, SparklesIcon, UploadIcon, XIcon } from "@/components/icons";
-import { ChartPresetPreview } from "@/features/slide-generation/ChartPresetPreview";
-import { chartPresets, type ChartPresetKey } from "@/features/slide-generation/chart-presets";
 import { StyleCardGallery } from "@/features/slide-generation/StyleCardGallery";
 import { stylePresets, type StylePresetKey } from "@/features/slide-generation/style-presets";
 import type { SlideGenerationRequest } from "@/features/slide-generation/slide-generation.types";
@@ -35,7 +33,6 @@ export function SlideGenerationForm({
   const [isDragging, setIsDragging] = useState(false);
   // Presets are tracked by translation key so the selection survives a language switch.
   const [stylePresetKey, setStylePresetKey] = useState<StylePresetKey | "">("");
-  const [chartPresetKey, setChartPresetKey] = useState<ChartPresetKey>("preset.chart.none");
   const sourceLength = sourceContent.trim().length;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -44,9 +41,7 @@ export function SlideGenerationForm({
     const presetStyleDirection =
       stylePresets.find((preset) => preset.key === stylePresetKey)?.styleDirection ?? "";
     const styleDirection = stringValue(form, "styleDirection") || presetStyleDirection;
-    const presetChartEmphasis =
-      chartPresets.find((preset) => preset.key === chartPresetKey)?.chartEmphasis ?? "";
-    const chartEmphasis = stringValue(form, "chartEmphasis") || presetChartEmphasis;
+    const chartEmphasis = stringValue(form, "chartEmphasis");
     const request: SlideGenerationRequest = {
       sourceContent: sourceContent.trim(),
       deckBrief: {
@@ -210,17 +205,6 @@ export function SlideGenerationForm({
               />
             </Field>
           </div>
-
-          <fieldset className="m-0 border-0 p-0">
-            <legend className="mb-2 text-sm font-semibold text-ink">
-              {t("form.design.chartPreset")}
-            </legend>
-            <ChartPresetPreview
-              presets={chartPresets}
-              selectedKey={chartPresetKey}
-              onSelect={setChartPresetKey}
-            />
-          </fieldset>
         </FormSection>
 
         <FormSection step={t("form.planning.step")} title={t("form.planning.title")}>
@@ -230,7 +214,16 @@ export function SlideGenerationForm({
               name="segmentationGuidance"
               placeholder={t("form.planning.segmentationPlaceholder")}
               className={inputClass}
+              aria-describedby={`${ids.segmentation}-help`}
             />
+            <div id={`${ids.segmentation}-help`} className="text-xs text-ink-soft">
+              <p>{t("form.planning.segmentationHelp")}</p>
+              <ul className="mt-1 ml-4 list-disc space-y-0.5">
+                <li>{t("form.planning.segmentationHelp.topic")}</li>
+                <li>{t("form.planning.segmentationHelp.focus")}</li>
+                <li>{t("form.planning.segmentationHelp.time")}</li>
+              </ul>
+            </div>
           </Field>
         </FormSection>
 
