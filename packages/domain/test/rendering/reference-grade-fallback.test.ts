@@ -4,7 +4,7 @@ import { validateGeneratedHtml } from "@/rendering/html-generation-validator";
 import { renderingDeck, renderingDesignPlanningResult } from "./rendering-fixtures";
 
 describe("reference-grade fallback renderer", () => {
-  const html = renderTemplateDeck({
+  const { html } = renderTemplateDeck({
     deck: renderingDeck,
     designPlanningResult: renderingDesignPlanningResult
   });
@@ -67,7 +67,7 @@ describe("reference-grade fallback renderer", () => {
       ]
     };
 
-    const md = renderTemplateDeck({
+    const { html: md } = renderTemplateDeck({
       deck: markdownDeck,
       designPlanningResult: renderingDesignPlanningResult
     });

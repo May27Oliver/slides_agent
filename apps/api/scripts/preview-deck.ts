@@ -15,6 +15,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
   generatePreviewDeck,
+  projectSelectedThemeSummary,
   renderChartIntent,
   renderTemplateDeckArtifact,
   selectTheme,
@@ -96,7 +97,7 @@ async function main(): Promise<void> {
     deck: deckResult.slideDeck,
     designPlanningResult: themed,
     chartIntents: deckResult.chartIntents,
-    selectedTheme: { ...selected.ids, fallback: selected.fallback }
+    selectedTheme: projectSelectedThemeSummary(selected, themed.designSystem.visualDensity)
   });
   mkdirSync(OUT_DIR, { recursive: true });
   const out = `${OUT_DIR}deck.html`;

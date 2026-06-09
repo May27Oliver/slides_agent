@@ -1,15 +1,17 @@
 <!--
 Sync Impact Report
-Version change: 3.1.0 -> 3.2.0
+Version change: 3.2.0 -> 3.3.0
 Modified principles:
-- Expanded: Code Quality and Simplicity with anti-over-design consumer/evidence gate
+- Expanded: VII. Code Quality and Simplicity — added explicit "No dead code, shims, or
+  legacy coexistence" gate (full-replacement rule; zero unused code incl. UI/i18n;
+  manual enforcement because noUnusedLocals is off; no over-strict types)
 Added sections:
 - None
 Removed sections:
 - None
 Templates requiring updates:
-- Updated: .specify/templates/plan-template.md
-- Updated: .specify/templates/tasks-template.md
+- Updated: .specify/templates/plan-template.md (Code Quality and Simplicity gate)
+- Review recommended: .specify/templates/tasks-template.md (polish/cleanup tasks)
 - No update needed: .specify/templates/spec-template.md
 Follow-up TODOs:
 - None
@@ -138,6 +140,17 @@ acceptance path that consumes it. If the consumer is future work, the feature pl
 record the rejected simpler alternative and the task that will prove the artifact is
 useful. Artifacts that remain unconsumed after the planned slice MUST be removed or
 simplified before completion unless the deferral is explicitly approved in evidence.
+
+No dead code, shims, or legacy coexistence. After any change there MUST be exactly one
+way to do each thing. When a behavior, type, component, path, or contract shape is
+replaced, the old one MUST be fully removed in the same change — never left coexisting,
+aliased, or hidden behind a backward-compatibility shim or optional "support both shapes"
+parameter. No unused code may remain: unused imports, variables, exports, props, type
+fields, enum values, branches, dead UI, or unreferenced i18n / config / schema keys.
+Because the toolchain does NOT enable `noUnusedLocals` / `noUnusedParameters`, this MUST be
+verified manually and in review, not assumed from a green build. Types MUST NOT encode a
+constraint stricter than the code actually exercises (for example a fixed-length tuple
+where the consumer only iterates) unless that constraint is genuinely enforced and needed.
 
 Rationale: The project is exploring a new agent workflow. Simple, readable increments make
 the system easier to validate and change. Domain structures that humans cannot see in
@@ -281,4 +294,4 @@ Compliance review is required during planning and before feature completion. If 
 deferred, the deferral MUST include a specific follow-up task and cannot be hidden in
 general prose.
 
-**Version**: 3.2.0 | **Ratified**: 2026-05-29 | **Last Amended**: 2026-06-02
+**Version**: 3.3.0 | **Ratified**: 2026-05-29 | **Last Amended**: 2026-06-08

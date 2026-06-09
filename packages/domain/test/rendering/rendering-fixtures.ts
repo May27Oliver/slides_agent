@@ -67,9 +67,7 @@ export const renderingDesignPlanningResult: DesignPlanningResult = {
       blockGap: 16
     },
     visualDensity: "high",
-    layoutGrid: "16:9",
-    slidePatterns: ["metric-comparison"],
-    chartStyle: "minimal"
+    slidePatterns: ["metric-comparison"]
   },
   slidePatternAssignments: [
     {

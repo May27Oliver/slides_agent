@@ -88,11 +88,71 @@ export interface HtmlGenerationValidationContract {
   fallbackUsed: boolean;
 }
 
+/** The 008 chart-rendering review-note code vocabulary (mirrors domain). */
+export type ChartRenderingNoteCode =
+  | "series_extracted"
+  | "series_insufficient"
+  | "unit_mismatch"
+  | "invalid_pie_total"
+  | "time_sort_failed"
+  | "table_truncated"
+  | "fallback_used"
+  | "value_parse_uncertain";
+
+export type ChartVisualKindContract =
+  | "pie_donut"
+  | "line"
+  | "bar"
+  | "metric_card"
+  | "metric_group"
+  | "table"
+  | "fallback_text";
+
+/**
+ * 009: readonly applied-theme evidence in the response (projection of the
+ * composed style kit). The domain `SelectedThemeSummary` is the source of truth;
+ * this is the wire mirror — fields are `readonly` so a domain value (deeply
+ * readonly) is assignable to it without a copy.
+ */
+export interface SelectedThemeSummaryContract {
+  readonly kitName: string;
+  readonly ids: {
+    readonly style: string | null;
+    readonly palette: string | null;
+    readonly font: string | null;
+  };
+  readonly fallback: boolean;
+  readonly accentHues: ReadonlyArray<{ readonly name: string; readonly base: string }>;
+  readonly fonts: { readonly heading: string; readonly body: string };
+  readonly visualDensity?: "low" | "medium" | "high";
+  readonly structureFeatures: {
+    readonly radiusPx: number;
+    readonly shadow: boolean;
+    readonly backdropBlurPx?: number;
+    readonly glow?: boolean;
+    readonly texture?: "grain" | "noise" | "paper";
+    readonly animation?: { readonly preset: "aurora" | "mesh"; readonly durationMs: number };
+  };
+}
+
+/** 009: per-chart render evidence; `fallback` true only on a real downgrade. */
+export interface RenderedChartSummaryContract {
+  slideId: string;
+  chartIntentId: string;
+  visualKind: ChartVisualKindContract;
+  fallback: boolean;
+  notes: Array<{ code: ChartRenderingNoteCode; message: string }>;
+}
+
 export interface GenerationSummaryContract {
   slideCount: number;
   sourceFactCount: number;
   chartIntentCount: number;
   uncertainClaimCount: number;
+  /** 007/009: readonly applied-theme evidence; always present on a rendered response. */
+  selectedTheme: SelectedThemeSummaryContract;
+  /** 009: per-chart render evidence; always present ([] when no charts). */
+  renderedCharts: RenderedChartSummaryContract[];
 }
 
 export interface GeneratePreviewResponseContract {

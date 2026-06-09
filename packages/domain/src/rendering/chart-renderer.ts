@@ -1,6 +1,6 @@
 import type { ChartIntent } from "@/content-core/chart-intent.types";
 import { PART_TO_WHOLE_MAX, PART_TO_WHOLE_MIN } from "@/content-core/metric-fact-parser";
-import type { SlideDeck, SourceFact } from "@/deck/deck.types";
+import type { SourceFact } from "@/deck/deck.types";
 import type { ChartTreatment, ChartTreatmentPlan, DesignSystem } from "@/design/design.types";
 import type { AccentHue, DesignStyleKit } from "@/design/design-style-kit.types";
 import { resolveTreatmentForVisuals } from "@/design/chart-treatment-mapping";
@@ -8,7 +8,8 @@ import type {
   ChartRenderingNote,
   ChartSeries,
   ChartVisualKind,
-  RenderedChart
+  RenderedChart,
+  RenderedChartSummary
 } from "@/rendering/chart-rendering.types";
 import { extractChartSeries } from "@/rendering/chart-series-extractor";
 import {
@@ -61,8 +62,32 @@ export function renderChartIntent(input: RenderChartIntentInput): RenderedChart 
     visualKind: rendered.visualKind,
     html: wrap(intent, rendered.visualKind, rendered.sourceFactIds, rendered.html, input.hideTitle),
     sourceFactIds: rendered.sourceFactIds,
-    notes
+    notes,
+    fallback: isChartFallback(treatment, rendered.visualKind, notes)
   };
+}
+
+/** Treatments whose primary visual is a true chart. */
+const CHART_INTENT_TREATMENTS: ReadonlySet<ChartTreatment> = new Set(["chart", "timeline"]);
+/** The visual kinds that ARE a true chart (the success outputs of the above). */
+const REAL_CHART_VISUALS: ReadonlySet<ChartVisualKind> = new Set(["pie_donut", "line", "bar"]);
+
+/**
+ * Whether the render fell back from the intent's primary visual (009). True when
+ * a `chart`/`timeline` intent did not land on a real chart (pie/line/bar), OR when
+ * any intent emitted a `fallback_used` note (covers e.g. `metric_card` → text and
+ * the comparison degrade chain metric_group → table → text). A *planned*
+ * `table`/`metric_card` is not a fallback.
+ */
+export function isChartFallback(
+  treatment: ChartTreatment,
+  visualKind: ChartVisualKind,
+  notes: readonly ChartRenderingNote[]
+): boolean {
+  if (notes.some((note) => note.code === "fallback_used")) {
+    return true;
+  }
+  return CHART_INTENT_TREATMENTS.has(treatment) && !REAL_CHART_VISUALS.has(visualKind);
 }
 
 interface VisualSelection {
@@ -278,11 +303,10 @@ function wrap(
 }
 
 export interface ChartReviewNotesInput {
-  deck: SlideDeck;
+  /** The single render pass's per-chart evidence (009). NOT re-rendered here. */
+  renderedCharts: RenderedChartSummary[];
+  /** Used only to recover each chart's human title for the formatted note. */
   chartIntents: ChartIntent[];
-  chartTreatmentPlans: ChartTreatmentPlan[];
-  styleKit: DesignStyleKit;
-  designSystem: DesignSystem;
 }
 
 /**
@@ -300,42 +324,25 @@ const REVIEWABLE_NOTE_CODES: ReadonlySet<ChartRenderingNote["code"]> = new Set([
 ]);
 
 /**
- * Collects human-readable review notes for every wired chart intent so the
- * fallback / extraction / truncation / uncertain-parse decisions taken during
- * rendering are visible in the deck's review report (CR-002 / FR-004). Pure, and
- * routed through the same renderChartIntent path so the surfaced notes can never
- * diverge from what was actually drawn.
+ * Projects the deck's already-rendered chart evidence into human-readable review
+ * notes (CR-002 / FR-004) — surfacing the fallback / extraction / truncation /
+ * uncertain-parse decisions in the review report. Pure projection: it does NOT
+ * re-render. The notes derive from the same `RenderedChartSummary[]` that backs
+ * the deck html and `generationSummary.renderedCharts`, so the three can never
+ * diverge (009: single render source of truth).
  */
 export function collectChartReviewNotes(input: ChartReviewNotesInput): string[] {
-  if (input.chartIntents.length === 0) {
+  if (input.renderedCharts.length === 0) {
     return [];
   }
-  const intentById = new Map(input.chartIntents.map((intent) => [intent.id, intent]));
-  const planByIntentId = new Map(
-    input.chartTreatmentPlans.map((plan) => [plan.chartIntentId, plan])
-  );
+  const titleByIntentId = new Map(input.chartIntents.map((intent) => [intent.id, intent.title]));
 
   const notes: string[] = [];
-  for (const slide of input.deck.slides) {
-    for (const block of slide.contentBlocks) {
-      if (block.kind !== "chart_placeholder" || !block.chartIntentId) {
-        continue;
-      }
-      const intent = intentById.get(block.chartIntentId);
-      if (!intent) {
-        continue;
-      }
-      const plan = planByIntentId.get(intent.id);
-      const rendered = renderChartIntent({
-        intent,
-        ...(plan ? { treatmentPlan: plan } : {}),
-        styleKit: input.styleKit,
-        designSystem: input.designSystem
-      });
-      for (const note of rendered.notes) {
-        if (REVIEWABLE_NOTE_CODES.has(note.code)) {
-          notes.push(`「${intent.title}」：${note.message}`);
-        }
+  for (const chart of input.renderedCharts) {
+    const title = titleByIntentId.get(chart.chartIntentId) ?? chart.chartIntentId;
+    for (const note of chart.notes) {
+      if (REVIEWABLE_NOTE_CODES.has(note.code)) {
+        notes.push(`「${title}」：${note.message}`);
       }
     }
   }

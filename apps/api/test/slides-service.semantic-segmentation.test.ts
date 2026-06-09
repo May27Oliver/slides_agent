@@ -12,6 +12,16 @@ vi.mock("@slides-agent/domain", () => ({
   // 008: this suite stubs the whole domain module, so the chart review-note
   // collector must be stubbed too (no charts in these fixtures → no notes).
   collectChartReviewNotes: () => [],
+  // 009: slides.service projects the selected theme into readonly summary tokens,
+  // so the projection must be stubbed in this whole-domain mock.
+  projectSelectedThemeSummary: () => ({
+    kitName: "default",
+    ids: { style: null, palette: null, font: null },
+    fallback: true,
+    accentHues: [],
+    fonts: { heading: "", body: "" },
+    structureFeatures: {}
+  }),
   LlmDeckOutlinePlanner: class {
     async plan(input: { deck: unknown }) {
       deckOutlinePlannerInputs.push(input);
@@ -40,7 +50,8 @@ vi.mock("@slides-agent/domain", () => ({
       slideCount: 1,
       sourceFactCount: 1,
       chartIntentCount: 0,
-      uncertainClaimCount: 0
+      uncertainClaimCount: 0,
+      renderedCharts: []
     }
   })
 }));

@@ -31,9 +31,7 @@ export interface DesignSystem {
   typography: Typography;
   spacing: SpacingScale;
   visualDensity: VisualDensity;
-  layoutGrid: string;
   slidePatterns: string[];
-  chartStyle: string;
 }
 
 export interface DesignPlanningInput {

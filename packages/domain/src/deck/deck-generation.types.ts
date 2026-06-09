@@ -2,7 +2,7 @@ import type { SegmentationValidation } from "@/content-core/semantic-segmentatio
 import type { ChartIntent } from "@/content-core/chart-intent.types";
 import type {
   DeckBrief,
-  GenerationSummary,
+  PreRenderSummary,
   SlideDeck,
   SourceFact,
   SourceSection
@@ -25,7 +25,7 @@ export interface GeneratePreviewDeckInput {
 export interface GeneratePreviewDeckResult {
   slideDeck: SlideDeck;
   chartIntents: ChartIntent[];
-  generationSummary: GenerationSummary;
+  generationSummary: PreRenderSummary;
 }
 
 export interface SlideDeckPlanningResult {

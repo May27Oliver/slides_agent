@@ -215,9 +215,7 @@ for (const styleId of orderedIds) {
       typography: { headingFamily: "", bodyFamily: "", scale: "presentation" },
       spacing: { unit: 8, slidePadding: 64, blockGap: 16 },
       visualDensity: "medium",
-      layoutGrid: "16:9",
-      slidePatterns: [],
-      chartStyle: "minimal"
+      slidePatterns: []
     },
     slidePatternAssignments: [
       {
@@ -234,7 +232,10 @@ for (const styleId of orderedIds) {
   // Dev harness: only the fields renderTemplateDeck actually reads are populated
   // (styleKit, designSystem, slidePatternAssignments, deck.title/slides), so cast
   // through unknown to the full input type rather than hand-build every unused field.
-  const html = renderTemplateDeck({ deck, designPlanningResult } as unknown as TemplateDeckInput);
+  const { html } = renderTemplateDeck({
+    deck,
+    designPlanningResult
+  } as unknown as TemplateDeckInput);
   const file = `${styleId}.html`;
   writeFileSync(`${OUT_DIR}${file}`, html, "utf8");
   entries.push({ id: styleId, name: styleSeed.name, file, paletteId, grade, note });

@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { seedAuthenticatedSession } from "./auth-session";
 
 test("polls preview job progress and renders completed preview", async ({ page }) => {
+  await seedAuthenticatedSession(page);
+
   await page.route("**/api/slides/preview-jobs", async (route) => {
     await route.fulfill({
       status: 202,
@@ -68,9 +71,7 @@ function succeededResponse() {
           humanReviewNotes: []
         }
       },
-      designPlanningResult: {
-        designSystem: { themeName: "test", visualDensity: "medium", chartStyle: "minimal" }
-      },
+      designPlanningResult: {},
       previewArtifact: {
         html: "<!doctype html><html><body>Slide One</body></html>",
         htmlGenerationValidation: {

@@ -2,6 +2,7 @@ import { DownloadIcon, PresentationIcon } from "@/components/icons";
 import { DesignPlanningPanel } from "@/features/slide-generation/DesignPlanningPanel";
 import { GenerationSummaryPanel } from "@/features/slide-generation/GenerationSummaryPanel";
 import { HtmlGenerationValidationPanel } from "@/features/slide-generation/HtmlGenerationValidationPanel";
+import { RenderedChartsPanel } from "@/features/slide-generation/RenderedChartsPanel";
 import { ReviewReportPanel } from "@/features/slide-generation/ReviewReportPanel";
 import { SlideJsonPanel } from "@/features/slide-generation/SlideJsonPanel";
 import { SlidePreviewPanel } from "@/features/slide-generation/SlidePreviewPanel";
@@ -40,7 +41,13 @@ export function ResultsPanel({ preview, htmlDownload }: ResultsPanelProps) {
       <SlidePreviewPanel preview={preview} />
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <DesignPlanningPanel designPlanningResult={preview.designPlanningResult} />
+        <DesignPlanningPanel
+          designPlanningResult={preview.designPlanningResult}
+          selectedTheme={preview.previewArtifact.generationSummary.selectedTheme}
+        />
+        <RenderedChartsPanel
+          renderedCharts={preview.previewArtifact.generationSummary.renderedCharts}
+        />
         <HtmlGenerationValidationPanel
           validation={preview.previewArtifact.htmlGenerationValidation}
         />

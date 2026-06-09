@@ -4,7 +4,7 @@ import { renderingDeck, renderingDesignPlanningResult } from "./rendering-fixtur
 
 describe("fallback HTML keyboard navigation", () => {
   it("includes self-contained previous and next keyboard navigation script", () => {
-    const html = renderTemplateDeck({
+    const { html } = renderTemplateDeck({
       deck: renderingDeck,
       designPlanningResult: renderingDesignPlanningResult
     });
@@ -18,7 +18,7 @@ describe("fallback HTML keyboard navigation", () => {
   });
 
   it("includes an F-key fullscreen toggle", () => {
-    const html = renderTemplateDeck({
+    const { html } = renderTemplateDeck({
       deck: renderingDeck,
       designPlanningResult: renderingDesignPlanningResult
     });
@@ -30,7 +30,7 @@ describe("fallback HTML keyboard navigation", () => {
   });
 
   it("routes wheel input to the active slide scroll container", () => {
-    const html = renderTemplateDeck({
+    const { html } = renderTemplateDeck({
       deck: renderingDeck,
       designPlanningResult: renderingDesignPlanningResult
     });

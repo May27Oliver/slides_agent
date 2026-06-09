@@ -8,34 +8,18 @@ import {
   type ReactNode
 } from "react";
 import { AlertIcon, SparklesIcon, UploadIcon, XIcon } from "@/components/icons";
+import { ChartPresetPreview } from "@/features/slide-generation/ChartPresetPreview";
+import { chartPresets, type ChartPresetKey } from "@/features/slide-generation/chart-presets";
+import { StyleCardGallery } from "@/features/slide-generation/StyleCardGallery";
+import { stylePresets, type StylePresetKey } from "@/features/slide-generation/style-presets";
 import type { SlideGenerationRequest } from "@/features/slide-generation/slide-generation.types";
-import { useI18n, type TranslationKey } from "@/i18n";
+import { useI18n } from "@/i18n";
 
 interface SlideGenerationFormProps {
   onSubmit: (request: SlideGenerationRequest) => void;
   isSubmitting?: boolean;
   errorMessage?: string | undefined;
 }
-
-// Each preset's styleDirection is a curated keyword phrase that reliably selects
-// a coherent design kit (font pairing + palette) in the backend's
-// selectDesignStyleKit. The phrase is decoupled from the (translated) label so
-// switching languages never changes which design kit a preset maps to.
-const stylePresets: { key: TranslationKey; styleDirection: string }[] = [
-  { key: "preset.style.professional", styleDirection: "professional business corporate 商務" },
-  { key: "preset.style.warm", styleDirection: "warm friendly approachable 暖 親切" },
-  { key: "preset.style.vibrant", styleDirection: "playful creative vibrant 活潑 創意" },
-  { key: "preset.style.elegant", styleDirection: "elegant luxury editorial 優雅 高級" },
-  { key: "preset.style.tech", styleDirection: "tech startup developer 科技" },
-  { key: "preset.style.minimal", styleDirection: "minimal geometric clean 簡潔" }
-];
-
-const chartPresetKeys: TranslationKey[] = [
-  "preset.chart.none",
-  "preset.chart.comparison",
-  "preset.chart.trend",
-  "preset.chart.metric"
-];
 
 const MAX_UPLOAD_BYTES = 1_000_000;
 
@@ -50,8 +34,8 @@ export function SlideGenerationForm({
   const [sourceContent, setSourceContent] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   // Presets are tracked by translation key so the selection survives a language switch.
-  const [stylePresetKey, setStylePresetKey] = useState<TranslationKey | "">("");
-  const [chartPresetKey, setChartPresetKey] = useState<TranslationKey>("preset.chart.none");
+  const [stylePresetKey, setStylePresetKey] = useState<StylePresetKey | "">("");
+  const [chartPresetKey, setChartPresetKey] = useState<ChartPresetKey>("preset.chart.none");
   const sourceLength = sourceContent.trim().length;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -60,9 +44,9 @@ export function SlideGenerationForm({
     const presetStyleDirection =
       stylePresets.find((preset) => preset.key === stylePresetKey)?.styleDirection ?? "";
     const styleDirection = stringValue(form, "styleDirection") || presetStyleDirection;
-    const chartEmphasis =
-      stringValue(form, "chartEmphasis") ||
-      (chartPresetKey !== "preset.chart.none" ? t(chartPresetKey) : "");
+    const presetChartEmphasis =
+      chartPresets.find((preset) => preset.key === chartPresetKey)?.chartEmphasis ?? "";
+    const chartEmphasis = stringValue(form, "chartEmphasis") || presetChartEmphasis;
     const request: SlideGenerationRequest = {
       sourceContent: sourceContent.trim(),
       deckBrief: {
@@ -201,30 +185,11 @@ export function SlideGenerationForm({
             <legend className="mb-2 text-sm font-semibold text-ink">
               {t("form.design.stylePreset")}
             </legend>
-            <div className="grid grid-cols-2 gap-2">
-              {stylePresets.map(({ key }) => {
-                const active = stylePresetKey === key;
-                return (
-                  <label
-                    key={key}
-                    className={`relative flex cursor-pointer items-center justify-center rounded-xl border px-3 py-2.5 text-center text-sm font-semibold transition-colors ${
-                      active
-                        ? "border-brand-500 bg-brand-50 text-brand-800"
-                        : "border-line bg-white text-ink-soft hover:border-brand-300 hover:text-ink"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="styleDirectionPreset"
-                      checked={active}
-                      onChange={() => setStylePresetKey(key)}
-                      className="sr-only"
-                    />
-                    {t(key)}
-                  </label>
-                );
-              })}
-            </div>
+            <StyleCardGallery
+              presets={stylePresets}
+              selectedKey={stylePresetKey}
+              onSelect={setStylePresetKey}
+            />
           </fieldset>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -250,30 +215,11 @@ export function SlideGenerationForm({
             <legend className="mb-2 text-sm font-semibold text-ink">
               {t("form.design.chartPreset")}
             </legend>
-            <div className="flex flex-wrap gap-2">
-              {chartPresetKeys.map((key) => {
-                const active = chartPresetKey === key;
-                return (
-                  <label
-                    key={key}
-                    className={`relative cursor-pointer rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-                      active
-                        ? "border-brand-500 bg-brand-600 text-white"
-                        : "border-line bg-white text-ink-soft hover:border-brand-300 hover:text-ink"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="chartEmphasisPreset"
-                      checked={active}
-                      onChange={() => setChartPresetKey(key)}
-                      className="sr-only"
-                    />
-                    {t(key)}
-                  </label>
-                );
-              })}
-            </div>
+            <ChartPresetPreview
+              presets={chartPresets}
+              selectedKey={chartPresetKey}
+              onSelect={setChartPresetKey}
+            />
           </fieldset>
         </FormSection>
 
