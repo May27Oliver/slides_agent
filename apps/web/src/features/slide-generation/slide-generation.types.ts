@@ -8,6 +8,12 @@ export interface SlideGenerationRequest {
     segmentationGuidance?: string;
     language?: string;
   };
+  /** 011: optional per-axis manual theme override (applied at render, no extra LLM). */
+  themeSelection?: {
+    fontId?: string;
+    paletteId?: string;
+    styleId?: string;
+  };
 }
 
 export interface GeneratedPreviewArtifact {

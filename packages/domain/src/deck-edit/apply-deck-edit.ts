@@ -70,8 +70,15 @@ export function applyDeckEdit(
   let themeSelectionWarnings: ThemeSelectionWarning[] = [];
   let restyledKit: DesignPlanningResult["styleKit"] | undefined;
   if (options.themeSelection) {
+    // A legacy base summary may lack the three axis ids; treat each missing axis as
+    // unresolvable (→ default kit + base_unresolved warning), never crash (§7).
+    const baselineIds = baseSummary.selectedTheme.ids ?? {
+      style: null,
+      palette: null,
+      font: null
+    };
     const { selectedTheme, warnings } = applyThemeSelection(
-      baseSummary.selectedTheme.ids,
+      baselineIds,
       options.themeSelection,
       options.candidates ?? []
     );

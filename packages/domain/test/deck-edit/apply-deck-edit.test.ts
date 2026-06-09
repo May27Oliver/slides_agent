@@ -248,6 +248,23 @@ describe("applyDeckEdit (010 US1)", () => {
       ]);
     });
 
+    it("re-themes a legacy base whose summary has no axis ids (guards instead of crashing)", () => {
+      // baseRevision()'s selectedTheme is the legacy {kitName, fallback} with no ids.
+      const result = applyDeckEdit(baseRevision(), editTitle(renderingDeck, "x"), {
+        themeSelection: { paletteId: "palette-acid" },
+        candidates
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      // the overridden axis resolves; the two missing base axes fall back honestly.
+      expect(result.payload.generationSummary.selectedTheme.ids.palette).toBe("palette-acid");
+      const reasons = result.payload.generationSummary.themeSelectionWarnings
+        .map((w) => `${w.axis}:${w.reason}`)
+        .sort();
+      expect(reasons).toEqual(["font:base_unresolved", "style:base_unresolved"]);
+    });
+
     it("with no themeSelection, reuses the base theme verbatim (010 behaviour)", () => {
       const result = applyDeckEdit(themedBase(), editTitle(renderingDeck, "y"));
       expect(result.ok).toBe(true);
