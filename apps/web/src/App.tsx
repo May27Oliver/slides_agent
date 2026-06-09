@@ -29,7 +29,7 @@ function GenerationRoute() {
           <button
             type="button"
             onClick={() => void logout()}
-            className="rounded-lg border border-line px-3 py-1 font-medium text-ink hover:bg-canvas"
+            className="rounded-lg border border-line px-3 py-1 font-medium text-ink hover:bg-surface"
           >
             {t("decks.logout")}
           </button>

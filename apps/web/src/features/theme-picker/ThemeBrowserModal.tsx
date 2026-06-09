@@ -133,7 +133,7 @@ export function ThemeBrowserModal({
             type="button"
             onClick={onClose}
             aria-label={t("theme.modal.close")}
-            className="rounded-lg p-1.5 text-ink-soft transition-colors hover:bg-canvas hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+            className="rounded-lg p-1.5 text-ink-soft transition-colors hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
           >
             <XIcon className="h-5 w-5" />
           </button>
@@ -234,7 +234,7 @@ export function ThemeBrowserModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink hover:bg-canvas"
+            className="rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface"
           >
             {t("theme.modal.close")}
           </button>
