@@ -6,16 +6,23 @@ type SelectedTheme = NonNullable<
   GeneratedPreviewArtifact["previewArtifact"]["generationSummary"]["selectedTheme"]
 >;
 
+type ThemeSelectionWarnings = NonNullable<
+  GeneratedPreviewArtifact["previewArtifact"]["generationSummary"]["themeSelectionWarnings"]
+>;
+
 interface DesignPlanningPanelProps {
   designPlanningResult: GeneratedPreviewArtifact["designPlanningResult"];
   // 009/FR-005: the applied-theme tokens come from the response result evidence
   // (generationSummary.selectedTheme) — never fabricated from the planning request.
   selectedTheme?: SelectedTheme | undefined;
+  // 011/T013a: per-axis fallback evidence for a manual override that couldn't apply.
+  themeSelectionWarnings?: ThemeSelectionWarnings | undefined;
 }
 
 export function DesignPlanningPanel({
   designPlanningResult,
-  selectedTheme
+  selectedTheme,
+  themeSelectionWarnings
 }: DesignPlanningPanelProps) {
   const { t } = useI18n();
   const firstPattern = designPlanningResult.slidePatternAssignments?.[0];
@@ -68,6 +75,14 @@ export function DesignPlanningPanel({
               </p>
               <FallbackAxes ids={selectedTheme.ids} />
             </div>
+          ) : null}
+
+          {/* 011/T013a: a manual override that couldn't apply → honest "改用預設主題"
+              disclosure on the generation result (same copy as the picker summary). */}
+          {themeSelectionWarnings && themeSelectionWarnings.length > 0 ? (
+            <p role="alert" className="mt-2 text-[11px] font-medium leading-snug text-amber-700">
+              {t("theme.warning.fallback")}
+            </p>
           ) : null}
         </>
       ) : null}

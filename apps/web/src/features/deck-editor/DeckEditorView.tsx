@@ -296,7 +296,7 @@ export function DeckEditorView({
             base={base}
             workingDeck={draft.deck}
             authoritativeHtml={savedHtml}
-            themeSelection={themeSelection}
+            {...(hasThemeSelection(themeSelection) ? { themeSelection } : {})}
             themeCandidates={themeCandidates}
             selectedIndex={Math.max(
               0,

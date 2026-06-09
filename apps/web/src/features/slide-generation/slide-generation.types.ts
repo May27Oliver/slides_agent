@@ -124,6 +124,13 @@ export interface GeneratedPreviewArtifact {
         fallback: boolean;
         notes: Array<{ code: string; message: string }>;
       }>;
+      // 011: per-axis theme fallback evidence (mirrors the response contract). Optional
+      // on the read side so the panel tolerates planning-only / older payloads.
+      themeSelectionWarnings?: Array<{
+        axis: "font" | "palette" | "style";
+        requestedId?: string;
+        reason: "invalid_id" | "base_unresolved";
+      }>;
     };
   };
 }

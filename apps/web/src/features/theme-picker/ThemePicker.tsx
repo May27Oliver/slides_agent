@@ -31,6 +31,7 @@ export function ThemePicker({
   onCatalogLoaded
 }: ThemePickerProps) {
   const [catalog, setCatalog] = useState<ThemeCatalog | null>(null);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -39,10 +40,14 @@ export function ThemePicker({
       .then((loaded) => {
         if (cancelled) return;
         setCatalog(loaded);
+        setStatus("ready");
         onCatalogLoaded?.(loaded);
       })
       .catch(() => {
-        if (!cancelled) setCatalog(null);
+        if (cancelled) return;
+        setCatalog(null);
+        // Surface the failure (401/500/network) instead of a silent dead button.
+        setStatus("error");
       });
     return () => {
       cancelled = true;
@@ -57,6 +62,7 @@ export function ThemePicker({
         selection={selection}
         catalog={catalog}
         warnings={warnings ?? []}
+        status={status}
         onBrowse={() => setOpen(true)}
       />
       {open && catalog ? (

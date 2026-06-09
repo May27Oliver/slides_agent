@@ -12,6 +12,8 @@ interface ThemeSummaryProps {
   onBrowse: () => void;
   /** Optional fallback evidence (post-generation / post-save) to disclose honestly. */
   warnings?: ThemeSelectionWarning[];
+  /** Catalogue load state — drives the browse button + a status line (no silent failure). */
+  status?: "loading" | "ready" | "error";
 }
 
 /**
@@ -21,8 +23,15 @@ interface ThemeSummaryProps {
  * browser modal. When warnings are present it honestly discloses that an axis fell
  * back to the DEFAULT theme (never claims it silently applied).
  */
-export function ThemeSummary({ selection, catalog, onBrowse, warnings = [] }: ThemeSummaryProps) {
+export function ThemeSummary({
+  selection,
+  catalog,
+  onBrowse,
+  warnings = [],
+  status = "ready"
+}: ThemeSummaryProps) {
   const { t } = useI18n();
+  const ready = status === "ready" && catalog !== null;
 
   return (
     <section className="flex flex-col gap-2 rounded-xl border border-line bg-white p-3">
@@ -31,11 +40,21 @@ export function ThemeSummary({ selection, catalog, onBrowse, warnings = [] }: Th
         <button
           type="button"
           onClick={onBrowse}
-          className="rounded-lg border border-brand-300 px-2.5 py-1 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
+          disabled={!ready}
+          className="rounded-lg border border-brand-300 px-2.5 py-1 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {t("theme.summary.browse")} →
         </button>
       </div>
+
+      {status === "loading" ? (
+        <p className="text-[11px] text-ink-soft/80">{t("theme.modal.loading")}</p>
+      ) : null}
+      {status === "error" ? (
+        <p role="alert" className="text-[11px] font-medium text-red-600">
+          {t("theme.modal.error")}
+        </p>
+      ) : null}
 
       <dl className="grid grid-cols-3 gap-2">
         {THEME_AXES.map((axis) => {

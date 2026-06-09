@@ -44,6 +44,7 @@ export function ResultsPanel({ preview, htmlDownload }: ResultsPanelProps) {
         <DesignPlanningPanel
           designPlanningResult={preview.designPlanningResult}
           selectedTheme={preview.previewArtifact.generationSummary.selectedTheme}
+          themeSelectionWarnings={preview.previewArtifact.generationSummary.themeSelectionWarnings}
         />
         <RenderedChartsPanel
           renderedCharts={preview.previewArtifact.generationSummary.renderedCharts}
