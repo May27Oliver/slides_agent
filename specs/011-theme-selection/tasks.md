@@ -48,6 +48,12 @@ description: "Task list — 011 主題庫手動選擇（生成頁 + 編輯頁，
 - [ ] T017 [P] **death-inventory 量化**（research）：跑 selectTheme 統計 220 裡實際可選中比例，記錄 011 動機數據。
 - [ ] T018 e2e `apps/web/tests/e2e/theme-selection.spec.ts`：生成頁開瀏覽器→選主題→送出（mock /api）；編輯頁換主題→預覽變。
 - [ ] T019 `gitnexus_detect_changes()` 確認影響範圍；三語無缺鍵。
+- [ ] T020 **反模式稽核（legacy / dead code / drift / shim — 對齊 plan Constitution Check）**：
+  - **drift**：確認 `applyThemeSelection` 只有一份且前端預覽與後端 render 都呼叫它（grep 前端無自寫套用邏輯）；`ManualThemeSelection`/`ThemeSelectionWarning`/styleKit 形狀無平行宣告；picker 為單一共用元件。
+  - **dead code**：逐一核對每個新型別/欄位/函式都有消費者（`ManualThemeSelection`、`BrowsableTheme`/`ThemeCatalog`、`themeSelectionWarnings`、`listBrowsable`、`applyThemeSelection`、`ThemeBrowserModal`/`ThemeSummary`、`themes-client`）；確認**未新增**獨立 swatch 投影型別/欄位。(可選)跑 `npx ts-prune` / `npx knip` 抓孤兒 export。
+  - **shim**：確認 `composeKit` 直接吃 `BrowsableTheme.styleKit`、無 kit↔swatch / contract↔domain 的 load-bearing 轉換層。
+  - **legacy**：確認關鍵字 `selectTheme` + 6 卡僅作「無手動選擇」路徑且已標 intentional；無「以防萬一」相容碼；無「完整主題卡」平行模型。
+  - 產出：稽核 checklist 結果記於 PR 描述。
 
 ## 明確不在本批
 - 編輯主題庫本身（新增/改/刪 themes）、自訂主題、AI 推薦主題。

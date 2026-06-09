@@ -37,8 +37,22 @@
 - **Backend-Configured LLM Boundary（CR-004）**：本批**完全不呼叫 LLM**；主題在 render 後段確定性套用，指定主題零額外 token。
 - **Coherent Deck Design System（CR-005）**：沿用 `composeKit` 三軸合成，設計一致性不變。
 - **Source Fidelity / Reviewable**：換主題只改 styleKit，**不改文字/結構/chartIntents**；編輯頁換主題沿用 010 的確定性重渲染與 reviewReport。
-- **Code Quality**：picker 為共用元件（生成頁/編輯頁不重複）；`applyThemeSelection` 為 selectTheme 的薄 wrapper（不重寫）；瀏覽讀取與選擇套用分離。
-- **Backward Compatible**：無 `themeSelection` 時行為與現況 100% 相同（关键字 selectTheme）。
+- **Code Quality and Simplicity**：picker 為共用元件（生成頁/編輯頁不重複）；`applyThemeSelection` 為 selectTheme 的薄 wrapper（不重寫）；瀏覽讀取與選擇套用分離。下列**反模式不變式**於實作與收尾（T0xx 稽核）強制：
+
+  - **No drift（單一真實來源）**：
+    - 套用邏輯只有一份 `applyThemeSelection`（domain 純函式）；**前端即時預覽與後端 render 共用它，前端禁止另寫一份**（防 parity 漂移）。
+    - 主題 styleKit 形狀只有一份：`BrowsableTheme.styleKit` === `SelectableTheme.styleKit`（domain 擁有，contract 邊界 opaque `unknown`），**不另立平行型別**。
+    - `ManualThemeSelection` / `ThemeSelectionWarning` 各只定義一次，contract↔domain↔web 共用，不重宣告。
+    - 三軸 picker（modal + summary）生成頁/編輯頁共用同一元件，**不做兩套 UI**。
+  - **No dead code（每個新符號都有近期消費者）**：列出消費鏈，無消費者者不新增——
+    - `ManualThemeSelection`：form/modal → request → `slides.service` / `applyDeckEdit`。
+    - `BrowsableTheme`/`ThemeCatalog`：`GET /api/themes` → `themes-client` → `ThemeBrowserModal`（swatch + client composeKit）。
+    - `themeSelectionWarnings`：generation/edit 回應 → 前端誠實提示（T013a）。
+    - **不新增獨立 swatch 投影型別/端點欄位**（client 從 partial kit 萃取）——避免死/重複表示。
+  - **No shim（不加轉換層）**：contract 與 domain 形狀要嘛一致、要嘛刻意 opaque；`composeKit` 直接吃 `BrowsableTheme.styleKit`，**禁止 kit↔swatch 或 contract↔domain 的 load-bearing 轉換層**；若想加 shim，代表形狀設計錯了，回頭改形狀。
+  - **No unlabeled legacy（相容碼須標明）**：關鍵字 `selectTheme` + 6 張快速卡 = **刻意保留的「無手動選擇」路徑**（消費者：未帶 `themeSelection` 的請求 / 6 卡使用者），標為 intentional、不移除、不重寫；**未引入「完整主題卡」資料模型**（避免平行/死模型）。本批無「以防萬一」的相容碼。
+
+- **Backward Compatible**：無 `themeSelection` 時行為與現況 100% 相同（關鍵字 selectTheme）——此為上條「labeled legacy」的刻意路徑。
 
 ## 實作階段（供 /tasks 展開）
 
