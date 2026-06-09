@@ -134,14 +134,14 @@ export interface ThemeCatalogResponseContract {
 
 ## §7 失敗安全 / Edge
 
-- 指定 id 不在可選目錄（刪除/停用/打錯，現行過濾下不可區分）→ 該軸退回 baseline + **warning `invalid_id`（§8）**，不報錯、不擋生成。
+- 指定 id 不在可選目錄（刪除/停用/打錯，現行過濾下不可區分）→ **該軸退預設**（非 baseline）+ **warning `invalid_id`（§8）**，不報錯、不擋生成。
 - 只指定部分軸 → 未指定軸走 baseline（§2）。
 - 無 themeSelection → 現況（§1）。
 - 編輯頁對 legacy deck（base 無三軸 id）→ 該軸退預設 + warning（§4/§8）；換主題仍可運作。
 
 ## §8 結果證據：themeSelectionWarnings（修正：fallback 需有 contract 承載）
 
-> **問題（修正）**：spec/quickstart 要求「指定 id 無效 → 退 baseline 並有明確提示」,但 `SelectedThemeSummary.fallback` 只表示「軸為 null/預設」,**無法表達「使用者指定的 id 被拒、但 baseline 有值」**。需要明確的唯讀結果證據（與 008/009 圖表 fallback review note 同精神:誠實揭露、不靜默）。
+> **問題（修正）**：「指定 id 無效 → 該軸退預設」需要明確提示,但 `SelectedThemeSummary.fallback` 只表示「軸為 null/預設」,**無法表達「是使用者指定的 id 被拒(invalid_id) vs base 軸無法解析(base_unresolved)」**。需要明確的唯讀結果證據（與 008/009 圖表 fallback review note 同精神:誠實揭露、不靜默）。
 
 ```ts
 export interface ThemeSelectionWarning {

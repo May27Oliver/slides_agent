@@ -32,7 +32,7 @@
 - 後端 render 階段：`const baseline = selectTheme(brief, candidates); const { selectedTheme, warnings } = applyThemeSelection(baseline.ids, themeSelection, candidates)`（data-model §2/§3）。
 - **無 themeSelection → 行為與現況 100% 相同**（關鍵字 selectTheme）。
 - 指定主題**不增加 LLM 呼叫**（render 後段套用）。
-- 驗證：`themeSelection` 若提供，三個欄位皆 optional string；**非法型別 → 既有 400**；型別合法但 id 解析不到 → 退 baseline + `themeSelectionWarnings`（下方）。
+- 驗證：`themeSelection` 若提供，三個欄位皆 optional string；**非法型別 → 既有 400**；型別合法但 id 解析不到 → **該軸退預設**（非 baseline）+ `themeSelectionWarnings`（下方）。
 
 **Response**：沿用既有 `GeneratePreviewResponseContract`，其 `generationSummary` **新增** `themeSelectionWarnings: ThemeSelectionWarning[]`（data-model §8；`[]` = 全照指定套用）。前端據此誠實提示「指定主題已停用,退回自動」。
 

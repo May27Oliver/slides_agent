@@ -57,8 +57,8 @@
 ## 實作階段（供 /tasks 展開）
 
 ### Phase A — Domain：依 id 套用主題（純函式）
-- `applyThemeSelection(baseline: SelectedTheme, manualSelection, candidates): SelectedTheme`：以 baseline 為底，對有指定的軸用候選的 styleKit 取代 → `composeKit` → 新 ids/kitName。無指定軸沿用 baseline。
-- 失敗安全：指定 id 不在候選（停用/不存在）→ 該軸退回 baseline + 標記（見 spec edge cases）。
+- `applyThemeSelection(baselineIds, selection, candidates) → { selectedTheme, warnings }`（data-model §2）：每軸 `effectiveId = 覆寫 ?? baselineIds[axis]` → **由 candidates 依 id 解析 partial** → `composeKit`。非覆寫且 base 可解析的軸沿用該 base partial。
+- **失敗安全（鎖定語意）**：`effectiveId` 解析不到 → **該軸退預設**(composeKit 用該軸預設,**不退 baseline**) + warning（覆寫失敗 `invalid_id`、base 失敗 `base_unresolved`，§8）。
 - 匯出於 `packages/domain/src/index.ts`。
 
 ### Phase B — Backend：瀏覽讀取 + 兩個入口套用
