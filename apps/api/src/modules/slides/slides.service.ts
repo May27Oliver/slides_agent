@@ -11,6 +11,7 @@ import type {
   GeneratePreviewResponseContract
 } from "@slides-agent/contracts";
 import {
+  applyThemeSelection,
   collectChartReviewNotes,
   type DeckOutlinePlanningPort,
   type DesignPlanningGenerationPort,
@@ -116,7 +117,9 @@ export class SlidesService {
       // the pure selector picks the three axes. Both the LLM-success and fallback
       // design paths converge here, so fallback decks finally get a named theme.
       const themeCandidates = this.themeStore ? await this.themeStore.listSelectable() : [];
-      const selectedTheme = selectTheme(
+      // 007 keyword baseline → 011 manual per-axis override applied deterministically
+      // on top (render-stage, zero extra LLM). No themeSelection ⇒ identical to 007.
+      const baselineTheme = selectTheme(
         {
           purpose: request.deckBrief.purpose,
           audience: request.deckBrief.audience,
@@ -126,12 +129,17 @@ export class SlidesService {
         },
         themeCandidates
       );
+      const { selectedTheme, warnings: themeSelectionWarnings } = applyThemeSelection(
+        baselineTheme.ids,
+        request.themeSelection,
+        themeCandidates
+      );
       const themedDesignPlanningResult = {
         ...designPlanningResult,
         styleKit: selectedTheme.styleKit
       };
       this.logger.log(
-        `[SlidesPipeline] node=theme_selection done theme=${selectedTheme.styleKit.kitName} fallback=${selectedTheme.fallback} candidates=${themeCandidates.length}`
+        `[SlidesPipeline] node=theme_selection done theme=${selectedTheme.styleKit.kitName} fallback=${selectedTheme.fallback} overrides=${themeSelectionWarnings.length === 0 ? "ok" : `warn:${themeSelectionWarnings.length}`} candidates=${themeCandidates.length}`
       );
       currentNode = "html_generation";
       await notifyStage(progress, "html_generation");
@@ -146,7 +154,9 @@ export class SlidesService {
         selectedTheme: projectSelectedThemeSummary(
           selectedTheme,
           themedDesignPlanningResult.designSystem.visualDensity
-        )
+        ),
+        // 011: honest per-axis fallback evidence → generationSummary.themeSelectionWarnings.
+        themeSelectionWarnings
       });
       // 008/009 (CR-002/FR-004): derive the chart fallback / extraction / truncation
       // review notes from that SAME render's evidence — no second render — so the

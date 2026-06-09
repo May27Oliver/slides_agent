@@ -5,6 +5,8 @@
  * the web layer never re-declares domain types it only forwards to the renderer.
  */
 
+import { parseThemeSelection, type ThemeSelectionContract } from "./theme-selection";
+
 export interface DeckSummaryContract {
   id: string;
   title: string;
@@ -60,6 +62,8 @@ export interface DeckNotFoundContract {
 export interface EditRevisionRequestContract {
   baseRevision: number;
   slideDeck: unknown;
+  /** 011: optional manual theme override; re-themes deterministically (no LLM). */
+  themeSelection?: ThemeSelectionContract;
 }
 
 /** 409: the base the client edited from is no longer current (FR-020). */
@@ -160,6 +164,13 @@ export function validateEditRevisionRequest(
       issues.push(`slideDeck.slides exceeds ${MAX_SLIDES}`);
     }
     slides.forEach((slide, index) => validateSlideShape(slide, index, issues));
+  }
+
+  // 011: optional manual theme override (shared validator — same rules as the
+  // preview request, no drift). Malformed types add to the same 400 issue list.
+  const themeSelection = parseThemeSelection(input.themeSelection);
+  if (!themeSelection.ok) {
+    issues.push(...themeSelection.fields);
   }
 
   return issues.length === 0

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { applyDeckEdit } from "@slides-agent/domain";
-import type { DeckRevision, SlideDeck } from "@slides-agent/domain";
+import type {
+  ApplyDeckEditOptions,
+  DeckRevision,
+  SelectableTheme,
+  SlideDeck
+} from "@slides-agent/domain";
 import { renderLivePreview } from "@/features/deck-editor/live-preview-render";
 import { EditableSlideDraft } from "@/features/deck-editor/editable-slide-draft";
 import { fixtureRevision, fixtureSlideDeck } from "@/features/deck-editor/test-fixtures";
@@ -33,5 +38,42 @@ describe("renderLivePreview (010 US1, FR-005a parity)", () => {
     const empty: SlideDeck = { ...fixtureSlideDeck, slides: [] };
     const result = renderLivePreview(fixtureRevision, empty);
     expect(result.ok).toBe(false);
+  });
+
+  it("threads themeSelection + candidates through, matching the server re-theme (011 parity)", () => {
+    const candidates: SelectableTheme[] = [
+      {
+        id: "palette-x",
+        kind: "palette",
+        keywords: [],
+        support: "full",
+        styleKit: {
+          accentHues: [
+            { name: "x", base: "#CCFF00", gradient: "linear-gradient(135deg,#CCFF00,#CCFF00)" }
+          ],
+          accentGradient: "linear-gradient(110deg,#CCFF00,#CCFF00)",
+          background: { css: "#101010" },
+          cardSurface: "rgba(255,255,255,.8)",
+          cardBorder: "1px solid #CCFF00"
+        }
+      }
+    ];
+    const options: ApplyDeckEditOptions = {
+      themeSelection: { paletteId: "palette-x" },
+      candidates
+    };
+
+    const client = renderLivePreview(fixtureRevision, fixtureSlideDeck, options);
+    const server = applyDeckEdit(
+      fixtureRevision as unknown as DeckRevision,
+      fixtureSlideDeck,
+      options
+    );
+
+    expect(client.ok).toBe(true);
+    expect(server.ok).toBe(true);
+    if (!client.ok || !server.ok) return;
+    // Same use-case + same theme options ⇒ identical re-themed html (parity).
+    expect(client.html).toBe(server.payload.html);
   });
 });

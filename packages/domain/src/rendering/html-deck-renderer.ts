@@ -2,6 +2,7 @@ import type { ChartIntent } from "@/content-core/chart-intent.types";
 import type { GenerationSummary, PreviewArtifact, SlideDeck } from "@/deck/deck.types";
 import { buildGenerationSummary } from "@/deck/generation-summary";
 import type { DesignPlanningResult } from "@/design/types";
+import type { ThemeSelectionWarning } from "@/design/theme-selection.types";
 import { validateGeneratedHtml } from "@/rendering/html-generation-validator";
 import { renderTemplateDeck } from "@/rendering/template-html-renderer";
 
@@ -12,6 +13,8 @@ export interface HtmlDeckGenerationInput {
   chartIntents?: ChartIntent[];
   /** 007/009: the applied theme projected as readonly summary evidence (FR-005). */
   selectedTheme: GenerationSummary["selectedTheme"];
+  /** 011: per-axis fallback warnings from applyThemeSelection; defaults to []. */
+  themeSelectionWarnings?: ThemeSelectionWarning[];
 }
 
 /**
@@ -39,6 +42,11 @@ export function renderTemplateDeckArtifact(input: HtmlDeckGenerationInput): Prev
       repairAttempted: false,
       fallbackUsed: false
     },
-    generationSummary: buildGenerationSummary(input.deck, renderedCharts, input.selectedTheme)
+    generationSummary: buildGenerationSummary(
+      input.deck,
+      renderedCharts,
+      input.selectedTheme,
+      input.themeSelectionWarnings ?? []
+    )
   };
 }

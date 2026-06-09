@@ -49,6 +49,25 @@ describe("edit revision contract (010 US1)", () => {
     expect(result.issues.some((i) => i.includes("title too long"))).toBe(true);
   });
 
+  it("accepts an optional themeSelection (011) and rejects a malformed one", () => {
+    expect(
+      validateEditRevisionRequest({
+        baseRevision: 2,
+        slideDeck: { id: "d", slides: [{ id: "s1" }] },
+        themeSelection: { paletteId: "palette-10" }
+      }).ok
+    ).toBe(true);
+
+    const bad = validateEditRevisionRequest({
+      baseRevision: 2,
+      slideDeck: { id: "d", slides: [{ id: "s1" }] },
+      themeSelection: { paletteId: 123 }
+    });
+    expect(bad.ok).toBe(false);
+    if (bad.ok) return;
+    expect(bad.issues).toContain("themeSelection.paletteId");
+  });
+
   it("uses the repo's top-level error shape (not a nested { error })", () => {
     // Type-level assertion: error contracts are flat { code, message, ... }.
     const conflict: RevisionConflictContract = {

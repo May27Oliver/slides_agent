@@ -52,6 +52,30 @@ describe("DesignPlanningPanel", () => {
     expect(screen.queryByText("部分風格軸未命中，已套用預設值")).toBeNull();
   });
 
+  it("discloses a 011 manual-override fallback warning on the generation result (T013a)", () => {
+    render(
+      <DesignPlanningPanel
+        designPlanningResult={designPlanningResult}
+        selectedTheme={theme()}
+        themeSelectionWarnings={[
+          { axis: "palette", requestedId: "palette-x", reason: "invalid_id" }
+        ]}
+      />
+    );
+    expect(screen.getByText(/已改用預設主題/)).toBeTruthy();
+  });
+
+  it("shows no theme warning when there are none", () => {
+    render(
+      <DesignPlanningPanel
+        designPlanningResult={designPlanningResult}
+        selectedTheme={theme()}
+        themeSelectionWarnings={[]}
+      />
+    );
+    expect(screen.queryByText(/已改用預設主題/)).toBeNull();
+  });
+
   it("does not fabricate effects the kit omits", () => {
     render(
       <DesignPlanningPanel

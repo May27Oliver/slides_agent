@@ -2,6 +2,7 @@ import type { ReviewReport } from "@/review/types";
 import type { HtmlGenerationValidation } from "@/rendering/html-generation.types";
 import type { RenderedChartSummary } from "@/rendering/chart-rendering.types";
 import type { SelectedThemeSummary } from "@/design/selected-theme-summary.types";
+import type { ThemeSelectionWarning } from "@/design/theme-selection.types";
 
 export type SourceFactKind = "metric" | "date" | "decision" | "risk" | "constraint" | "claim";
 
@@ -168,4 +169,10 @@ export interface GenerationSummary extends PreRenderSummary {
    * Always present; `[]` when the deck has no charts.
    */
   renderedCharts: RenderedChartSummary[];
+  /**
+   * 011: honest evidence that a requested/baseline theme axis could not be applied
+   * and fell back to the default. Always present; `[]` when every axis applied as
+   * requested. The front end surfaces it as "你選的主題已無法使用，該軸已改用預設主題".
+   */
+  themeSelectionWarnings: ThemeSelectionWarning[];
 }

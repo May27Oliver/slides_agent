@@ -23,9 +23,10 @@ import type {
   DeckRevisionContract
 } from "@slides-agent/contracts";
 import { validateEditRevisionRequest } from "@slides-agent/contracts";
-import type { DeckStore, SlideDeck } from "@slides-agent/domain";
+import type { DeckStore, SlideDeck, ThemeStore } from "@slides-agent/domain";
 import { applyDeckEdit } from "@slides-agent/domain";
 import { DECK_STORE } from "@/modules/decks/decks.tokens";
+import { THEME_STORE } from "@/modules/themes/themes.tokens";
 import { assertValidDeckId } from "@/modules/decks/deck-request.parser";
 
 // 010: throttle the edit-revision write per client. Cheaper than the LLM preview
@@ -46,7 +47,12 @@ const editRateLimit = new RateLimitGuard({
 export class DecksController {
   private readonly logger = new Logger("Decks");
 
-  constructor(@Inject(DECK_STORE) private readonly deckStore: DeckStore) {}
+  constructor(
+    @Inject(DECK_STORE) private readonly deckStore: DeckStore,
+    // 011: loads the theme catalogue when an edit re-themes. Optional only for
+    // direct unit construction; under Nest DI ThemesModule always provides it.
+    @Inject(THEME_STORE) private readonly themeStore?: ThemeStore
+  ) {}
 
   @Get()
   async list(@Req() req: { user?: AuthedRequestUser }): Promise<DeckListResponseContract> {
@@ -100,7 +106,7 @@ export class DecksController {
         fields: parsed.issues
       });
     }
-    const { baseRevision, slideDeck } = parsed.value;
+    const { baseRevision, slideDeck, themeSelection } = parsed.value;
 
     const deck = await this.deckStore.findByIdForAccount(accountId, deckId);
     if (!deck) {
@@ -125,7 +131,15 @@ export class DecksController {
       });
     }
 
-    const applied = applyDeckEdit(deck.currentRevision, slideDeck as SlideDeck);
+    // 011: re-theme only when the client asked to. Loading the catalogue (candidates)
+    // is skipped entirely otherwise, so a plain text edit costs no extra read.
+    const applied = applyDeckEdit(
+      deck.currentRevision,
+      slideDeck as SlideDeck,
+      themeSelection && this.themeStore
+        ? { themeSelection, candidates: await this.themeStore.listBrowsable() }
+        : {}
+    );
     if (!applied.ok) {
       this.logger.log(`edit account=${accountId} deck=${deckId} rejected=${applied.rejection}`);
       throw new BadRequestException({

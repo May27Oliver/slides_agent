@@ -54,6 +54,27 @@ describe("buildDeckStyleCss sanitization", () => {
     expect(css).not.toContain("body { background:");
   });
 
+  it("neutralizes a CSS-breakout font family (011 F6: GET /api/themes kit reaches the same use boundary)", () => {
+    // 011 serves the trusted-builtin partial kit verbatim (no endpoint sanitize);
+    // the render use boundary (safeCssValue on --font-heading/--font-body) is what
+    // keeps a hostile family name from breaking out — proven here for fonts.
+    const tampered = {
+      ...defaultDesignStyleKit(),
+      fonts: {
+        heading: "Inter</style><script>alert(1)</script>",
+        body: "Body; } html { display:none } .y{"
+      }
+    };
+
+    const css = buildDeckStyleCss(tampered, designSystemWith({}));
+
+    expect(css).not.toContain("</style>");
+    expect(css).not.toContain("<script>");
+    expect(css).not.toContain("html { display:none }");
+    // falls back to the safe system stack instead.
+    expect(css).toContain("--font-heading: system-ui, sans-serif");
+  });
+
   it("passes valid curated values through unchanged", () => {
     const css = buildDeckStyleCss(defaultDesignStyleKit(), designSystemWith({}));
     expect(css).toContain("--type-title: clamp(");

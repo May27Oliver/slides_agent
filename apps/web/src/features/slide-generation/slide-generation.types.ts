@@ -8,6 +8,12 @@ export interface SlideGenerationRequest {
     segmentationGuidance?: string;
     language?: string;
   };
+  /** 011: optional per-axis manual theme override (applied at render, no extra LLM). */
+  themeSelection?: {
+    fontId?: string;
+    paletteId?: string;
+    styleId?: string;
+  };
 }
 
 export interface GeneratedPreviewArtifact {
@@ -117,6 +123,13 @@ export interface GeneratedPreviewArtifact {
           | "fallback_text";
         fallback: boolean;
         notes: Array<{ code: string; message: string }>;
+      }>;
+      // 011: per-axis theme fallback evidence (mirrors the response contract). Optional
+      // on the read side so the panel tolerates planning-only / older payloads.
+      themeSelectionWarnings?: Array<{
+        axis: "font" | "palette" | "style";
+        requestedId?: string;
+        reason: "invalid_id" | "base_unresolved";
       }>;
     };
   };

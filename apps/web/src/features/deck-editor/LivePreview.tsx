@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DeckRevisionContract } from "@slides-agent/contracts";
-import type { SlideDeck } from "@slides-agent/domain";
+import type { ManualThemeSelection, SelectableTheme, SlideDeck } from "@slides-agent/domain";
 import { useI18n } from "@/i18n";
 import { renderLivePreview } from "@/features/deck-editor/live-preview-render";
 
@@ -11,6 +11,9 @@ interface LivePreviewProps {
   selectedIndex: number;
   /** Optional authoritative html (after a save) to display verbatim instead. */
   authoritativeHtml?: string | null;
+  /** 011: manual theme override + catalogue, so the live preview re-themes with parity. */
+  themeSelection?: ManualThemeSelection;
+  themeCandidates?: SelectableTheme[];
   debounceMs?: number;
 }
 
@@ -26,6 +29,8 @@ export function LivePreview({
   workingDeck,
   selectedIndex,
   authoritativeHtml,
+  themeSelection,
+  themeCandidates,
   debounceMs = 250
 }: LivePreviewProps) {
   const { t } = useI18n();
@@ -38,7 +43,14 @@ export function LivePreview({
     return () => clearTimeout(id);
   }, [workingDeck, debounceMs]);
 
-  const local = useMemo(() => renderLivePreview(base, debounced), [base, debounced]);
+  const local = useMemo(
+    () =>
+      renderLivePreview(base, debounced, {
+        ...(themeSelection ? { themeSelection } : {}),
+        ...(themeCandidates ? { candidates: themeCandidates } : {})
+      }),
+    [base, debounced, themeSelection, themeCandidates]
+  );
   const html = authoritativeHtml ?? (local.ok ? local.html : null);
 
   // Tell the deck runtime which slide to show, so the preview tracks the edited slide.

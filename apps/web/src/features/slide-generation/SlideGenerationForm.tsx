@@ -7,16 +7,19 @@ import {
   type FormEvent,
   type ReactNode
 } from "react";
+import type { ManualThemeSelection } from "@slides-agent/domain";
 import { AlertIcon, SparklesIcon, UploadIcon, XIcon } from "@/components/icons";
 import { StyleCardGallery } from "@/features/slide-generation/StyleCardGallery";
 import { stylePresets, type StylePresetKey } from "@/features/slide-generation/style-presets";
 import type { SlideGenerationRequest } from "@/features/slide-generation/slide-generation.types";
+import { ThemePicker } from "@/features/theme-picker/ThemePicker";
 import { useI18n } from "@/i18n";
 
 interface SlideGenerationFormProps {
   onSubmit: (request: SlideGenerationRequest) => void;
   isSubmitting?: boolean;
   errorMessage?: string | undefined;
+  fetchImpl?: typeof fetch;
 }
 
 const MAX_UPLOAD_BYTES = 1_000_000;
@@ -24,7 +27,8 @@ const MAX_UPLOAD_BYTES = 1_000_000;
 export function SlideGenerationForm({
   onSubmit,
   isSubmitting = false,
-  errorMessage
+  errorMessage,
+  fetchImpl
 }: SlideGenerationFormProps) {
   const { t } = useI18n();
   const ids = useFieldIds();
@@ -33,6 +37,8 @@ export function SlideGenerationForm({
   const [isDragging, setIsDragging] = useState(false);
   // Presets are tracked by translation key so the selection survives a language switch.
   const [stylePresetKey, setStylePresetKey] = useState<StylePresetKey | "">("");
+  // 011: per-axis manual theme override (empty = keyword baseline, i.e. current behaviour).
+  const [themeSelection, setThemeSelection] = useState<ManualThemeSelection>({});
   const sourceLength = sourceContent.trim().length;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -51,7 +57,8 @@ export function SlideGenerationForm({
         ...(chartEmphasis ? { chartEmphasis } : {}),
         ...optionalValue("segmentationGuidance", form, "segmentationGuidance"),
         ...optionalValue("language", form, "language")
-      }
+      },
+      ...(hasThemeSelection(themeSelection) ? { themeSelection } : {})
     };
 
     onSubmit(request);
@@ -205,6 +212,14 @@ export function SlideGenerationForm({
               />
             </Field>
           </div>
+
+          {/* 011: per-axis manual theme override (quick cards above set styleDirection;
+              this picks exact font/palette/style ids). First-time-right, zero token. */}
+          <ThemePicker
+            selection={themeSelection}
+            onChange={setThemeSelection}
+            {...(fetchImpl ? { fetchImpl } : {})}
+          />
         </FormSection>
 
         <FormSection step={t("form.planning.step")} title={t("form.planning.title")}>
@@ -309,6 +324,10 @@ function useFieldIds() {
     chartEmphasis: `${prefix}-chart-emphasis`,
     segmentation: `${prefix}-segmentation`
   };
+}
+
+function hasThemeSelection(selection: ManualThemeSelection): boolean {
+  return Boolean(selection.fontId || selection.paletteId || selection.styleId);
 }
 
 function stringValue(form: FormData, key: string): string {

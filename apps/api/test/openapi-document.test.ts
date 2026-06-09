@@ -7,6 +7,7 @@ describe("buildOpenApiDocument", () => {
   it("is a valid OpenAPI 3 document with the preview and decks routes", () => {
     expect(doc.openapi).toBe("3.0.0");
     expect(Object.keys(doc.paths)).toEqual([
+      "/api/themes",
       "/api/decks",
       "/api/decks/{id}",
       "/api/decks/{id}/revisions",
@@ -16,12 +17,26 @@ describe("buildOpenApiDocument", () => {
     ]);
   });
 
+  it("documents the 011 GET /api/themes browse endpoint (200/401)", () => {
+    const get = doc.paths["/api/themes"]!.get!;
+    const responseSchema = (
+      get.responses["200"] as { content: Record<string, { schema: { properties: object } }> }
+    ).content["application/json"]!.schema;
+    expect(Object.keys(responseSchema.properties)).toEqual(["font", "palette", "style"]);
+    expect(Object.keys(get.responses).sort()).toEqual(["200", "401", "500"]);
+  });
+
   it("documents the 010 edit-revision endpoint (request body + 201/400/404/409)", () => {
     const post = doc.paths["/api/decks/{id}/revisions"]!.post!;
     const requestSchema = (
       post.requestBody as { content: Record<string, { schema: { properties: object } }> }
     ).content["application/json"]!.schema;
-    expect(Object.keys(requestSchema.properties)).toEqual(["baseRevision", "slideDeck"]);
+    // 011 added the optional themeSelection override.
+    expect(Object.keys(requestSchema.properties)).toEqual([
+      "baseRevision",
+      "slideDeck",
+      "themeSelection"
+    ]);
     expect(Object.keys(post.responses).sort()).toEqual(["201", "400", "401", "404", "409", "500"]);
   });
 
@@ -37,7 +52,11 @@ describe("buildOpenApiDocument", () => {
     const requestSchema = (
       post.requestBody as { content: Record<string, { schema: { properties: object } }> }
     ).content["application/json"]!.schema;
-    expect(Object.keys(requestSchema.properties)).toEqual(["sourceContent", "deckBrief"]);
+    expect(Object.keys(requestSchema.properties)).toEqual([
+      "sourceContent",
+      "deckBrief",
+      "themeSelection"
+    ]);
     expect(Object.keys(post.responses).sort()).toEqual(["202", "400", "429", "500", "503"]);
   });
 

@@ -43,6 +43,12 @@ vi.mock("@slides-agent/domain", () => ({
     ids: { style: null, palette: null, font: null },
     fallback: true
   }),
+  // 011: the manual-override resolver runs after selectTheme. With no override it
+  // passes the baseline through unchanged (no warnings).
+  applyThemeSelection: (baselineIds: unknown) => ({
+    selectedTheme: { styleKit: { kitName: "default" }, ids: baselineIds, fallback: true },
+    warnings: []
+  }),
   renderTemplateDeckArtifact: () => ({
     html: "<!doctype html><html><body>slides</body></html>",
     htmlGenerationValidation: { status: "pass", fallbackUsed: false },
@@ -51,7 +57,8 @@ vi.mock("@slides-agent/domain", () => ({
       sourceFactCount: 1,
       chartIntentCount: 0,
       uncertainClaimCount: 0,
-      renderedCharts: []
+      renderedCharts: [],
+      themeSelectionWarnings: []
     }
   })
 }));

@@ -1,4 +1,5 @@
 import { composeKit } from "@/design/compose-kit";
+import { composeKitName } from "@/design/compose-kit-name";
 import { pickBest } from "@/design/pick-best";
 import type {
   FontStyleKit,
@@ -64,13 +65,4 @@ export function selectTheme(brief: SelectThemeBrief, candidates: SelectableTheme
 
 function byKind(candidates: SelectableTheme[], kind: ThemeKind): SelectableTheme[] {
   return candidates.filter((theme) => theme.kind === kind);
-}
-
-function composeKitName(ids: {
-  style: string | null;
-  palette: string | null;
-  font: string | null;
-}): string {
-  const parts = [ids.style, ids.palette, ids.font].filter((id): id is string => id !== null);
-  return parts.length > 0 ? parts.join("+") : "default";
 }

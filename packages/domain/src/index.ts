@@ -37,6 +37,8 @@ export { composeKit } from "@/design/compose-kit";
 export type { ComposeKitParts } from "@/design/compose-kit";
 export { selectTheme } from "@/design/select-theme";
 export type { SelectThemeBrief } from "@/design/select-theme";
+export { applyThemeSelection } from "@/design/apply-theme-selection";
+export type * from "@/design/theme-selection.types";
 export { projectSelectedThemeSummary } from "@/design/selected-theme-summary";
 export type * from "@/design/selected-theme-summary.types";
 export { expandFontPairing, expandPalette } from "@/design/style-kit-engine";
@@ -113,6 +115,7 @@ export {
   type CreateDeckFromPreviewInput
 } from "@/deck-persistence/create-deck-from-preview";
 export { applyDeckEdit } from "@/deck-edit/apply-deck-edit";
+export type { ApplyDeckEditOptions } from "@/deck-edit/apply-deck-edit";
 export { mergeEditedDeck } from "@/deck-edit/slide-merge";
 export type { EditRevisionPayload, ApplyDeckEditResult } from "@/deck-edit/apply-deck-edit.types";
 export type { SlideMergeResult } from "@/deck-edit/slide-merge";

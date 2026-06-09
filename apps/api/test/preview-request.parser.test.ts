@@ -38,6 +38,24 @@ describe("parseGeneratePreviewRequest", () => {
       });
     }
   });
+
+  it("passes a valid 011 themeSelection through", () => {
+    expect(
+      parseGeneratePreviewRequest({ ...validRequest, themeSelection: { paletteId: "palette-10" } })
+    ).toEqual({ ...validRequest, themeSelection: { paletteId: "palette-10" } });
+  });
+
+  it("rejects a malformed themeSelection with INVALID_INPUT", () => {
+    try {
+      parseGeneratePreviewRequest({ ...validRequest, themeSelection: { fontId: 5 } });
+      throw new Error("expected rejection");
+    } catch (error) {
+      expect((error as BadRequestException).getResponse()).toMatchObject({
+        code: "INVALID_INPUT",
+        fields: ["themeSelection.fontId"]
+      });
+    }
+  });
 });
 
 describe("assertValidJobId", () => {

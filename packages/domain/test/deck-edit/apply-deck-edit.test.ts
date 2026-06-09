@@ -4,10 +4,8 @@ import { renderTemplateDeckArtifact } from "@/rendering/html-deck-renderer";
 import type { ChartIntent } from "@/content-core/chart-intent.types";
 import type { GenerationSummary, Slide, SlideDeck } from "@/deck/deck.types";
 import type { DeckRevision } from "@/deck-persistence/deck.types";
-import {
-  renderingDeck,
-  renderingDesignPlanningResult
-} from "../rendering/rendering-fixtures";
+import type { SelectableTheme } from "@/design/theme.types";
+import { renderingDeck, renderingDesignPlanningResult } from "../rendering/rendering-fixtures";
 
 const selectedTheme = {
   kitName: "brief-directed-planning",
@@ -32,9 +30,7 @@ function baseRevision(overrides: Partial<DeckRevision> = {}): DeckRevision {
 function editTitle(deck: SlideDeck, title: string): SlideDeck {
   return {
     ...deck,
-    slides: deck.slides.map((slide, index) =>
-      index === 0 ? { ...slide, title } : slide
-    )
+    slides: deck.slides.map((slide, index) => (index === 0 ? { ...slide, title } : slide))
   };
 }
 
@@ -141,6 +137,163 @@ describe("applyDeckEdit (010 US1)", () => {
       expect(result.payload.slideDeck.reviewReport.humanReviewNotes.join("\n")).toContain(
         "圖表未重現"
       );
+    });
+  });
+
+  // T008 — 011 deterministic re-theme during an edit.
+  describe("011 re-theme", () => {
+    const motion = {
+      slideTransitionMs: 0,
+      slideEasing: "linear",
+      entranceMs: 0,
+      staggerStepMs: 0,
+      microMs: 0,
+      respectReducedMotion: true
+    };
+    const fontKit = (heading: string) => ({ fonts: { heading, body: '"Inter", sans-serif' } });
+    const paletteKit = (base: string) => ({
+      accentHues: [{ name: "a", base, gradient: `linear-gradient(135deg, ${base}, ${base})` }],
+      accentGradient: `linear-gradient(110deg, ${base}, ${base})`,
+      background: { css: base },
+      cardSurface: "rgba(255,255,255,.8)",
+      cardBorder: `1px solid ${base}`
+    });
+    const candidates: SelectableTheme[] = [
+      { id: "font-b", kind: "font", keywords: [], support: "full", styleKit: fontKit('"Inter"') },
+      {
+        id: "palette-b",
+        kind: "palette",
+        keywords: [],
+        support: "full",
+        styleKit: paletteKit("#111")
+      },
+      {
+        id: "palette-acid",
+        kind: "palette",
+        keywords: [],
+        support: "full",
+        styleKit: paletteKit("#CCFF00")
+      },
+      {
+        id: "style-b",
+        kind: "style",
+        keywords: [],
+        support: "full",
+        styleKit: { effects: { cardRadiusPx: 8, cardShadow: "none" }, motion }
+      }
+    ];
+    const themedSummary = {
+      kitName: "style-b+palette-b+font-b",
+      ids: { style: "style-b", palette: "palette-b", font: "font-b" },
+      fallback: false,
+      accentHues: [],
+      fonts: { heading: "", body: "" },
+      structureFeatures: { radiusPx: 8, shadow: false }
+    } as unknown as GenerationSummary["selectedTheme"];
+    const themedBase = (over: Partial<DeckRevision> = {}) =>
+      baseRevision({
+        generationSummary: {
+          slideCount: 1,
+          renderedCharts: [],
+          themeSelectionWarnings: [],
+          selectedTheme: themedSummary
+        } as unknown as GenerationSummary,
+        ...over
+      });
+
+    it("swaps only the styleKit for an overridden axis; text/structure kept, no warnings", () => {
+      const result = applyDeckEdit(themedBase(), editTitle(renderingDeck, "Re-themed title"), {
+        themeSelection: { paletteId: "palette-acid" },
+        candidates
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      // only palette changed; style/font keep the base.
+      expect(result.payload.designPlan.styleKit?.kitName).toBe("style-b+palette-acid+font-b");
+      expect(result.payload.generationSummary.selectedTheme.ids).toEqual({
+        style: "style-b",
+        palette: "palette-acid",
+        font: "font-b"
+      });
+      expect(result.payload.generationSummary.themeSelectionWarnings).toEqual([]);
+      // the edited text survives the re-theme (theme never touches content).
+      expect(result.payload.slideDeck.slides[0]!.title).toBe("Re-themed title");
+      expect(result.payload.origin).toBe("edit");
+    });
+
+    it("emits base_unresolved when a base axis id is no longer in the catalogue", () => {
+      const base = themedBase({
+        generationSummary: {
+          slideCount: 1,
+          renderedCharts: [],
+          themeSelectionWarnings: [],
+          selectedTheme: {
+            ...themedSummary,
+            ids: { style: "style-b", palette: "palette-gone", font: "font-b" }
+          }
+        } as unknown as GenerationSummary
+      });
+
+      const result = applyDeckEdit(base, editTitle(renderingDeck, "x"), {
+        themeSelection: { fontId: "font-b" },
+        candidates
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.payload.generationSummary.selectedTheme.ids.palette).toBeNull();
+      expect(result.payload.generationSummary.themeSelectionWarnings).toEqual([
+        { axis: "palette", reason: "base_unresolved" }
+      ]);
+    });
+
+    it("re-themes a legacy base whose summary has no axis ids (guards instead of crashing)", () => {
+      // baseRevision()'s selectedTheme is the legacy {kitName, fallback} with no ids.
+      const result = applyDeckEdit(baseRevision(), editTitle(renderingDeck, "x"), {
+        themeSelection: { paletteId: "palette-acid" },
+        candidates
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      // the overridden axis resolves; the two missing base axes fall back honestly.
+      expect(result.payload.generationSummary.selectedTheme.ids.palette).toBe("palette-acid");
+      const reasons = result.payload.generationSummary.themeSelectionWarnings
+        .map((w) => `${w.axis}:${w.reason}`)
+        .sort();
+      expect(reasons).toEqual(["font:base_unresolved", "style:base_unresolved"]);
+    });
+
+    it("treats an EMPTY themeSelection {} as a no-op identical to passing nothing (parity)", () => {
+      // The editor live preview always forwards the current selection object (often {});
+      // an empty selection must NOT re-theme, or the preview diverges from what save stores.
+      const edited = editTitle(renderingDeck, "z");
+      const withEmpty = applyDeckEdit(themedBase(), edited, { themeSelection: {}, candidates });
+      const withNothing = applyDeckEdit(themedBase(), edited);
+
+      expect(withEmpty.ok).toBe(true);
+      expect(withNothing.ok).toBe(true);
+      if (!withEmpty.ok || !withNothing.ok) return;
+      expect(withEmpty.payload.html).toBe(withNothing.payload.html);
+      expect(withEmpty.payload.generationSummary.themeSelectionWarnings).toEqual([]);
+      expect(withEmpty.payload.generationSummary.selectedTheme.ids).toEqual({
+        style: "style-b",
+        palette: "palette-b",
+        font: "font-b"
+      });
+    });
+
+    it("with no themeSelection, reuses the base theme verbatim (010 behaviour)", () => {
+      const result = applyDeckEdit(themedBase(), editTitle(renderingDeck, "y"));
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.payload.generationSummary.selectedTheme.ids).toEqual({
+        style: "style-b",
+        palette: "palette-b",
+        font: "font-b"
+      });
+      expect(result.payload.generationSummary.themeSelectionWarnings).toEqual([]);
     });
   });
 });

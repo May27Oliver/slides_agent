@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import type { DeckRevisionContract } from "@slides-agent/contracts";
-import type { SlideDeck } from "@slides-agent/domain";
+import type {
+  ManualThemeSelection,
+  SelectableTheme,
+  SlideDeck,
+  ThemeCatalog,
+  ThemeSelectionWarning
+} from "@slides-agent/domain";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { AuthError } from "@/features/auth/auth-client";
 import { getDeck } from "@/features/decks/decks-client";
@@ -24,6 +30,7 @@ import { EditableSlideDraft } from "@/features/deck-editor/editable-slide-draft"
 import { LivePreview } from "@/features/deck-editor/LivePreview";
 import { SlideEditPanel } from "@/features/deck-editor/SlideEditPanel";
 import { SlideNavigator } from "@/features/deck-editor/SlideNavigator";
+import { ThemePicker } from "@/features/theme-picker/ThemePicker";
 import { useI18n } from "@/i18n";
 
 type LoadState = "loading" | "ready" | "error" | "notReady";
@@ -63,6 +70,11 @@ export function DeckEditorView({
     draft: DeckDraft;
     kind: Exclude<DraftClassification, "none">;
   } | null>(null);
+  // 011: manual re-theme. selection lifts from the picker; candidates feed the client
+  // live preview (parity); warnings are the post-save fallback evidence to disclose.
+  const [themeSelection, setThemeSelection] = useState<ManualThemeSelection>({});
+  const [themeCandidates, setThemeCandidates] = useState<SelectableTheme[]>([]);
+  const [themeWarnings, setThemeWarnings] = useState<ThemeSelectionWarning[]>([]);
 
   const adopt = useCallback((title: string, revision: DeckRevisionContract) => {
     const slideDeck = revision.slideDeck as SlideDeck;
@@ -74,6 +86,13 @@ export function DeckEditorView({
     // Drop any prior deck's post-save html so a deck switch (same component, new :id)
     // can't show the previous deck's preview. A fresh save re-sets it right after.
     setSavedHtml(null);
+    // 011: the adopted revision has the theme baked in, so the pending override resets.
+    // Surface any fallback evidence it carries (honest disclosure).
+    setThemeSelection({});
+    const summary = revision.generationSummary as {
+      themeSelectionWarnings?: ThemeSelectionWarning[];
+    } | null;
+    setThemeWarnings(summary?.themeSelectionWarnings ?? []);
   }, []);
 
   const load = useCallback(() => {
@@ -164,6 +183,16 @@ export function DeckEditorView({
     setSaveState({ kind: "idle" });
   }, []);
 
+  // 011: applying a theme is a savable change — like a text edit, it drops the
+  // authoritative html (so the live preview shows the re-themed local render) and
+  // marks the draft dirty so Save persists it.
+  const changeTheme = useCallback((selection: ManualThemeSelection) => {
+    setThemeSelection(selection);
+    setSavedHtml(null);
+    setDirty(true);
+    setSaveState({ kind: "idle" });
+  }, []);
+
   const selectedSlide = useMemo(
     () => draft?.slides.find((s) => s.id === selectedId) ?? draft?.slides[0] ?? null,
     [draft, selectedId]
@@ -173,7 +202,14 @@ export function DeckEditorView({
     if (!draft) return;
     setSaveState({ kind: "saving" });
     try {
-      const revision = await createEditRevision(id, draft.toRequest(), authFetch);
+      const revision = await createEditRevision(
+        id,
+        {
+          ...draft.toRequest(),
+          ...(hasThemeSelection(themeSelection) ? { themeSelection } : {})
+        },
+        authFetch
+      );
       adopt(deckTitle, revision);
       clearDraft(id); // US3: a persisted revision supersedes the local draft.
       setPendingDraft(null);
@@ -199,7 +235,7 @@ export function DeckEditorView({
         setSaveState({ kind: "error" });
       }
     }
-  }, [draft, id, authFetch, adopt, deckTitle, load]);
+  }, [draft, id, authFetch, adopt, deckTitle, load, themeSelection]);
 
   if (state === "loading") {
     return <CenterMessage>{t("editor.loading")}</CenterMessage>;
@@ -260,6 +296,8 @@ export function DeckEditorView({
             base={base}
             workingDeck={draft.deck}
             authoritativeHtml={savedHtml}
+            {...(hasThemeSelection(themeSelection) ? { themeSelection } : {})}
+            themeCandidates={themeCandidates}
             selectedIndex={Math.max(
               0,
               draft.slides.findIndex((s) => s.id === selectedSlide.id)
@@ -267,8 +305,20 @@ export function DeckEditorView({
           />
         </div>
 
-        {/* Right half: tabbed — slide edit form / slide ordering. */}
+        {/* Right half: theme picker + tabbed slide edit form / slide ordering. */}
         <div className="flex min-h-0 flex-col rounded-2xl border border-line bg-panel p-3 max-md:h-[70vh]">
+          {/* 011: re-theme entry (WYSIWYG via the live preview + applyThemeSelection). */}
+          <div className="mb-3">
+            <ThemePicker
+              selection={themeSelection}
+              onChange={changeTheme}
+              fetchImpl={authFetch}
+              warnings={themeWarnings}
+              onCatalogLoaded={(catalog: ThemeCatalog) =>
+                setThemeCandidates([...catalog.font, ...catalog.palette, ...catalog.style])
+              }
+            />
+          </div>
           <div role="tablist" className="mb-3 flex gap-1 rounded-xl bg-canvas p-1">
             <TabButton active={rightTab === "edit"} onClick={() => setRightTab("edit")}>
               {t("editor.tab.edit")}
@@ -307,6 +357,10 @@ export function DeckEditorView({
       </main>
     </div>
   );
+}
+
+function hasThemeSelection(selection: ManualThemeSelection): boolean {
+  return Boolean(selection.fontId || selection.paletteId || selection.styleId);
 }
 
 function SaveStatus({ saveState }: { saveState: SaveState }) {

@@ -138,6 +138,7 @@ export function SlideGenerationFeature({
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
             errorMessage={errorMessage}
+            fetchImpl={fetchImpl}
           />
         </section>
 
