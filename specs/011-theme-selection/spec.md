@@ -88,11 +88,12 @@
 - **FR-009**：所有新 UI MUST 符合既有 a11y（鍵盤、focus、三語 i18n、RWD、reduced-motion）。
 - **FR-010**：主題挑選與套用 **MUST NOT** 呼叫 LLM、**MUST NOT** 引入任何 LLM provider/model 欄位。
 
-### 與現有「6 張預設卡」的關係（待 spec 拍板）
+### 與現有「6 張預設卡」的關係（已鎖定 2026-06-09）
 
-生成頁現有「風格預設 6 張卡 + 風格方向（自訂）」與新挑選器並存方式，二擇一或調整：
-- (a) 6 張卡保留為「快速套用」，新增「瀏覽全部主題 →」開挑選器；或
-- (b) 6 張卡退場，挑選器內以「精選」分組呈現那 6 組。
+**保留 6 張快速卡 + 新增「瀏覽全部」入口開主題瀏覽器。** 6 張卡維持寫
+`styleDirection` 關鍵字（走 baseline），瀏覽器走每軸 id 覆寫（`manualThemeSelection`）；
+兩者並存、不衝突。挑選粒度鎖定為**每軸各選**（`manualThemeSelection = { fontId?, paletteId?, styleId? }`，
+不引入「完整主題卡」資料模型）——見 data-model §1/§2。
 
 ---
 
