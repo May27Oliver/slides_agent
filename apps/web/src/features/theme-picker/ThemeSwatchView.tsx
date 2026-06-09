@@ -18,12 +18,20 @@ export function ThemeSwatchView({
   const box = size === "sm" ? "h-6 w-6" : "h-9 w-9";
   const swatch = extractSwatch(theme);
 
+  // Purely decorative — every usage shows the theme name as text alongside, so the
+  // swatch is hidden from assistive tech (avoids reading "Aa" / colour spans).
   if (!swatch) {
-    return <span className={`${box} shrink-0 rounded-lg border border-line bg-canvas`} />;
+    return (
+      <span
+        aria-hidden="true"
+        className={`${box} shrink-0 rounded-lg border border-line bg-surface`}
+      />
+    );
   }
   if (swatch.kind === "palette") {
     return (
       <span
+        aria-hidden="true"
         className={`flex ${box} shrink-0 overflow-hidden rounded-lg border border-line`}
         style={swatch.background ? { background: swatch.background } : undefined}
       >
@@ -36,6 +44,7 @@ export function ThemeSwatchView({
   if (swatch.kind === "font") {
     return (
       <span
+        aria-hidden="true"
         className={`grid ${box} shrink-0 place-items-center rounded-lg border border-line bg-white font-bold text-ink ${size === "sm" ? "text-xs" : "text-lg"}`}
         style={{ fontFamily: swatch.heading }}
       >
@@ -45,6 +54,7 @@ export function ThemeSwatchView({
   }
   return (
     <span
+      aria-hidden="true"
       className={`${box} shrink-0 border border-line bg-white`}
       style={{
         borderRadius: swatch.radiusPx != null ? `${Math.min(swatch.radiusPx, 18)}px` : "8px"

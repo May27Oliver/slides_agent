@@ -195,12 +195,37 @@ export function SlideGenerationForm({
 
         <FormSection step={t("form.design.step")} title={t("form.design.title")}>
           {/* 011: preset (styleDirection keyword) vs custom theme are mutually exclusive,
-              so they live in separate tabs — only the active tab's choice is submitted. */}
-          <div role="tablist" className="flex gap-1 rounded-xl bg-canvas p-1">
-            <DesignTab active={designMode === "preset"} onClick={() => setDesignMode("preset")}>
+              so they live in a segmented control — a recessed track (bg-surface) holding two
+              options, the active one a raised brand-tinted pill — only the active tab's
+              choice is submitted. Arrow keys rove between tabs (WAI tabs pattern). */}
+          <div
+            role="tablist"
+            aria-label={t("form.design.title")}
+            className="inline-flex w-full gap-1 rounded-xl border border-line bg-surface p-1"
+            onKeyDown={(event) => {
+              if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+                event.preventDefault();
+                setDesignMode("custom");
+                setCustomMounted(true);
+                document.getElementById(ids.designCustomTab)?.focus();
+              } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+                event.preventDefault();
+                setDesignMode("preset");
+                document.getElementById(ids.designPresetTab)?.focus();
+              }
+            }}
+          >
+            <DesignTab
+              id={ids.designPresetTab}
+              controls={ids.designPresetPanel}
+              active={designMode === "preset"}
+              onClick={() => setDesignMode("preset")}
+            >
               {t("form.design.tab.preset")}
             </DesignTab>
             <DesignTab
+              id={ids.designCustomTab}
+              controls={ids.designCustomPanel}
               active={designMode === "custom"}
               onClick={() => {
                 setDesignMode("custom");
@@ -212,8 +237,16 @@ export function SlideGenerationForm({
           </div>
 
           {/* Preset panel — always mounted (uncontrolled styleDirection persists across
-              tab switches), hidden when the custom tab is active. */}
-          <div hidden={designMode !== "preset"} className="flex flex-col gap-4">
+              tab switches); hidden + inert when the custom tab is active (so AT/Tab/FormData
+              skip it). */}
+          <div
+            role="tabpanel"
+            id={ids.designPresetPanel}
+            aria-labelledby={ids.designPresetTab}
+            hidden={designMode !== "preset"}
+            inert={designMode !== "preset"}
+            className="flex flex-col gap-4"
+          >
             <fieldset className="m-0 border-0 p-0">
               <legend className="mb-2 text-sm font-semibold text-ink">
                 {t("form.design.stylePreset")}
@@ -234,10 +267,16 @@ export function SlideGenerationForm({
             </Field>
           </div>
 
-          {/* Custom-theme panel — mounted on first open, hidden when the preset tab is
-              active (so the catalogue loads once and only when the user opts in). */}
+          {/* Custom-theme panel — mounted on first open (catalogue loads once, only when the
+              user opts in); hidden + inert when the preset tab is active. */}
           {customMounted ? (
-            <div hidden={designMode !== "custom"}>
+            <div
+              role="tabpanel"
+              id={ids.designCustomPanel}
+              aria-labelledby={ids.designCustomTab}
+              hidden={designMode !== "custom"}
+              inert={designMode !== "custom"}
+            >
               <ThemePicker
                 selection={themeSelection}
                 onChange={setThemeSelection}
@@ -308,22 +347,34 @@ const inputClass =
 function DesignTab({
   active,
   onClick,
+  id,
+  controls,
   children
 }: {
   active: boolean;
   onClick: () => void;
+  id: string;
+  controls: string;
   children: ReactNode;
 }) {
   return (
     <button
       type="button"
       role="tab"
+      id={id}
+      aria-controls={controls}
       aria-selected={active}
+      // Roving tabindex: only the active tab is in the Tab sequence; arrows move between.
+      tabIndex={active ? 0 : -1}
       onClick={onClick}
       className={[
         "flex-1 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
-        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500",
-        active ? "bg-panel text-ink shadow-sm" : "text-ink-soft hover:text-ink"
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500",
+        // Active = raised white pill (brand-tinted + shadow + ring) on the recessed track;
+        // selection is signalled by fill + elevation + colour, not colour alone.
+        active
+          ? "bg-panel text-brand-700 shadow-sm ring-1 ring-line"
+          : "text-ink-soft hover:bg-panel/60 hover:text-ink"
       ].join(" ")}
     >
       {children}
@@ -383,7 +434,11 @@ function useFieldIds() {
     language: `${prefix}-language`,
     styleDirection: `${prefix}-style-direction`,
     chartEmphasis: `${prefix}-chart-emphasis`,
-    segmentation: `${prefix}-segmentation`
+    segmentation: `${prefix}-segmentation`,
+    designPresetTab: `${prefix}-design-tab-preset`,
+    designCustomTab: `${prefix}-design-tab-custom`,
+    designPresetPanel: `${prefix}-design-panel-preset`,
+    designCustomPanel: `${prefix}-design-panel-custom`
   };
 }
 
