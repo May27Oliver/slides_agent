@@ -75,4 +75,19 @@ describe("ThemeBrowserModal", () => {
     fireEvent.keyDown(document, { key: "Escape" });
     expect(onClose).toHaveBeenCalled();
   });
+
+  it("is an accessible modal: aria-modal + initial focus inside the dialog (a11y)", () => {
+    open();
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.getAttribute("aria-modal")).toBe("true");
+    // focus is moved into the dialog on open (focus trap), not left on the body.
+    expect(dialog === document.activeElement || dialog.contains(document.activeElement)).toBe(true);
+  });
+
+  it("marks the active tab with aria-selected", () => {
+    open();
+    fireEvent.click(screen.getByRole("tab", { name: "配色" }));
+    expect(screen.getByRole("tab", { name: "配色" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByRole("tab", { name: "字體" }).getAttribute("aria-selected")).toBe("false");
+  });
 });

@@ -18,9 +18,14 @@
 - 220 個（palette 96）若各做 live deck 渲染不可行。
 - **決定**：清單用**從 partial kit 萃取的輕量 swatch**（非 live deck）；palette 清單虛擬化/分頁、DOM swatch 上限。完整 WYSIWYG 只在「選定後」——生成頁 = 生成結果、編輯頁 = 010 LivePreview（client composeKit 完整 partial kit 重渲染）。
 
-## R5 — death-inventory 量化（動機數據，待跑）
+## R5 — death-inventory 量化（動機數據，T017 已跑）
 - selectTheme 為「最高分；沒比中或平手 → 穩定排序第一個」，無多樣性機制。
-- **待辦（T017）**：以一組代表性 brief 跑 selectTheme，統計 220 裡實際被選中的 distinct 主題數 / 占比，量化「死庫存」規模作為 011 動機證據。預期：可選中比例極低（長尾選不到）。
+- **量測方法**：`apps/api/scripts/death-inventory.ts` 讀同一份 committed seed JSON，建可選候選（style 排除 `support=raw`、applies_to in presentation/universal），跑兩種情境。`pnpm --filter @slides-agent/api exec tsx scripts/death-inventory.ts` 可重跑。
+- **結果（2026-06-10）**：
+  - **220 列 DB 中僅 173 可選**（font 57 / palette 96 / **style 僅 20**）。**47 個 style 列是 C 級 `raw`**，引擎無法渲染、永遠選不到——這是 DB 層的純死庫存（與關鍵字無關）。
+  - **空/泛用 brief（最常見路徑）→ 只選中 3 個**（每軸穩定排序第一個：font/palette/style 各一），即 **173 中僅 ~1.7% 會被用到**，其餘 ~98% 在預設路徑永不出現。
+  - **best-case（用每個主題自己的 keywords 當 styleDirection 召喚）→ 173/173 全可達**。亦即主題「描述得夠精準才選得到」，但使用者無從得知關鍵字。
+- **結論（011 動機）**：長尾選不到不是因為主題壞，而是 (a) 47 個 style 是 raw（另需 C 級渲染，非本批），(b) 關鍵字＋穩定第一個讓常見路徑只用 3 個。**011 的每軸手動瀏覽，讓 173 個可選主題全部可被直接挑選**（不必猜關鍵字），正面解決死庫存。
 
 ## R6 — 編輯頁 re-theme 的 baseline 來源
 - 編輯既有 deck 換主題時，baselineIds 取 **base revision 既有三軸**（`generationSummary.selectedTheme.ids`），交同一個 `applyThemeSelection`；某軸為 null 或解析不到（legacy/已刪/已停用）→ 該軸用**預設 + `base_unresolved` warning**（不另跑 selectTheme）。
