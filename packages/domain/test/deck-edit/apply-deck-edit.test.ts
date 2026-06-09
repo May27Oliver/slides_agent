@@ -265,6 +265,25 @@ describe("applyDeckEdit (010 US1)", () => {
       expect(reasons).toEqual(["font:base_unresolved", "style:base_unresolved"]);
     });
 
+    it("treats an EMPTY themeSelection {} as a no-op identical to passing nothing (parity)", () => {
+      // The editor live preview always forwards the current selection object (often {});
+      // an empty selection must NOT re-theme, or the preview diverges from what save stores.
+      const edited = editTitle(renderingDeck, "z");
+      const withEmpty = applyDeckEdit(themedBase(), edited, { themeSelection: {}, candidates });
+      const withNothing = applyDeckEdit(themedBase(), edited);
+
+      expect(withEmpty.ok).toBe(true);
+      expect(withNothing.ok).toBe(true);
+      if (!withEmpty.ok || !withNothing.ok) return;
+      expect(withEmpty.payload.html).toBe(withNothing.payload.html);
+      expect(withEmpty.payload.generationSummary.themeSelectionWarnings).toEqual([]);
+      expect(withEmpty.payload.generationSummary.selectedTheme.ids).toEqual({
+        style: "style-b",
+        palette: "palette-b",
+        font: "font-b"
+      });
+    });
+
     it("with no themeSelection, reuses the base theme verbatim (010 behaviour)", () => {
       const result = applyDeckEdit(themedBase(), editTitle(renderingDeck, "y"));
       expect(result.ok).toBe(true);

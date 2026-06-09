@@ -90,7 +90,10 @@ const CANDIDATES: SelectableTheme[] = [
 ];
 
 const storeReturning = (candidates: SelectableTheme[]): ThemeStore => ({
-  listSelectable: async () => candidates
+  listSelectable: async () => candidates,
+  // listBrowsable is part of the port; the generation path only calls listSelectable,
+  // but the mock must satisfy the full interface (tests aren't typechecked at build).
+  listBrowsable: async () => candidates.map((c) => ({ ...c, name: c.id }))
 });
 
 const serviceWith = (themeStore?: ThemeStore): SlidesService =>

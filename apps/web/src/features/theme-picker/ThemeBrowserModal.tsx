@@ -40,13 +40,14 @@ export function ThemeBrowserModal({
     dialogRef.current?.focus();
     const handler = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        event.stopPropagation();
         onClose();
         return;
       }
       if (event.key !== "Tab" || !dialogRef.current) return;
+      // Exclude :disabled (e.g. pagination ‹/› at the extremes) so the trap endpoints
+      // are always focusable and Tab can't escape the dialog.
       const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'
       );
       if (focusable.length === 0) return;
       const first = focusable[0]!;
@@ -313,7 +314,9 @@ function SwatchPreview({ theme }: { theme: BrowsableTheme }) {
   return (
     <span
       className="h-9 w-9 shrink-0 border border-line bg-white"
-      style={{ borderRadius: swatch.radiusPx != null ? `${Math.min(swatch.radiusPx, 18)}px` : "8px" }}
+      style={{
+        borderRadius: swatch.radiusPx != null ? `${Math.min(swatch.radiusPx, 18)}px` : "8px"
+      }}
     />
   );
 }

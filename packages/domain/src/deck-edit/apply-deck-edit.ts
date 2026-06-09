@@ -62,14 +62,17 @@ export function applyDeckEdit(
   const baseDesignPlan = base.designPlan as DesignPlanningResult;
   const survivingIds = new Set(merge.slideDeck.slides.map((slide) => slide.id));
 
-  // 011: optionally re-theme. With no themeSelection this is exactly 010 — reuse the
-  // base theme verbatim, no warnings. With one, recompose the styleKit from the SAME
-  // resolver the generation path uses (baseline = base revision's three axis ids) and
-  // only swap the styleKit; text / structure / chartIntents stay untouched.
+  // 011: optionally re-theme. With no (or an EMPTY) themeSelection this is exactly 010
+  // — reuse the base theme verbatim, no warnings. An empty `{}` must NOT take the
+  // re-theme path: the client live preview always passes the current selection object
+  // (often `{}`), and the server save only sends a selection when an axis is set
+  // (hasThemeSelection guard). Treating `{}` as a re-theme would recompose from the
+  // catalogue (or fall to default while it loads / for legacy ids), diverging the
+  // preview from what save stores. So gate on an actual axis override.
   let selectedThemeSummary = baseSummary.selectedTheme;
   let themeSelectionWarnings: ThemeSelectionWarning[] = [];
   let restyledKit: DesignPlanningResult["styleKit"] | undefined;
-  if (options.themeSelection) {
+  if (hasAxisOverride(options.themeSelection)) {
     // A legacy base summary may lack the three axis ids; treat each missing axis as
     // unresolvable (→ default kit + base_unresolved warning), never crash (§7).
     const baselineIds = baseSummary.selectedTheme.ids ?? {
@@ -137,6 +140,11 @@ export function applyDeckEdit(
       sourceJobId: null
     }
   };
+}
+
+/** True only when at least one axis is actually overridden (an empty `{}` is a no-op). */
+function hasAxisOverride(selection: ManualThemeSelection | undefined): boolean {
+  return Boolean(selection && (selection.fontId || selection.paletteId || selection.styleId));
 }
 
 /**
