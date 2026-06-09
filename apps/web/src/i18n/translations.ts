@@ -41,6 +41,8 @@ const zhTW = {
 
   "form.design.step": "03",
   "form.design.title": "設計方向",
+  "form.design.tab.preset": "風格預設",
+  "form.design.tab.custom": "自選主題",
   "form.design.stylePreset": "風格預設",
   "form.design.styleDirection": "風格方向（自訂）",
   "form.design.styleDirectionPlaceholder": "描述想要的視覺風格或語氣",
@@ -277,6 +279,8 @@ const enUS: Dictionary = {
 
   "form.design.step": "03",
   "form.design.title": "Design direction",
+  "form.design.tab.preset": "Style preset",
+  "form.design.tab.custom": "Custom theme",
   "form.design.stylePreset": "Style preset",
   "form.design.styleDirection": "Style direction (custom)",
   "form.design.styleDirectionPlaceholder": "Describe the visual style or tone you want",
@@ -514,6 +518,8 @@ const jaJP: Dictionary = {
 
   "form.design.step": "03",
   "form.design.title": "デザイン方針",
+  "form.design.tab.preset": "スタイルプリセット",
+  "form.design.tab.custom": "テーマを選ぶ",
   "form.design.stylePreset": "スタイルプリセット",
   "form.design.styleDirection": "スタイルの方向性（カスタム）",
   "form.design.styleDirectionPlaceholder": "希望する視覚スタイルやトーンを記述",

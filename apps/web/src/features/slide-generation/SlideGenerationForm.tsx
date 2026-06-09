@@ -39,14 +39,25 @@ export function SlideGenerationForm({
   const [stylePresetKey, setStylePresetKey] = useState<StylePresetKey | "">("");
   // 011: per-axis manual theme override (empty = keyword baseline, i.e. current behaviour).
   const [themeSelection, setThemeSelection] = useState<ManualThemeSelection>({});
+  // 011: the two design approaches are mutually exclusive — a preset (styleDirection
+  // keyword) OR a hand-picked theme — so they live in separate tabs and only the active
+  // one is submitted. `customMounted` keeps the picker mounted once opened (so its
+  // catalogue isn't re-fetched on every tab toggle, and isn't fetched at all unless used).
+  const [designMode, setDesignMode] = useState<"preset" | "custom">("preset");
+  const [customMounted, setCustomMounted] = useState(false);
   const sourceLength = sourceContent.trim().length;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const isCustom = designMode === "custom";
     const presetStyleDirection =
       stylePresets.find((preset) => preset.key === stylePresetKey)?.styleDirection ?? "";
-    const styleDirection = stringValue(form, "styleDirection") || presetStyleDirection;
+    // Mutually exclusive: in custom-theme mode the preset/styleDirection is not sent;
+    // in preset mode the manual themeSelection is not sent.
+    const styleDirection = isCustom
+      ? ""
+      : stringValue(form, "styleDirection") || presetStyleDirection;
     const chartEmphasis = stringValue(form, "chartEmphasis");
     const request: SlideGenerationRequest = {
       sourceContent: sourceContent.trim(),
@@ -58,7 +69,7 @@ export function SlideGenerationForm({
         ...optionalValue("segmentationGuidance", form, "segmentationGuidance"),
         ...optionalValue("language", form, "language")
       },
-      ...(hasThemeSelection(themeSelection) ? { themeSelection } : {})
+      ...(isCustom && hasThemeSelection(themeSelection) ? { themeSelection } : {})
     };
 
     onSubmit(request);
@@ -183,18 +194,36 @@ export function SlideGenerationForm({
         </FormSection>
 
         <FormSection step={t("form.design.step")} title={t("form.design.title")}>
-          <fieldset className="m-0 border-0 p-0">
-            <legend className="mb-2 text-sm font-semibold text-ink">
-              {t("form.design.stylePreset")}
-            </legend>
-            <StyleCardGallery
-              presets={stylePresets}
-              selectedKey={stylePresetKey}
-              onSelect={setStylePresetKey}
-            />
-          </fieldset>
+          {/* 011: preset (styleDirection keyword) vs custom theme are mutually exclusive,
+              so they live in separate tabs — only the active tab's choice is submitted. */}
+          <div role="tablist" className="flex gap-1 rounded-xl bg-canvas p-1">
+            <DesignTab active={designMode === "preset"} onClick={() => setDesignMode("preset")}>
+              {t("form.design.tab.preset")}
+            </DesignTab>
+            <DesignTab
+              active={designMode === "custom"}
+              onClick={() => {
+                setDesignMode("custom");
+                setCustomMounted(true);
+              }}
+            >
+              {t("form.design.tab.custom")}
+            </DesignTab>
+          </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          {/* Preset panel — always mounted (uncontrolled styleDirection persists across
+              tab switches), hidden when the custom tab is active. */}
+          <div hidden={designMode !== "preset"} className="flex flex-col gap-4">
+            <fieldset className="m-0 border-0 p-0">
+              <legend className="mb-2 text-sm font-semibold text-ink">
+                {t("form.design.stylePreset")}
+              </legend>
+              <StyleCardGallery
+                presets={stylePresets}
+                selectedKey={stylePresetKey}
+                onSelect={setStylePresetKey}
+              />
+            </fieldset>
             <Field id={ids.styleDirection} label={t("form.design.styleDirection")}>
               <input
                 id={ids.styleDirection}
@@ -203,23 +232,29 @@ export function SlideGenerationForm({
                 className={inputClass}
               />
             </Field>
-            <Field id={ids.chartEmphasis} label={t("form.design.chartEmphasis")}>
-              <input
-                id={ids.chartEmphasis}
-                name="chartEmphasis"
-                placeholder={t("form.design.chartEmphasisPlaceholder")}
-                className={inputClass}
-              />
-            </Field>
           </div>
 
-          {/* 011: per-axis manual theme override (quick cards above set styleDirection;
-              this picks exact font/palette/style ids). First-time-right, zero token. */}
-          <ThemePicker
-            selection={themeSelection}
-            onChange={setThemeSelection}
-            {...(fetchImpl ? { fetchImpl } : {})}
-          />
+          {/* Custom-theme panel — mounted on first open, hidden when the preset tab is
+              active (so the catalogue loads once and only when the user opts in). */}
+          {customMounted ? (
+            <div hidden={designMode !== "custom"}>
+              <ThemePicker
+                selection={themeSelection}
+                onChange={setThemeSelection}
+                {...(fetchImpl ? { fetchImpl } : {})}
+              />
+            </div>
+          ) : null}
+
+          {/* Chart emphasis is orthogonal to the style approach — always visible. */}
+          <Field id={ids.chartEmphasis} label={t("form.design.chartEmphasis")}>
+            <input
+              id={ids.chartEmphasis}
+              name="chartEmphasis"
+              placeholder={t("form.design.chartEmphasisPlaceholder")}
+              className={inputClass}
+            />
+          </Field>
         </FormSection>
 
         <FormSection step={t("form.planning.step")} title={t("form.planning.title")}>
@@ -269,6 +304,32 @@ export function SlideGenerationForm({
 
 const inputClass =
   "w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-ink-soft/60 focus:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-400";
+
+function DesignTab({
+  active,
+  onClick,
+  children
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={[
+        "flex-1 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500",
+        active ? "bg-panel text-ink shadow-sm" : "text-ink-soft hover:text-ink"
+      ].join(" ")}
+    >
+      {children}
+    </button>
+  );
+}
 
 function FormSection({
   step,

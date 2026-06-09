@@ -3,7 +3,7 @@ import type { BrowsableTheme, ManualThemeSelection, ThemeCatalog } from "@slides
 import { CheckIcon, XIcon } from "@/components/icons";
 import { useI18n } from "@/i18n";
 import { THEME_AXES, type ThemeAxis, resolveThemeName } from "@/features/theme-picker/theme-axes";
-import { extractSwatch } from "@/features/theme-picker/theme-swatch";
+import { ThemeSwatchView } from "@/features/theme-picker/ThemeSwatchView";
 
 interface ThemeBrowserModalProps {
   catalog: ThemeCatalog;
@@ -271,7 +271,7 @@ function ThemeRow({
         selected ? "border-brand-500 bg-brand-50" : "border-line bg-white hover:border-brand-300"
       ].join(" ")}
     >
-      <SwatchPreview theme={theme} />
+      <ThemeSwatchView theme={theme} />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-semibold text-ink">{theme.name}</span>
         {theme.description ? (
@@ -280,43 +280,5 @@ function ThemeRow({
       </span>
       {selected ? <CheckIcon className="h-4 w-4 shrink-0 text-brand-600" /> : null}
     </button>
-  );
-}
-
-/** Renders the kind-specific lightweight swatch (colour chips / font sample / style chip). */
-function SwatchPreview({ theme }: { theme: BrowsableTheme }) {
-  const swatch = extractSwatch(theme);
-  if (!swatch) {
-    return <span className="h-9 w-9 shrink-0 rounded-lg border border-line bg-canvas" />;
-  }
-  if (swatch.kind === "palette") {
-    return (
-      <span
-        className="flex h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-line"
-        style={swatch.background ? { background: swatch.background } : undefined}
-      >
-        {swatch.colors.slice(0, 4).map((color, index) => (
-          <span key={index} className="flex-1" style={{ backgroundColor: color }} />
-        ))}
-      </span>
-    );
-  }
-  if (swatch.kind === "font") {
-    return (
-      <span
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-line bg-white text-lg font-bold text-ink"
-        style={{ fontFamily: swatch.heading }}
-      >
-        Aa
-      </span>
-    );
-  }
-  return (
-    <span
-      className="h-9 w-9 shrink-0 border border-line bg-white"
-      style={{
-        borderRadius: swatch.radiusPx != null ? `${Math.min(swatch.radiusPx, 18)}px` : "8px"
-      }}
-    />
   );
 }
