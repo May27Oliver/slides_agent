@@ -35,14 +35,30 @@ describe("SlideGenerationFeature → editor navigation (010)", () => {
         deckId: "deck_new_99",
         slideDeck: { title: "T", slides: [] },
         designPlanningResult: {},
-        previewArtifact: { html: "<x/>", generationSummary: { slideCount: 0 } }
+        previewArtifact: {
+          html: "<x/>",
+          htmlGenerationValidation: {
+            status: "pass",
+            selfContained: true,
+            repairAttempted: false,
+            fallbackUsed: false
+          },
+          generationSummary: {
+            slideCount: 0,
+            sourceFactCount: 0,
+            chartIntentCount: 0,
+            uncertainClaimCount: 0
+          }
+        }
       }
     });
     const onGenerated = vi.fn();
 
     render(<SlideGenerationFeature onGenerated={onGenerated} />);
 
-    fireEvent.change(screen.getByLabelText("原始內容"), { target: { value: "一些足夠長的來源內容用於生成" } });
+    fireEvent.change(screen.getByLabelText("原始內容"), {
+      target: { value: "一些足夠長的來源內容用於生成" }
+    });
     fireEvent.change(screen.getByLabelText("簡報用途"), { target: { value: "季度回顧" } });
     fireEvent.change(screen.getByLabelText("目標受眾"), { target: { value: "主管" } });
     fireEvent.click(screen.getByRole("button", { name: "生成簡報" }));
@@ -64,13 +80,29 @@ describe("SlideGenerationFeature → editor navigation (010)", () => {
       result: {
         slideDeck: { title: "T", slides: [] },
         designPlanningResult: {},
-        previewArtifact: { html: "<x/>", generationSummary: { slideCount: 0 } }
+        previewArtifact: {
+          html: "<x/>",
+          htmlGenerationValidation: {
+            status: "pass",
+            selfContained: true,
+            repairAttempted: false,
+            fallbackUsed: false
+          },
+          generationSummary: {
+            slideCount: 0,
+            sourceFactCount: 0,
+            chartIntentCount: 0,
+            uncertainClaimCount: 0
+          }
+        }
       }
     });
     const onGenerated = vi.fn();
 
     render(<SlideGenerationFeature onGenerated={onGenerated} />);
-    fireEvent.change(screen.getByLabelText("原始內容"), { target: { value: "一些足夠長的來源內容用於生成" } });
+    fireEvent.change(screen.getByLabelText("原始內容"), {
+      target: { value: "一些足夠長的來源內容用於生成" }
+    });
     fireEvent.change(screen.getByLabelText("簡報用途"), { target: { value: "季度回顧" } });
     fireEvent.change(screen.getByLabelText("目標受眾"), { target: { value: "主管" } });
     fireEvent.click(screen.getByRole("button", { name: "生成簡報" }));
