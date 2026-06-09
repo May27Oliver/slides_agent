@@ -1,7 +1,7 @@
 # Research: 主題庫手動選擇（011）
 
 ## R1 — 套用策略：baseline + 每軸覆寫（不重寫 selectTheme）
-- **決定**：`applyThemeSelection(selectTheme(brief), selection, candidates)`：以關鍵字 baseline 為底，對使用者指定的軸用 id 覆寫，再 `composeKit`。
+- **決定**：baseline ids 取自 `selectTheme(brief, candidates).ids`，再 `applyThemeSelection(baselineIds, selection, candidates)`：每軸 effectiveId（覆寫優先，否則 baseline）→ **由 candidates 依 id 解析 partial**（不反解 composed kit）→ `composeKit`；回 `{ selectedTheme, warnings }`。
 - **理由**：① 「無指定 = 現況」最自然（直接回 baseline）；② 只覆寫想換的軸、其餘維持自動，符合「每軸各選」；③ selectTheme/composeKit 都是純函式，覆寫純確定性、零 LLM；④ 不動 selectTheme 降低既有風險（CR-005 設計一致性沿用 composeKit）。
 - **拒絕**：重寫 selectTheme 接受 manualSelection（侵入既有純選擇邏輯、風險高）；整組精選卡（回到少數可選，違反 011 動機）。
 
@@ -23,5 +23,5 @@
 - **待辦（T017）**：以一組代表性 brief 跑 selectTheme，統計 220 裡實際被選中的 distinct 主題數 / 占比，量化「死庫存」規模作為 011 動機證據。預期：可選中比例極低（長尾選不到）。
 
 ## R6 — 編輯頁 re-theme 的 baseline 來源
-- 編輯既有 deck 換主題時，baseline 取 **base revision 既有三軸**（`generationSummary.selectedTheme.ids`）較穩；legacy（無三軸）退回對 base 重跑 selectTheme 或預設。
+- 編輯既有 deck 換主題時，baselineIds 取 **base revision 既有三軸**（`generationSummary.selectedTheme.ids`），交同一個 `applyThemeSelection`；某軸為 null 或解析不到（legacy/已刪/已停用）→ 該軸用**預設 + `base_unresolved` warning**（不另跑 selectTheme）。
 - 只換 styleKit，文字/結構/chartIntents 沿用 base（010 確定性重渲染），產生新 `origin="edit"` revision。

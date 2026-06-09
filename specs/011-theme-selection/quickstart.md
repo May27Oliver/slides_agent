@@ -21,9 +21,9 @@
 10. 每筆顯示 name + swatch（顏色/字體樣本/風格標籤）。
 
 ## 失敗安全 / Edge
-11. 指定一個已停用/不存在的主題 id（用 API 直打）→ 該軸退回 baseline、有 fallback 標記、不報錯、仍生成。
+11. 指定一個不存在的主題 id（用 API 直打）→ 該軸退回預設、回應 `generationSummary.themeSelectionWarnings` 含 `{ axis, requestedId, reason:"invalid_id" }`、不報錯、仍生成。
 12. 只指定 palette → font/style 走 baseline（自動）。
-13. legacy deck（無三軸 id）編輯換主題 → baseline 退回重跑 selectTheme/預設，仍可換。
+13. legacy deck（base 軸 id 為 null 或解析不到）編輯換主題 → 該軸用預設 + `base_unresolved` warning，仍可換。
 
 ## 跨切面
 14. zh-TW/en/ja 三語、窄視窗（三軸 picker 可堆疊）、`prefers-reduced-motion`；picker 鍵盤可操作、focus 可見。
