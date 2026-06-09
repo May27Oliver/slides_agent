@@ -9,13 +9,14 @@
 - **事實**：`generatePreview` 在 LLM（分段/大綱/設計）之後才 `themedDesignPlanningResult.styleKit = selectedTheme.styleKit`。
 - **結論**：在生成頁讓使用者指定主題**不增加任何 LLM 呼叫/ token**；真正省 token 的是「避免因自動選錯而重新生成」。支持「生成頁就該能選」。
 
-## R3 — 瀏覽讀取需 name + swatch（listSelectable 不夠）
-- `SelectableTheme` 只有 id/kind/keywords/support/styleKit，**無 name/description**。瀏覽器要可讀標籤 + 輕量預覽。
-- **決定**：新增 `listBrowsable()`：從 `themes` 表讀 name/description，並由各軸 styleKit **安全投影** swatch（palette→顏色 hex；font→字體家族名 + googleFontsHref；style→結構 enum 標籤）。**不回傳整包 styleKit、不含可注入 CSS**（沿用 007 的 sanitization 立場）。
+## R3 — 瀏覽讀取需 name + **完整 partial styleKit**（修正:原本「只回 swatch」已推翻）
+- `SelectableTheme` 只有 id/kind/keywords/support/styleKit，**無 name/description**。瀏覽器要可讀標籤;編輯頁要 client `composeKit` 即時重渲染,**需要完整 partial styleKit**。
+- **決定（最終）**：`listBrowsable()` 回 name/description/keywords + **完整 partial `styleKit`**（= SelectableTheme.styleKit）。**swatch 由 client 從該 partial kit 萃取**（顏色 hex / 字體家族名 / 風格標籤），不在後端做縮減投影。安全性:trusted builtin（007 seed 已驗證），render/client 在使用邊界 escape——**不在端點再做 sanitize**。
+- **被推翻的舊案**:「只回 swatch、不回 styleKit」——會讓編輯頁 client 無法 compose/render（與 010 client-renderer parity 衝突），故改回傳完整 partial kit。
 
-## R4 — 預覽成本：swatch 為主，不對 220 做 live 全渲染
+## R4 — 預覽成本：清單用 swatch，不對 220 做 live 全渲染
 - 220 個（palette 96）若各做 live deck 渲染不可行。
-- **決定**：清單用輕量 swatch；完整 WYSIWYG 只在「選定後」——生成頁 = 生成結果、編輯頁 = 010 LivePreview。palette 清單用分頁/虛擬列表。
+- **決定**：清單用**從 partial kit 萃取的輕量 swatch**（非 live deck）；palette 清單虛擬化/分頁、DOM swatch 上限。完整 WYSIWYG 只在「選定後」——生成頁 = 生成結果、編輯頁 = 010 LivePreview（client composeKit 完整 partial kit 重渲染）。
 
 ## R5 — death-inventory 量化（動機數據，待跑）
 - selectTheme 為「最高分；沒比中或平手 → 穩定排序第一個」，無多樣性機制。

@@ -19,15 +19,15 @@ description: "Task list — 011 主題庫手動選擇（生成頁 + 編輯頁，
 - [ ] T001a 編輯前 impact（CLAUDE.md）：對將動的既有 symbol 跑 `gitnexus_impact`：`selectTheme`、`composeKit`、`ThemeStore`/`DrizzleThemeStore`、`SlidesService.generatePreview`、`applyDeckEdit`、`GeneratePreviewRequestContract`、`SlideGenerationForm`。HIGH/CRITICAL 先警示。
 
 ## Phase 2：Domain — 依 id 套用（純函式，先寫）
-- [ ] T002 [P] 型別：`ManualThemeSelection`、`BrowsableTheme`（含完整 partial `styleKit`，data-model §5）、`ThemeCatalogResponseContract`、`ThemeSelectionWarning` + `GenerationSummary.themeSelectionWarnings`（data-model §8）。
-- [ ] T003 失敗測試 `packages/domain/test/design/apply-theme-selection.test.ts`：只覆寫一軸 / 全覆寫 / 無效 id 退 baseline+fallback / 無 selection===baseline / 純函式零外呼。
-- [ ] T004 實作 `packages/domain/src/design/apply-theme-selection.ts`（baseline→override→composeKit，data-model §2）；`index.ts` 匯出。**先跑 `gitnexus_impact({target:"selectTheme"})`**（確認不動 selectTheme）。
+- [ ] T002 [P] 型別：`ManualThemeSelection`、`ApplyThemeResult`（`{ selectedTheme, warnings }`，data-model §2）、`BrowsableTheme`（含完整 partial `styleKit`，§5）、`ThemeCatalogResponseContract`、`ThemeSelectionWarning`（reason: `invalid_id`|`base_unresolved`）+ `GenerationSummary.themeSelectionWarnings`（§8）。
+- [ ] T003 失敗測試 `packages/domain/test/design/apply-theme-selection.test.ts`（回 `{selectedTheme, warnings}`）：只覆寫 palette→font/style 由 baselineIds 解析保留 / 三軸全覆寫→ids 全為所選+warnings=[] / 覆寫無效 id→退預設+`invalid_id` warning / baseIds 某軸不可解析→`base_unresolved` / 無 selection 且 baseline 可解析→等同 baseline / 純函式零外呼。
+- [ ] T004 實作 `packages/domain/src/design/apply-theme-selection.ts`：**輸入 `(baselineIds, selection, candidates)`,每軸 effectiveId(覆寫優先)→由 candidates 依 id 解析 partial→composeKit,回 `{selectedTheme, warnings}`**（data-model §2，**不反解 composed kit**）；`index.ts` 匯出。**先跑 `gitnexus_impact({target:"selectTheme"})`**（確認不動 selectTheme）。
 
 ## Phase 3：Backend — 瀏覽讀取 + 套用串接
 - [ ] T005 `ThemeStore` 加 `listBrowsable()`（name/description/keywords + **完整 partial `styleKit`**，data-model §5）；`DrizzleThemeStore` 從 `themes` 讀。**先跑 `gitnexus_impact({target:"ThemeStore"})`**。
-- [ ] T006 `GET /api/themes`（JWT，可選 `?kind=`）回 `ThemeCatalogResponseContract`（依 kind 分組，含 partial styleKit）；contract + endpoint 測試（含「回傳 partial kit 可被 composeKit 接受」）。
-- [ ] T007 生成路徑：`GeneratePreviewRequestContract` 加 `themeSelection?`；`slides.service.generatePreview` 用 `applyThemeSelection(selectTheme(...), themeSelection, candidates)`（§3），並把 fallback 收集成 `generationSummary.themeSelectionWarnings`（§8）。**先跑 `gitnexus_impact({target:"generatePreview"})`**。測試：帶 selection→套用、不帶→現況不變、無效 id→退 baseline+warning、零額外 LLM。
-- [ ] T008 編輯路徑：edit-revision request 加 `themeSelection?`；`applyDeckEdit`（010）依 **§4 演算法**（base 三軸用 catalog 還原 + 覆寫 + composeKit）重組 styleKit，其餘沿用 base，並帶 `themeSelectionWarnings`；端點載入 `listBrowsable()` 供 catalog。**先跑 `gitnexus_impact({target:"applyDeckEdit"})`**。測試：只換 palette→font/style 保留、base id 不可 resolve→退預設+warning、文字/chartIntents 不變、零 LLM。
+- [ ] T006 `GET /api/themes`（JWT）回完整 `ThemeCatalogResponseContract`（依 kind 分組，含完整 partial styleKit；**本批無 `?kind=`**）；contract + endpoint 測試：① 回 partial kit 可被 `composeKit` 直接接受（無 shim）；② **escape 邊界（F6）**：含類 CSS/特殊字元的字體名/顏色值經 render 後不破版/不注入（驗證 use-boundary escaping，非端點 sanitize）。
+- [ ] T007 生成路徑：`GeneratePreviewRequestContract` 加 `themeSelection?`；`slides.service.generatePreview` 取 `selectTheme(brief).ids` 當 baselineIds → `const { selectedTheme, warnings } = applyThemeSelection(baselineIds, themeSelection, candidates)`（§3），styleKit 套用、`generationSummary.themeSelectionWarnings = warnings`（§8）。**先跑 `gitnexus_impact({target:"generatePreview"})`**。測試：帶 selection→套用、不帶→現況不變、無效 id→退 baseline+warning、零額外 LLM。
+- [ ] T008 編輯路徑：edit-revision request 加 `themeSelection?`；`applyDeckEdit`（010）**呼叫同一個 `applyThemeSelection`**，baselineIds = `base.generationSummary.selectedTheme.ids`（§4），只換 styleKit、其餘沿用 base、帶 `themeSelectionWarnings`；端點載入 `listBrowsable()` 供 candidates。**先跑 `gitnexus_impact({target:"applyDeckEdit"})`**。測試：只換 palette→font/style 保留、base id 不可 resolve→退預設+`base_unresolved`、文字/chartIntents 不變、零 LLM。
 - [ ] T009 OpenAPI 補登 `GET /api/themes` + request `themeSelection`（contracts §4）+ smoke。
 
 **✅ Checkpoint A**：後端可瀏覽主題 + 兩入口依 id 套用，零額外 LLM。
