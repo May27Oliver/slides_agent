@@ -115,6 +115,7 @@ export {
   type CreateDeckFromPreviewInput
 } from "@/deck-persistence/create-deck-from-preview";
 export { applyDeckEdit } from "@/deck-edit/apply-deck-edit";
+export type { ApplyDeckEditOptions } from "@/deck-edit/apply-deck-edit";
 export { mergeEditedDeck } from "@/deck-edit/slide-merge";
 export type { EditRevisionPayload, ApplyDeckEditResult } from "@/deck-edit/apply-deck-edit.types";
 export type { SlideMergeResult } from "@/deck-edit/slide-merge";

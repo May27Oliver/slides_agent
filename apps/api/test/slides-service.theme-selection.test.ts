@@ -178,4 +178,48 @@ describe("SlidesService theme selection (US1)", () => {
     const response = await serviceWith(undefined).generatePreview(request);
     expect(response.previewArtifact.generationSummary.selectedTheme?.fallback).toBe(true);
   });
+
+  describe("011 manual theme override", () => {
+    it("applies a per-axis override on top of the keyword baseline (other axes kept)", async () => {
+      const response = await serviceWith(storeReturning(CANDIDATES)).generatePreview({
+        ...request,
+        themeSelection: { paletteId: "palette-00-safe" }
+      });
+
+      // baseline = brutalism+acid+display; only palette is overridden.
+      expect(response.designPlanningResult.styleKit?.kitName).toBe(
+        "style-10-brutalism+palette-00-safe+font-10-display"
+      );
+      expect(response.previewArtifact.generationSummary.selectedTheme?.ids).toEqual({
+        style: "style-10-brutalism",
+        palette: "palette-00-safe",
+        font: "font-10-display"
+      });
+      expect(response.previewArtifact.generationSummary.themeSelectionWarnings).toEqual([]);
+    });
+
+    it("falls an invalid override id back to default for that axis with an invalid_id warning", async () => {
+      const response = await serviceWith(storeReturning(CANDIDATES)).generatePreview({
+        ...request,
+        themeSelection: { fontId: "font-99-does-not-exist" }
+      });
+
+      // font axis falls back to default (null id), style/palette keep the baseline.
+      expect(response.previewArtifact.generationSummary.selectedTheme?.ids.font).toBeNull();
+      expect(response.previewArtifact.generationSummary.selectedTheme?.ids.style).toBe(
+        "style-10-brutalism"
+      );
+      expect(response.previewArtifact.generationSummary.themeSelectionWarnings).toEqual([
+        { axis: "font", requestedId: "font-99-does-not-exist", reason: "invalid_id" }
+      ]);
+    });
+
+    it("with no override, behaves exactly as the keyword baseline (warnings empty)", async () => {
+      const response = await serviceWith(storeReturning(CANDIDATES)).generatePreview(request);
+      expect(response.designPlanningResult.styleKit?.kitName).toBe(
+        "style-10-brutalism+palette-10-acid+font-10-display"
+      );
+      expect(response.previewArtifact.generationSummary.themeSelectionWarnings).toEqual([]);
+    });
+  });
 });

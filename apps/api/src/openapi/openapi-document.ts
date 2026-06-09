@@ -17,7 +17,8 @@ import {
   PREVIEW_JOB_STATUS_RESPONSE_SCHEMA,
   PREVIEW_JOB_UNAVAILABLE_SCHEMA,
   PREVIEW_QUEUE_UNAVAILABLE_SCHEMA,
-  PREVIEW_REQUEST_ERROR_SCHEMA
+  PREVIEW_REQUEST_ERROR_SCHEMA,
+  THEME_CATALOG_RESPONSE_SCHEMA
 } from "@slides-agent/contracts";
 
 const json = (schema: OpenApiSchema): Record<string, unknown> => ({
@@ -39,8 +40,24 @@ export function buildOpenApiDocument(): OpenAPIObject {
       description: "Preview generation (sync) and async preview jobs.",
       version: "1.0"
     },
-    tags: [{ name: "slides" }, { name: "decks" }],
+    tags: [{ name: "slides" }, { name: "decks" }, { name: "themes" }],
     paths: {
+      "/api/themes": {
+        get: {
+          tags: ["themes"],
+          summary: "Browse the builtin theme catalogue (011)",
+          description:
+            "JWT-protected, read-only, shared builtin catalogue (not account-scoped). Returns font/palette/style groups, each entry carrying the trusted-builtin partial styleKit.",
+          responses: {
+            "200": {
+              description: "Theme catalogue grouped by axis",
+              content: json(THEME_CATALOG_RESPONSE_SCHEMA)
+            },
+            "401": { description: "Missing/invalid JWT", content: json(AUTH_REQUIRED_SCHEMA) },
+            "500": { description: "Unexpected server error." }
+          }
+        }
+      },
       "/api/decks": {
         get: {
           tags: ["decks"],

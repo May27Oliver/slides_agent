@@ -1,4 +1,5 @@
 import type { GeneratePreviewRequestContract } from "./index";
+import { parseThemeSelection } from "./theme-selection";
 
 export interface ContractError {
   code: "INVALID_INPUT" | "UNSUPPORTED_OPTION";
@@ -20,6 +21,7 @@ interface RawGeneratePreviewRequest {
   sourceContent?: unknown;
   deckBrief?: RawDeckBrief;
   options?: unknown;
+  themeSelection?: unknown;
 }
 
 type OptionalDeckBriefKey =
@@ -96,11 +98,17 @@ export function validateGeneratePreviewRequest(input: unknown): PreviewRequestVa
     return unsupportedDeckBriefOption(unsupportedDeckBriefFields);
   }
 
+  const themeSelection = parseThemeSelection(input.themeSelection);
+  if (!themeSelection.ok) {
+    return invalidInput(themeSelection.fields);
+  }
+
   return {
     ok: true,
     value: {
       sourceContent,
-      deckBrief: deckBriefValue(deckBrief, purpose, audience)
+      deckBrief: deckBriefValue(deckBrief, purpose, audience),
+      ...(themeSelection.value ? { themeSelection: themeSelection.value } : {})
     }
   };
 }

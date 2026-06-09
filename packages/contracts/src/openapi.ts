@@ -5,6 +5,8 @@
  * decorators. Plain JSON-Schema objects — framework-agnostic, consumable by
  * @nestjs/swagger's `@ApiBody({ schema })` / `@ApiResponse({ schema })`.
  */
+import { MAX_THEME_ID_CHARS } from "./theme-selection";
+
 export type OpenApiSchema = Record<string, unknown>;
 
 const MAX_SOURCE_CONTENT_CHARS = 50_000;
@@ -40,13 +42,27 @@ export const DECK_BRIEF_SCHEMA: OpenApiSchema = {
   }
 };
 
+// 011: optional per-axis manual theme override. All ids optional; absent ⇒ keyword
+// baseline. A well-formed id not in the catalogue is accepted then surfaced as a
+// themeSelectionWarnings fallback (not a 400).
+export const THEME_SELECTION_SCHEMA: OpenApiSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    fontId: { type: "string", maxLength: MAX_THEME_ID_CHARS },
+    paletteId: { type: "string", maxLength: MAX_THEME_ID_CHARS },
+    styleId: { type: "string", maxLength: MAX_THEME_ID_CHARS }
+  }
+};
+
 export const GENERATE_PREVIEW_REQUEST_SCHEMA: OpenApiSchema = {
   type: "object",
   required: ["sourceContent", "deckBrief"],
   additionalProperties: false,
   properties: {
     sourceContent: { type: "string", maxLength: MAX_SOURCE_CONTENT_CHARS },
-    deckBrief: DECK_BRIEF_SCHEMA
+    deckBrief: DECK_BRIEF_SCHEMA,
+    themeSelection: THEME_SELECTION_SCHEMA
   }
 };
 
@@ -157,6 +173,17 @@ const RENDERED_CHART_SUMMARY_SCHEMA: OpenApiSchema = {
   }
 };
 
+// 011: evidence an axis fell back to the default kit (invalid override / unresolvable base).
+const THEME_SELECTION_WARNING_SCHEMA: OpenApiSchema = {
+  type: "object",
+  required: ["axis", "reason"],
+  properties: {
+    axis: { type: "string", enum: ["font", "palette", "style"] },
+    requestedId: { type: "string" },
+    reason: { type: "string", enum: ["invalid_id", "base_unresolved"] }
+  }
+};
+
 const GENERATION_SUMMARY_SCHEMA: OpenApiSchema = {
   type: "object",
   required: [
@@ -165,7 +192,8 @@ const GENERATION_SUMMARY_SCHEMA: OpenApiSchema = {
     "chartIntentCount",
     "uncertainClaimCount",
     "selectedTheme",
-    "renderedCharts"
+    "renderedCharts",
+    "themeSelectionWarnings"
   ],
   properties: {
     slideCount: { type: "integer" },
@@ -173,7 +201,8 @@ const GENERATION_SUMMARY_SCHEMA: OpenApiSchema = {
     chartIntentCount: { type: "integer" },
     uncertainClaimCount: { type: "integer" },
     selectedTheme: SELECTED_THEME_SUMMARY_SCHEMA,
-    renderedCharts: { type: "array", items: RENDERED_CHART_SUMMARY_SCHEMA }
+    renderedCharts: { type: "array", items: RENDERED_CHART_SUMMARY_SCHEMA },
+    themeSelectionWarnings: { type: "array", items: THEME_SELECTION_WARNING_SCHEMA }
   }
 };
 
@@ -374,7 +403,8 @@ export const EDIT_REVISION_REQUEST_SCHEMA: OpenApiSchema = {
       type: "object",
       additionalProperties: true,
       description: "Edited deck (text + structure). Read-only blocks are re-derived server-side."
-    }
+    },
+    themeSelection: THEME_SELECTION_SCHEMA
   }
 };
 
@@ -390,5 +420,31 @@ export const REVISION_CONFLICT_SCHEMA: OpenApiSchema = {
     code: { type: "string", enum: ["REVISION_CONFLICT"] },
     message: { type: "string", example: "This deck was updated elsewhere." },
     currentRevision: { type: "integer", description: "Latest revision so the client can rebase." }
+  }
+};
+
+// 011: GET /api/themes browse catalogue. styleKit is the trusted-builtin partial kit
+// (opaque here; the renderer/client escape at the use boundary).
+const BROWSABLE_THEME_SCHEMA: OpenApiSchema = {
+  type: "object",
+  required: ["id", "kind", "name", "keywords", "support", "styleKit"],
+  properties: {
+    id: { type: "string" },
+    kind: { type: "string", enum: ["font", "palette", "style"] },
+    name: { type: "string" },
+    description: { type: "string" },
+    keywords: { type: "array", items: { type: "string" } },
+    support: { type: "string", enum: ["full", "partial", "raw"] },
+    styleKit: { type: "object", additionalProperties: true }
+  }
+};
+
+export const THEME_CATALOG_RESPONSE_SCHEMA: OpenApiSchema = {
+  type: "object",
+  required: ["font", "palette", "style"],
+  properties: {
+    font: { type: "array", items: BROWSABLE_THEME_SCHEMA },
+    palette: { type: "array", items: BROWSABLE_THEME_SCHEMA },
+    style: { type: "array", items: BROWSABLE_THEME_SCHEMA }
   }
 };

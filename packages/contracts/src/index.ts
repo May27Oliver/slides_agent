@@ -1,3 +1,5 @@
+import type { ThemeSelectionContract, ThemeSelectionWarningContract } from "./theme-selection";
+
 export const SLIDE_GENERATION_SCHEMA_ID = "urn:slides-agent:contracts:slide-generation";
 
 export {
@@ -12,6 +14,14 @@ export {
   type ContractError,
   type PreviewRequestValidationResult
 } from "./preview-request";
+
+export {
+  parseThemeSelection,
+  MAX_THEME_ID_CHARS,
+  type ThemeSelectionContract,
+  type ThemeSelectionWarningContract,
+  type ParseThemeSelectionResult
+} from "./theme-selection";
 
 export {
   validateLoginRequest,
@@ -43,7 +53,9 @@ export {
   AUTH_REQUIRED_SCHEMA,
   EDIT_REVISION_REQUEST_SCHEMA,
   INVALID_EDIT_SCHEMA,
-  REVISION_CONFLICT_SCHEMA
+  REVISION_CONFLICT_SCHEMA,
+  THEME_SELECTION_SCHEMA,
+  THEME_CATALOG_RESPONSE_SCHEMA
 } from "./openapi";
 
 export {
@@ -73,6 +85,8 @@ export interface DeckBriefContract {
 export interface GeneratePreviewRequestContract {
   sourceContent: string;
   deckBrief: DeckBriefContract;
+  /** 011: optional manual theme override applied at render stage (no extra LLM). */
+  themeSelection?: ThemeSelectionContract;
 }
 
 export interface PreviewArtifactContract {
@@ -161,6 +175,8 @@ export interface GenerationSummaryContract {
   selectedTheme: SelectedThemeSummaryContract;
   /** 009: per-chart render evidence; always present ([] when no charts). */
   renderedCharts: RenderedChartSummaryContract[];
+  /** 011: per-axis theme fallback evidence; always present ([] when all applied). */
+  themeSelectionWarnings: ThemeSelectionWarningContract[];
 }
 
 export interface GeneratePreviewResponseContract {
