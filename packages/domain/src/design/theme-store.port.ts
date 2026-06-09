@@ -5,6 +5,7 @@
  * specs/007-design-theme-system/contracts/theme-selection.md (DR-006).
  */
 
+import type { BrowsableTheme } from "@/design/theme-selection.types";
 import type { SelectableTheme } from "@/design/theme.types";
 
 export interface ThemeStore {
@@ -17,4 +18,13 @@ export interface ThemeStore {
    * safe default sorts first (DR-004).
    */
   listSelectable(): Promise<SelectableTheme[]>;
+
+  /**
+   * 011: same builtin catalogue as `listSelectable` (identical filter + order),
+   * enriched with the human-facing `name`/`description` the browse UI needs. The
+   * `styleKit` is the SAME trusted-builtin partial kit — no swatch-reduced parallel
+   * projection — so the web client can `composeKit` + live-render. Served by
+   * `GET /api/themes`. data-model §5.
+   */
+  listBrowsable(): Promise<BrowsableTheme[]>;
 }
