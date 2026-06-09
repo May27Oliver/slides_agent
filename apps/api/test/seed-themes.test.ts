@@ -204,6 +204,24 @@ describe("seedThemes (007 US2)", () => {
     expect(issues[0]?.problems.some((p) => p.includes("ambient"))).toBe(true);
   });
 
+  it("rejects a non-hex / url() accentHues[].base (011 sec: base must be a #hex, not just non-empty)", () => {
+    const mk = (base: string): ThemeSeed => ({
+      ...paletteSeed,
+      id: `palette-10-base-${base.slice(1, 5)}`,
+      styleKit: {
+        ...(paletteSeed.styleKit as object),
+        accentHues: [{ name: "x", base, gradient: "linear-gradient(135deg,#111,#333)" }]
+      } as never
+    });
+
+    // a url()-bearing base would previously pass (isNonEmptyString) and reach a swatch inline style.
+    const beacon = validateThemeSeeds([mk("url(https://evil.example/x)")]);
+    expect(beacon[0]?.problems.some((p) => p.includes("base"))).toBe(true);
+    expect(validateThemeSeeds([mk("rgb(0,0,0);}")]).length).toBe(1);
+    // a valid #hex base still passes.
+    expect(validateThemeSeeds([mk("#0AF")])).toEqual([]);
+  });
+
   it("rejects a CSS-breakout in a free-CSS string field (cardShadow / glow)", async () => {
     const breakout = "0 0 8px red } body { background: red"; // '}' escapes the rule
     const badShadow: ThemeSeed = {

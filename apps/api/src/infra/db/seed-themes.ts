@@ -231,11 +231,11 @@ function validatePaletteKit(kit: Record<string, unknown>): string[] {
       if (
         !isObject(hue) ||
         !isNonEmptyString(hue.name) ||
-        !isNonEmptyString(hue.base) ||
+        !isHexColor(hue.base) ||
         !isSafeCssValue(hue.gradient)
       ) {
         problems.push(
-          `palette styleKit.accentHues[${i}] must have name/base strings and a safe gradient`
+          `palette styleKit.accentHues[${i}] must have a name, a #hex base, and a safe gradient`
         );
       }
     });
@@ -395,6 +395,16 @@ function isNonEmptyString(value: unknown): value is string {
 /** A non-empty string with no CSS-injection characters (mirrors the renderer). */
 function isSafeCssValue(value: unknown): value is string {
   return typeof value === "string" && value.length > 0 && !UNSAFE_CSS_VALUE.test(value);
+}
+/**
+ * A `#hex` colour. `accentHues[].base` is consumed at render ONLY via `safeHex`, so it
+ * must be a hex literal — validating it as such (not just a non-empty string) closes the
+ * gap where a `url(...)`/breakout `base` could pass seed-time and reach a swatch's inline
+ * style (011 security review). Pattern mirrors the renderer's safeHex.
+ */
+const HEX_COLOR = /^#[0-9a-fA-F]{3,8}$/u;
+function isHexColor(value: unknown): value is string {
+  return typeof value === "string" && HEX_COLOR.test(value.trim());
 }
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
