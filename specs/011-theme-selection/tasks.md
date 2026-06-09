@@ -34,9 +34,9 @@ description: "Task list — 011 主題庫手動選擇（生成頁 + 編輯頁，
 
 ## Phase 4：Frontend — 共用 ThemePicker + 兩入口
 - [ ] T010 [P] `themes-client`（GET /api/themes）+ 測試。
-- [ ] T011 `ThemePicker`（共用）：三軸選擇器 + swatch + 「目前組合摘要」+ 搜尋/篩選/分頁（palette 96 用虛擬列表/分頁）；鍵盤/focus/RWD。輸出 `ManualThemeSelection`。元件測試。
-- [ ] T012 生成頁：保留 6 張快速卡 + 新增「瀏覽全部」開 `ThemePicker`；送出時把 picker 結果帶入 request `themeSelection`。**先跑 `gitnexus_impact({target:"SlideGenerationForm"})`**。測試：選三軸→request 帶正確 ids；未開 picker→現況。
-- [ ] T013 編輯頁：`ThemePicker` 入口（沿用 010 tab/panel 版面）；套用 → 經 `createEditRevision` 帶 `themeSelection` → 即時預覽 + 存新版本。測試：換主題→預覽變、存後版本+1。
+- [ ] T011 `ThemeBrowserModal`（共用彈窗）：三軸分頁 + swatch + 頂部組合摘要 + 搜尋/篩選/分頁（palette 96 用虛擬列表/分頁）+ 套用；a11y：focus trap、Esc 關閉、鍵盤/focus。輸出 `ManualThemeSelection`。＋ `ThemeSummary`（常駐摘要，未選=「自動」，含「瀏覽全部 →」開 modal）。元件測試。
+- [ ] T012 生成頁：保留 6 張快速卡；表單側邊欄掛 `ThemeSummary` → 開 `ThemeBrowserModal` 選定 → 送出帶 request `themeSelection`。**先跑 `gitnexus_impact({target:"SlideGenerationForm"})`**。測試：選三軸→request 帶正確 ids；未開 modal→現況。
+- [ ] T013 編輯頁：右側版面掛 `ThemeSummary`（沿用 010 版面）→ 開 `ThemeBrowserModal` → 套用 → 經 `createEditRevision` 帶 `themeSelection` → 即時預覽 + 存新版本。測試：換主題→預覽變、存後版本+1。
 - [ ] T014 [P] i18n（zh-TW/en/ja）：picker 標籤、三軸名、組合摘要、瀏覽全部、swatch 提示。
 
 **✅ Checkpoint B**：生成頁/編輯頁皆可瀏覽 220 主題、每軸挑選、即時看到效果。

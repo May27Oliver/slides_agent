@@ -50,12 +50,13 @@
 - 編輯路徑：edit-revision request 加 `themeSelection?`；`applyDeckEdit`（010）帶 selection 時重組 styleKit。
 - OpenAPI 補登 `GET /api/themes` + request 欄位。
 
-### Phase C — Frontend：共用 ThemePicker + 兩入口
+### Phase C — Frontend：共用 ThemePicker（modal）+ 常駐組合摘要
 - `themes-client`（GET /api/themes）。
-- `ThemePicker`：三軸選擇器（font/palette/style）+ swatch + 「目前組合摘要」+ 搜尋/篩選/分頁（96 palette 需虛擬列表/分頁）。
-- 生成頁：保留 6 張卡 + 「瀏覽全部」開 picker；picker 結果 → request.themeSelection。
-- 編輯頁：picker 入口（tab/panel，沿用 010 版面）；套用 → 經 edit revision 重渲染、即時預覽。
-- i18n（zh-TW/en/ja）、a11y（鍵盤/focus/RWD/reduced-motion）。
+- **`ThemeBrowserModal`（彈窗，共用）**：三軸分頁（font/palette/style）+ swatch + 搜尋/篩選/分頁（96 palette 需虛擬列表/分頁）+ 頂部「目前組合」摘要 + 套用。a11y：focus trap、Esc 關閉、鍵盤可操作。
+- **`ThemeSummary`（常駐摘要，共用）**：顯示三軸目前選擇（未選=「自動」），帶「瀏覽全部主題 →」按鈕開 modal。**生成頁掛在表單側邊欄**（設計區）、**編輯頁掛在右側版面**（沿用 010）。
+- 生成頁：保留 6 張快速卡；`ThemeSummary` 顯示組合、開 modal 選定 → request.themeSelection。
+- 編輯頁：`ThemeSummary` 顯示組合、開 modal、套用 → 經 edit revision 重渲染、即時預覽。
+- i18n（zh-TW/en/ja）、a11y（modal focus trap / 鍵盤 / focus / RWD / reduced-motion）。
 
 ### Phase D — 驗證
 - domain `applyThemeSelection` 測試（override/缺軸/無效 id 退回）；contract 測試；endpoint 測試；picker 元件測試；生成/編輯兩入口整合測試；client↔server 套用一致；death-inventory 量化（research）。

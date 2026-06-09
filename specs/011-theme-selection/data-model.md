@@ -101,10 +101,11 @@ export interface ThemeCatalogResponseContract {
 
 ## §6 前端模型
 
-- **ThemePicker 狀態**：`{ fontId?: string; paletteId?: string; styleId?: string }`（= ManualThemeSelection）。三軸各一個清單（搜尋/篩選/分頁），選中以 id 記錄。
-- 「目前組合摘要」：顯示三軸目前選擇（含 baseline 未覆寫的軸以「自動」標示）。
-- 生成頁：6 張快速卡（寫 styleDirection，現況）+「瀏覽全部」開 picker（picker 輸出 themeSelection）。兩者可並存——卡片走關鍵字 baseline、picker 走 id 覆寫。
-- 編輯頁：picker 入口（沿用 010 tab/panel 版面）；套用 → edit revision 帶 themeSelection。
+- **選擇狀態**：`{ fontId?: string; paletteId?: string; styleId?: string }`（= ManualThemeSelection）。
+- **`ThemeBrowserModal`（彈窗）**：開啟才載入/呈現三軸 swatch 清單（搜尋/篩選/分頁），選中以 id 記錄；頂部組合摘要 + 套用；a11y focus trap / Esc。**選定即關閉**，結果回填 summary。
+- **`ThemeSummary`（常駐摘要）**：顯示三軸目前選擇（未覆寫軸標「自動」）+「瀏覽全部主題 →」開 modal。**生成頁掛表單側邊欄、編輯頁掛右側版面**（沿用 010）。
+- 生成頁：6 張快速卡（寫 styleDirection，現況）與 modal 並存——卡片走關鍵字 baseline、modal 走 id 覆寫；summary 結果 → request.themeSelection。
+- 編輯頁：summary → modal → 套用 → edit revision 帶 themeSelection。
 
 ## §7 失敗安全 / Edge
 
