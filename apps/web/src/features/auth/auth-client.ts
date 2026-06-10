@@ -1,9 +1,14 @@
 import type { LoginResponseContract } from "@slides-agent/contracts";
 
 export class AuthError extends Error {
-  constructor(message = "Authentication failed") {
+  /** Public, sanitized server code (e.g. AUTH_INVALID / ACCOUNT_PENDING /
+   * ACCOUNT_DISABLED), or AUTH_INVALID as a safe default. */
+  readonly code: string;
+
+  constructor(message = "Authentication failed", code = "AUTH_INVALID") {
     super(message);
     this.name = "AuthError";
+    this.code = code;
   }
 }
 
@@ -18,9 +23,22 @@ export async function loginRequest(
     body: JSON.stringify({ username, password })
   });
   if (!response.ok) {
-    throw new AuthError("Login failed");
+    // Carry the server's code so the view can distinguish pending/disabled from a
+    // generic credential failure (DR-002). Unknown account / wrong password stay
+    // AUTH_INVALID — no enumeration.
+    const code = await readErrorCode(response);
+    throw new AuthError("Login failed", code);
   }
   return (await response.json()) as LoginResponseContract;
+}
+
+async function readErrorCode(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { code?: string };
+    return typeof body.code === "string" ? body.code : "AUTH_INVALID";
+  } catch {
+    return "AUTH_INVALID";
+  }
 }
 
 export async function logoutRequest(

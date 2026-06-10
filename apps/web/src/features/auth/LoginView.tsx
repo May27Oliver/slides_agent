@@ -2,7 +2,22 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { AuthError } from "@/features/auth/auth-client";
 import { fetchAuthConfig } from "@/features/auth/register-client";
+
+/** Maps a login failure to a zh-TW message. Only pending/disabled (reached with the
+ * correct password) get specific text; everything else stays generic (FR-005). */
+function loginErrorMessage(error: unknown): string {
+  if (error instanceof AuthError) {
+    if (error.code === "ACCOUNT_PENDING") {
+      return "帳號尚待管理員核准，核准後即可登入。";
+    }
+    if (error.code === "ACCOUNT_DISABLED") {
+      return "此帳號已被停用，請聯絡管理員。";
+    }
+  }
+  return "登入失敗，請確認帳號與密碼";
+}
 
 /**
  * Only follow the stored post-login destination if it is a same-origin relative
@@ -51,9 +66,9 @@ export function LoginView() {
     try {
       await login(username, password);
       navigate(from, { replace: true });
-    } catch {
-      // Sanitized: never reveal whether the account exists (FR-005).
-      setError("登入失敗，請確認帳號與密碼");
+    } catch (caught) {
+      // Generic by default (no enumeration); pending/disabled get specific text.
+      setError(loginErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }

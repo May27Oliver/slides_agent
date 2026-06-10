@@ -32,6 +32,29 @@ describe("auth-client", () => {
     await expect(loginRequest("a", "bad", fetchImpl)).rejects.toBeInstanceOf(AuthError);
   });
 
+  it("loginRequest carries the server code (ACCOUNT_PENDING) for the view to branch on", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ code: "ACCOUNT_PENDING" }, false, 403));
+    await expect(loginRequest("a", "pw", fetchImpl)).rejects.toMatchObject({
+      name: "AuthError",
+      code: "ACCOUNT_PENDING"
+    });
+  });
+
+  it("loginRequest defaults to AUTH_INVALID when the error body is unparseable", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => {
+        throw new Error("no body");
+      }
+    } as unknown as Response);
+    await expect(loginRequest("a", "bad", fetchImpl)).rejects.toMatchObject({
+      code: "AUTH_INVALID"
+    });
+  });
+
   it("logoutRequest sends the bearer token and swallows network errors", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(undefined, true, 204));
     await logoutRequest("jwt", fetchImpl);
