@@ -3,6 +3,8 @@ import { useAuth } from "@/features/auth/AuthProvider";
 import { LoginView } from "@/features/auth/LoginView";
 import { RegisterView } from "@/features/auth/RegisterView";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
+import { AdminRoute } from "@/features/admin/AdminRoute";
+import { AdminUsersView } from "@/features/admin/AdminUsersView";
 import { DeckEditorView } from "@/features/deck-editor/DeckEditorView";
 import { DeckSwitcher } from "@/features/deck-switcher/DeckSwitcher";
 import { MyDecksView } from "@/features/decks/MyDecksView";
@@ -26,6 +28,11 @@ function GenerationRoute() {
           <DeckSwitcher fetchImpl={authFetch} />
         </div>
         <div className="flex items-center gap-3">
+          {user?.isAdmin ? (
+            <Link to="/admin/users" className="font-medium text-brand-700 hover:underline">
+              使用者管理
+            </Link>
+          ) : null}
           {user ? <span className="text-ink-soft">{user.displayName}</span> : null}
           <button
             type="button"
@@ -53,6 +60,9 @@ export function App() {
         <Route path="/" element={<GenerationRoute />} />
         <Route path="/decks" element={<MyDecksView />} />
         <Route path="/decks/:id/edit" element={<DeckEditorView />} />
+      </Route>
+      <Route element={<AdminRoute />}>
+        <Route path="/admin/users" element={<AdminUsersView />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
