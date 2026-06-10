@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { fetchAuthConfig } from "@/features/auth/register-client";
 
 /**
  * Only follow the stored post-login destination if it is a same-origin relative
@@ -25,6 +26,19 @@ export function LoginView() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | undefined>();
   const [submitting, setSubmitting] = useState(false);
+  const [registrationEnabled, setRegistrationEnabled] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void fetchAuthConfig().then((config) => {
+      if (active) {
+        setRegistrationEnabled(config.registrationEnabled);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   if (status === "authenticated") {
     return <Navigate to={from} replace />;
@@ -87,6 +101,15 @@ export function LoginView() {
         >
           {submitting ? "登入中…" : "登入"}
         </button>
+
+        {registrationEnabled ? (
+          <p className="text-center text-sm text-ink-soft">
+            還沒有帳號？{" "}
+            <Link to="/register" className="font-medium text-brand-700 hover:underline">
+              註冊
+            </Link>
+          </p>
+        ) : null}
       </form>
     </main>
   );

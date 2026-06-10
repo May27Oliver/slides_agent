@@ -8,8 +8,14 @@ import {
   Req,
   UseGuards
 } from "@nestjs/common";
-import type { LoginResponseContract, MeResponseContract } from "@slides-agent/contracts";
+import type {
+  AuthConfigContract,
+  LoginResponseContract,
+  MeResponseContract
+} from "@slides-agent/contracts";
 import { AuthService } from "@/modules/auth/auth.service";
+import type { AuthConfig } from "@/config/auth.config";
+import { AUTH_CONFIG } from "@/modules/auth/auth.tokens";
 import { LocalAuthGuard } from "@/modules/auth/local-auth.guard";
 import { LoginRateLimitGuard } from "@/modules/auth/login-rate-limit.guard";
 import { JwtAuthGuard } from "@/modules/auth/jwt-auth.guard";
@@ -21,7 +27,17 @@ interface AuthedRequest {
 
 @Controller("auth")
 export class AuthController {
-  constructor(@Inject(AuthService) private readonly authService: AuthService) {}
+  constructor(
+    @Inject(AuthService) private readonly authService: AuthService,
+    @Inject(AUTH_CONFIG) private readonly config: AuthConfig
+  ) {}
+
+  @Get("config")
+  getConfig(): AuthConfigContract {
+    // Public (no guard): lets the login page decide whether to show the
+    // "register" link without requiring auth (DR-010).
+    return { registrationEnabled: this.config.registrationEnabled };
+  }
 
   @Post("login")
   @UseGuards(LoginRateLimitGuard, LocalAuthGuard)

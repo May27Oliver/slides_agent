@@ -1,10 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import { AuthController } from "@/modules/auth/auth.controller";
 import type { AuthService } from "@/modules/auth/auth.service";
+import type { AuthConfig } from "@/config/auth.config";
 import type { AuthedRequestUser } from "@/modules/auth/jwt.strategy";
 
-function controllerWith(authService: Partial<AuthService>): AuthController {
-  return new AuthController(authService as AuthService);
+function controllerWith(
+  authService: Partial<AuthService>,
+  config: Partial<AuthConfig> = { registrationEnabled: true }
+): AuthController {
+  return new AuthController(authService as AuthService, config as AuthConfig);
 }
 
 describe("AuthController", () => {
@@ -43,5 +47,14 @@ describe("AuthController", () => {
 
   it("logout is a no-op (204)", () => {
     expect(controllerWith({}).logout()).toBeUndefined();
+  });
+
+  it("getConfig exposes the public registrationEnabled flag", () => {
+    expect(controllerWith({}, { registrationEnabled: true }).getConfig()).toEqual({
+      registrationEnabled: true
+    });
+    expect(controllerWith({}, { registrationEnabled: false }).getConfig()).toEqual({
+      registrationEnabled: false
+    });
   });
 });

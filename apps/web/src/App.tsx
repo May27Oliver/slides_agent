@@ -1,6 +1,7 @@
 import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { LoginView } from "@/features/auth/LoginView";
+import { RegisterView } from "@/features/auth/RegisterView";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
 import { DeckEditorView } from "@/features/deck-editor/DeckEditorView";
 import { DeckSwitcher } from "@/features/deck-switcher/DeckSwitcher";
@@ -47,6 +48,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginView />} />
+      <Route path="/register" element={<RegisterView />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<GenerationRoute />} />
         <Route path="/decks" element={<MyDecksView />} />

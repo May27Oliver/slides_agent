@@ -28,6 +28,24 @@ describe("loadAuthConfig", () => {
     expect(config.jwtIssuer).toBe("slides-agent");
     expect(config.accounts).toEqual([account]);
     expect(config.loginRateLimit).toEqual({ max: 10, windowMs: 60000 });
+    expect(config.registerRateLimit).toEqual({ max: 5, windowMs: 60000 });
+    expect(config.registrationEnabled).toBe(true);
+  });
+
+  it("disables self-registration when REGISTRATION_ENABLED is false/0/no", () => {
+    for (const flag of ["false", "0", "no", "FALSE"]) {
+      expect(
+        loadAuthConfig({ AUTH_JWT_SECRET: SECRET, REGISTRATION_ENABLED: flag }).registrationEnabled
+      ).toBe(false);
+    }
+  });
+
+  it("keeps self-registration enabled for unset/blank/true REGISTRATION_ENABLED", () => {
+    for (const flag of [undefined, "", "true", "1"]) {
+      expect(
+        loadAuthConfig({ AUTH_JWT_SECRET: SECRET, REGISTRATION_ENABLED: flag }).registrationEnabled
+      ).toBe(true);
+    }
   });
 
   it("rejects a malformed AUTH_JWT_EXPIRES_IN", () => {

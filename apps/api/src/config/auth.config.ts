@@ -13,6 +13,9 @@ export interface AuthConfig {
   jwtIssuer: string;
   accounts: BootstrapAccount[];
   loginRateLimit: { max: number; windowMs: number };
+  registerRateLimit: { max: number; windowMs: number };
+  /** Self-registration master switch (DR-010). Defaults to enabled. */
+  registrationEnabled: boolean;
 }
 
 type EnvLike = Record<string, string | undefined>;
@@ -22,6 +25,8 @@ const DEFAULT_ISSUER = "slides-agent";
 const MIN_JWT_SECRET_CHARS = 32;
 const DEFAULT_LOGIN_RATE_LIMIT_MAX = 10;
 const DEFAULT_LOGIN_RATE_LIMIT_WINDOW_MS = 60_000;
+const DEFAULT_REGISTER_RATE_LIMIT_MAX = 5;
+const DEFAULT_REGISTER_RATE_LIMIT_WINDOW_MS = 60_000;
 // Accepts a bare seconds count or a vercel/ms duration string (e.g. "30d", "12h").
 const EXPIRES_IN_PATTERN = /^\d+(\.\d+)?\s*(ms|s|m|h|d|w|y)?$/u;
 
@@ -50,7 +55,16 @@ export function loadAuthConfig(env: EnvLike = process.env): AuthConfig {
         env.AUTH_LOGIN_RATE_LIMIT_WINDOW_MS,
         DEFAULT_LOGIN_RATE_LIMIT_WINDOW_MS
       )
-    }
+    },
+    registerRateLimit: {
+      max: positiveIntOr(env.AUTH_REGISTER_RATE_LIMIT_MAX, DEFAULT_REGISTER_RATE_LIMIT_MAX),
+      windowMs: positiveIntOr(
+        env.AUTH_REGISTER_RATE_LIMIT_WINDOW_MS,
+        DEFAULT_REGISTER_RATE_LIMIT_WINDOW_MS
+      )
+    },
+    // Default ON; only an explicit "false" / "0" disables self-registration.
+    registrationEnabled: parseBooleanFlag(env.REGISTRATION_ENABLED, true)
   };
 }
 
@@ -104,6 +118,20 @@ function toBootstrapAccount(value: unknown, index: number): BootstrapAccount {
 function positiveIntOr(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function parseBooleanFlag(value: string | undefined, fallback: boolean): boolean {
+  const normalized = value?.trim().toLowerCase();
+  if (normalized === undefined || normalized === "") {
+    return fallback;
+  }
+  if (normalized === "false" || normalized === "0" || normalized === "no") {
+    return false;
+  }
+  if (normalized === "true" || normalized === "1" || normalized === "yes") {
+    return true;
+  }
+  return fallback;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -3,13 +3,15 @@ import { PassportModule } from "@nestjs/passport";
 import { JwtModule } from "@nestjs/jwt";
 import { loadAuthConfig } from "@/config/auth.config";
 import { DbModule } from "@/infra/db/db.module";
-import { AUTH_CONFIG, USER_ACCOUNT_STORE } from "@/modules/auth/auth.tokens";
+import { ACCOUNT_ADMIN_STORE, AUTH_CONFIG, USER_ACCOUNT_STORE } from "@/modules/auth/auth.tokens";
 import { AuthController } from "@/modules/auth/auth.controller";
+import { RegisterController } from "@/modules/auth/register.controller";
 import { AuthService } from "@/modules/auth/auth.service";
 import { DbUserAccountStore } from "@/modules/auth/db-user-account-store";
 import { LocalStrategy } from "@/modules/auth/local.strategy";
 import { JwtStrategy } from "@/modules/auth/jwt.strategy";
 import { LoginRateLimitGuard } from "@/modules/auth/login-rate-limit.guard";
+import { RegisterRateLimitGuard } from "@/modules/auth/register-rate-limit.guard";
 
 /**
  * Login + protection. Provides the account allowlist store, both Passport
@@ -40,15 +42,19 @@ import { LoginRateLimitGuard } from "@/modules/auth/login-rate-limit.guard";
       }
     })
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, RegisterController],
   providers: [
     { provide: AUTH_CONFIG, useFactory: () => loadAuthConfig() },
-    { provide: USER_ACCOUNT_STORE, useClass: DbUserAccountStore },
+    DbUserAccountStore,
+    // One store instance backs both the read-only and the write/list capability.
+    { provide: USER_ACCOUNT_STORE, useExisting: DbUserAccountStore },
+    { provide: ACCOUNT_ADMIN_STORE, useExisting: DbUserAccountStore },
     AuthService,
     LocalStrategy,
     JwtStrategy,
-    LoginRateLimitGuard
+    LoginRateLimitGuard,
+    RegisterRateLimitGuard
   ],
-  exports: [AuthService]
+  exports: [AuthService, ACCOUNT_ADMIN_STORE, USER_ACCOUNT_STORE, AUTH_CONFIG]
 })
 export class AuthModule {}
