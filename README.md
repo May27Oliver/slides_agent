@@ -265,6 +265,24 @@ All require `Authorization: Bearer <jwt>` (auth itself excepted).
 
 ---
 
+## Deployment (Docker Compose, feature 012)
+
+For single-host production deployment, the repo ships a Docker Compose stack
+(`nginx` edge + `api` + `worker` + one-shot `migrate` job + `postgres` + `redis`).
+One command brings it up:
+
+```bash
+cp .env.production.example .env   # then fill POSTGRES_* / AUTH_* / ALLOWED_ORIGIN
+docker compose up -d --build
+```
+
+migrate→seed runs automatically and gates `api`/`worker`; the only app change vs
+dev is a public liveness probe `GET /api/health`. Full guide (required env,
+healthcheck observation, end-to-end smoke, `down -v` risk, manual rerun):
+[`specs/012-docker-compose-deploy/quickstart.md`](specs/012-docker-compose-deploy/quickstart.md).
+
+---
+
 ## Testing & verification
 
 ### Unit / integration tests (vitest)

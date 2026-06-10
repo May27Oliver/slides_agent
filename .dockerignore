@@ -1,0 +1,45 @@
+# Build-context exclusions (012, FR-012). Keep secrets and non-runtime bulk out
+# of the image: smaller context, faster builds, no .env / certs baked into layers.
+# Runtime needs apps/api {src,scripts,tsconfig,migrations,seeds} + packages/*/src
+# + manifests — those are NOT excluded here.
+
+# Dependencies — reinstalled in-image from the lockfile.
+**/node_modules
+
+# Secrets / local env — injected at runtime via compose env_file, never baked.
+.env
+.env.*
+
+# Build / test / tooling output — regenerated in-image or irrelevant to runtime.
+**/dist
+**/build
+**/coverage
+**/*.tsbuildinfo
+playwright-report
+**/test-results
+.vite
+.pnpm-store
+
+# Local visual-preview output (generated, not runtime).
+apps/api/preview
+apps/web/test-results
+
+# Tests — not needed to run the services.
+**/*.test.ts
+**/*.test.tsx
+**/tests
+apps/web/tests
+
+# VCS / docs / specs / agent + editor metadata — not part of the runtime image.
+.git
+.gitignore
+specs
+docs
+*.md
+.claude
+.agents
+.codex
+.coding_agent_tasks
+.gitnexus
+.DS_Store
+**/*.log
