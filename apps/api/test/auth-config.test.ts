@@ -28,6 +28,24 @@ describe("loadAuthConfig", () => {
     expect(config.jwtIssuer).toBe("slides-agent");
     expect(config.accounts).toEqual([account]);
     expect(config.loginRateLimit).toEqual({ max: 10, windowMs: 60000 });
+    expect(config.registerRateLimit).toEqual({ max: 5, windowMs: 60000 });
+    expect(config.registrationEnabled).toBe(true);
+  });
+
+  it("disables self-registration when REGISTRATION_ENABLED is false/0/no", () => {
+    for (const flag of ["false", "0", "no", "FALSE"]) {
+      expect(
+        loadAuthConfig({ AUTH_JWT_SECRET: SECRET, REGISTRATION_ENABLED: flag }).registrationEnabled
+      ).toBe(false);
+    }
+  });
+
+  it("keeps self-registration enabled for unset/blank/true REGISTRATION_ENABLED", () => {
+    for (const flag of [undefined, "", "true", "1"]) {
+      expect(
+        loadAuthConfig({ AUTH_JWT_SECRET: SECRET, REGISTRATION_ENABLED: flag }).registrationEnabled
+      ).toBe(true);
+    }
   });
 
   it("rejects a malformed AUTH_JWT_EXPIRES_IN", () => {
@@ -54,6 +72,23 @@ describe("loadAuthConfig", () => {
   it("throws on a malformed account entry", () => {
     expect(() =>
       loadAuthConfig({ AUTH_JWT_SECRET: SECRET, AUTH_ACCOUNTS: JSON.stringify([{ id: "x" }]) })
+    ).toThrow(/AUTH_ACCOUNTS\[0\]/u);
+  });
+
+  it("parses the optional isAdmin bootstrap flag when present", () => {
+    const config = loadAuthConfig({
+      AUTH_JWT_SECRET: SECRET,
+      AUTH_ACCOUNTS: JSON.stringify([{ ...account, isAdmin: true }])
+    });
+    expect(config.accounts[0]).toMatchObject({ id: "user_owner", isAdmin: true });
+  });
+
+  it("throws when isAdmin is present but not a boolean", () => {
+    expect(() =>
+      loadAuthConfig({
+        AUTH_JWT_SECRET: SECRET,
+        AUTH_ACCOUNTS: JSON.stringify([{ ...account, isAdmin: "yes" }])
+      })
     ).toThrow(/AUTH_ACCOUNTS\[0\]/u);
   });
 });

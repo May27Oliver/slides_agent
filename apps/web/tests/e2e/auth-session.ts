@@ -2,7 +2,14 @@ import type { Page } from "@playwright/test";
 
 const AUTH_STORAGE_KEY = "slides-agent.auth";
 
-export async function seedAuthenticatedSession(page: Page) {
+interface SessionUserOverrides {
+  id?: string;
+  username?: string;
+  displayName?: string;
+  isAdmin?: boolean;
+}
+
+export async function seedAuthenticatedSession(page: Page, user: SessionUserOverrides = {}) {
   await page.addInitScript(
     ({ key, session }) => {
       window.localStorage.setItem(key, JSON.stringify(session));
@@ -15,7 +22,9 @@ export async function seedAuthenticatedSession(page: Page) {
         user: {
           id: "user_e2e",
           username: "e2e@example.com",
-          displayName: "E2E User"
+          displayName: "E2E User",
+          isAdmin: false,
+          ...user
         }
       }
     }

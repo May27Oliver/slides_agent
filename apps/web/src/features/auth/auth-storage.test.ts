@@ -11,7 +11,7 @@ import {
 const session = {
   token: "jwt",
   expiresAt: "2026-07-03T00:00:00.000Z",
-  user: { id: "u", username: "owner@example.com", displayName: "Owner" }
+  user: { id: "u", username: "owner@example.com", displayName: "Owner", isAdmin: false }
 };
 
 afterEach(() => localStorage.clear());

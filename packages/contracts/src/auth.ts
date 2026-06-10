@@ -7,6 +7,8 @@ export interface AuthUserContract {
   id: string;
   username: string;
   displayName: string;
+  /** UI hint only — server authorization re-reads the live DB value. */
+  isAdmin: boolean;
 }
 
 export interface LoginResponseContract {
@@ -21,24 +23,116 @@ export interface MeResponseContract {
   user: AuthUserContract;
 }
 
-/** Sanitized auth error shape. `AUTH_INVALID` = login failed; `AUTH_REQUIRED` = not authenticated. */
+/** Account lifecycle exposed to the frontend (mirrors domain AccountStatus). */
+export type AccountStatusContract = "pending" | "active" | "disabled";
+
+/** Public-safe account view: register response + admin dashboard rows. No hash. */
+export interface PublicAccount {
+  id: string;
+  username: string;
+  displayName: string;
+  status: AccountStatusContract;
+  isAdmin: boolean;
+  /** ISO-8601 timestamp. */
+  createdAt: string;
+}
+
+/** Registration always lands in `pending`; no token is issued (FR-013a). */
+export type RegisterResponseContract = PublicAccount;
+
+/**
+ * Sanitized auth error shape.
+ * - `AUTH_INVALID` = login failed (generic; never reveals account existence).
+ * - `AUTH_REQUIRED` = not authenticated.
+ * - `ACCOUNT_PENDING` / `ACCOUNT_DISABLED` = correct password, but the account is
+ *   not yet approved / has been disabled (only reachable by the account owner).
+ * - `REGISTRATION_DISABLED` = self-registration is turned off.
+ */
 export interface AuthErrorContract {
-  code: "AUTH_INVALID" | "AUTH_REQUIRED";
+  code:
+    | "AUTH_INVALID"
+    | "AUTH_REQUIRED"
+    | "ACCOUNT_PENDING"
+    | "ACCOUNT_DISABLED"
+    | "REGISTRATION_DISABLED";
   message: string;
 }
 
-export interface LoginRequestError {
+/** Public registration availability flag (DR-010, GET /api/auth/config). */
+export interface AuthConfigContract {
+  registrationEnabled: boolean;
+}
+
+export interface RegisterRequestContract {
+  username: string;
+  displayName: string;
+  password: string;
+}
+
+/**
+ * Sanitized registration error codes.
+ * - `INVALID_INPUT` = a field failed validation (carries `fields`).
+ * - `USERNAME_TAKEN` = the email is already registered (409). A dedicated code so
+ *   the client need not infer duplicates from a field-less `INVALID_INPUT`.
+ * - `REGISTRATION_DISABLED` = self-registration is turned off (403).
+ */
+export type RegisterErrorCode = "INVALID_INPUT" | "USERNAME_TAKEN" | "REGISTRATION_DISABLED";
+
+/** Admin dashboard list response. */
+export interface AdminUserListResponse {
+  users: PublicAccount[];
+}
+
+/**
+ * The only statuses an admin may SET via PATCH (FR-010): approve/re-enable
+ * (`active`) or disable (`disabled`). `pending` is NOT settable — it is reached
+ * only by self-registration, and allowing an admin to set it would bypass the
+ * FR-018 last-admin guard (a "pending" admin can't log in / manage).
+ */
+export type AdminSettableStatus = "active" | "disabled";
+
+/** Admin mutation request: at least one of status/isAdmin. */
+export interface AdminUpdateUserRequest {
+  status?: AdminSettableStatus;
+  isAdmin?: boolean;
+}
+
+/** Admin guardrail error (FR-018) + not-found / bad-target shapes. */
+export type AdminMutationErrorCode =
+  | "LAST_ADMIN_PROTECTED"
+  | "CANNOT_MODIFY_SELF"
+  | "CANNOT_REJECT_NON_PENDING"
+  | "ACCOUNT_NOT_FOUND"
+  | "INVALID_INPUT";
+
+export interface AdminMutationErrorContract {
+  code: AdminMutationErrorCode;
+  message: string;
+}
+
+export interface RequestValidationError {
   code: "INVALID_INPUT";
   message: string;
   fields: string[];
 }
 
+export type LoginRequestError = RequestValidationError;
+
 export type LoginRequestValidationResult =
   | { ok: true; value: LoginRequestContract }
-  | { ok: false; error: LoginRequestError };
+  | { ok: false; error: RequestValidationError };
+
+export type RegisterRequestValidationResult =
+  | { ok: true; value: RegisterRequestContract }
+  | { ok: false; error: RequestValidationError };
 
 const MAX_USERNAME_CHARS = 320;
+const MAX_DISPLAY_NAME_CHARS = 200;
 const MAX_PASSWORD_CHARS = 1_000;
+const MIN_PASSWORD_CHARS = 10;
+// Pragmatic email shape: one @, no spaces, a dotted domain. Not RFC-perfect by
+// design — we only reject obviously malformed addresses, not exotic-but-valid ones.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 
 export function validateLoginRequest(input: unknown): LoginRequestValidationResult {
   if (!isRecord(input)) {
@@ -65,6 +159,51 @@ export function validateLoginRequest(input: unknown): LoginRequestValidationResu
   return { ok: true, value: { username, password } };
 }
 
+/**
+ * Registration validation (DR-008). email-shaped username, required display name,
+ * and a password of at least {@link MIN_PASSWORD_CHARS} chars containing at least
+ * one letter and one digit. Username is trimmed; the password is preserved
+ * verbatim (leading/trailing spaces are legal password characters).
+ */
+export function validateRegisterRequest(input: unknown): RegisterRequestValidationResult {
+  if (!isRecord(input)) {
+    return registerInvalid(["username", "displayName", "password"]);
+  }
+
+  const username = (typeof input.username === "string" ? input.username : "").trim();
+  const displayName = (typeof input.displayName === "string" ? input.displayName : "").trim();
+  const password = typeof input.password === "string" ? input.password : "";
+
+  const fields: string[] = [];
+  if (!username || username.length > MAX_USERNAME_CHARS || !EMAIL_PATTERN.test(username)) {
+    fields.push("username");
+  }
+  if (!displayName || displayName.length > MAX_DISPLAY_NAME_CHARS) {
+    fields.push("displayName");
+  }
+  if (!passwordMeetsPolicy(password)) {
+    fields.push("password");
+  }
+
+  if (fields.length > 0) {
+    return registerInvalid(fields);
+  }
+
+  return { ok: true, value: { username, displayName, password } };
+}
+
+/** Password policy (FR-002): ≥10 chars, ≤1000, with at least one letter and one
+ * digit. Exported so the frontend can give live feedback against the SAME rule
+ * (single source of truth — no drift between client hint and server validation). */
+export function passwordMeetsPolicy(password: string): boolean {
+  return (
+    password.length >= MIN_PASSWORD_CHARS &&
+    password.length <= MAX_PASSWORD_CHARS &&
+    /[A-Za-z]/u.test(password) &&
+    /\d/u.test(password)
+  );
+}
+
 function invalid(
   fields: string[],
   message = "username and password are required"
@@ -72,6 +211,18 @@ function invalid(
   return {
     ok: false,
     error: { code: "INVALID_INPUT", message, fields }
+  };
+}
+
+function registerInvalid(fields: string[]): RegisterRequestValidationResult {
+  return {
+    ok: false,
+    error: {
+      code: "INVALID_INPUT",
+      message:
+        "A valid email, a display name, and a password (min 10 chars, with a letter and a digit) are required.",
+      fields
+    }
   };
 }
 

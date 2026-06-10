@@ -19,7 +19,9 @@ async function bootstrap(): Promise<void> {
   if (process.env.NODE_ENV === "production") {
     app.enableCors({
       origin: process.env.ALLOWED_ORIGIN ?? "http://localhost:5173",
-      methods: ["GET", "POST"]
+      // PATCH/DELETE are required by the admin dashboard (/api/admin/users/:id);
+      // omitting them makes preflight reject every approve/disable/demote in prod.
+      methods: ["GET", "POST", "PATCH", "DELETE"]
     });
   } else {
     app.enableCors();

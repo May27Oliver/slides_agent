@@ -25,6 +25,68 @@ const json = (schema: OpenApiSchema): Record<string, unknown> => ({
   "application/json": { schema }
 });
 
+// --- Auth/admin schemas (feature 013). Inlined here (not the contracts package)
+// since they are doc-only projections of the public-safe shapes. ---
+
+const sanitizedError = (codes: string[], description: string): OpenApiSchema => ({
+  type: "object",
+  required: ["code", "message"],
+  properties: {
+    code: { type: "string", enum: codes },
+    message: { type: "string", description }
+  }
+});
+
+const PUBLIC_ACCOUNT_SCHEMA: OpenApiSchema = {
+  type: "object",
+  required: ["id", "username", "displayName", "status", "isAdmin", "createdAt"],
+  properties: {
+    id: { type: "string" },
+    username: { type: "string", description: "email (normalized lowercase)" },
+    displayName: { type: "string" },
+    status: { type: "string", enum: ["pending", "active", "disabled"] },
+    isAdmin: { type: "boolean" },
+    createdAt: { type: "string", format: "date-time" }
+  }
+};
+
+const REGISTER_REQUEST_SCHEMA: OpenApiSchema = {
+  type: "object",
+  required: ["username", "displayName", "password"],
+  properties: {
+    username: { type: "string", format: "email", maxLength: 320 },
+    displayName: { type: "string", maxLength: 200 },
+    password: {
+      type: "string",
+      minLength: 10,
+      maxLength: 1000,
+      description: "≥10 chars, with at least one letter and one digit (FR-002)"
+    }
+  }
+};
+
+const AUTH_CONFIG_SCHEMA: OpenApiSchema = {
+  type: "object",
+  required: ["registrationEnabled"],
+  properties: { registrationEnabled: { type: "boolean" } }
+};
+
+const ADMIN_USER_LIST_SCHEMA: OpenApiSchema = {
+  type: "object",
+  required: ["users"],
+  properties: { users: { type: "array", items: PUBLIC_ACCOUNT_SCHEMA } }
+};
+
+const ADMIN_UPDATE_REQUEST_SCHEMA: OpenApiSchema = {
+  type: "object",
+  minProperties: 1,
+  description: "At least one of status/isAdmin. status may only be set to active|disabled.",
+  properties: {
+    status: { type: "string", enum: ["active", "disabled"] },
+    isAdmin: { type: "boolean" }
+  }
+};
+
 /**
  * Static OpenAPI 3 document, assembled from the shared contract schemas. Built
  * by hand (not SwaggerModule.createDocument) on purpose: the app runs under tsx,
@@ -40,7 +102,13 @@ export function buildOpenApiDocument(): OpenAPIObject {
       description: "Preview generation (sync) and async preview jobs.",
       version: "1.0"
     },
-    tags: [{ name: "slides" }, { name: "decks" }, { name: "themes" }],
+    tags: [
+      { name: "slides" },
+      { name: "decks" },
+      { name: "themes" },
+      { name: "auth" },
+      { name: "admin" }
+    ],
     paths: {
       "/api/themes": {
         get: {
@@ -206,6 +274,135 @@ export function buildOpenApiDocument(): OpenAPIObject {
             "503": {
               description: "Queue/Redis unavailable",
               content: json(PREVIEW_QUEUE_UNAVAILABLE_SCHEMA)
+            },
+            "500": { description: "Unexpected server error." }
+          }
+        }
+      },
+      "/api/auth/register": {
+        post: {
+          tags: ["auth"],
+          summary: "Self-register a pending account (013 US1)",
+          description:
+            "Public, no JWT, per-IP rate-limited. Creates a status=pending account (no token issued); an admin must approve it before login. Closed when REGISTRATION_ENABLED is false.",
+          requestBody: { required: true, content: json(REGISTER_REQUEST_SCHEMA) },
+          responses: {
+            "201": {
+              description: "Pending account created (public-safe; no token)",
+              content: json(PUBLIC_ACCOUNT_SCHEMA)
+            },
+            "400": {
+              description: "Validation error (email / display name / password policy)",
+              content: json(sanitizedError(["INVALID_INPUT"], "Invalid registration input."))
+            },
+            "403": {
+              description: "Self-registration is disabled",
+              content: json(sanitizedError(["REGISTRATION_DISABLED"], "Registration is off."))
+            },
+            "409": {
+              description: "Email already registered",
+              content: json(sanitizedError(["USERNAME_TAKEN"], "This email is already in use."))
+            },
+            "429": { description: "Rate limit exceeded for this IP." },
+            "500": { description: "Unexpected server error." }
+          }
+        }
+      },
+      "/api/auth/config": {
+        get: {
+          tags: ["auth"],
+          summary: "Public registration availability flag (013 DR-010)",
+          description: "No auth. Lets the login page decide whether to show the register link.",
+          responses: {
+            "200": { description: "Registration flag", content: json(AUTH_CONFIG_SCHEMA) },
+            "500": { description: "Unexpected server error." }
+          }
+        }
+      },
+      "/api/admin/users": {
+        get: {
+          tags: ["admin"],
+          summary: "List users for the admin dashboard (013 US2)",
+          description:
+            "JWT + AdminGuard (live DB isAdmin). Optional status filter; returns public-safe accounts (no hash).",
+          parameters: [
+            {
+              name: "status",
+              in: "query",
+              required: false,
+              schema: { type: "string", enum: ["pending", "active", "disabled", "all"] }
+            }
+          ],
+          responses: {
+            "200": { description: "All/filtered users", content: json(ADMIN_USER_LIST_SCHEMA) },
+            "401": { description: "Missing/invalid JWT", content: json(AUTH_REQUIRED_SCHEMA) },
+            "403": {
+              description: "Authenticated but not an admin",
+              content: json(sanitizedError(["FORBIDDEN"], "Admin privilege required."))
+            },
+            "500": { description: "Unexpected server error." }
+          }
+        }
+      },
+      "/api/admin/users/{id}": {
+        patch: {
+          tags: ["admin"],
+          summary: "Approve / disable / re-enable / promote / demote a user (013 US2)",
+          description:
+            "JWT + AdminGuard. Idempotent partial update (status active|disabled and/or isAdmin). The FR-018 last-admin/self guard is enforced atomically.",
+          parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+          requestBody: { required: true, content: json(ADMIN_UPDATE_REQUEST_SCHEMA) },
+          responses: {
+            "200": { description: "Updated account", content: json(PUBLIC_ACCOUNT_SCHEMA) },
+            "400": {
+              description: "Empty body or non-settable status",
+              content: json(sanitizedError(["INVALID_INPUT"], "Invalid admin update."))
+            },
+            "401": { description: "Missing/invalid JWT", content: json(AUTH_REQUIRED_SCHEMA) },
+            "403": {
+              description: "Authenticated but not an admin",
+              content: json(sanitizedError(["FORBIDDEN"], "Admin privilege required."))
+            },
+            "404": {
+              description: "No such account",
+              content: json(sanitizedError(["ACCOUNT_NOT_FOUND"], "Account not found."))
+            },
+            "409": {
+              description: "Last-admin / self-modify guard (FR-018)",
+              content: json(
+                sanitizedError(
+                  ["LAST_ADMIN_PROTECTED", "CANNOT_MODIFY_SELF"],
+                  "Admin lockout prevented."
+                )
+              )
+            },
+            "500": { description: "Unexpected server error." }
+          }
+        },
+        delete: {
+          tags: ["admin"],
+          summary: "Reject (delete) a pending registration (013 US2)",
+          description: "JWT + AdminGuard. Only a status=pending account may be deleted.",
+          parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+          responses: {
+            "204": { description: "Pending account deleted" },
+            "401": { description: "Missing/invalid JWT", content: json(AUTH_REQUIRED_SCHEMA) },
+            "403": {
+              description: "Authenticated but not an admin",
+              content: json(sanitizedError(["FORBIDDEN"], "Admin privilege required."))
+            },
+            "404": {
+              description: "No such account",
+              content: json(sanitizedError(["ACCOUNT_NOT_FOUND"], "Account not found."))
+            },
+            "409": {
+              description: "Account is not pending",
+              content: json(
+                sanitizedError(
+                  ["CANNOT_REJECT_NON_PENDING"],
+                  "Only a pending account can be deleted."
+                )
+              )
             },
             "500": { description: "Unexpected server error." }
           }
