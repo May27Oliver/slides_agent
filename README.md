@@ -13,6 +13,9 @@ Paste or upload content, pick a presentation style, and the app plans the deck, 
 - **Source → deck pipeline**: semantic segmentation → deck-outline planning → design planning → HTML rendering → validation.
 - **LLM-assisted, deterministic-rendered**: the LLM handles language/structure/design _selection_; the final HTML is produced by a deterministic, reference-grade template renderer (fast, free, consistent, always valid).
 - **UIUX Pro Max design system**: curated palettes + font pairings + a concrete style kit (type scale, motion, effects) selected from the deck brief. See [`docs/design.md`](docs/design.md).
+- **Manual theme browsing** (feature 011): browse the full theme catalogue (font / palette / style swatches) and hand-pick one at generation or edit time — deterministic, zero extra LLM calls.
+- **Deck library & persistence** (feature 006): generated decks are saved per-account and listed in "My Decks"; the structured `SlideDeck` is the source of truth and HTML is a derived cache.
+- **In-app deck editing** (feature 010): restructure a saved deck (reorder / edit / remove slides, re-theme), deterministically re-rendered and persisted as a new revision under optimistic concurrency.
 - **Async preview jobs**: submit a job, poll for progress, get the result — with timeouts, failure reporting, and a cancellable polling UI.
 - **Self-contained output**: one HTML file, inline CSS/JS, keyboard navigation, the only external resource being Google Fonts.
 - **Source-faithful**: validators guard slide order, content fidelity, and number fidelity; nothing fabricates facts.
@@ -29,7 +32,7 @@ A pnpm monorepo with a clean domain core and thin app shells.
 | `packages/domain`    | `@slides-agent/domain`    | Pure domain logic: segmentation, deck/outline planning, design system, rendering, preview-job lifecycle. No I/O. |
 | `packages/contracts` | `@slides-agent/contracts` | Shared request/response contracts + runtime validators.                                                          |
 | `apps/api`           | `@slides-agent/api`       | NestJS backend: REST endpoints, LLM adapters (ports), preview-job store/runner.                                  |
-| `apps/web`           | `@slides-agent/web`       | React + Vite frontend: input form, style presets, job polling, preview.                                          |
+| `apps/web`           | `@slides-agent/web`       | React + Vite frontend: input form, style presets + theme picker, my-decks library, in-app deck editor, job polling, preview. |
 
 ### Generation pipeline
 
@@ -246,6 +249,20 @@ Request body (both POSTs):
 
 The two POST endpoints share a per-IP rate-limit budget. Source/brief fields are length-capped.
 
+### Account endpoints
+
+All require `Authorization: Bearer <jwt>` (auth itself excepted).
+
+| Method | Path                        | Description                                                                                |
+| ------ | --------------------------- | ----------------------------------------------------------------------------------------- |
+| `POST` | `/api/auth/login`           | Log in against the account allowlist → JWT (feature 005).                                  |
+| `GET`  | `/api/auth/me`              | Current session identity.                                                                  |
+| `POST` | `/api/auth/logout`          | End the session.                                                                           |
+| `GET`  | `/api/decks`               | List the signed-in account's saved decks (feature 006).                                    |
+| `GET`  | `/api/decks/:id`           | Deck detail (current revision).                                                            |
+| `POST` | `/api/decks/:id/revisions` | Apply a structural/text edit → new `origin="edit"` revision; deterministic re-render (010). |
+| `GET`  | `/api/themes`              | Browse the theme catalogue grouped by `font` / `palette` / `style` (feature 011).          |
+
 ---
 
 ## Testing & verification
@@ -289,14 +306,14 @@ pnpm --filter @slides-agent/api preview:deck sample-deck-input.md "tech startup 
 
 ```
 apps/
-  api/        NestJS backend (controllers, LLM adapters, preview-job store/runner)
-  web/        React + Vite frontend (form, style presets, polling, preview)
+  api/        NestJS backend (controllers, LLM adapters, preview-job/deck/theme stores)
+  web/        React + Vite frontend (form, theme picker, my-decks, deck editor, polling, preview)
 packages/
-  domain/     pure domain logic (segmentation, deck/design/render, preview-job)
+  domain/     pure domain logic (segmentation, deck/design/render, deck-edit, review, preview-job)
   contracts/  shared request/response contracts + validators
 docs/
   design.md   design-system architecture + how to add new design skills
-specs/        feature specs (003-async-preview-jobs)
+specs/        feature specs 001 → 011 (spec-kit)
 ```
 
 ---

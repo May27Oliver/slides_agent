@@ -1,7 +1,7 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-specs/008-chart-rendering/plan.md
+specs/011-theme-selection/plan.md
 <!-- SPECKIT END -->
 
 <!-- project-structure:start (hand-maintained — keep in sync when adding modules/features) -->
@@ -24,9 +24,10 @@ apps/
         redis/                 Redis connection (BullMQ)
       modules/
         auth/                  login/JWT (feature 005)
-        decks/                 my-decks read API + DrizzleDeckStore (feature 006)
+        decks/                 my-decks read API + DrizzleDeckStore + edit revisions (features 006/010)
         preview-jobs/          async job store/runner (features 003/004)
         slides/                preview generation endpoints
+        themes/                theme catalog read API + DrizzleThemeStore (feature 011)
       openapi/                 hand-built OpenAPI document (tsx = no reflection)
       worker/                  preview-job worker entrypoint (non-HTTP)
     scripts/                   db-migrate.ts, db-seed.ts
@@ -35,18 +36,21 @@ apps/
       components/              shared UI
       features/
         auth/                  login view + auth client
+        deck-editor/           deck edit view + apply-edit client (feature 010)
+        deck-switcher/         recent-decks switcher (feature 010)
         decks/                 MyDecksView + decks client (feature 006)
         slide-generation/      input form, style presets, job polling, preview
+        theme-picker/          shared ThemePicker / ThemeBrowserModal / swatches + themes client (feature 011)
       i18n/                    zh-TW / en-US / ja-JP translations
       styles/  test/
 packages/
-  domain/                      pure domain logic (no I/O): segmentation, deck/design/render, preview-job
+  domain/                      pure domain logic (no I/O): segmentation, deck/design/render, deck-edit, review, preview-job
     src/  test/  docs/
   contracts/                   shared request/response contracts + runtime validators + OpenAPI schemas
     src/  test/  schemas/
 docs/                          design.md (design-system architecture)
 scripts/                       repo-level scripts (dev.sh, auth-hash.ts)
-specs/                         feature specs 001 → 008 (spec-kit); current: 008-chart-rendering
+specs/                         feature specs 001 → 011 (spec-kit); current: 011-theme-selection
 tests/                         cross-cutting / shared test assets
 ```
 
@@ -58,7 +62,7 @@ HTML is derived cache); every deck read scoped to `req.user.id`; migrations run 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **slides_agent** (5420 symbols, 9916 relationships, 298 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **slides_agent** (5443 symbols, 9958 relationships, 297 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
