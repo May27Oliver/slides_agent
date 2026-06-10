@@ -45,7 +45,12 @@ async function readErrorCode(response: Response): Promise<string> {
  * Re-reads the live session (`GET /api/auth/me`) for the given token. The server
  * re-validates against the DB, so the returned `user.isAdmin` is the CURRENT value
  * — used to reconcile a possibly-stale stored admin flag after a demotion
- * (FR-017a). Throws {@link AuthError} on a non-2xx (e.g. the account was disabled).
+ * (FR-017a).
+ *
+ * Throws {@link AuthError} ONLY on a 401 (the token is genuinely rejected —
+ * expired / account disabled or removed) so the caller logs out. A transient 5xx
+ * (or a proxy error in tests) throws a plain Error instead: the caller must KEEP
+ * the existing session, never log the user out over a server blip.
  */
 export async function meRequest(
   token: string,
@@ -54,8 +59,11 @@ export async function meRequest(
   const response = await fetchImpl("/api/auth/me", {
     headers: { authorization: `Bearer ${token}` }
   });
-  if (!response.ok) {
+  if (response.status === 401) {
     throw new AuthError("Session invalid", await readErrorCode(response));
+  }
+  if (!response.ok) {
+    throw new Error(`/api/auth/me failed with status ${response.status}`);
   }
   return (await response.json()) as MeResponseContract;
 }
