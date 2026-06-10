@@ -102,21 +102,55 @@ describe("DbUserAccountStore (admin/write path)", () => {
     expect(await store.getById("user_missing")).toBeUndefined();
   });
 
-  it("updates status and isAdmin, returning the new view", async () => {
-    expect((await store.updateStatus("user_disabled", "active"))?.status).toBe("active");
-    expect((await store.setAdmin("user_disabled", true))?.isAdmin).toBe(true);
-    expect(await store.updateStatus("user_missing", "active")).toBeUndefined();
+  it("applyAdminMutation activates a disabled account and toggles isAdmin atomically", async () => {
+    const enabled = await store.applyAdminMutation({
+      actorId: "user_owner",
+      targetId: "user_disabled",
+      status: "active",
+      isAdmin: true
+    });
+    expect(enabled).toEqual({
+      status: "ok",
+      account: expect.objectContaining({ id: "user_disabled", status: "active", isAdmin: true })
+    });
+  });
+
+  it("applyAdminMutation returns not_found for a missing id", async () => {
+    expect(
+      await store.applyAdminMutation({
+        actorId: "user_owner",
+        targetId: "user_missing",
+        status: "active"
+      })
+    ).toEqual({ status: "not_found" });
+  });
+
+  it("applyAdminMutation refuses demoting the last active admin (LAST_ADMIN_PROTECTED)", async () => {
+    // `owner` is the only active admin; another actor cannot strip its admin bit.
+    expect(
+      await store.applyAdminMutation({
+        actorId: "other_admin",
+        targetId: "user_owner",
+        isAdmin: false
+      })
+    ).toEqual({ status: "lockout", code: "LAST_ADMIN_PROTECTED" });
+    // The row is unchanged.
+    expect((await store.getById("user_owner"))?.isAdmin).toBe(true);
+  });
+
+  it("applyAdminMutation refuses disabling yourself (CANNOT_MODIFY_SELF)", async () => {
+    expect(
+      await store.applyAdminMutation({
+        actorId: "user_owner",
+        targetId: "user_owner",
+        status: "disabled"
+      })
+    ).toEqual({ status: "lockout", code: "CANNOT_MODIFY_SELF" });
   });
 
   it("deletes by id, reporting whether a row was removed", async () => {
     expect(await store.deleteById("user_disabled")).toBe(true);
     expect(await store.deleteById("user_disabled")).toBe(false);
     expect(await store.findById("user_disabled")).toBeUndefined();
-  });
-
-  it("counts only active admins", async () => {
-    expect(await store.countActiveAdmins()).toBe(1); // owner is an active admin
-    await store.updateStatus("user_owner", "disabled");
-    expect(await store.countActiveAdmins()).toBe(0); // disabled admin no longer counts
   });
 });

@@ -1,15 +1,19 @@
 import type {
   AccountStatusContract,
+  AdminMutationErrorCode,
   AdminUpdateUserRequest,
   AdminUserListResponse,
   PublicAccount
 } from "@slides-agent/contracts";
 
+/** The codes the admin API can return, plus a transport fallback. */
+export type AdminErrorCode = AdminMutationErrorCode | "REQUEST_FAILED";
+
 /** An admin API failure carrying the server's public error code (FR-018 etc.). */
 export class AdminApiError extends Error {
-  readonly code: string;
+  readonly code: AdminErrorCode;
 
-  constructor(code: string, message = "Request failed") {
+  constructor(code: AdminErrorCode, message = "Request failed") {
     super(message);
     this.name = "AdminApiError";
     this.code = code;
@@ -59,7 +63,7 @@ export async function deleteUser(id: string, authFetch: typeof fetch): Promise<v
 
 async function toError(response: Response): Promise<AdminApiError> {
   try {
-    const body = (await response.json()) as { code?: string; message?: string };
+    const body = (await response.json()) as { code?: AdminErrorCode; message?: string };
     return new AdminApiError(body.code ?? "REQUEST_FAILED", body.message ?? "Request failed");
   } catch {
     return new AdminApiError("REQUEST_FAILED");

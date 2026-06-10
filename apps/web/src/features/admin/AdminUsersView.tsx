@@ -7,6 +7,7 @@ import {
   deleteUser,
   listUsers,
   updateUser,
+  type AdminErrorCode,
   type StatusFilter
 } from "@/features/admin/admin-users-client";
 
@@ -29,11 +30,11 @@ const STATUS_BADGE: Record<AccountStatusContract, string> = {
   disabled: "bg-zinc-200 text-zinc-700"
 };
 
-const ERROR_MESSAGE: Record<string, string> = {
+const ERROR_MESSAGE: Partial<Record<AdminErrorCode, string>> = {
   LAST_ADMIN_PROTECTED: "無法移除最後一位啟用中的管理員。",
   CANNOT_MODIFY_SELF: "無法停用或降權自己的帳號。",
   CANNOT_REJECT_NON_PENDING: "只有待審核的帳號可以刪除。",
-  USER_NOT_FOUND: "找不到該帳號（可能已被其他人處理）。"
+  ACCOUNT_NOT_FOUND: "找不到該帳號（可能已被其他人處理）。"
 };
 
 export function AdminUsersView() {
@@ -149,12 +150,16 @@ export function AdminUsersView() {
                       row={row}
                       isSelf={row.id === user?.id}
                       busy={busyId === row.id}
-                      onApprove={() => act(() => updateUser(row.id, { status: "active" }, authFetch), row.id)}
+                      onApprove={() =>
+                        act(() => updateUser(row.id, { status: "active" }, authFetch), row.id)
+                      }
                       onReject={() => act(() => deleteUser(row.id, authFetch), row.id)}
                       onDisable={() =>
                         act(() => updateUser(row.id, { status: "disabled" }, authFetch), row.id)
                       }
-                      onEnable={() => act(() => updateUser(row.id, { status: "active" }, authFetch), row.id)}
+                      onEnable={() =>
+                        act(() => updateUser(row.id, { status: "active" }, authFetch), row.id)
+                      }
                       onToggleAdmin={() =>
                         act(() => updateUser(row.id, { isAdmin: !row.isAdmin }, authFetch), row.id)
                       }

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { BadRequestException, ConflictException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import type { AccountAdminStore, AdminAccountView } from "@slides-agent/domain";
 import { AdminUsersController } from "@/modules/admin/admin-users.controller";
 
@@ -45,74 +45,70 @@ describe("AdminUsersController.list", () => {
 });
 
 describe("AdminUsersController.update", () => {
-  it("approves a pending account (status -> active)", async () => {
-    const getById = vi.fn().mockResolvedValue(view({ status: "pending" }));
-    const updateStatus = vi.fn().mockResolvedValue(view({ status: "active" }));
-    const controller = makeController({ getById, updateStatus, countActiveAdmins: vi.fn() });
+  it("forwards the change + actor to the atomic store mutation and returns its account", async () => {
+    const applyAdminMutation = vi
+      .fn()
+      .mockResolvedValue({ status: "ok", account: view({ status: "active" }) });
+    const controller = makeController({ applyAdminMutation });
 
     const result = await controller.update("user_target", { status: "active" }, actor);
     expect(result.status).toBe("active");
-    expect(updateStatus).toHaveBeenCalledWith("user_target", "active");
+    expect(applyAdminMutation).toHaveBeenCalledWith({
+      actorId: "admin_self",
+      targetId: "user_target",
+      status: "active",
+      isAdmin: undefined
+    });
   });
 
-  it("promotes a user to admin", async () => {
-    const getById = vi.fn().mockResolvedValue(view());
-    const setAdmin = vi.fn().mockResolvedValue(view({ isAdmin: true }));
-    const controller = makeController({ getById, setAdmin, countActiveAdmins: vi.fn() });
-
-    const result = await controller.update("user_target", { isAdmin: true }, actor);
-    expect(result.isAdmin).toBe(true);
-    expect(setAdmin).toHaveBeenCalledWith("user_target", true);
+  it("404 ACCOUNT_NOT_FOUND when the store reports the target is gone", async () => {
+    const applyAdminMutation = vi.fn().mockResolvedValue({ status: "not_found" });
+    const controller = makeController({ applyAdminMutation });
+    await expect(controller.update("missing", { status: "active" }, actor)).rejects.toMatchObject({
+      response: { code: "ACCOUNT_NOT_FOUND" }
+    });
   });
 
-  it("404s when the target does not exist", async () => {
-    const controller = makeController({ getById: vi.fn().mockResolvedValue(undefined) });
-    await expect(
-      controller.update("missing", { status: "active" }, actor)
-    ).rejects.toBeInstanceOf(NotFoundException);
-  });
-
-  it("400s on an empty body", async () => {
-    const controller = makeController({ getById: vi.fn() });
+  it("400s on an empty body (before touching the store)", async () => {
+    const applyAdminMutation = vi.fn();
+    const controller = makeController({ applyAdminMutation });
     await expect(controller.update("user_target", {}, actor)).rejects.toBeInstanceOf(
       BadRequestException
     );
+    expect(applyAdminMutation).not.toHaveBeenCalled();
   });
 
-  it("409 LAST_ADMIN_PROTECTED when demoting the last active admin", async () => {
-    const getById = vi.fn().mockResolvedValue(view({ id: "admin_b", isAdmin: true, status: "active" }));
-    const countActiveAdmins = vi.fn().mockResolvedValue(1);
-    const setAdmin = vi.fn();
-    const controller = makeController({ getById, countActiveAdmins, setAdmin });
-
+  it("400s when trying to SET a non-settable status (pending) — FR-010", async () => {
+    const applyAdminMutation = vi.fn();
+    const controller = makeController({ applyAdminMutation });
     await expect(
-      controller.update("admin_b", { isAdmin: false }, actor)
-    ).rejects.toMatchObject({ response: { code: "LAST_ADMIN_PROTECTED" } });
-    expect(setAdmin).not.toHaveBeenCalled();
+      controller.update(
+        "user_target",
+        { status: "pending" } as unknown as Parameters<AdminUsersController["update"]>[1],
+        actor
+      )
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(applyAdminMutation).not.toHaveBeenCalled();
   });
 
-  it("409 CANNOT_MODIFY_SELF when disabling yourself", async () => {
-    const getById = vi
+  it("409 LAST_ADMIN_PROTECTED when the store refuses (last active admin)", async () => {
+    const applyAdminMutation = vi
       .fn()
-      .mockResolvedValue(view({ id: "admin_self", isAdmin: true, status: "active" }));
-    const countActiveAdmins = vi.fn().mockResolvedValue(3);
-    const updateStatus = vi.fn();
-    const controller = makeController({ getById, countActiveAdmins, updateStatus });
+      .mockResolvedValue({ status: "lockout", code: "LAST_ADMIN_PROTECTED" });
+    const controller = makeController({ applyAdminMutation });
+    await expect(controller.update("admin_b", { isAdmin: false }, actor)).rejects.toMatchObject({
+      response: { code: "LAST_ADMIN_PROTECTED" }
+    });
+  });
 
+  it("409 CANNOT_MODIFY_SELF when the store refuses self-modification", async () => {
+    const applyAdminMutation = vi
+      .fn()
+      .mockResolvedValue({ status: "lockout", code: "CANNOT_MODIFY_SELF" });
+    const controller = makeController({ applyAdminMutation });
     await expect(
       controller.update("admin_self", { status: "disabled" }, actor)
     ).rejects.toMatchObject({ response: { code: "CANNOT_MODIFY_SELF" } });
-    expect(updateStatus).not.toHaveBeenCalled();
-  });
-
-  it("allows demoting an admin when other active admins remain", async () => {
-    const getById = vi.fn().mockResolvedValue(view({ id: "admin_b", isAdmin: true, status: "active" }));
-    const countActiveAdmins = vi.fn().mockResolvedValue(2);
-    const setAdmin = vi.fn().mockResolvedValue(view({ id: "admin_b", isAdmin: false }));
-    const controller = makeController({ getById, countActiveAdmins, setAdmin });
-
-    const result = await controller.update("admin_b", { isAdmin: false }, actor);
-    expect(result.isAdmin).toBe(false);
   });
 });
 

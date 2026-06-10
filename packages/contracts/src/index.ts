@@ -26,6 +26,7 @@ export {
 export {
   validateLoginRequest,
   validateRegisterRequest,
+  passwordMeetsPolicy,
   type LoginRequestContract,
   type AuthUserContract,
   type LoginResponseContract,
@@ -37,12 +38,15 @@ export {
   type RegisterRequestContract,
   type RegisterResponseContract,
   type RegisterRequestValidationResult,
+  type RegisterErrorCode,
   type RequestValidationError,
   type PublicAccount,
   type AccountStatusContract,
   type AdminUserListResponse,
   type AdminUpdateUserRequest,
-  type AdminMutationErrorContract
+  type AdminSettableStatus,
+  type AdminMutationErrorContract,
+  type AdminMutationErrorCode
 } from "./auth";
 
 export {

@@ -95,4 +95,41 @@ describe("evaluateAdminMutation", () => {
       })
     ).toEqual({ ok: true });
   });
+
+  it("allows promoting yourself (a non-stripping change is never a self-lockout)", () => {
+    expect(
+      evaluateAdminMutation({
+        actorId: "admin_a",
+        targetId: "admin_a",
+        activeAdminCount: 1,
+        change: { type: "setAdmin", isAdmin: true }
+      })
+    ).toEqual({ ok: true });
+  });
+
+  it("refuses moving the last active admin to a non-active status (pending bypass guard)", () => {
+    // `pending` also strips management, so it must not be a back door around the
+    // last-admin guard (R1 defense-in-depth).
+    expect(
+      evaluateAdminMutation({
+        actorId: "admin_a",
+        targetId: "admin_b",
+        activeAdminCount: 1,
+        change: { type: "setStatus", status: "pending", targetIsActiveAdmin: true }
+      })
+    ).toEqual({ ok: false, code: "LAST_ADMIN_PROTECTED" });
+  });
+
+  it("does not protect a non-admin target when targetIsActiveAdmin is omitted, even at count 1", () => {
+    // Demoting/disabling a non-admin must be allowed regardless of admin count; the
+    // omitted flag is falsy, so the last-admin guard correctly does not fire.
+    expect(
+      evaluateAdminMutation({
+        actorId: "admin_a",
+        targetId: "user_b",
+        activeAdminCount: 1,
+        change: { type: "setAdmin", isAdmin: false }
+      })
+    ).toEqual({ ok: true });
+  });
 });

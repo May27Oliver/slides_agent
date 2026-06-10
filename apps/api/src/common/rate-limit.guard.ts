@@ -29,8 +29,17 @@ interface RateLimitedRequest {
  * Dependency-free, in-process per-client sliding-window rate limiter.
  *
  * Matches the app's single-instance, in-memory architecture (no Redis / no
- * @nestjs/throttler dependency). Intended for the expensive POST endpoints that
- * fan out into chained LLM calls; the cheap polling GET is left unthrottled.
+ * @nestjs/throttler dependency — feature 013 FR-016 forbids new infra). Intended
+ * for the expensive POST endpoints that fan out into chained LLM calls and the
+ * public register endpoint; the cheap polling GET is left unthrottled.
+ *
+ * KNOWN LIMITS (acceptable for the single-instance, internal-tool scope; revisit
+ * with a Redis-backed limiter if this ever runs multi-instance or faces the open
+ * internet):
+ *  - Counts live in process memory, so a restart/redeploy resets every quota.
+ *  - The window is PER-IP only; there is no global cap, so a distributed source
+ *    (many IPs, each under `max`) is not throttled. For an emergency clamp on
+ *    public registration, flip `REGISTRATION_ENABLED=false`.
  */
 @Injectable()
 export class RateLimitGuard implements CanActivate {

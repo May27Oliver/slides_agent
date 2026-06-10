@@ -14,11 +14,6 @@ interface SessionClaims {
   isAdmin: boolean;
 }
 
-// Precomputed once so an unknown username still incurs the full scrypt cost.
-// Keeps login timing constant whether or not the account exists, closing the
-// timing side-channel that would otherwise leak which usernames are valid.
-const DUMMY_PASSWORD_HASH = hashPassword("__no_such_account__");
-
 /**
  * Auth application service: credential validation (delegates the decision to the
  * pure domain policy, does the scrypt check here), JWT issuance, and session
@@ -31,6 +26,11 @@ const DUMMY_PASSWORD_HASH = hashPassword("__no_such_account__");
  */
 @Injectable()
 export class AuthService {
+  // Computed once (lazily, then cached) so an unknown username still incurs the
+  // full scrypt cost — keeps login timing constant whether or not the account
+  // exists, closing the side-channel that would otherwise leak valid usernames.
+  private dummyPasswordHash?: Promise<string>;
+
   constructor(
     @Inject(USER_ACCOUNT_STORE) private readonly accounts: UserAccountStore,
     @Inject(JwtService) private readonly jwt: JwtService
@@ -39,8 +39,13 @@ export class AuthService {
   async validateCredentials(username: string, password: string): Promise<AuthEvaluation> {
     const account = await this.accounts.findByUsername(username);
     // Always run scrypt (against a dummy hash for unknown users) for constant timing.
-    const passwordMatches = verifyPassword(password, account?.passwordHash ?? DUMMY_PASSWORD_HASH);
+    const stored = account?.passwordHash ?? (await this.dummyHash());
+    const passwordMatches = await verifyPassword(password, stored);
     return evaluateLogin(account, passwordMatches);
+  }
+
+  private dummyHash(): Promise<string> {
+    return (this.dummyPasswordHash ??= hashPassword("__no_such_account__"));
   }
 
   async validateSessionUser(userId: string): Promise<AuthenticatedUser | null> {

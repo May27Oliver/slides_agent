@@ -37,7 +37,10 @@ export const accounts = pgTable(
     statusCheck: check(
       "accounts_status_check",
       sql`${table.status} in ('pending', 'active', 'disabled')`
-    )
+    ),
+    // Serves the FR-018 active-admin count + FOR UPDATE lock (is_admin AND
+    // status='active') on every admin mutation, so it never scans the full table.
+    activeAdminIdx: index("accounts_active_admin_idx").on(table.isAdmin, table.status)
   })
 );
 

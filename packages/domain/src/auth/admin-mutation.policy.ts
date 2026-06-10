@@ -19,11 +19,13 @@ export type AdminMutationDecision =
   | { ok: true }
   | { ok: false; code: "LAST_ADMIN_PROTECTED" | "CANNOT_MODIFY_SELF" };
 
-/** Does this change remove an account's ability to manage (demote or disable)? */
+/** Does this change remove an account's ability to manage? Demotion, OR moving to
+ * ANY non-active status (disabled or pending) — both leave the account unable to
+ * log in/manage, so either can lock out the last admin. */
 function stripsManagement(change: AdminChange): boolean {
   return (
     (change.type === "setAdmin" && change.isAdmin === false) ||
-    (change.type === "setStatus" && change.status === "disabled")
+    (change.type === "setStatus" && change.status !== "active")
   );
 }
 

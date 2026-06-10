@@ -122,7 +122,9 @@
 ### 反模式不變式（實作與收尾稽核強制）
 
 - **No drift（單一真實來源）**：帳號單一 `accounts` 表；狀態單一 `status` 欄位；admin 即時值單一來源＝DB（JWT claim 僅 UI 初判）；admin 授權單一 `AdminGuard`；env `active` 僅 bootstrap 一次映射（標明）。
-- **No dead code**：每個新 port 方法（create/listAll/updateStatus/setAdmin/deleteById/countAdmins）、新 contract 欄位（`isAdmin`/`status`/`PublicAccount`）、新 i18n key、新路由都有消費者。
+- **No dead code**：每個新 port 方法（create/listAll/getById/applyAdminMutation/deleteById）、新 contract 欄位（`isAdmin`/`status`/`PublicAccount`）、新 i18n key、新路由都有消費者。
+
+  > **Review 後修訂**：原設計的 `updateStatus`/`setAdmin`/`countActiveAdmins` 三個 primitive 在收尾 review 時合併為單一**原子** `applyAdminMutation`（交易內 `SELECT … FOR UPDATE` 重算 active-admin 數 → 跑 FR-018 政策 → 寫入），消除 count→write 之間的 TOCTOU（兩個 admin 互相降權皆過關而歸零）。`countActiveAdmins` 成為該方法內部步驟，非公開 port 方法。
 - **No shim（同次移除舊路徑）**：`active boolean` **完全移除**（不與 `status` 並存）；`inactive_account` code **完全移除**（不別名、不「同時支援」）；無「同時吃 active 與 status」的雙路徑參數。
 - **No unlabeled legacy**：env `AUTH_ACCOUNTS` 仍含 `active`（bootstrap 輸入）= **刻意保留並標明**用途（一次映射到 DB `status`）；非殘留。
 
@@ -182,7 +184,7 @@ specs/013-user-registration/quickstart.md # （新）部署/驗證手冊
 - **Phase A — domain（先 TDD）**：`AccountStatus` + `UserAccount.status` + `AuthenticatedUser.isAdmin`；`evaluateLogin`/`evaluateSession` 新順序與 `account_pending`/`account_disabled`（移除 `inactive_account`）；`evaluateAdminMutation`（FR-018）；測試先紅後綠。
 - **Phase B — contracts（先 TDD）**：`validateRegisterRequest`（密碼政策）、`PublicAccount`、`AuthUserContract.isAdmin`、admin 契約；contract 測試。
 - **Phase C — DB migration**：schema 改（-active +status +isAdmin）→ `drizzle-kit generate` → 手動補 backfill（active→status）與 drop；本機套用驗證。
-- **Phase D — store 寫入**：`AccountAdminStore` port + `DbUserAccountStore` 實作（create/listAll/updateStatus/setAdmin/deleteById/countAdmins）+ 整合測試（pglite/真 DB）。
+- **Phase D — store 寫入**：`AccountAdminStore` port + `DbUserAccountStore` 實作（create/listAll/getById/applyAdminMutation/deleteById；`applyAdminMutation` 內含 active-admin 計數與 FR-018 政策,原子交易）+ 整合測試（pglite/真 DB）。
 - **Phase E — API**：register controller（+rate limit, REGISTRATION_ENABLED 403）；admin module + `AdminGuard` + users controller（list/patch/delete，idempotent，FR-018 409 用 `countActiveAdmins`）；**登入錯誤 pipeline**（DR-002）：`validateCredentials` 回帶 code 結果、`local.strategy` pending/disabled→`ForbiddenException({code})`、`AuthErrorContract.code` 擴充；`validateSessionUser`/`issueSession`/`jwt.strategy` 帶 `isAdmin`；login/me 回 `isAdmin`；public `GET /api/auth/config`。API 授權測試（401 invalid / 403 pending/disabled / 403 非 admin / 409 FR-018、即時降權/停用）。
 - **Phase F — seed（FR-020）**：`BootstrapAccount` 型別 + `loadSeedAccounts` 回 `BootstrapAccount[]`（解析 isAdmin）；`seedAccounts` insert 映射 `active`→`status`、conflict **不覆蓋** status/isAdmin；seed 測試（既有 dashboard 狀態不被 reseed 還原）。
 - **Phase G — 前端**：RegisterView + 待審確認、AdminUsersView dashboard + AdminRoute、auth state isAdmin、clients、i18n、登入頁文案/註冊連結、路由；元件測試 + 一條 e2e（註冊→approve→login）。

@@ -1,12 +1,16 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { and, count, desc, eq } from "drizzle-orm";
-import type {
-  AccountAdminStore,
-  AccountStatus,
-  AdminAccountView,
-  CreateAccountInput,
-  UserAccount,
-  UserAccountStore
+import { and, desc, eq } from "drizzle-orm";
+import {
+  evaluateAdminMutation,
+  type AccountAdminStore,
+  type AccountStatus,
+  type AdminAccountView,
+  type AdminMutationDecision,
+  type AdminMutationOutcome,
+  type AdminMutationRequest,
+  type CreateAccountInput,
+  type UserAccount,
+  type UserAccountStore
 } from "@slides-agent/domain";
 import type { AppDatabase } from "@/infra/db/db.service";
 import { DRIZZLE } from "@/infra/db/db.tokens";
@@ -71,35 +75,81 @@ export class DbUserAccountStore implements UserAccountStore, AccountAdminStore {
     return rows[0] ? toAdminAccountView(rows[0]) : undefined;
   }
 
-  async updateStatus(id: string, status: AccountStatus): Promise<AdminAccountView | undefined> {
-    const [row] = await this.db
-      .update(accounts)
-      .set({ status, updatedAt: new Date() })
-      .where(eq(accounts.id, id))
-      .returning();
-    return row ? toAdminAccountView(row) : undefined;
-  }
+  async applyAdminMutation(input: AdminMutationRequest): Promise<AdminMutationOutcome> {
+    const { actorId, targetId, status, isAdmin } = input;
+    // Demotion, or moving to ANY non-active status, can strip the last admin.
+    const stripsManagement = isAdmin === false || (status !== undefined && status !== "active");
 
-  async setAdmin(id: string, isAdmin: boolean): Promise<AdminAccountView | undefined> {
-    const [row] = await this.db
-      .update(accounts)
-      .set({ isAdmin, updatedAt: new Date() })
-      .where(eq(accounts.id, id))
-      .returning();
-    return row ? toAdminAccountView(row) : undefined;
+    return this.db.transaction(async (tx): Promise<AdminMutationOutcome> => {
+      let activeAdminCount = 0;
+      if (stripsManagement) {
+        // Lock the active-admin set FOR UPDATE so a concurrent demote/disable
+        // blocks until this txn commits, then re-reads the reduced count — closing
+        // the FR-018 TOCTOU where two admins demoting each other both pass a stale
+        // count and drop active admins to zero.
+        const lockedAdmins = await tx
+          .select({ id: accounts.id })
+          .from(accounts)
+          .where(and(eq(accounts.isAdmin, true), eq(accounts.status, "active")))
+          .for("update");
+        activeAdminCount = lockedAdmins.length;
+      }
+
+      const [row] = await tx.select().from(accounts).where(eq(accounts.id, targetId)).limit(1);
+      if (!row) {
+        return { status: "not_found" };
+      }
+      const target = toAdminAccountView(row);
+      const targetIsActiveAdmin = target.isAdmin && target.status === "active";
+
+      const decisions: AdminMutationDecision[] = [];
+      if (isAdmin === false) {
+        decisions.push(
+          evaluateAdminMutation({
+            actorId,
+            targetId,
+            activeAdminCount,
+            change: { type: "setAdmin", isAdmin: false, targetIsActiveAdmin }
+          })
+        );
+      }
+      if (status !== undefined && status !== "active") {
+        decisions.push(
+          evaluateAdminMutation({
+            actorId,
+            targetId,
+            activeAdminCount,
+            change: { type: "setStatus", status, targetIsActiveAdmin }
+          })
+        );
+      }
+      for (const decision of decisions) {
+        if (!decision.ok) {
+          return { status: "lockout", code: decision.code };
+        }
+      }
+
+      const patch: Partial<typeof accounts.$inferInsert> = { updatedAt: new Date() };
+      if (status !== undefined) {
+        patch.status = status;
+      }
+      if (isAdmin !== undefined) {
+        patch.isAdmin = isAdmin;
+      }
+      const [updated] = await tx
+        .update(accounts)
+        .set(patch)
+        .where(eq(accounts.id, targetId))
+        .returning();
+      return updated
+        ? { status: "ok", account: toAdminAccountView(updated) }
+        : { status: "not_found" };
+    });
   }
 
   async deleteById(id: string): Promise<boolean> {
     const deleted = await this.db.delete(accounts).where(eq(accounts.id, id)).returning();
     return deleted.length > 0;
-  }
-
-  async countActiveAdmins(): Promise<number> {
-    const [row] = await this.db
-      .select({ value: count() })
-      .from(accounts)
-      .where(and(eq(accounts.isAdmin, true), eq(accounts.status, "active")));
-    return row?.value ?? 0;
   }
 }
 

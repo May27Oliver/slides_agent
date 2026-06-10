@@ -130,7 +130,9 @@ export type { UserAccountStore } from "@/auth/user-account-store.port";
 export type {
   AccountAdminStore,
   CreateAccountInput,
-  AdminAccountView
+  AdminAccountView,
+  AdminMutationRequest,
+  AdminMutationOutcome
 } from "@/auth/account-admin-store.port";
 export type { BootstrapAccount } from "@/auth/bootstrap-account.types";
 export {

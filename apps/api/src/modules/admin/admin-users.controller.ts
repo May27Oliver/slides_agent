@@ -15,14 +15,9 @@ import {
   Req,
   UseGuards
 } from "@nestjs/common";
-import {
-  evaluateAdminMutation,
-  type AccountAdminStore,
-  type AccountStatus,
-  type AdminAccountView,
-  type AdminMutationDecision
-} from "@slides-agent/domain";
+import type { AccountAdminStore, AccountStatus } from "@slides-agent/domain";
 import type {
+  AdminSettableStatus,
   AdminUpdateUserRequest,
   AdminUserListResponse,
   PublicAccount
@@ -65,25 +60,21 @@ export class AdminUsersController {
   ): Promise<PublicAccount> {
     const { status, isAdmin } = parseUpdate(body);
 
-    const target = await this.accounts.getById(id);
-    if (!target) {
-      throw new NotFoundException({ code: "USER_NOT_FOUND", message: "User not found." });
+    // The store applies the change and the FR-018 anti-lockout guard atomically
+    // (count + write in one transaction), so demote/disable can't be raced.
+    const outcome = await this.accounts.applyAdminMutation({
+      actorId: request.user.id,
+      targetId: id,
+      status,
+      isAdmin
+    });
+    if (outcome.status === "not_found") {
+      throw new NotFoundException({ code: "ACCOUNT_NOT_FOUND", message: "Account not found." });
     }
-
-    await this.guardAgainstLockout({ actorId: request.user.id, target, status, isAdmin });
-
-    let updated: AdminAccountView | undefined = target;
-    if (status !== undefined) {
-      updated = await this.accounts.updateStatus(id, status);
+    if (outcome.status === "lockout") {
+      throw new ConflictException({ code: outcome.code, message: lockoutMessage(outcome.code) });
     }
-    if (isAdmin !== undefined) {
-      updated = await this.accounts.setAdmin(id, isAdmin);
-    }
-    if (!updated) {
-      // Concurrent delete between getById and the write.
-      throw new NotFoundException({ code: "USER_NOT_FOUND", message: "User not found." });
-    }
-    return updated;
+    return outcome.account;
   }
 
   @Delete(":id")
@@ -91,7 +82,7 @@ export class AdminUsersController {
   async remove(@Param("id") id: string): Promise<void> {
     const target = await this.accounts.getById(id);
     if (!target) {
-      throw new NotFoundException({ code: "USER_NOT_FOUND", message: "User not found." });
+      throw new NotFoundException({ code: "ACCOUNT_NOT_FOUND", message: "Account not found." });
     }
     // DELETE is "reject a registration" — only ever valid for a pending account.
     if (target.status !== "pending") {
@@ -101,55 +92,6 @@ export class AdminUsersController {
       });
     }
     await this.accounts.deleteById(id);
-  }
-
-  /** Runs the FR-018 policy for any demote/disable in this request. */
-  private async guardAgainstLockout(input: {
-    actorId: string;
-    target: AdminAccountView;
-    status?: AccountStatus | undefined;
-    isAdmin?: boolean | undefined;
-  }): Promise<void> {
-    const { actorId, target, status, isAdmin } = input;
-    const demotes = isAdmin === false;
-    const disables = status === "disabled";
-    if (!demotes && !disables) {
-      return;
-    }
-
-    const targetIsActiveAdmin = target.isAdmin && target.status === "active";
-    const activeAdminCount = await this.accounts.countActiveAdmins();
-
-    const decisions: AdminMutationDecision[] = [];
-    if (demotes) {
-      decisions.push(
-        evaluateAdminMutation({
-          actorId,
-          targetId: target.id,
-          activeAdminCount,
-          change: { type: "setAdmin", isAdmin: false, targetIsActiveAdmin }
-        })
-      );
-    }
-    if (disables) {
-      decisions.push(
-        evaluateAdminMutation({
-          actorId,
-          targetId: target.id,
-          activeAdminCount,
-          change: { type: "setStatus", status: "disabled", targetIsActiveAdmin }
-        })
-      );
-    }
-
-    for (const decision of decisions) {
-      if (!decision.ok) {
-        throw new ConflictException({
-          code: decision.code,
-          message: lockoutMessage(decision.code)
-        });
-      }
-    }
   }
 }
 
@@ -165,8 +107,14 @@ function parseUpdate(body: AdminUpdateUserRequest): {
       message: "Provide at least one of status or isAdmin."
     });
   }
-  if (status !== undefined && !isStatus(status)) {
-    throw new BadRequestException({ code: "INVALID_INPUT", message: "Unknown status." });
+  // FR-010: an admin may only SET 'active' or 'disabled'. Reject 'pending' (and any
+  // other value) — allowing it would let an admin park the last active admin in a
+  // non-loginable state, bypassing the FR-018 lockout guard.
+  if (status !== undefined && !isSettableStatus(status)) {
+    throw new BadRequestException({
+      code: "INVALID_INPUT",
+      message: "status must be 'active' or 'disabled'."
+    });
   }
   if (isAdmin !== undefined && typeof isAdmin !== "boolean") {
     throw new BadRequestException({ code: "INVALID_INPUT", message: "isAdmin must be a boolean." });
@@ -176,6 +124,10 @@ function parseUpdate(body: AdminUpdateUserRequest): {
 
 function isStatus(value: string): value is AccountStatus {
   return (STATUSES as string[]).includes(value);
+}
+
+function isSettableStatus(value: string): value is AdminSettableStatus {
+  return value === "active" || value === "disabled";
 }
 
 function lockoutMessage(code: "LAST_ADMIN_PROTECTED" | "CANNOT_MODIFY_SELF"): string {

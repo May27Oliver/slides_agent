@@ -1,0 +1,1 @@
+CREATE INDEX "accounts_active_admin_idx" ON "accounts" USING btree ("is_admin","status");

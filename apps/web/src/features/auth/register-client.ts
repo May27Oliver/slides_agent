@@ -25,8 +25,9 @@ interface ServerErrorBody {
 
 /**
  * Posts a registration. On a non-2xx response, parses the sanitized error body
- * into a {@link RegisterError} with its `code` (`INVALID_INPUT` 400 / 409,
- * `REGISTRATION_DISABLED` 403) so the view can show the right message.
+ * into a {@link RegisterError} with its `code` (`INVALID_INPUT` 400,
+ * `USERNAME_TAKEN` 409, `REGISTRATION_DISABLED` 403 — see RegisterErrorCode) so
+ * the view can show the right message.
  */
 export async function registerRequest(
   body: RegisterRequestContract,

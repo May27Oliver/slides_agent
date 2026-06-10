@@ -69,25 +69,44 @@ export interface RegisterRequestContract {
   password: string;
 }
 
+/**
+ * Sanitized registration error codes.
+ * - `INVALID_INPUT` = a field failed validation (carries `fields`).
+ * - `USERNAME_TAKEN` = the email is already registered (409). A dedicated code so
+ *   the client need not infer duplicates from a field-less `INVALID_INPUT`.
+ * - `REGISTRATION_DISABLED` = self-registration is turned off (403).
+ */
+export type RegisterErrorCode = "INVALID_INPUT" | "USERNAME_TAKEN" | "REGISTRATION_DISABLED";
+
 /** Admin dashboard list response. */
 export interface AdminUserListResponse {
   users: PublicAccount[];
 }
 
+/**
+ * The only statuses an admin may SET via PATCH (FR-010): approve/re-enable
+ * (`active`) or disable (`disabled`). `pending` is NOT settable — it is reached
+ * only by self-registration, and allowing an admin to set it would bypass the
+ * FR-018 last-admin guard (a "pending" admin can't log in / manage).
+ */
+export type AdminSettableStatus = "active" | "disabled";
+
 /** Admin mutation request: at least one of status/isAdmin. */
 export interface AdminUpdateUserRequest {
-  status?: AccountStatusContract;
+  status?: AdminSettableStatus;
   isAdmin?: boolean;
 }
 
 /** Admin guardrail error (FR-018) + not-found / bad-target shapes. */
+export type AdminMutationErrorCode =
+  | "LAST_ADMIN_PROTECTED"
+  | "CANNOT_MODIFY_SELF"
+  | "CANNOT_REJECT_NON_PENDING"
+  | "ACCOUNT_NOT_FOUND"
+  | "INVALID_INPUT";
+
 export interface AdminMutationErrorContract {
-  code:
-    | "LAST_ADMIN_PROTECTED"
-    | "CANNOT_MODIFY_SELF"
-    | "CANNOT_REJECT_NON_PENDING"
-    | "USER_NOT_FOUND"
-    | "INVALID_INPUT";
+  code: AdminMutationErrorCode;
   message: string;
 }
 
@@ -162,7 +181,7 @@ export function validateRegisterRequest(input: unknown): RegisterRequestValidati
   if (!displayName || displayName.length > MAX_DISPLAY_NAME_CHARS) {
     fields.push("displayName");
   }
-  if (!isAcceptablePassword(password)) {
+  if (!passwordMeetsPolicy(password)) {
     fields.push("password");
   }
 
@@ -173,7 +192,10 @@ export function validateRegisterRequest(input: unknown): RegisterRequestValidati
   return { ok: true, value: { username, displayName, password } };
 }
 
-function isAcceptablePassword(password: string): boolean {
+/** Password policy (FR-002): ≥10 chars, ≤1000, with at least one letter and one
+ * digit. Exported so the frontend can give live feedback against the SAME rule
+ * (single source of truth — no drift between client hint and server validation). */
+export function passwordMeetsPolicy(password: string): boolean {
   return (
     password.length >= MIN_PASSWORD_CHARS &&
     password.length <= MAX_PASSWORD_CHARS &&

@@ -11,15 +11,20 @@ import {
   Post,
   UseGuards
 } from "@nestjs/common";
-import type { AccountAdminStore, UserAccountStore } from "@slides-agent/domain";
-import { validateRegisterRequest, type RegisterResponseContract } from "@slides-agent/contracts";
+import type { AccountAdminStore } from "@slides-agent/domain";
+import {
+  validateRegisterRequest,
+  type RegisterErrorCode,
+  type RegisterResponseContract
+} from "@slides-agent/contracts";
 import { hashPassword } from "@/common/scrypt-password";
 import type { AuthConfig } from "@/config/auth.config";
-import { ACCOUNT_ADMIN_STORE, AUTH_CONFIG, USER_ACCOUNT_STORE } from "@/modules/auth/auth.tokens";
+import { ACCOUNT_ADMIN_STORE, AUTH_CONFIG } from "@/modules/auth/auth.tokens";
 import { RegisterRateLimitGuard } from "@/modules/auth/register-rate-limit.guard";
 
 const PG_UNIQUE_VIOLATION = "23505";
 const DUPLICATE_MESSAGE = "此 email 已被使用。";
+const DUPLICATE_CODE: RegisterErrorCode = "USERNAME_TAKEN";
 
 /**
  * Public self-registration (US1, DR-005). Creates a `pending` account that cannot
@@ -30,7 +35,6 @@ const DUPLICATE_MESSAGE = "此 email 已被使用。";
 export class RegisterController {
   constructor(
     @Inject(ACCOUNT_ADMIN_STORE) private readonly accounts: AccountAdminStore,
-    @Inject(USER_ACCOUNT_STORE) private readonly lookup: UserAccountStore,
     @Inject(AUTH_CONFIG) private readonly config: AuthConfig
   ) {}
 
@@ -51,23 +55,21 @@ export class RegisterController {
     }
     const { username, displayName, password } = parsed.value;
 
-    // Friendly pre-check; the DB unique index is the real guard (race backstop below).
-    if (await this.lookup.findByUsername(username)) {
-      throw new ConflictException({ code: "INVALID_INPUT", message: DUPLICATE_MESSAGE });
-    }
-
+    // The DB unique constraint on `username` is the single guard against duplicates
+    // (no app-level pre-check: it would only add a race window and a timing channel).
+    // A 23505 violation maps to a 409 with a dedicated code.
     try {
       return await this.accounts.create({
         id: `user_${randomUUID()}`,
         username,
         displayName,
-        passwordHash: hashPassword(password),
+        passwordHash: await hashPassword(password),
         status: "pending",
         isAdmin: false
       });
     } catch (error) {
       if (isUniqueViolation(error)) {
-        throw new ConflictException({ code: "INVALID_INPUT", message: DUPLICATE_MESSAGE });
+        throw new ConflictException({ code: DUPLICATE_CODE, message: DUPLICATE_MESSAGE });
       }
       throw error;
     }

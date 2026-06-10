@@ -71,14 +71,28 @@ describe("RegisterView", () => {
     expect(screen.getByText("回登入頁")).toBeTruthy();
   });
 
-  it("shows a duplicate-email message on a 409 conflict", async () => {
+  it("shows a duplicate-email message on a 409 USERNAME_TAKEN conflict", async () => {
     fetchAuthConfig.mockResolvedValue({ registrationEnabled: true });
-    registerRequest.mockRejectedValue(new RegisterError("INVALID_INPUT", "dup", []));
+    registerRequest.mockRejectedValue(new RegisterError("USERNAME_TAKEN", "dup", []));
     setup();
 
     fillAndSubmit();
 
     expect(await screen.findByText("此 email 已被使用。")).toBeTruthy();
+  });
+
+  it("shows a live password error while the typed password breaks the policy", async () => {
+    fetchAuthConfig.mockResolvedValue({ registrationEnabled: true });
+    setup();
+
+    fireEvent.change(screen.getByLabelText("密碼"), { target: { value: "short" } });
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(screen.getByText("密碼不符上述規則，請再調整。")).toBeTruthy();
+
+    // A compliant password clears the live error.
+    fireEvent.change(screen.getByLabelText("密碼"), { target: { value: "abc123def4" } });
+    await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+    expect(registerRequest).not.toHaveBeenCalled();
   });
 
   it("shows a closed-registration notice when the config flag is off", async () => {

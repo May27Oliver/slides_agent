@@ -43,10 +43,26 @@ describe("AuthProvider", () => {
   });
 
   it("restores a stored session on mount", async () => {
+    // /me reconcile returns the same user → no change.
+    stubFetch({ authenticated: true, expiresAt: session.expiresAt, user: session.user });
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
     const { result } = renderAuth();
     await waitFor(() => expect(result.current.status).toBe("authenticated"));
     expect(result.current.user).toEqual(session.user);
+  });
+
+  it("reconciles a stale admin flag against /api/auth/me on mount (FR-017a)", async () => {
+    // Stored session claims admin; the live /me says the account was demoted.
+    const storedAdmin = { ...session, user: { ...session.user, isAdmin: true } };
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(storedAdmin));
+    stubFetch({
+      authenticated: true,
+      expiresAt: session.expiresAt,
+      user: { ...session.user, isAdmin: false }
+    });
+    const { result } = renderAuth();
+    await waitFor(() => expect(result.current.user?.isAdmin).toBe(false));
+    expect(result.current.status).toBe("authenticated");
   });
 
   it("logs out and clears storage", async () => {

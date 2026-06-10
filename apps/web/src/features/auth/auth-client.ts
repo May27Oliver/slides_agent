@@ -1,4 +1,4 @@
-import type { LoginResponseContract } from "@slides-agent/contracts";
+import type { LoginResponseContract, MeResponseContract } from "@slides-agent/contracts";
 
 export class AuthError extends Error {
   /** Public, sanitized server code (e.g. AUTH_INVALID / ACCOUNT_PENDING /
@@ -39,6 +39,25 @@ async function readErrorCode(response: Response): Promise<string> {
   } catch {
     return "AUTH_INVALID";
   }
+}
+
+/**
+ * Re-reads the live session (`GET /api/auth/me`) for the given token. The server
+ * re-validates against the DB, so the returned `user.isAdmin` is the CURRENT value
+ * — used to reconcile a possibly-stale stored admin flag after a demotion
+ * (FR-017a). Throws {@link AuthError} on a non-2xx (e.g. the account was disabled).
+ */
+export async function meRequest(
+  token: string,
+  fetchImpl: typeof fetch = fetch
+): Promise<MeResponseContract> {
+  const response = await fetchImpl("/api/auth/me", {
+    headers: { authorization: `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    throw new AuthError("Session invalid", await readErrorCode(response));
+  }
+  return (await response.json()) as MeResponseContract;
 }
 
 export async function logoutRequest(

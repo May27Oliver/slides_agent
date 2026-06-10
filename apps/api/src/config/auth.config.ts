@@ -131,6 +131,11 @@ function parseBooleanFlag(value: string | undefined, fallback: boolean): boolean
   if (normalized === "true" || normalized === "1" || normalized === "yes") {
     return true;
   }
+  // An unrecognized value (e.g. "disabled") silently falling back to `true` could
+  // unexpectedly leave public registration open — surface it loudly instead.
+  process.stderr.write(
+    `WARN: unrecognized boolean flag value "${value}"; defaulting to ${fallback}.\n`
+  );
   return fallback;
 }
 
