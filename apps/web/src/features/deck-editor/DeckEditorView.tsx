@@ -251,7 +251,7 @@ export function DeckEditorView({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-canvas">
+    <div className="flex min-h-screen flex-col bg-surface">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-panel px-5 py-2 text-sm">
         <div className="flex min-w-0 items-center gap-3">
           <Link to="/decks" className="font-medium text-brand-700 hover:underline">
@@ -278,7 +278,7 @@ export function DeckEditorView({
           <button
             type="button"
             onClick={() => void logout()}
-            className="rounded-lg border border-line px-3 py-1 font-medium text-ink hover:bg-canvas"
+            className="rounded-lg border border-line px-3 py-1 font-medium text-ink hover:bg-surface"
           >
             {t("decks.logout")}
           </button>
@@ -319,7 +319,7 @@ export function DeckEditorView({
               }
             />
           </div>
-          <div role="tablist" className="mb-3 flex gap-1 rounded-xl bg-canvas p-1">
+          <div role="tablist" className="mb-3 flex gap-1 rounded-xl bg-surface p-1">
             <TabButton active={rightTab === "edit"} onClick={() => setRightTab("edit")}>
               {t("editor.tab.edit")}
             </TabButton>
@@ -466,7 +466,7 @@ function DraftBanner({
 
 function CenterMessage({ children, tone }: { children: React.ReactNode; tone?: "error" }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas px-5">
+    <div className="flex min-h-screen items-center justify-center bg-surface px-5">
       <p className={`text-sm ${tone === "error" ? "text-red-600" : "text-ink-soft"}`}>{children}</p>
     </div>
   );

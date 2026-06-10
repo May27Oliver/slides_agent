@@ -4,7 +4,8 @@ import type {
   ThemeSelectionWarning
 } from "@slides-agent/domain";
 import { useI18n } from "@/i18n";
-import { THEME_AXES, resolveThemeName } from "@/features/theme-picker/theme-axes";
+import { THEME_AXES, resolveTheme } from "@/features/theme-picker/theme-axes";
+import { ThemeSwatchView } from "@/features/theme-picker/ThemeSwatchView";
 
 interface ThemeSummaryProps {
   selection: ManualThemeSelection;
@@ -56,17 +57,22 @@ export function ThemeSummary({
         </p>
       ) : null}
 
-      <dl className="grid grid-cols-3 gap-2">
+      <dl className="flex flex-col gap-1.5">
         {THEME_AXES.map((axis) => {
-          const name = resolveThemeName(catalog, axis, selection[axis.idKey]);
+          const theme = resolveTheme(catalog, axis, selection[axis.idKey]);
           return (
-            <div key={axis.kind} className="min-w-0">
-              <dt className="text-[11px] font-medium text-ink-soft">{t(axis.labelKey)}</dt>
+            <div key={axis.kind} className="flex min-w-0 items-center gap-2">
+              {theme ? (
+                <ThemeSwatchView theme={theme} size="sm" />
+              ) : (
+                <span className="h-6 w-6 shrink-0 rounded-lg border border-dashed border-line" />
+              )}
+              <dt className="shrink-0 text-[11px] font-medium text-ink-soft">{t(axis.labelKey)}</dt>
               <dd
-                className={`truncate text-xs font-semibold ${name ? "text-ink" : "text-ink-soft/70"}`}
-                title={name ?? t("theme.auto")}
+                className={`min-w-0 flex-1 truncate text-right text-xs font-semibold ${theme ? "text-ink" : "text-ink-soft/70"}`}
+                title={theme?.name ?? t("theme.auto")}
               >
-                {name ?? t("theme.auto")}
+                {theme?.name ?? t("theme.auto")}
               </dd>
             </div>
           );

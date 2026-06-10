@@ -88,7 +88,7 @@ export function LivePreview({
     <section aria-label={t("editor.preview.heading")} className="flex h-full min-h-0 flex-col">
       <div className="mb-2 flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-ink">{t("editor.preview.heading")}</h2>
-        <span className="rounded-md bg-canvas px-2 py-0.5 text-xs text-ink-soft">
+        <span className="rounded-md bg-surface px-2 py-0.5 text-xs text-ink-soft">
           {t("editor.preview.fullscreenHint")}
         </span>
       </div>

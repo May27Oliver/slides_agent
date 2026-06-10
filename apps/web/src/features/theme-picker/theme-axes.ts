@@ -1,8 +1,4 @@
-import type {
-  BrowsableTheme,
-  ManualThemeSelection,
-  ThemeCatalog
-} from "@slides-agent/domain";
+import type { BrowsableTheme, ManualThemeSelection, ThemeCatalog } from "@slides-agent/domain";
 import type { TranslationKey } from "@/i18n";
 
 /** The three selection axes, with their catalog group + ManualThemeSelection key. */
@@ -19,14 +15,23 @@ export const THEME_AXES = [
 
 export type ThemeAxis = (typeof THEME_AXES)[number];
 
+/** Resolve a selected axis id to its full theme (for swatch + name), or null. */
+export function resolveTheme(
+  catalog: ThemeCatalog | null,
+  axis: ThemeAxis,
+  id: string | undefined
+): BrowsableTheme | null {
+  if (!catalog || !id) {
+    return null;
+  }
+  return catalog[axis.group].find((theme) => theme.id === id) ?? null;
+}
+
 /** Resolve a selected axis id to its theme name, or null when unset/unresolvable. */
 export function resolveThemeName(
   catalog: ThemeCatalog | null,
   axis: ThemeAxis,
   id: string | undefined
 ): string | null {
-  if (!catalog || !id) {
-    return null;
-  }
-  return catalog[axis.group].find((theme) => theme.id === id)?.name ?? null;
+  return resolveTheme(catalog, axis, id)?.name ?? null;
 }

@@ -78,7 +78,7 @@ export function DeckSwitcher({ fetchImpl, confirmNavigate }: DeckSwitcherProps) 
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="rounded-lg border border-line px-3 py-1 font-medium text-ink hover:bg-canvas focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
+        className="rounded-lg border border-line px-3 py-1 font-medium text-ink hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
       >
         {t("switcher.open")} ▾
       </button>
@@ -91,7 +91,7 @@ export function DeckSwitcher({ fetchImpl, confirmNavigate }: DeckSwitcherProps) 
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("switcher.search")}
             aria-label={t("switcher.search")}
-            className="mb-2 w-full rounded-lg border border-line bg-canvas px-3 py-2 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
+            className="mb-2 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
           />
           {!query ? (
             <p className="px-1 pb-1 text-xs font-semibold uppercase tracking-wide text-ink-soft">
@@ -112,7 +112,7 @@ export function DeckSwitcher({ fetchImpl, confirmNavigate }: DeckSwitcherProps) 
                     role="option"
                     aria-selected={false}
                     onClick={() => navigateTo(`/decks/${deck.id}/edit`)}
-                    className="flex w-full flex-col items-start gap-0.5 rounded-lg px-3 py-2 text-left hover:bg-canvas focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
+                    className="flex w-full flex-col items-start gap-0.5 rounded-lg px-3 py-2 text-left hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
                   >
                     <span className="w-full truncate text-sm text-ink">{deck.title}</span>
                     <span className="text-xs text-ink-soft">
@@ -127,7 +127,7 @@ export function DeckSwitcher({ fetchImpl, confirmNavigate }: DeckSwitcherProps) 
           <button
             type="button"
             onClick={() => navigateTo("/decks")}
-            className="mt-2 w-full rounded-lg border border-line px-3 py-2 text-sm font-medium text-brand-700 hover:bg-canvas focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
+            className="mt-2 w-full rounded-lg border border-line px-3 py-2 text-sm font-medium text-brand-700 hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
           >
             📂 {t("switcher.browseAll")}
           </button>

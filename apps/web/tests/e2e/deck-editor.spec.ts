@@ -53,7 +53,12 @@ const revision = {
       htmlGenerationConstraints: [],
       manualVerificationNotes: []
     },
-    consistencyValidation: { ok: true, checkedSlideIds: ["slide_001"], issues: [], fallbackUsed: false }
+    consistencyValidation: {
+      ok: true,
+      checkedSlideIds: ["slide_001"],
+      issues: [],
+      fallbackUsed: false
+    }
   },
   html: "<!doctype html><html><body>gen</body></html>",
   generationSummary: {
@@ -82,6 +87,14 @@ const detail = {
 test("edits a deck, saves a new revision, and reflects the version", async ({ page }) => {
   await seedAuthenticatedSession(page);
 
+  // 011: the editor mounts the theme picker, which fetches the catalogue — mock it so
+  // the test is hermetic (no real backend / hanging request).
+  await page.route("**/api/themes", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ font: [], palette: [], style: [] })
+    });
+  });
   await page.route(`**/api/decks/${DECK_ID}`, async (route) => {
     await route.fulfill({ contentType: "application/json", body: JSON.stringify(detail) });
   });
@@ -108,12 +121,23 @@ test("edits a deck, saves a new revision, and reflects the version", async ({ pa
 test("switcher searches decks and routes into the editor", async ({ page }) => {
   await seedAuthenticatedSession(page);
 
+  await page.route("**/api/themes", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ font: [], palette: [], style: [] })
+    });
+  });
   await page.route("**/api/decks", async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
         decks: [
-          { id: DECK_ID, title: "PM planning review", status: "ready", updatedAt: "2026-06-10T00:00:00.000Z" }
+          {
+            id: DECK_ID,
+            title: "PM planning review",
+            status: "ready",
+            updatedAt: "2026-06-10T00:00:00.000Z"
+          }
         ]
       })
     });

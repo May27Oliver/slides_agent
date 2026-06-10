@@ -56,7 +56,7 @@ export function MyDecksView() {
   );
 
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-screen bg-surface">
       <div className="flex items-center justify-between gap-3 border-b border-line bg-panel px-5 py-2 text-sm">
         <Link to="/" className="font-medium text-brand-700 hover:underline">
           {t("decks.create")}
@@ -66,7 +66,7 @@ export function MyDecksView() {
           <button
             type="button"
             onClick={() => void logout()}
-            className="rounded-lg border border-line px-3 py-1 font-medium text-ink hover:bg-canvas"
+            className="rounded-lg border border-line px-3 py-1 font-medium text-ink hover:bg-surface"
           >
             {t("decks.logout")}
           </button>
@@ -137,7 +137,7 @@ function DeckList({
                 <button
                   type="button"
                   onClick={() => onOpen(deck.id)}
-                  className="cursor-pointer rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink transition-colors duration-200 hover:bg-canvas"
+                  className="cursor-pointer rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink transition-colors duration-200 hover:bg-surface"
                 >
                   {t("decks.open")}
                 </button>
@@ -173,7 +173,7 @@ function DeckDetailView({
         <button
           type="button"
           onClick={onBack}
-          className="shrink-0 cursor-pointer rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink transition-colors duration-200 hover:bg-canvas"
+          className="shrink-0 cursor-pointer rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink transition-colors duration-200 hover:bg-surface"
         >
           {t("decks.back")}
         </button>

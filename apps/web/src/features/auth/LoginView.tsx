@@ -46,7 +46,7 @@ export function LoginView() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-canvas px-4">
+    <main className="flex min-h-screen items-center justify-center bg-surface px-4">
       <form
         onSubmit={onSubmit}
         className="w-full max-w-sm space-y-4 rounded-2xl border border-line bg-panel p-6 shadow-sm"
@@ -61,7 +61,7 @@ export function LoginView() {
             autoComplete="username"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
-            className="w-full rounded-lg border border-line bg-canvas px-3 py-2 text-sm text-ink"
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
             required
           />
         </label>
@@ -73,7 +73,7 @@ export function LoginView() {
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-lg border border-line bg-canvas px-3 py-2 text-sm text-ink"
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
             required
           />
         </label>

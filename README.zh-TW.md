@@ -13,6 +13,9 @@
 - **內容 → 簡報 pipeline**:語意切段 → 大綱規劃 → 設計規劃 → HTML 渲染 → 驗證。
 - **LLM 輔助、確定性渲染**:LLM 負責語言／結構／設計「選型」;最終 HTML 由確定性、reference 級的模板渲染器產生(快、免費、穩定、必過驗證)。
 - **UIUX Pro Max 設計系統**:依簡報需求挑選策展調色盤＋字型配對＋具體 style kit(字級、動態、效果)。見 [`docs/design.md`](docs/design.md)。
+- **手動主題瀏覽**(功能 011):瀏覽完整主題庫(字型／調色盤／風格色票),在生成或編輯時手動挑一個——確定性、零額外 LLM 呼叫。
+- **簡報庫與持久化**(功能 006):生成的簡報依帳號存檔,列在「我的簡報」;結構化的 `SlideDeck` 為真實來源,HTML 是衍生快取。
+- **App 內編輯簡報**(功能 010):重整已存簡報(重排／編輯／移除投影片、換主題),確定性重渲染,並在樂觀並行控制下存成新 revision。
 - **非同步預覽工作流**:送出工作 → 輪詢進度 → 取得結果,含逾時、失敗回報與可取消的輪詢 UI。
 - **Self-contained 輸出**:單一 HTML 檔、inline CSS/JS、鍵盤導覽,唯一的外部資源是 Google Fonts。
 - **忠於來源**:驗證器把關投影片順序、內容忠實度與數字保真,不捏造事實。
@@ -29,7 +32,7 @@ pnpm monorepo,核心領域邏輯乾淨、App 外殼輕薄。
 | `packages/domain`    | `@slides-agent/domain`    | 純領域邏輯:切段、大綱/版面規劃、設計系統、渲染、預覽工作生命週期。無 I/O。 |
 | `packages/contracts` | `@slides-agent/contracts` | 共用的請求/回應契約 + 執行期驗證器。                                       |
 | `apps/api`           | `@slides-agent/api`       | NestJS 後端:REST 端點、LLM adapter(port)、預覽工作 store/runner。          |
-| `apps/web`           | `@slides-agent/web`       | React + Vite 前端:輸入表單、風格預設、工作輪詢、預覽。                     |
+| `apps/web`           | `@slides-agent/web`       | React + Vite 前端:輸入表單、風格預設＋主題挑選、我的簡報庫、App 內編輯器、工作輪詢、預覽。 |
 
 ### 生成 pipeline
 
@@ -220,6 +223,20 @@ pnpm db:migrate    # 把待套用的 migration 套到 DATABASE_URL
 
 兩個 POST 端點**共用**同一個 per-IP rate-limit 預算;來源與簡報欄位都有長度上限。
 
+### 帳號相關端點
+
+除登入本身外,皆需帶 `Authorization: Bearer <jwt>`。
+
+| 方法   | 路徑                        | 說明                                                                 |
+| ------ | --------------------------- | -------------------------------------------------------------------- |
+| `POST` | `/api/auth/login`           | 對帳號白名單登入 → JWT(功能 005)。                                   |
+| `GET`  | `/api/auth/me`              | 目前 session 身分。                                                  |
+| `POST` | `/api/auth/logout`          | 結束 session。                                                       |
+| `GET`  | `/api/decks`               | 列出登入帳號已存的簡報(功能 006)。                                   |
+| `GET`  | `/api/decks/:id`           | 簡報詳情(目前 revision)。                                            |
+| `POST` | `/api/decks/:id/revisions` | 套用結構／文字編輯 → 新的 `origin="edit"` revision;確定性重渲染(010)。 |
+| `GET`  | `/api/themes`              | 瀏覽主題庫,依 `font` / `palette` / `style` 分組(功能 011)。          |
+
 ---
 
 ## 測試與驗證
@@ -263,14 +280,14 @@ pnpm --filter @slides-agent/api preview:deck sample-deck-input.md "tech startup 
 
 ```
 apps/
-  api/        NestJS 後端（controller、LLM adapter、預覽工作 store/runner）
-  web/        React + Vite 前端（表單、風格預設、輪詢、預覽）
+  api/        NestJS 後端（controller、LLM adapter、preview-job/deck/theme store）
+  web/        React + Vite 前端（表單、主題挑選、我的簡報、編輯器、輪詢、預覽）
 packages/
-  domain/     純領域邏輯（切段、deck/design/render、preview-job）
+  domain/     純領域邏輯（切段、deck/design/render、deck-edit、review、preview-job）
   contracts/  共用契約 + 驗證器
 docs/
   design.md   設計系統架構 + 如何新增設計 skill
-specs/        功能規格（003-async-preview-jobs）
+specs/        功能規格 001 → 011（spec-kit）
 ```
 
 ---

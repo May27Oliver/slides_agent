@@ -43,7 +43,7 @@ export function SlideNavigator({
         <button
           type="button"
           onClick={() => onAddSlide(selectedId)}
-          className="rounded-lg border border-line px-2 py-1 text-xs font-medium text-ink hover:bg-canvas focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
+          className="rounded-lg border border-line px-2 py-1 text-xs font-medium text-ink hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
         >
           + {t("editor.slide.add")}
         </button>
@@ -108,7 +108,7 @@ function SortableSlideRow({
       <button
         type="button"
         aria-label={t("editor.dragHandle")}
-        className="flex cursor-grab touch-none items-center rounded-lg border border-line px-1.5 text-ink-soft hover:bg-canvas focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700 active:cursor-grabbing"
+        className="flex cursor-grab touch-none items-center rounded-lg border border-line px-1.5 text-ink-soft hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700 active:cursor-grabbing"
         {...attributes}
         {...listeners}
       >
@@ -121,7 +121,7 @@ function SortableSlideRow({
         className={[
           "flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors",
           "focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700",
-          selected ? "border-brand-700 bg-brand-50 text-ink" : "border-line bg-panel text-ink hover:bg-canvas"
+          selected ? "border-brand-700 bg-brand-50 text-ink" : "border-line bg-panel text-ink hover:bg-surface"
         ].join(" ")}
       >
         <span className="shrink-0 tabular-nums text-xs text-ink-soft">

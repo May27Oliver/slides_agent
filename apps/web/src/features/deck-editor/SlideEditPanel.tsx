@@ -79,7 +79,7 @@ export function SlideEditPanel({
           <button
             type="button"
             onClick={onAddBullet}
-            className="rounded-lg border border-line px-2 py-1 text-xs font-medium text-ink hover:bg-canvas focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
+            className="rounded-lg border border-line px-2 py-1 text-xs font-medium text-ink hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
           >
             + {t("editor.bullet.add")}
           </button>
@@ -171,7 +171,7 @@ function SortableBulletRow({
       <button
         type="button"
         aria-label={t("editor.dragHandle")}
-        className="flex cursor-grab touch-none items-center rounded border border-line px-1.5 py-2 text-ink-soft hover:bg-canvas focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700 active:cursor-grabbing"
+        className="flex cursor-grab touch-none items-center rounded border border-line px-1.5 py-2 text-ink-soft hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700 active:cursor-grabbing"
         {...attributes}
         {...listeners}
       >
