@@ -21,7 +21,7 @@ describe("JwtStrategy", () => {
     expect(result.expiresAt).toBe(new Date(1_893_456_000 * 1000).toISOString());
   });
 
-  it("throws when the token's account is missing or inactive", async () => {
+  it("throws when the token's account is missing or no longer active", async () => {
     const strategy = strategyWith(vi.fn().mockResolvedValue(null));
     await expect(strategy.validate({ sub: "u", exp: 1 })).rejects.toBeInstanceOf(
       UnauthorizedException
