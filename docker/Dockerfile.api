@@ -1,0 +1,53 @@
+# syntax=docker/dockerfile:1
+#
+# Shared image for the `api`, `worker`, and one-shot `migrate` services (012,
+# DR-001). All three run the same apps/api code via the tsx runtime — they
+# differ only in the compose `command:` (src/main.ts vs src/worker/worker.main.ts
+# vs scripts/db-migrate.ts + db-seed.ts). One image, no drift.
+#
+# Single stage on purpose (DR-003): the app is NOT compiled — it runs through
+# tsx, which needs the full workspace deps (tsx itself is a devDependency) plus
+# the original .ts sources and the monorepo's tsconfig path map at runtime. A
+# `--prod` prune or a "copy built dist to a slim stage" step would break startup,
+# and pnpm's symlinked virtual store does not copy cleanly across stages, so a
+# second stage would add fragility with zero size win.
+#
+# tsx resolves `@/*` and `@slides-agent/*` from apps/api/tsconfig.json, whose
+# baseUrl is the monorepo root. The container therefore preserves the workspace
+# layout under /app: /app/apps/api, /app/packages/{domain,contracts},
+# /app/tsconfig.base.json.
+
+FROM node:20.19.5-slim AS api
+ENV NODE_ENV=production
+WORKDIR /app
+
+# corepack provides the pinned pnpm (root package.json "packageManager").
+RUN corepack enable
+
+# --- deps layer: copy only manifests first so `pnpm install` is cached until a
+# package.json / lockfile actually changes. All workspace manifests are needed
+# (even apps/web) so --frozen-lockfile can validate the lockfile against the
+# full member set; --filter then scopes the actual install to api + its
+# workspace deps (domain/contracts), skipping web's devDeps.
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY packages/domain/package.json packages/domain/package.json
+COPY packages/contracts/package.json packages/contracts/package.json
+COPY apps/api/package.json apps/api/package.json
+COPY apps/web/package.json apps/web/package.json
+RUN pnpm install --frozen-lockfile --filter "@slides-agent/api..."
+
+# --- source layer: the tsx runtime needs the real sources + the shared base
+# tsconfig (apps/api/tsconfig.json extends ../../tsconfig.base.json).
+COPY tsconfig.base.json tsconfig.base.json
+COPY packages/domain packages/domain
+COPY packages/contracts packages/contracts
+COPY apps/api apps/api
+
+# WORKDIR matches dev: db-migrate.ts uses migrationsFolder "./src/infra/db/migrations"
+# relative to CWD, and tsx auto-detects apps/api/tsconfig.json from here.
+WORKDIR /app/apps/api
+
+# Default command = the api process. compose overrides `command:` for the worker
+# and the migrate job (same image, same physical entrypoints as dev — no
+# prod-only start script; HOST/PORT come from the injected env, DR-006).
+CMD ["node", "--import", "tsx", "src/main.ts"]
