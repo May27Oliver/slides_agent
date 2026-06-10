@@ -239,6 +239,23 @@ pnpm db:migrate    # 把待套用的 migration 套到 DATABASE_URL
 
 ---
 
+## 部署（Docker Compose,功能 012）
+
+單機正式部署可用內附的 Docker Compose 堆疊（`nginx` 邊緣 + `api` + `worker` +
+一次性 `migrate` job + `postgres` + `redis`）。一條指令帶起：
+
+```bash
+cp .env.production.example .env   # 再填 POSTGRES_* / AUTH_* / ALLOWED_ORIGIN
+docker compose up -d --build
+```
+
+migrate→seed 會自動執行並 gate `api`/`worker`;相對 dev 的唯一 app 變更是 public
+liveness 探針 `GET /api/health`。完整手冊（必填 env、healthcheck 觀察、端到端
+smoke、`down -v` 風險、手動 rerun）見
+[`specs/012-docker-compose-deploy/quickstart.md`](specs/012-docker-compose-deploy/quickstart.md)。
+
+---
+
 ## 測試與驗證
 
 ### 單元／整合測試（vitest）
