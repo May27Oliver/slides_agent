@@ -197,5 +197,5 @@ docs/ 或 README             # 部署章節：必填 env、ALLOWED_ORIGIN/TRUST_
 
 - **Automated Evidence**：`health.controller.test.ts`（單元，api vitest 套件內）；`docker compose config` 通過紀錄。
 - **Manual / Operational Evidence**：`docker compose ps`（healthcheck 狀態）、端到端 smoke 的 log/截圖/簡短錄製、`down`→`up` 後資料留存截圖。
-- **Security Evidence**：`grep` web `dist` 無 `OPENAI_API_KEY`/`AUTH_JWT_SECRET` 等；`git ls-files | grep .env` 為空；image history 不含密鑰；缺 `AUTH_JWT_SECRET` 時 api fail-fast log（worker 不因缺 JWT 而擋）。
+- **Security Evidence**：`grep` web `dist` 無 `OPENAI_API_KEY`/`AUTH_JWT_SECRET` 等；無實密鑰檔被追蹤 —— `git ls-files | grep -E '(^|/)\.env(\.|$)' | grep -vE '\.example$'` 為空（`*.example` 範本如 `.env.production.example` 為刻意追蹤、不算密鑰，對齊 tasks T023）；image history 不含密鑰；缺 `AUTH_JWT_SECRET` 時 api fail-fast log（worker 不因缺 JWT 而擋）。
 - **Decision Evidence**：本 plan 的 DR-001~006（含 rejected alternatives）即決策依據。
