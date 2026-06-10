@@ -9,6 +9,9 @@ import { AuthService } from "@/modules/auth/auth.service";
 interface JwtPayload {
   sub: string;
   exp: number;
+  // NOTE: do NOT read `isAdmin` (or any role) from the token for authorization.
+  // The signed claim is a stale UI hint only; `validate()` below re-reads the live
+  // DB value so a demoted admin is rejected on the very next request (FR-017a/019).
 }
 
 /** Public user attached to the request, plus the token expiry for `/auth/me`. */

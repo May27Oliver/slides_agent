@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { UnauthorizedException } from "@nestjs/common";
+import { ForbiddenException, UnauthorizedException } from "@nestjs/common";
 import { JwtAuthGuard } from "@/modules/auth/jwt-auth.guard";
 import { LocalAuthGuard } from "@/modules/auth/local-auth.guard";
 
@@ -16,7 +16,9 @@ describe("JwtAuthGuard.handleRequest", () => {
       guard.handleRequest(null, null);
     } catch (error) {
       expect(error).toBeInstanceOf(UnauthorizedException);
-      expect((error as UnauthorizedException).getResponse()).toMatchObject({ code: "AUTH_REQUIRED" });
+      expect((error as UnauthorizedException).getResponse()).toMatchObject({
+        code: "AUTH_REQUIRED"
+      });
     }
   });
 
@@ -33,7 +35,21 @@ describe("LocalAuthGuard.handleRequest", () => {
     try {
       guard.handleRequest(null, null);
     } catch (error) {
-      expect((error as UnauthorizedException).getResponse()).toMatchObject({ code: "AUTH_INVALID" });
+      expect((error as UnauthorizedException).getResponse()).toMatchObject({
+        code: "AUTH_INVALID"
+      });
+    }
+  });
+
+  it("preserves a ForbiddenException (ACCOUNT_PENDING/DISABLED) from the strategy", () => {
+    const forbidden = new ForbiddenException({ code: "ACCOUNT_PENDING", message: "pending" });
+    expect(() => guard.handleRequest(forbidden, null)).toThrow(ForbiddenException);
+    try {
+      guard.handleRequest(forbidden, null);
+    } catch (error) {
+      expect((error as ForbiddenException).getResponse()).toMatchObject({
+        code: "ACCOUNT_PENDING"
+      });
     }
   });
 });

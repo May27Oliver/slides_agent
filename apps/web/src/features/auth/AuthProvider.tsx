@@ -15,7 +15,7 @@ import {
   loadSession,
   saveSession
 } from "@/features/auth/auth-storage";
-import { AuthError, loginRequest, logoutRequest } from "@/features/auth/auth-client";
+import { AuthError, loginRequest, logoutRequest, meRequest } from "@/features/auth/auth-client";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -30,10 +30,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus(next ? "authenticated" : "unauthenticated");
   }, []);
 
-  // Restore on mount.
+  // Reconcile the stored session against the live DB (FR-017a): refresh user
+  // (notably isAdmin) + expiry from /api/auth/me. On a 401-class AuthError the
+  // account is gone/disabled → drop the session; a transient network error keeps
+  // the restored session as-is (no surprise logout when the API is briefly down).
+  const reconcileSession = useCallback(
+    async (token: string) => {
+      try {
+        const me = await meRequest(token);
+        const next: StoredSession = { token, expiresAt: me.expiresAt, user: me.user };
+        saveSession(next);
+        applySession(next);
+      } catch (error) {
+        if (error instanceof AuthError) {
+          clearSession();
+          applySession(null);
+        }
+      }
+    },
+    [applySession]
+  );
+
+  // Restore on mount, then reconcile a possibly-stale stored admin flag.
   useEffect(() => {
-    applySession(loadSession());
-  }, [applySession]);
+    const restored = loadSession();
+    applySession(restored);
+    if (restored?.token) {
+      void reconcileSession(restored.token);
+    }
+  }, [applySession, reconcileSession]);
 
   // Cross-tab sync: a logout / token clear in another tab updates this one (FR-012).
   useEffect(() => {
@@ -81,9 +106,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // applySession(null) also redirects to /login via ProtectedRoute.
         throw new AuthError("Session expired");
       }
+      if (response.status === 403 && tokenRef.current) {
+        // A 403 may mean the live isAdmin no longer matches our stored flag (e.g.
+        // just demoted). Reconcile against /me so the admin nav/route drops on the
+        // next render. The caller still receives the 403 to handle as usual.
+        void reconcileSession(tokenRef.current);
+      }
       return response;
     },
-    [applySession]
+    [applySession, reconcileSession]
   );
 
   const value = useMemo<AuthContextValue>(

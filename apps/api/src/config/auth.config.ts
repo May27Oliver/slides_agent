@@ -1,16 +1,21 @@
-import type { UserAccount } from "@slides-agent/domain";
+import type { BootstrapAccount } from "@slides-agent/domain";
 
 /**
  * Backend-only auth configuration. `AUTH_JWT_SECRET` is required — the API fails
  * fast on startup without it. Accounts come from the `AUTH_ACCOUNTS` JSON
- * allowlist (passwordHash produced by `pnpm auth:hash`).
+ * allowlist (passwordHash produced by `pnpm auth:hash`). Entries are
+ * {@link BootstrapAccount}s: the two-state `active` boolean is a bootstrap input
+ * that `seedAccounts` maps onto the DB `status` on first insert (DR-007).
  */
 export interface AuthConfig {
   jwtSecret: string;
   jwtExpiresIn: string;
   jwtIssuer: string;
-  accounts: UserAccount[];
+  accounts: BootstrapAccount[];
   loginRateLimit: { max: number; windowMs: number };
+  registerRateLimit: { max: number; windowMs: number };
+  /** Self-registration master switch (DR-010). Defaults to enabled. */
+  registrationEnabled: boolean;
 }
 
 type EnvLike = Record<string, string | undefined>;
@@ -20,6 +25,8 @@ const DEFAULT_ISSUER = "slides-agent";
 const MIN_JWT_SECRET_CHARS = 32;
 const DEFAULT_LOGIN_RATE_LIMIT_MAX = 10;
 const DEFAULT_LOGIN_RATE_LIMIT_WINDOW_MS = 60_000;
+const DEFAULT_REGISTER_RATE_LIMIT_MAX = 5;
+const DEFAULT_REGISTER_RATE_LIMIT_WINDOW_MS = 60_000;
 // Accepts a bare seconds count or a vercel/ms duration string (e.g. "30d", "12h").
 const EXPIRES_IN_PATTERN = /^\d+(\.\d+)?\s*(ms|s|m|h|d|w|y)?$/u;
 
@@ -48,7 +55,16 @@ export function loadAuthConfig(env: EnvLike = process.env): AuthConfig {
         env.AUTH_LOGIN_RATE_LIMIT_WINDOW_MS,
         DEFAULT_LOGIN_RATE_LIMIT_WINDOW_MS
       )
-    }
+    },
+    registerRateLimit: {
+      max: positiveIntOr(env.AUTH_REGISTER_RATE_LIMIT_MAX, DEFAULT_REGISTER_RATE_LIMIT_MAX),
+      windowMs: positiveIntOr(
+        env.AUTH_REGISTER_RATE_LIMIT_WINDOW_MS,
+        DEFAULT_REGISTER_RATE_LIMIT_WINDOW_MS
+      )
+    },
+    // Default ON; only an explicit "false" / "0" disables self-registration.
+    registrationEnabled: parseBooleanFlag(env.REGISTRATION_ENABLED, true)
   };
 }
 
@@ -56,11 +72,11 @@ export function loadAuthConfig(env: EnvLike = process.env): AuthConfig {
  * Parses only the AUTH_ACCOUNTS allowlist — used by `db:seed`, which must not
  * require AUTH_JWT_SECRET (seeding accounts has nothing to do with JWT signing).
  */
-export function loadSeedAccounts(env: EnvLike = process.env): UserAccount[] {
+export function loadSeedAccounts(env: EnvLike = process.env): BootstrapAccount[] {
   return parseAccounts(env.AUTH_ACCOUNTS);
 }
 
-function parseAccounts(raw: string | undefined): UserAccount[] {
+function parseAccounts(raw: string | undefined): BootstrapAccount[] {
   if (!raw || !raw.trim()) {
     return [];
   }
@@ -73,17 +89,18 @@ function parseAccounts(raw: string | undefined): UserAccount[] {
   if (!Array.isArray(parsed)) {
     throw new Error("AUTH_ACCOUNTS must be a JSON array.");
   }
-  return parsed.map(toUserAccount);
+  return parsed.map(toBootstrapAccount);
 }
 
-function toUserAccount(value: unknown, index: number): UserAccount {
+function toBootstrapAccount(value: unknown, index: number): BootstrapAccount {
   if (
     !isRecord(value) ||
     typeof value.id !== "string" ||
     typeof value.username !== "string" ||
     typeof value.displayName !== "string" ||
     typeof value.passwordHash !== "string" ||
-    typeof value.active !== "boolean"
+    typeof value.active !== "boolean" ||
+    (value.isAdmin !== undefined && typeof value.isAdmin !== "boolean")
   ) {
     throw new Error(`AUTH_ACCOUNTS[${index}] is malformed.`);
   }
@@ -92,13 +109,34 @@ function toUserAccount(value: unknown, index: number): UserAccount {
     username: value.username,
     displayName: value.displayName,
     passwordHash: value.passwordHash,
-    active: value.active
+    active: value.active,
+    // Only carry isAdmin when explicitly provided (keeps the bootstrap value clean).
+    ...(value.isAdmin === undefined ? {} : { isAdmin: value.isAdmin })
   };
 }
 
 function positiveIntOr(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function parseBooleanFlag(value: string | undefined, fallback: boolean): boolean {
+  const normalized = value?.trim().toLowerCase();
+  if (normalized === undefined || normalized === "") {
+    return fallback;
+  }
+  if (normalized === "false" || normalized === "0" || normalized === "no") {
+    return false;
+  }
+  if (normalized === "true" || normalized === "1" || normalized === "yes") {
+    return true;
+  }
+  // An unrecognized value (e.g. "disabled") silently falling back to `true` could
+  // unexpectedly leave public registration open — surface it loudly instead.
+  process.stderr.write(
+    `WARN: unrecognized boolean flag value "${value}"; defaulting to ${fallback}.\n`
+  );
+  return fallback;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

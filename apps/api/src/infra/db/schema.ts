@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   index,
   integer,
   jsonb,
@@ -17,15 +18,31 @@ import {
  * normalization (no citext) — see specs/006-db-persistence/research.md DR-004.
  */
 
-export const accounts = pgTable("accounts", {
-  id: text("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  displayName: text("display_name").notNull(),
-  passwordHash: text("password_hash").notNull(),
-  active: boolean("active").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
-});
+// 013: account lifecycle is the three-state `status` (pending|active|disabled),
+// replacing the old two-state `active` boolean (No shim). `is_admin` gates the
+// admin dashboard. See specs/013-user-registration/plan.md (DR-001/DR-003).
+export const accounts = pgTable(
+  "accounts",
+  {
+    id: text("id").primaryKey(),
+    username: text("username").notNull().unique(),
+    displayName: text("display_name").notNull(),
+    passwordHash: text("password_hash").notNull(),
+    status: text("status").notNull().default("pending"),
+    isAdmin: boolean("is_admin").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
+  },
+  (table) => ({
+    statusCheck: check(
+      "accounts_status_check",
+      sql`${table.status} in ('pending', 'active', 'disabled')`
+    ),
+    // Serves the FR-018 active-admin count + FOR UPDATE lock (is_admin AND
+    // status='active') on every admin mutation, so it never scans the full table.
+    activeAdminIdx: index("accounts_active_admin_idx").on(table.isAdmin, table.status)
+  })
+);
 
 export const decks = pgTable(
   "decks",
