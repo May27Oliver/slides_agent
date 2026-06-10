@@ -1,15 +1,17 @@
-import type { UserAccount } from "@slides-agent/domain";
+import type { BootstrapAccount } from "@slides-agent/domain";
 
 /**
  * Backend-only auth configuration. `AUTH_JWT_SECRET` is required — the API fails
  * fast on startup without it. Accounts come from the `AUTH_ACCOUNTS` JSON
- * allowlist (passwordHash produced by `pnpm auth:hash`).
+ * allowlist (passwordHash produced by `pnpm auth:hash`). Entries are
+ * {@link BootstrapAccount}s: the two-state `active` boolean is a bootstrap input
+ * that `seedAccounts` maps onto the DB `status` on first insert (DR-007).
  */
 export interface AuthConfig {
   jwtSecret: string;
   jwtExpiresIn: string;
   jwtIssuer: string;
-  accounts: UserAccount[];
+  accounts: BootstrapAccount[];
   loginRateLimit: { max: number; windowMs: number };
 }
 
@@ -56,11 +58,11 @@ export function loadAuthConfig(env: EnvLike = process.env): AuthConfig {
  * Parses only the AUTH_ACCOUNTS allowlist — used by `db:seed`, which must not
  * require AUTH_JWT_SECRET (seeding accounts has nothing to do with JWT signing).
  */
-export function loadSeedAccounts(env: EnvLike = process.env): UserAccount[] {
+export function loadSeedAccounts(env: EnvLike = process.env): BootstrapAccount[] {
   return parseAccounts(env.AUTH_ACCOUNTS);
 }
 
-function parseAccounts(raw: string | undefined): UserAccount[] {
+function parseAccounts(raw: string | undefined): BootstrapAccount[] {
   if (!raw || !raw.trim()) {
     return [];
   }
@@ -73,17 +75,18 @@ function parseAccounts(raw: string | undefined): UserAccount[] {
   if (!Array.isArray(parsed)) {
     throw new Error("AUTH_ACCOUNTS must be a JSON array.");
   }
-  return parsed.map(toUserAccount);
+  return parsed.map(toBootstrapAccount);
 }
 
-function toUserAccount(value: unknown, index: number): UserAccount {
+function toBootstrapAccount(value: unknown, index: number): BootstrapAccount {
   if (
     !isRecord(value) ||
     typeof value.id !== "string" ||
     typeof value.username !== "string" ||
     typeof value.displayName !== "string" ||
     typeof value.passwordHash !== "string" ||
-    typeof value.active !== "boolean"
+    typeof value.active !== "boolean" ||
+    (value.isAdmin !== undefined && typeof value.isAdmin !== "boolean")
   ) {
     throw new Error(`AUTH_ACCOUNTS[${index}] is malformed.`);
   }
@@ -92,7 +95,9 @@ function toUserAccount(value: unknown, index: number): UserAccount {
     username: value.username,
     displayName: value.displayName,
     passwordHash: value.passwordHash,
-    active: value.active
+    active: value.active,
+    // Only carry isAdmin when explicitly provided (keeps the bootstrap value clean).
+    ...(value.isAdmin === undefined ? {} : { isAdmin: value.isAdmin })
   };
 }
 

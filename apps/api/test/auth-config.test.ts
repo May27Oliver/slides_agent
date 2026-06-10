@@ -56,4 +56,21 @@ describe("loadAuthConfig", () => {
       loadAuthConfig({ AUTH_JWT_SECRET: SECRET, AUTH_ACCOUNTS: JSON.stringify([{ id: "x" }]) })
     ).toThrow(/AUTH_ACCOUNTS\[0\]/u);
   });
+
+  it("parses the optional isAdmin bootstrap flag when present", () => {
+    const config = loadAuthConfig({
+      AUTH_JWT_SECRET: SECRET,
+      AUTH_ACCOUNTS: JSON.stringify([{ ...account, isAdmin: true }])
+    });
+    expect(config.accounts[0]).toMatchObject({ id: "user_owner", isAdmin: true });
+  });
+
+  it("throws when isAdmin is present but not a boolean", () => {
+    expect(() =>
+      loadAuthConfig({
+        AUTH_JWT_SECRET: SECRET,
+        AUTH_ACCOUNTS: JSON.stringify([{ ...account, isAdmin: "yes" }])
+      })
+    ).toThrow(/AUTH_ACCOUNTS\[0\]/u);
+  });
 });

@@ -120,11 +120,28 @@ export { mergeEditedDeck } from "@/deck-edit/slide-merge";
 export type { EditRevisionPayload, ApplyDeckEditResult } from "@/deck-edit/apply-deck-edit.types";
 export type { SlideMergeResult } from "@/deck-edit/slide-merge";
 
-export type { UserAccount, AuthenticatedUser, AuthFailureCode } from "@/auth/auth.types";
+export type {
+  UserAccount,
+  AuthenticatedUser,
+  AuthFailureCode,
+  AccountStatus
+} from "@/auth/auth.types";
 export type { UserAccountStore } from "@/auth/user-account-store.port";
+export type {
+  AccountAdminStore,
+  CreateAccountInput,
+  AdminAccountView
+} from "@/auth/account-admin-store.port";
+export type { BootstrapAccount } from "@/auth/bootstrap-account.types";
 export {
   evaluateLogin,
   evaluateSession,
   toAuthenticatedUser,
   type AuthEvaluation
 } from "@/auth/auth-policy.service";
+export {
+  evaluateAdminMutation,
+  type AdminChange,
+  type AdminMutationInput,
+  type AdminMutationDecision
+} from "@/auth/admin-mutation.policy";

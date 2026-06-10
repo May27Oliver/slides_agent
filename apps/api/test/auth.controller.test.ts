@@ -12,12 +12,12 @@ describe("AuthController", () => {
     const session = {
       token: "jwt",
       expiresAt: "2026-07-03T00:00:00.000Z",
-      user: { id: "u", username: "a", displayName: "A" }
+      user: { id: "u", username: "a", displayName: "A", isAdmin: false }
     };
     const issueSession = vi.fn().mockResolvedValue(session);
     const controller = controllerWith({ issueSession });
 
-    const user = { id: "u", username: "a", displayName: "A" } as AuthedRequestUser;
+    const user = { id: "u", username: "a", displayName: "A", isAdmin: false } as AuthedRequestUser;
     const result = await controller.login({ user });
 
     expect(result).toEqual(session);
@@ -30,13 +30,14 @@ describe("AuthController", () => {
       id: "u",
       username: "a",
       displayName: "A",
+      isAdmin: true,
       expiresAt: "2026-07-03T00:00:00.000Z"
     };
 
     expect(controller.me({ user })).toEqual({
       authenticated: true,
       expiresAt: "2026-07-03T00:00:00.000Z",
-      user: { id: "u", username: "a", displayName: "A" }
+      user: { id: "u", username: "a", displayName: "A", isAdmin: true }
     });
   });
 
