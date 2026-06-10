@@ -16,7 +16,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  process.stdout.write(`${hashPassword(password)}\n`);
+  process.stdout.write(`${await hashPassword(password)}\n`);
 }
 
 main().catch((error) => {
