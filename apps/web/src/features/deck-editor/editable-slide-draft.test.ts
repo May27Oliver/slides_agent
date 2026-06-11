@@ -149,6 +149,68 @@ describe("EditableSlideDraft (010 US1)", () => {
       ]);
     });
 
+    it("removeChart / addChartFromIntent record ops and the effective placement follows", () => {
+      const withChart = slide("s1", {
+        contentBlocks: [{ kind: "chart_placeholder", content: {}, chartIntentId: "chart-0" }]
+      });
+      const d = draftOf([withChart, slide("s2")]);
+      expect(d.placedChartId("s1")).toBe("chart-0");
+      expect(d.placedChartId("s2")).toBeNull();
+
+      const removed = d.removeChart("s1", "chart-0");
+      expect(removed.chartOperations).toEqual([
+        { op: "remove_chart", slideId: "s1", chartIntentId: "chart-0" }
+      ]);
+      expect(removed.placedChartId("s1")).toBeNull();
+      // contentBlocks stay pristine (010 read-only wall) — only the ops change.
+      expect(removed.slide("s1")!.contentBlocks).toHaveLength(1);
+
+      const added = removed.addChartFromIntent("s2", "chart-1");
+      expect(added.placedChartId("s2")).toBe("chart-1");
+      expect(added.chartOperations).toHaveLength(2);
+    });
+
+    it("re-adding the removed intent cancels the pending removal (no redundant ops)", () => {
+      const withChart = slide("s1", {
+        contentBlocks: [{ kind: "chart_placeholder", content: {}, chartIntentId: "chart-0" }]
+      });
+      const d = draftOf([withChart])
+        .removeChart("s1", "chart-0")
+        .addChartFromIntent("s1", "chart-0");
+      expect(d.chartOperations).toEqual([]);
+      expect(d.placedChartId("s1")).toBe("chart-0");
+    });
+
+    it("removing a pending add cancels it instead of stacking remove on add", () => {
+      const d = draftOf([slide("s1")])
+        .addChartFromIntent("s1", "chart-1")
+        .removeChart("s1", "chart-1");
+      expect(d.chartOperations).toEqual([]);
+      expect(d.placedChartId("s1")).toBeNull();
+    });
+
+    it("moving a chart in one request keeps both ops (remove + add on another slide)", () => {
+      const withChart = slide("s1", {
+        contentBlocks: [{ kind: "chart_placeholder", content: {}, chartIntentId: "chart-0" }]
+      });
+      const d = draftOf([withChart, slide("s2")])
+        .removeChart("s1", "chart-0")
+        .addChartFromIntent("s2", "chart-0");
+      expect(d.chartOperations).toHaveLength(2);
+      expect(d.placedChartId("s1")).toBeNull();
+      expect(d.placedChartId("s2")).toBe("chart-0");
+    });
+
+    it("predicts the deterministic id for a pending user_data add", () => {
+      const d = draftOf([slide("s1")]).addChartFromUserData("s1", {
+        title: "手動圖",
+        visual: "bar",
+        points: [{ label: "A", valueText: "1", unit: null }]
+      });
+      // baseRevision = 2, opIndex = 0 → the id the domain will mint.
+      expect(d.placedChartId("s1")).toBe("chart_user_r2_0");
+    });
+
     it("fromRevision restores persisted chart operations (localStorage draft path)", () => {
       const restored = EditableSlideDraft.fromRevision(2, deck([slide("s1")]), seq(), [
         { op: "set_visual", chartIntentId: "chart-0", visual: "bar" }

@@ -4,7 +4,8 @@ import type {
   ChartVisualOverride,
   Slide,
   SlideDeck,
-  SlideOutlineItem
+  SlideOutlineItem,
+  UserPointInput
 } from "@slides-agent/domain";
 
 /**
@@ -172,6 +173,80 @@ export class EditableSlideDraft {
     return this.withOps(
       this.chartOperations.filter((op) => operationIntentId(op) !== chartIntentId)
     );
+  }
+
+  /**
+   * Removes a chart placement. A pending `add_chart` on the same slide that would
+   * yield this intent is simply cancelled; otherwise a `remove_chart` op is recorded.
+   * The deck's contentBlocks stay pristine (010 read-only wall) — placement state
+   * is derived by replaying the ops (`placedChartId`).
+   */
+  removeChart(slideId: string, chartIntentId: string): EditableSlideDraft {
+    const pendingAddIndex = this.chartOperations.findIndex(
+      (op, index) =>
+        op.op === "add_chart" &&
+        op.slideId === slideId &&
+        this.addedIntentId(op, index) === chartIntentId
+    );
+    if (pendingAddIndex >= 0) {
+      return this.withOps(this.chartOperations.filter((_, index) => index !== pendingAddIndex));
+    }
+    return this.withOps([...this.chartOperations, { op: "remove_chart", slideId, chartIntentId }]);
+  }
+
+  /** Places an existing intent on a slide; cancels a pending removal of the same pair. */
+  addChartFromIntent(slideId: string, chartIntentId: string): EditableSlideDraft {
+    const pendingRemoveIndex = this.chartOperations.findIndex(
+      (op) =>
+        op.op === "remove_chart" && op.slideId === slideId && op.chartIntentId === chartIntentId
+    );
+    if (pendingRemoveIndex >= 0) {
+      return this.withOps(this.chartOperations.filter((_, index) => index !== pendingRemoveIndex));
+    }
+    return this.withOps([
+      ...this.chartOperations,
+      { op: "add_chart", slideId, source: { kind: "existing_intent", chartIntentId } }
+    ]);
+  }
+
+  /** US4: places a brand-new chart built from user-entered points. */
+  addChartFromUserData(
+    slideId: string,
+    source: { title: string; visual: ChartVisualOverride; points: UserPointInput[] }
+  ): EditableSlideDraft {
+    return this.withOps([
+      ...this.chartOperations,
+      { op: "add_chart", slideId, source: { kind: "user_data", ...source } }
+    ]);
+  }
+
+  /**
+   * The chart intent EFFECTIVELY placed on a slide after replaying the pending ops
+   * over the base placeholder. Pending user_data adds resolve to the deterministic
+   * id the domain will mint (`chart_user_r{baseRevision}_{opIndex}`), so the UI and
+   * the live preview's render evidence agree on ids before the save happens.
+   */
+  placedChartId(slideId: string): string | null {
+    const target = this.slide(slideId);
+    if (!target) return null;
+    let current =
+      target.contentBlocks.find(
+        (block) => block.kind === "chart_placeholder" && block.chartIntentId
+      )?.chartIntentId ?? null;
+    for (const [index, op] of this.chartOperations.entries()) {
+      if (op.op === "remove_chart" && op.slideId === slideId && op.chartIntentId === current) {
+        current = null;
+      } else if (op.op === "add_chart" && op.slideId === slideId) {
+        current = this.addedIntentId(op, index);
+      }
+    }
+    return current;
+  }
+
+  private addedIntentId(op: Extract<ChartOperation, { op: "add_chart" }>, opIndex: number): string {
+    return op.source.kind === "existing_intent"
+      ? op.source.chartIntentId
+      : `chart_user_r${this.baseRevision}_${opIndex}`;
   }
 
   /** The pending visual override for an intent; "auto" when none recorded. */

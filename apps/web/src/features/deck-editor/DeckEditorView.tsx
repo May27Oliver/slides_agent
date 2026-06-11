@@ -28,6 +28,7 @@ import {
   loadDraft,
   saveDraft
 } from "@/features/deck-editor/deck-draft-storage";
+import { AddChartPanel } from "@/features/deck-editor/AddChartPanel";
 import { ChartEditorCard } from "@/features/deck-editor/ChartEditorCard";
 import { EditableSlideDraft } from "@/features/deck-editor/editable-slide-draft";
 import { LivePreview } from "@/features/deck-editor/LivePreview";
@@ -211,32 +212,61 @@ export function DeckEditorView({
     [draft, selectedId]
   );
 
-  // 014 (US1): the selected slide's chart card model — placeholder × base intents ×
-  // preview render evidence × shared placements (derived live from the draft, R10).
+  // 014: the selected slide's chart editor model, derived from the EFFECTIVE
+  // placement state (base placeholders + pending ops replayed, R10). A pending
+  // user_data add resolves to its deterministic future id, so the preview's render
+  // evidence lines up before the save happens.
+  const baseIntents = useMemo(
+    () => ((base?.chartIntents as ChartIntent[] | null) ?? []) as ChartIntent[],
+    [base]
+  );
+
   const chartCard = useMemo(() => {
-    if (!draft || !base || !selectedSlide) return null;
-    const placeholder = selectedSlide.contentBlocks.find(
-      (block) => block.kind === "chart_placeholder" && block.chartIntentId
+    if (!draft || !selectedSlide) return null;
+    const placedId = draft.placedChartId(selectedSlide.id);
+    if (!placedId) return null;
+    const baseIntent = baseIntents.find((candidate) => candidate.id === placedId);
+    const pendingUserAdd = draft.chartOperations.find(
+      (op): op is Extract<typeof op, { op: "add_chart" }> =>
+        op.op === "add_chart" &&
+        op.source.kind === "user_data" &&
+        draft.placedChartId(op.slideId) === placedId
     );
-    if (!placeholder?.chartIntentId) return null;
-    const intents = (base.chartIntents as ChartIntent[] | null) ?? [];
-    const intent = intents.find((candidate) => candidate.id === placeholder.chartIntentId);
-    if (!intent) return null;
+    const title =
+      baseIntent?.title ??
+      (pendingUserAdd?.source.kind === "user_data" ? pendingUserAdd.source.title : placedId);
     const sharedPages = draft.deck.slides
       .map((slide, index) => ({ slide, page: index + 1 }))
       .filter(
-        ({ slide }) =>
-          slide.id !== selectedSlide.id &&
-          slide.contentBlocks.some(
-            (block) => block.kind === "chart_placeholder" && block.chartIntentId === intent.id
-          )
+        ({ slide }) => slide.id !== selectedSlide.id && draft.placedChartId(slide.id) === placedId
       )
       .map(({ page }) => page);
     const renderedChart = previewSummary?.renderedCharts.find(
-      (chart) => chart.chartIntentId === intent.id && chart.slideId === selectedSlide.id
+      (chart) => chart.chartIntentId === placedId && chart.slideId === selectedSlide.id
     );
-    return { intent, sharedPages, renderedChart };
-  }, [draft, base, selectedSlide, previewSummary]);
+    return { chartIntentId: placedId, title, sharedPages, renderedChart };
+  }, [draft, baseIntents, selectedSlide, previewSummary]);
+
+  // US2 (FR-005/FR-016): the add entry shows only on a chartless, non-opening slide.
+  const showAddChart = Boolean(
+    draft &&
+    selectedSlide &&
+    !chartCard &&
+    selectedSlide.slideKind !== "opening" &&
+    base?.chartIntents !== null
+  );
+
+  const usedPagesByIntent = useMemo(() => {
+    if (!draft) return {};
+    const used: Record<string, number[]> = {};
+    draft.deck.slides.forEach((slide, index) => {
+      const placedId = draft.placedChartId(slide.id);
+      if (placedId) {
+        used[placedId] = [...(used[placedId] ?? []), index + 1];
+      }
+    });
+    return used;
+  }, [draft]);
 
   const onSave = useCallback(async () => {
     if (!draft) return;
@@ -385,21 +415,35 @@ export function DeckEditorView({
                   ? {
                       chartEditor: (
                         <ChartEditorCard
-                          chartIntentId={chartCard.intent.id}
-                          title={chartCard.intent.title}
-                          selectedVisual={draft.chartVisualOf(chartCard.intent.id)}
+                          chartIntentId={chartCard.chartIntentId}
+                          title={chartCard.title}
+                          selectedVisual={draft.chartVisualOf(chartCard.chartIntentId)}
                           {...(chartCard.renderedChart
                             ? { renderedChart: chartCard.renderedChart }
                             : {})}
                           sharedPages={chartCard.sharedPages}
                           onSetVisual={(visual) =>
-                            edit((d) => d.setChartVisual(chartCard.intent.id, visual))
+                            edit((d) => d.setChartVisual(chartCard.chartIntentId, visual))
                           }
-                          onRemove={null}
+                          onRemove={() =>
+                            edit((d) => d.removeChart(selectedSlide.id, chartCard.chartIntentId))
+                          }
                         />
                       )
                     }
-                  : {})}
+                  : showAddChart
+                    ? {
+                        chartEditor: (
+                          <AddChartPanel
+                            intents={baseIntents}
+                            usedPagesByIntent={usedPagesByIntent}
+                            onAddExisting={(chartIntentId) =>
+                              edit((d) => d.addChartFromIntent(selectedSlide.id, chartIntentId))
+                            }
+                          />
+                        )
+                      }
+                    : {})}
               />
             ) : (
               <SlideNavigator
