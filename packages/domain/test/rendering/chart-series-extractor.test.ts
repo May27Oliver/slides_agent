@@ -132,3 +132,102 @@ describe("extractChartSeries", () => {
     expect(series.warnings.some((note) => note.code === "time_sort_failed")).toBe(true);
   });
 });
+
+describe("extractChartSeries — SourceFact.metric short-circuit (014)", () => {
+  it("builds the point directly from metric, bypassing value/sourceText parsing", () => {
+    const userFact = fact({
+      id: "fact_user_r3_0_0",
+      kind: "user_provided",
+      value: "45%",
+      sourceText: "使用者於編輯器輸入",
+      metric: { label: "行動裝置", displayValue: "45%", numericValue: 45, unit: "%" }
+    });
+    const series = extractChartSeries({
+      intent: intent({ sourceFacts: [userFact] }),
+      treatment: "metric_card"
+    });
+    expect(series.points).toHaveLength(1);
+    // Label comes from metric.label — NOT derived from "使用者於編輯器輸入".
+    expect(series.points[0]).toEqual({
+      label: "行動裝置",
+      displayValue: "45%",
+      value: 45,
+      unit: "%",
+      sourceFactId: "fact_user_r3_0_0",
+      sourceText: "使用者於編輯器輸入"
+    });
+  });
+
+  it("keeps a metric fact whose displayValue the free-text parser cannot parse", () => {
+    const odd = fact({
+      id: "u_odd",
+      kind: "user_provided",
+      value: "顯著成長",
+      sourceText: "使用者於編輯器輸入",
+      metric: { label: "東區", displayValue: "顯著成長", numericValue: 42, unit: null }
+    });
+    const series = extractChartSeries({
+      intent: intent({ sourceFacts: [odd] }),
+      treatment: "metric_card"
+    });
+    expect(series.points).toHaveLength(1);
+    expect(series.points[0]!.value).toBe(42);
+    expect(series.points[0]!.displayValue).toBe("顯著成長");
+    expect(series.warnings.some((note) => note.code === "value_parse_uncertain")).toBe(false);
+  });
+
+  it("derives the time sort key from metric.label so user points order on a timeline", () => {
+    const q2 = fact({
+      id: "u_q2",
+      kind: "user_provided",
+      value: "$1.4M",
+      sourceText: "使用者於編輯器輸入",
+      metric: { label: "Q2 2026", displayValue: "$1.4M", numericValue: 1.4, unit: "$M" }
+    });
+    const q1 = fact({
+      id: "u_q1",
+      kind: "user_provided",
+      value: "$1.0M",
+      sourceText: "使用者於編輯器輸入",
+      metric: { label: "Q1 2026", displayValue: "$1.0M", numericValue: 1.0, unit: "$M" }
+    });
+    const series = extractChartSeries({
+      intent: intent({ sourceFacts: [q2, q1] }),
+      treatment: "timeline"
+    });
+    expect(series.kind).toBe("time");
+    expect(series.points.map((point) => point.sourceFactId)).toEqual(["u_q1", "u_q2"]);
+  });
+
+  it("mixes metric and plain facts: units shared, plain facts still parsed as before", () => {
+    const userPoint = fact({
+      id: "u_mix",
+      kind: "user_provided",
+      value: "$1.1M",
+      sourceText: "使用者於編輯器輸入",
+      metric: { label: "中區", displayValue: "$1.1M", numericValue: 1.1, unit: "$M" }
+    });
+    const series = extractChartSeries({
+      intent: intent({ sourceFacts: [...barFacts, userPoint] }),
+      treatment: "chart"
+    });
+    expect(series.points).toHaveLength(5);
+    expect(series.unit).toBe("$M");
+    expect(series.sourceFactIds).toEqual(["f_north", "f_south", "f_east", "f_west", "u_mix"]);
+  });
+
+  it("regression: a fact WITHOUT metric keeps the exact current parse-derived point shape", () => {
+    const series = extractChartSeries({
+      intent: intent({ sourceFacts: barFacts }),
+      treatment: "chart"
+    });
+    expect(series.points[0]).toEqual({
+      label: "北區營收",
+      displayValue: "$2.3M",
+      value: 2.3,
+      unit: "$M",
+      sourceFactId: "f_north",
+      sourceText: "北區營收 $2.3M"
+    });
+  });
+});

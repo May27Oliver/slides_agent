@@ -1,7 +1,12 @@
 import type { ChartIntent } from "@/content-core/chart-intent.types";
 import { PART_TO_WHOLE_MAX, PART_TO_WHOLE_MIN } from "@/content-core/metric-fact-parser";
 import type { SourceFact } from "@/deck/deck.types";
-import type { ChartTreatment, ChartTreatmentPlan, DesignSystem } from "@/design/design.types";
+import type {
+  ChartTreatment,
+  ChartTreatmentPlan,
+  ChartVisualOverride,
+  DesignSystem
+} from "@/design/design.types";
 import type { AccentHue, DesignStyleKit } from "@/design/design-style-kit.types";
 import { resolveTreatmentForVisuals } from "@/design/chart-treatment-mapping";
 import type {
@@ -53,18 +58,76 @@ export function renderChartIntent(input: RenderChartIntentInput): RenderedChart 
   const hues = input.styleKit.accentHues;
   const treatment: ChartTreatment =
     input.treatmentPlan?.treatment ?? resolveTreatmentForVisuals(intent.recommendedVisuals);
-  const series = extractChartSeries({ intent, treatment });
+  // 014: a user override behaves as if the treatment WERE the override's natural
+  // one for extraction too (e.g. "line" attempts time ordering), so the existing
+  // validators can judge the requested visual honestly.
+  const override = normalizeOverride(input.treatmentPlan?.visualOverride);
+  const extractionTreatment = override ? EXTRACTION_TREATMENT_BY_OVERRIDE[override] : treatment;
+  const series = extractChartSeries({ intent, treatment: extractionTreatment });
 
-  const rendered = selectVisual({ intent, treatment, series, hues });
-  const notes = stamp(intent.id, [...series.warnings, ...rendered.notes]);
+  const rendered = selectVisual({
+    intent,
+    treatment,
+    series,
+    hues,
+    ...(override ? { override } : {})
+  });
+  const overrideNotes = overrideMissNote(intent, override, rendered);
+  const notes = stamp(intent.id, [...series.warnings, ...rendered.notes, ...overrideNotes]);
 
   return {
     visualKind: rendered.visualKind,
     html: wrap(intent, rendered.visualKind, rendered.sourceFactIds, rendered.html, input.hideTitle),
     sourceFactIds: rendered.sourceFactIds,
     notes,
-    fallback: isChartFallback(treatment, rendered.visualKind, notes)
+    fallback: isChartFallback(treatment, rendered.visualKind, notes, override)
   };
+}
+
+/** "auto" carries the same meaning as an absent override: automatic selection. */
+function normalizeOverride(
+  override: ChartVisualOverride | undefined
+): Exclude<ChartVisualOverride, "auto"> | undefined {
+  return override === "auto" ? undefined : override;
+}
+
+/** Which treatment's extraction semantics each override target expects. */
+const EXTRACTION_TREATMENT_BY_OVERRIDE: Record<
+  Exclude<ChartVisualOverride, "auto">,
+  ChartTreatment
+> = {
+  pie_donut: "chart",
+  bar: "chart",
+  line: "timeline",
+  metric_card: "metric_card",
+  table: "table"
+};
+
+const OVERRIDE_LABELS: Record<Exclude<ChartVisualOverride, "auto">, string> = {
+  pie_donut: "圓餅圖",
+  line: "折線圖",
+  bar: "長條圖",
+  metric_card: "指標卡",
+  table: "表格"
+};
+
+/** A disclosure note when a true-chart override could not be honored (FR-003). */
+function overrideMissNote(
+  intent: ChartIntent,
+  override: Exclude<ChartVisualOverride, "auto"> | undefined,
+  rendered: VisualSelection
+): ChartRenderingNote[] {
+  if (!override || !REAL_CHART_VISUALS.has(override) || rendered.visualKind === override) {
+    return [];
+  }
+  return [
+    {
+      code: "fallback_used",
+      message: `使用者指定的視覺類型（${OVERRIDE_LABELS[override]}）資料不符，已改用其他呈現。`,
+      chartIntentId: intent.id,
+      sourceFactIds: rendered.sourceFactIds
+    }
+  ];
 }
 
 /** Treatments whose primary visual is a true chart. */
@@ -82,10 +145,21 @@ const REAL_CHART_VISUALS: ReadonlySet<ChartVisualKind> = new Set(["pie_donut", "
 export function isChartFallback(
   treatment: ChartTreatment,
   visualKind: ChartVisualKind,
-  notes: readonly ChartRenderingNote[]
+  notes: readonly ChartRenderingNote[],
+  // 014: a true-chart override (pie/line/bar) that did not land on that exact
+  // visual is a fallback, regardless of the planned treatment.
+  override?: Exclude<ChartVisualOverride, "auto">
 ): boolean {
+  if (override && REAL_CHART_VISUALS.has(override) && visualKind !== override) {
+    return true;
+  }
   if (notes.some((note) => note.code === "fallback_used")) {
     return true;
+  }
+  if (override) {
+    // A planned metric_card/table override that was honored is not a fallback,
+    // even when the original treatment was a true-chart one.
+    return false;
   }
   return CHART_INTENT_TREATMENTS.has(treatment) && !REAL_CHART_VISUALS.has(visualKind);
 }
@@ -102,9 +176,15 @@ interface SelectVisualInput {
   treatment: ChartTreatment;
   series: ChartSeries;
   hues: readonly AccentHue[];
+  override?: Exclude<ChartVisualOverride, "auto">;
 }
 
 function selectVisual(input: SelectVisualInput): VisualSelection {
+  // 014: an override picks which concrete visual to ATTEMPT first; the existing
+  // validators and degrade chains still gate what actually renders (FR-003).
+  if (input.override) {
+    return selectOverride(input, input.override);
+  }
   switch (input.treatment) {
     case "chart":
       return selectComparison(input);
@@ -118,6 +198,33 @@ function selectVisual(input: SelectVisualInput): VisualSelection {
     case "review_note":
     default:
       return fallbackText(input.intent, input.series, "資料不足以成圖，改以文字呈現。");
+  }
+}
+
+function selectOverride(
+  input: SelectVisualInput,
+  override: Exclude<ChartVisualOverride, "auto">
+): VisualSelection {
+  const { intent, series, hues } = input;
+  switch (override) {
+    case "pie_donut":
+      // Pie first, else the existing comparison degrade chain — exactly what
+      // selectComparison already does.
+      return selectComparison(input);
+    case "line":
+      // Line first, else bar, else degrade — exactly the timeline chain.
+      return selectTimeline(input);
+    case "bar": {
+      const bar = validateBarSeries(series);
+      if (bar.ok) {
+        return svgVisual("bar", series, renderBarChart({ series, hues }));
+      }
+      return degradeComparison(input, [...bar.notes]);
+    }
+    case "metric_card":
+      return selectMetric(input);
+    case "table":
+      return tableVisual(intent, series);
   }
 }
 

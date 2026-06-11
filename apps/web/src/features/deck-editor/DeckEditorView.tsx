@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import type { DeckRevisionContract } from "@slides-agent/contracts";
 import type {
+  ChartIntent,
+  GenerationSummary,
   ManualThemeSelection,
   SelectableTheme,
   SlideDeck,
@@ -26,6 +28,9 @@ import {
   loadDraft,
   saveDraft
 } from "@/features/deck-editor/deck-draft-storage";
+import { AddChartPanel } from "@/features/deck-editor/AddChartPanel";
+import { ChartDataTable } from "@/features/deck-editor/ChartDataTable";
+import { ChartEditorCard } from "@/features/deck-editor/ChartEditorCard";
 import { EditableSlideDraft } from "@/features/deck-editor/editable-slide-draft";
 import { LivePreview } from "@/features/deck-editor/LivePreview";
 import { SlideEditPanel } from "@/features/deck-editor/SlideEditPanel";
@@ -75,6 +80,8 @@ export function DeckEditorView({
   const [themeSelection, setThemeSelection] = useState<ManualThemeSelection>({});
   const [themeCandidates, setThemeCandidates] = useState<SelectableTheme[]>([]);
   const [themeWarnings, setThemeWarnings] = useState<ThemeSelectionWarning[]>([]);
+  // 014: the live preview's summary — chart cards read render evidence from it.
+  const [previewSummary, setPreviewSummary] = useState<GenerationSummary | null>(null);
 
   const adopt = useCallback((title: string, revision: DeckRevisionContract) => {
     const slideDeck = revision.slideDeck as SlideDeck;
@@ -139,7 +146,8 @@ export function DeckEditorView({
           deckId: id,
           baseRevision: current.baseRevision,
           slideDeck: current.deck,
-          savedAt: new Date().toISOString()
+          savedAt: new Date().toISOString(),
+          chartOperations: [...current.chartOperations]
         });
       }
     }, autosaveIntervalMs);
@@ -161,7 +169,14 @@ export function DeckEditorView({
     setPendingDraft((pending) => {
       if (!pending) return null;
       const restored = pending.draft.slideDeck;
-      setDraft(EditableSlideDraft.fromRevision(pending.draft.baseRevision, restored));
+      setDraft(
+        EditableSlideDraft.fromRevision(
+          pending.draft.baseRevision,
+          restored,
+          undefined,
+          pending.draft.chartOperations ?? []
+        )
+      );
       setSelectedId(restored.slides[0]?.id ?? null);
       setDirty(true);
       setSavedHtml(null);
@@ -198,6 +213,72 @@ export function DeckEditorView({
     [draft, selectedId]
   );
 
+  // 014: the selected slide's chart editor model, derived from the EFFECTIVE
+  // placement state (base placeholders + pending ops replayed, R10). A pending
+  // user_data add resolves to its deterministic future id, so the preview's render
+  // evidence lines up before the save happens.
+  const baseIntents = useMemo(
+    () => ((base?.chartIntents as ChartIntent[] | null) ?? []) as ChartIntent[],
+    [base]
+  );
+  const canEditCharts = base !== null && base.chartIntents !== null;
+
+  const chartCard = useMemo(() => {
+    if (!draft || !selectedSlide || !canEditCharts) return null;
+    const placedId = draft.placedChartId(selectedSlide.id);
+    if (!placedId) return null;
+    const baseIntent = baseIntents.find((candidate) => candidate.id === placedId);
+    const pendingUserAdd = draft.chartOperations.find(
+      (op): op is Extract<typeof op, { op: "add_chart" }> =>
+        op.op === "add_chart" &&
+        op.source.kind === "user_data" &&
+        draft.placedChartId(op.slideId) === placedId
+    );
+    const title =
+      baseIntent?.title ??
+      (pendingUserAdd?.source.kind === "user_data" ? pendingUserAdd.source.title : placedId);
+    const sharedPages = draft.deck.slides
+      .map((slide, index) => ({ slide, page: index + 1 }))
+      .filter(
+        ({ slide }) => slide.id !== selectedSlide.id && draft.placedChartId(slide.id) === placedId
+      )
+      .map(({ page }) => page);
+    const renderedChart = previewSummary?.renderedCharts.find(
+      (chart) => chart.chartIntentId === placedId && chart.slideId === selectedSlide.id
+    );
+    // US3: the structured disclosure for THIS placement (n/m user points).
+    const disclosure = previewSummary?.userDataDisclosures.find(
+      (entry) => entry.chartIntentId === placedId && entry.slideId === selectedSlide.id
+    );
+    return { chartIntentId: placedId, title, sharedPages, renderedChart, baseIntent, disclosure };
+  }, [draft, baseIntents, selectedSlide, previewSummary, canEditCharts]);
+
+  // US2 (FR-005/FR-016): the add entry shows only on a chartless, non-opening slide.
+  const showAddChart = Boolean(
+    draft &&
+    selectedSlide &&
+    !chartCard &&
+    selectedSlide.slideKind !== "opening" &&
+    canEditCharts
+  );
+
+  const showLegacyChartNotice = Boolean(
+    !canEditCharts &&
+      selectedSlide?.contentBlocks.some((block) => block.kind === "chart_placeholder")
+  );
+
+  const usedPagesByIntent = useMemo(() => {
+    if (!draft) return {};
+    const used: Record<string, number[]> = {};
+    draft.deck.slides.forEach((slide, index) => {
+      const placedId = draft.placedChartId(slide.id);
+      if (placedId) {
+        used[placedId] = [...(used[placedId] ?? []), index + 1];
+      }
+    });
+    return used;
+  }, [draft]);
+
   const onSave = useCallback(async () => {
     if (!draft) return;
     setSaveState({ kind: "saving" });
@@ -225,7 +306,8 @@ export function DeckEditorView({
           deckId: id,
           baseRevision: draft.baseRevision,
           slideDeck: draft.deck,
-          savedAt: new Date().toISOString()
+          savedAt: new Date().toISOString(),
+          chartOperations: [...draft.chartOperations]
         });
         load(); // reload + show the latest revision (FR-020)
         setSaveState({ kind: "conflict", revision: error.currentRevision });
@@ -251,7 +333,10 @@ export function DeckEditorView({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface">
+    // h-screen (not min-h-screen): the columns get a FIXED viewport-bound height, so a
+    // long edit panel scrolls internally instead of stretching the grid row — which
+    // would stretch the preview iframe and with it the slide (100vh of the iframe).
+    <div className="flex h-screen flex-col bg-surface">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-panel px-5 py-2 text-sm">
         <div className="flex min-w-0 items-center gap-3">
           <Link to="/decks" className="font-medium text-brand-700 hover:underline">
@@ -289,7 +374,7 @@ export function DeckEditorView({
         <DraftBanner kind={pendingDraft.kind} onRestore={restoreDraft} onDiscard={discardDraft} />
       ) : null}
 
-      <main className="grid min-h-0 flex-1 grid-cols-1 gap-4 p-4 md:grid-cols-2">
+      <main className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 md:grid-cols-2 md:overflow-hidden">
         {/* Left half: live preview. */}
         <div className="min-h-0 rounded-2xl border border-line bg-panel p-3 max-md:h-[58vh]">
           <LivePreview
@@ -298,6 +383,12 @@ export function DeckEditorView({
             authoritativeHtml={savedHtml}
             {...(hasThemeSelection(themeSelection) ? { themeSelection } : {})}
             themeCandidates={themeCandidates}
+            chartOperations={draft.chartOperations}
+            onSummary={setPreviewSummary}
+            onSlideChange={(index) => {
+              const slide = draft.slides[index];
+              if (slide) setSelectedId(slide.id);
+            }}
             selectedIndex={Math.max(
               0,
               draft.slides.findIndex((s) => s.id === selectedSlide.id)
@@ -338,6 +429,62 @@ export function DeckEditorView({
                 onAddBullet={() => edit((d) => d.addBullet(selectedSlide.id))}
                 onRemoveBullet={(i) => edit((d) => d.removeBullet(selectedSlide.id, i))}
                 onMoveBullet={(from, to) => edit((d) => d.moveBullet(selectedSlide.id, from, to))}
+                {...(chartCard
+                  ? {
+                      chartEditor: (
+                        <ChartEditorCard
+                          chartIntentId={chartCard.chartIntentId}
+                          title={chartCard.title}
+                          selectedVisual={draft.chartVisualOf(chartCard.chartIntentId)}
+                          {...(chartCard.renderedChart
+                            ? { renderedChart: chartCard.renderedChart }
+                            : {})}
+                          sharedPages={chartCard.sharedPages}
+                          {...(chartCard.disclosure ? { disclosure: chartCard.disclosure } : {})}
+                          onSetVisual={(visual) =>
+                            edit((d) => d.setChartVisual(chartCard.chartIntentId, visual))
+                          }
+                          onRemove={() =>
+                            edit((d) => d.removeChart(selectedSlide.id, chartCard.chartIntentId))
+                          }
+                        >
+                          {/* US3: data-point editing for base intents (a pending
+                              user_data chart edits through its add panel instead). */}
+                          {chartCard.baseIntent ? (
+                            <ChartDataTable
+                              intent={chartCard.baseIntent}
+                              pendingEdit={draft.chartDataOf(chartCard.chartIntentId)}
+                              onEdit={(points, dataTitle) =>
+                                edit((d) =>
+                                  d.editChartData(chartCard.chartIntentId, points, dataTitle)
+                                )
+                              }
+                              onResetAll={() =>
+                                edit((d) => d.resetChartEdits(chartCard.chartIntentId))
+                              }
+                            />
+                          ) : null}
+                        </ChartEditorCard>
+                      )
+                    }
+                  : showAddChart
+                    ? {
+                        chartEditor: (
+                          <AddChartPanel
+                            intents={baseIntents}
+                            usedPagesByIntent={usedPagesByIntent}
+                            onAddExisting={(chartIntentId) =>
+                              edit((d) => d.addChartFromIntent(selectedSlide.id, chartIntentId))
+                            }
+                            onAddUserData={(source) =>
+                              edit((d) => d.addChartFromUserData(selectedSlide.id, source))
+                            }
+                          />
+                        )
+                      }
+                    : showLegacyChartNotice
+                      ? { chartEditor: <LegacyChartNotice /> }
+                      : {})}
               />
             ) : (
               <SlideNavigator
@@ -386,6 +533,16 @@ function SaveStatus({ saveState }: { saveState: SaveState }) {
     return <span className="text-xs text-red-600">{t("editor.saveError")}</span>;
   }
   return null;
+}
+
+function LegacyChartNotice() {
+  const { t } = useI18n();
+  return (
+    <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+      <p className="font-semibold">{t("editor.chart.legacy.heading")}</p>
+      <p className="mt-1 text-amber-700">{t("editor.chart.legacy.body")}</p>
+    </div>
+  );
 }
 
 function TabButton({

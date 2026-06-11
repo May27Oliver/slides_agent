@@ -29,6 +29,22 @@ describe("fallback HTML keyboard navigation", () => {
     expect(html).toContain("exitFullscreen");
   });
 
+  it("broadcasts user navigation to an embedding editor (014 preview→editor sync)", () => {
+    const { html } = renderTemplateDeck({
+      deck: renderingDeck,
+      designPlanningResult: renderingDesignPlanningResult
+    });
+
+    // Only user-driven navigation broadcasts; programmatic show()s stay silent so an
+    // iframe reload cannot yank the editor's selection back to slide 1.
+    expect(html).toContain('"deck:slideChanged"');
+    expect(html).toContain("window.parent !== window");
+    expect(html).toContain("function next() { show(current + 1); broadcast(); }");
+    expect(html).toContain("function prev() { show(current - 1); broadcast(); }");
+    expect(html).toContain('data.type === "deck:goToSlide"');
+    expect(html).not.toContain("show(data.index); broadcast()");
+  });
+
   it("routes wheel input to the active slide scroll container", () => {
     const { html } = renderTemplateDeck({
       deck: renderingDeck,

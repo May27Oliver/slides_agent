@@ -174,4 +174,30 @@ describe("DeckEditorView (010 US1)", () => {
       expect((saved!.slideDeck.slides[0] as { title: string }).title).toBe("Autosaved title");
     });
   });
+
+  it("shows a legacy chart notice instead of editable chart controls when chartIntents is null", async () => {
+    getDeck.mockResolvedValue({
+      ...detail,
+      currentRevision: {
+        ...fixtureRevision,
+        chartIntents: null,
+        slideDeck: {
+          ...fixtureSlideDeck,
+          slides: fixtureSlideDeck.slides.map((slide) => ({
+            ...slide,
+            contentBlocks: [
+              { kind: "chart_placeholder" as const, content: {}, chartIntentId: "chart_legacy" }
+            ]
+          }))
+        }
+      }
+    });
+
+    renderEditor();
+
+    expect(await screen.findByText("舊版圖表")).toBeTruthy();
+    expect(screen.getByText("此版本沒有持久化的圖表輸入，圖表無法在編輯器中修改。")).toBeTruthy();
+    expect(screen.queryByLabelText("視覺類型")).toBeNull();
+    expect(screen.queryByRole("button", { name: "移除圖表" })).toBeNull();
+  });
 });

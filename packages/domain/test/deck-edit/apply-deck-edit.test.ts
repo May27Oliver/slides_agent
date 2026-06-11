@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { applyDeckEdit } from "@/deck-edit/apply-deck-edit";
 import { renderTemplateDeckArtifact } from "@/rendering/html-deck-renderer";
 import type { ChartIntent } from "@/content-core/chart-intent.types";
+import type { ChartOperation } from "@/deck-edit/chart-operation.types";
 import type { GenerationSummary, Slide, SlideDeck } from "@/deck/deck.types";
 import type { DeckRevision } from "@/deck-persistence/deck.types";
 import type { SelectableTheme } from "@/design/theme.types";
@@ -137,6 +138,31 @@ describe("applyDeckEdit (010 US1)", () => {
       expect(result.payload.slideDeck.reviewReport.humanReviewNotes.join("\n")).toContain(
         "圖表未重現"
       );
+    });
+
+    it("legacy chart disclosure is synced, not duplicated on repeated edits", () => {
+      const base = baseRevision({ slideDeck: chartDeck, chartIntents: null });
+      const first = applyDeckEdit(base, editTitle(chartDeck, "Legacy edit 1"));
+      expect(first.ok).toBe(true);
+      if (!first.ok) return;
+
+      const secondBase = baseRevision({
+        revision: 4,
+        slideDeck: first.payload.slideDeck,
+        designPlan: first.payload.designPlan,
+        chartIntents: null,
+        generationSummary: first.payload.generationSummary,
+        origin: "edit",
+        sourceJobId: null
+      });
+      const second = applyDeckEdit(secondBase, editTitle(first.payload.slideDeck, "Legacy edit 2"));
+      expect(second.ok).toBe(true);
+      if (!second.ok) return;
+
+      const legacyNotes = second.payload.slideDeck.reviewReport.humanReviewNotes.filter((line) =>
+        line.includes("圖表未重現")
+      );
+      expect(legacyNotes).toHaveLength(1);
     });
   });
 
@@ -294,6 +320,239 @@ describe("applyDeckEdit (010 US1)", () => {
         font: "font-b"
       });
       expect(result.payload.generationSummary.themeSelectionWarnings).toEqual([]);
+    });
+  });
+
+  // T009 — 014 chart operations integration (data-model §5/§6/§6a/§10).
+  describe("014 chart operations", () => {
+    const chartIntents: ChartIntent[] = [
+      {
+        id: "chart_goal_metrics",
+        title: "Goal metrics",
+        sourceFacts: [
+          {
+            id: "fact_conversion",
+            kind: "metric",
+            value: "25%",
+            sourceText: "Onboarding conversion 從 18% 提升到 25%"
+          }
+        ],
+        recommendedVisuals: ["metric_card"],
+        rationale: "Show the headline metric."
+      }
+    ];
+
+    const chartDeck: SlideDeck = {
+      ...renderingDeck,
+      slides: renderingDeck.slides.map((slide) => ({
+        ...slide,
+        contentBlocks: [
+          { kind: "chart_placeholder", content: {}, chartIntentId: "chart_goal_metrics" }
+        ]
+      }))
+    };
+
+    const EDIT_DATA_OP: ChartOperation = {
+      op: "edit_data",
+      chartIntentId: "chart_goal_metrics",
+      points: [
+        { kind: "original", sourceFactId: "fact_conversion" },
+        { kind: "user", point: { label: "首次回覆", valueText: "4", unit: "小時" } }
+      ]
+    };
+
+    it("(a) regression invariant: empty chartOperations ≡ none, except userDataDisclosures: []", () => {
+      const base = baseRevision({ slideDeck: chartDeck, chartIntents });
+      const edited = editTitle(chartDeck, "Edited with empty ops");
+      const withEmpty = applyDeckEdit(base, edited, { chartOperations: [] });
+      const withNone = applyDeckEdit(base, edited);
+
+      expect(withEmpty.ok).toBe(true);
+      expect(withNone.ok).toBe(true);
+      if (!withEmpty.ok || !withNone.ok) return;
+      expect(withEmpty.payload).toEqual(withNone.payload);
+      expect(withEmpty.payload.html).toBe(withNone.payload.html);
+      expect(withEmpty.payload.generationSummary.userDataDisclosures).toEqual([]);
+      // reviewReport zero delta vs the base deck.
+      expect(withEmpty.payload.slideDeck.reviewReport).toEqual(chartDeck.reviewReport);
+    });
+
+    it("(b) operations derive chartIntents/designPlan; the html reflects the new visual", () => {
+      const base = baseRevision({ slideDeck: chartDeck, chartIntents });
+      const result = applyDeckEdit(base, chartDeck, {
+        chartOperations: [
+          { op: "set_visual", chartIntentId: "chart_goal_metrics", visual: "table" }
+        ]
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      const plan = result.payload.designPlan.chartTreatmentPlans.find(
+        (candidate) => candidate.chartIntentId === "chart_goal_metrics"
+      );
+      expect(plan?.visualOverride).toBe("table");
+      expect(result.payload.html).toContain('data-chart-visual="table"');
+    });
+
+    it("(b2) invalid operations reject the whole request with INVALID_EDIT", () => {
+      const base = baseRevision({ slideDeck: chartDeck, chartIntents });
+      const result = applyDeckEdit(base, chartDeck, {
+        chartOperations: [{ op: "set_visual", chartIntentId: "nope", visual: "table" }]
+      });
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.rejection).toBe("INVALID_EDIT");
+      expect(result.detail).toContain("operations[0]");
+    });
+
+    it("(b3) legacy base (null chartIntents) with non-empty operations is rejected", () => {
+      const base = baseRevision({ slideDeck: chartDeck, chartIntents: null });
+      const result = applyDeckEdit(base, chartDeck, { chartOperations: [EDIT_DATA_OP] });
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.rejection).toBe("INVALID_EDIT");
+    });
+
+    it("(c) userDataDisclosures: one entry per placement slide, [] without user data", () => {
+      const secondSlide: Slide = {
+        ...chartDeck.slides[0]!,
+        id: "slide_002",
+        title: "第二頁",
+        message: "同一張圖再放一次"
+      };
+      const sharedDeck: SlideDeck = { ...chartDeck, slides: [chartDeck.slides[0]!, secondSlide] };
+      const base = baseRevision({ slideDeck: sharedDeck, chartIntents });
+
+      const result = applyDeckEdit(base, sharedDeck, { chartOperations: [EDIT_DATA_OP] });
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.payload.generationSummary.userDataDisclosures).toEqual([
+        {
+          slideId: "slide_001",
+          chartIntentId: "chart_goal_metrics",
+          chartTitle: "Goal metrics",
+          userPointCount: 1,
+          totalPointCount: 2
+        },
+        {
+          slideId: "slide_002",
+          chartIntentId: "chart_goal_metrics",
+          chartTitle: "Goal metrics",
+          userPointCount: 1,
+          totalPointCount: 2
+        }
+      ]);
+
+      const noUserData = applyDeckEdit(base, sharedDeck, {
+        chartOperations: [{ op: "set_visual", chartIntentId: "chart_goal_metrics", visual: "bar" }]
+      });
+      expect(noUserData.ok).toBe(true);
+      if (!noUserData.ok) return;
+      expect(noUserData.payload.generationSummary.userDataDisclosures).toEqual([]);
+    });
+
+    it("(d) reviewReport sync: disclosure note + chartingDecisions for user_data intents", () => {
+      const base = baseRevision({ slideDeck: renderingDeck, chartIntents });
+      const result = applyDeckEdit(base, renderingDeck, {
+        chartOperations: [
+          {
+            op: "add_chart",
+            slideId: "slide_001",
+            source: {
+              kind: "user_data",
+              title: "手動圖表",
+              visual: "bar",
+              points: [
+                { label: "A", valueText: "30", unit: "%" },
+                { label: "B", valueText: "70", unit: "%" }
+              ]
+            }
+          }
+        ]
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      const report = result.payload.slideDeck.reviewReport;
+      expect(report.humanReviewNotes).toContain(
+        "第 1 頁圖表「手動圖表」含使用者提供的數據點（2/2），非全數來自來源文件。"
+      );
+      const decision = report.chartingDecisions.find(
+        (entry) => entry.chartIntentId === "chart_user_r3_0"
+      );
+      expect(decision).toBeDefined();
+      expect(decision!.decision).toContain("使用者手動建立");
+      expect(decision!.decision).toContain("bar");
+      expect(decision!.sourceFacts).toEqual(["30%", "70%"]);
+      expect(decision!.rationale).toBe("使用者於編輯器手動建立");
+
+      // 無 user 數據 → reviewReport 零變化。
+      const clean = applyDeckEdit(base, renderingDeck, {
+        chartOperations: [{ op: "set_visual", chartIntentId: "chart_goal_metrics", visual: "bar" }]
+      });
+      expect(clean.ok).toBe(true);
+      if (!clean.ok) return;
+      expect(clean.payload.slideDeck.reviewReport).toEqual(renderingDeck.reviewReport);
+    });
+
+    it("(e) inheritance closure: re-editing a derived revision neither loses nor duplicates disclosures", () => {
+      const base = baseRevision({ slideDeck: chartDeck, chartIntents });
+      const first = applyDeckEdit(base, chartDeck, { chartOperations: [EDIT_DATA_OP] });
+      expect(first.ok).toBe(true);
+      if (!first.ok) return;
+
+      const derivedBase = baseRevision({
+        revision: 4,
+        slideDeck: first.payload.slideDeck,
+        designPlan: first.payload.designPlan,
+        chartIntents: first.payload.chartIntents,
+        generationSummary: first.payload.generationSummary,
+        origin: "edit",
+        sourceJobId: null
+      });
+      const second = applyDeckEdit(derivedBase, first.payload.slideDeck, { chartOperations: [] });
+      expect(second.ok).toBe(true);
+      if (!second.ok) return;
+      // The chart still contains user data → the disclosure persists on re-edit.
+      expect(second.payload.generationSummary.userDataDisclosures).toEqual(
+        first.payload.generationSummary.userDataDisclosures
+      );
+      // The review note is synced, not appended again.
+      const disclosureLines = second.payload.slideDeck.reviewReport.humanReviewNotes.filter(
+        (line) => line.includes("含使用者提供的數據點")
+      );
+      expect(disclosureLines).toHaveLength(1);
+    });
+
+    it("(f) chart operations and 011 themeSelection coexist in one request", () => {
+      const paletteAcid: SelectableTheme = {
+        id: "palette-acid",
+        kind: "palette",
+        keywords: [],
+        support: "full",
+        styleKit: {
+          accentHues: [
+            { name: "a", base: "#CCFF00", gradient: "linear-gradient(135deg, #CCFF00, #CCFF00)" }
+          ],
+          accentGradient: "linear-gradient(110deg, #CCFF00, #CCFF00)",
+          background: { css: "#CCFF00" },
+          cardSurface: "rgba(255,255,255,.8)",
+          cardBorder: "1px solid #CCFF00"
+        }
+      };
+      const base = baseRevision({ slideDeck: chartDeck, chartIntents });
+      const result = applyDeckEdit(base, chartDeck, {
+        themeSelection: { paletteId: "palette-acid" },
+        candidates: [paletteAcid],
+        chartOperations: [
+          { op: "set_visual", chartIntentId: "chart_goal_metrics", visual: "table" }
+        ]
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.payload.generationSummary.selectedTheme.ids.palette).toBe("palette-acid");
+      expect(result.payload.html).toContain('data-chart-visual="table"');
     });
   });
 });

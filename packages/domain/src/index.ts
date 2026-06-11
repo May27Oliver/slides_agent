@@ -56,7 +56,7 @@ export {
   MAPPED_VISUALIZATION_TYPES
 } from "@/design/chart-treatment-mapping";
 export { parseMetricValue } from "@/content-core/metric-fact-parser";
-export { extractChartSeries } from "@/rendering/chart-series-extractor";
+export { extractChartSeries, deriveChartPointLabel } from "@/rendering/chart-series-extractor";
 export type { ExtractChartSeriesInput } from "@/rendering/chart-series-extractor";
 export {
   validatePieSeries,
@@ -119,6 +119,17 @@ export type { ApplyDeckEditOptions } from "@/deck-edit/apply-deck-edit";
 export { mergeEditedDeck } from "@/deck-edit/slide-merge";
 export type { EditRevisionPayload, ApplyDeckEditResult } from "@/deck-edit/apply-deck-edit.types";
 export type { SlideMergeResult } from "@/deck-edit/slide-merge";
+export type {
+  UserPointInput,
+  EditDataPoint,
+  ChartOperation
+} from "@/deck-edit/chart-operation.types";
+export { CHART_EDIT_LIMITS, USER_POINT_VALUE_PATTERN } from "@/deck-edit/chart-operation.types";
+export { applyChartOperations } from "@/deck-edit/apply-chart-operations";
+export type {
+  ApplyChartOperationsInput,
+  ApplyChartOperationsResult
+} from "@/deck-edit/apply-chart-operations";
 
 export type {
   UserAccount,

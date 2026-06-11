@@ -63,13 +63,47 @@ describe("buildOpenApiDocument", () => {
     const requestSchema = (
       post.requestBody as { content: Record<string, { schema: { properties: object } }> }
     ).content["application/json"]!.schema;
-    // 011 added the optional themeSelection override.
+    // 011 added the optional themeSelection override; 014 the chart operations.
     expect(Object.keys(requestSchema.properties)).toEqual([
       "baseRevision",
       "slideDeck",
-      "themeSelection"
+      "themeSelection",
+      "chartOperations"
     ]);
     expect(Object.keys(post.responses).sort()).toEqual(["201", "400", "401", "404", "409", "500"]);
+  });
+
+  it("documents 014 chartOperations as the full discriminated public contract", () => {
+    const post = doc.paths["/api/decks/{id}/revisions"]!.post!;
+    const requestSchema = (
+      post.requestBody as { content: Record<string, { schema: { properties: Record<string, unknown> } }> }
+    ).content["application/json"]!.schema;
+    const chartOperations = requestSchema.properties.chartOperations as {
+      maxItems: number;
+      items: { oneOf: Array<{ additionalProperties?: boolean; properties: Record<string, unknown> }> };
+    };
+
+    expect(chartOperations.maxItems).toBe(50);
+    expect(chartOperations.items.oneOf).toHaveLength(4);
+    expect(chartOperations.items.oneOf.every((schema) => schema.additionalProperties === false)).toBe(
+      true
+    );
+    const addChart = chartOperations.items.oneOf.find((schema) => "source" in schema.properties);
+    expect(addChart).toBeDefined();
+    const source = addChart!.properties.source as {
+      oneOf: Array<{ properties: Record<string, unknown> }>;
+    };
+    const userData = source.oneOf.find((schema) => "points" in schema.properties);
+    expect(userData).toBeDefined();
+    const points = userData!.properties.points as {
+      maxItems: number;
+      items: { properties: Record<string, unknown> };
+    };
+    expect(points.maxItems).toBe(12);
+    expect(points.items.properties.valueText).toMatchObject({
+      maxLength: 32,
+      pattern: "^-?\\d+(\\.\\d+)?$"
+    });
   });
 
   it("documents the decks read endpoints with ownership-aware response codes", () => {

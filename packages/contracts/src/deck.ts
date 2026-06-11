@@ -64,6 +64,12 @@ export interface EditRevisionRequestContract {
   slideDeck: unknown;
   /** 011: optional manual theme override; re-themes deterministically (no LLM). */
   themeSelection?: ThemeSelectionContract;
+  /**
+   * 014: optional structured chart operations (the only legal chart-edit channel).
+   * Shape-validated here; semantics (id existence, ownership, limits per chart)
+   * are enforced by the domain `applyChartOperations`.
+   */
+  chartOperations?: unknown[];
 }
 
 /** 409: the base the client edited from is no longer current (FR-020). */
@@ -173,9 +179,158 @@ export function validateEditRevisionRequest(
     issues.push(...themeSelection.fields);
   }
 
+  // 014: optional chart operations — shape only; semantics stay in the domain.
+  validateChartOperationsShape(input.chartOperations, issues);
+
   return issues.length === 0
     ? { ok: true, value: input as unknown as EditRevisionRequestContract }
     : invalid(issues);
+}
+
+// contracts is dependency-free by design, so these mirror the domain values
+// verbatim — keep in sync with `CHART_EDIT_LIMITS` and `ChartVisualOverride`
+// (packages/domain/src/deck-edit + design). The schema json and openapi enums
+// carry the same values; drift breaks their tests.
+const MAX_CHART_OPERATIONS = 50;
+// DoS guard: reject oversized point lists BEFORE iterating them, so a single
+// request cannot amplify CPU/memory with a huge nested array (the domain would
+// reject it anyway, but only after the shape pass walked every entry).
+const MAX_POINTS_PER_CHART = 12;
+const CHART_VISUAL_OVERRIDES = new Set([
+  "auto",
+  "pie_donut",
+  "line",
+  "bar",
+  "metric_card",
+  "table"
+]);
+
+function validateChartOperationsShape(input: unknown, issues: string[]): void {
+  if (input === undefined) {
+    return;
+  }
+  if (!Array.isArray(input)) {
+    issues.push("chartOperations must be an array");
+    return;
+  }
+  if (input.length > MAX_CHART_OPERATIONS) {
+    issues.push(`chartOperations exceeds ${MAX_CHART_OPERATIONS}`);
+    return;
+  }
+  input.forEach((operation, index) => {
+    const path = `chartOperations[${index}]`;
+    if (!isRecord(operation)) {
+      issues.push(`${path} must be an object`);
+      return;
+    }
+    switch (operation.op) {
+      case "set_visual":
+        requireNonEmptyString(operation.chartIntentId, `${path}.chartIntentId`, issues);
+        if (!isStringInSet(operation.visual, CHART_VISUAL_OVERRIDES)) {
+          issues.push(`${path}.visual must be one of auto/pie_donut/line/bar/metric_card/table`);
+        }
+        return;
+      case "remove_chart":
+        requireNonEmptyString(operation.slideId, `${path}.slideId`, issues);
+        requireNonEmptyString(operation.chartIntentId, `${path}.chartIntentId`, issues);
+        return;
+      case "add_chart":
+        requireNonEmptyString(operation.slideId, `${path}.slideId`, issues);
+        validateAddChartSource(operation.source, `${path}.source`, issues);
+        return;
+      case "edit_data":
+        requireNonEmptyString(operation.chartIntentId, `${path}.chartIntentId`, issues);
+        if (operation.title !== undefined && typeof operation.title !== "string") {
+          issues.push(`${path}.title must be a string`);
+        }
+        validateEditDataPoints(operation.points, `${path}.points`, issues);
+        return;
+      default:
+        issues.push(`${path}.op must be one of set_visual/remove_chart/add_chart/edit_data`);
+    }
+  });
+}
+
+function validateAddChartSource(source: unknown, path: string, issues: string[]): void {
+  if (!isRecord(source)) {
+    issues.push(`${path} must be an object`);
+    return;
+  }
+  if (source.kind === "existing_intent") {
+    requireNonEmptyString(source.chartIntentId, `${path}.chartIntentId`, issues);
+    return;
+  }
+  if (source.kind === "user_data") {
+    requireNonEmptyString(source.title, `${path}.title`, issues);
+    if (!isStringInSet(source.visual, CHART_VISUAL_OVERRIDES)) {
+      issues.push(`${path}.visual must be one of auto/pie_donut/line/bar/metric_card/table`);
+    }
+    if (!Array.isArray(source.points)) {
+      issues.push(`${path}.points must be an array`);
+      return;
+    }
+    if (source.points.length > MAX_POINTS_PER_CHART) {
+      issues.push(`${path}.points exceeds ${MAX_POINTS_PER_CHART}`);
+      return;
+    }
+    source.points.forEach((point, index) =>
+      validateUserPointShape(point, `${path}.points[${index}]`, issues)
+    );
+    return;
+  }
+  issues.push(`${path}.kind must be existing_intent or user_data`);
+}
+
+function validateEditDataPoints(points: unknown, path: string, issues: string[]): void {
+  if (!Array.isArray(points)) {
+    issues.push(`${path} must be an array`);
+    return;
+  }
+  if (points.length > MAX_POINTS_PER_CHART) {
+    issues.push(`${path} exceeds ${MAX_POINTS_PER_CHART}`);
+    return;
+  }
+  points.forEach((point, index) => {
+    const itemPath = `${path}[${index}]`;
+    if (!isRecord(point)) {
+      issues.push(`${itemPath} must be an object`);
+      return;
+    }
+    if (point.kind === "original") {
+      requireNonEmptyString(point.sourceFactId, `${itemPath}.sourceFactId`, issues);
+      return;
+    }
+    if (point.kind === "user") {
+      validateUserPointShape(point.point, `${itemPath}.point`, issues);
+      if (point.replacesFactId !== undefined && typeof point.replacesFactId !== "string") {
+        issues.push(`${itemPath}.replacesFactId must be a string`);
+      }
+      return;
+    }
+    issues.push(`${itemPath}.kind must be original or user`);
+  });
+}
+
+function validateUserPointShape(point: unknown, path: string, issues: string[]): void {
+  if (!isRecord(point)) {
+    issues.push(`${path} must be an object`);
+    return;
+  }
+  if (typeof point.label !== "string") {
+    issues.push(`${path}.label must be a string`);
+  }
+  if (typeof point.valueText !== "string") {
+    issues.push(`${path}.valueText must be a string`);
+  }
+  if (point.unit !== null && typeof point.unit !== "string") {
+    issues.push(`${path}.unit must be a string or null`);
+  }
+}
+
+function requireNonEmptyString(value: unknown, path: string, issues: string[]): void {
+  if (typeof value !== "string" || value.length === 0) {
+    issues.push(`${path} must be a non-empty string`);
+  }
 }
 
 function validateSlideShape(slide: unknown, index: number, issues: string[]): void {

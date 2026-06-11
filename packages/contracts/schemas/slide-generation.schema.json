@@ -271,6 +271,10 @@
         "treatment": {
           "enum": ["chart", "metric_card", "table", "timeline", "fallback_text", "review_note"]
         },
+        "visualOverride": {
+          "description": "014: user-selected visual override; absent or auto = automatic selection.",
+          "enum": ["auto", "pie_donut", "line", "bar", "metric_card", "table"]
+        },
         "labelingNotes": {
           "type": "array",
           "items": {
@@ -806,6 +810,42 @@
                   "additionalProperties": false
                 }
               }
+            },
+            "additionalProperties": false
+          }
+        },
+        "themeSelectionWarnings": {
+          "type": "array",
+          "description": "011: per-axis theme fallback evidence ([] when every axis applied).",
+          "items": {
+            "type": "object",
+            "required": ["axis", "reason"],
+            "properties": {
+              "axis": { "type": "string", "enum": ["font", "palette", "style"] },
+              "requestedId": { "type": "string" },
+              "reason": { "type": "string", "enum": ["invalid_id", "base_unresolved"] }
+            },
+            "additionalProperties": false
+          }
+        },
+        "userDataDisclosures": {
+          "type": "array",
+          "description": "014: charts containing user-provided data points ([] when none).",
+          "items": {
+            "type": "object",
+            "required": [
+              "slideId",
+              "chartIntentId",
+              "chartTitle",
+              "userPointCount",
+              "totalPointCount"
+            ],
+            "properties": {
+              "slideId": { "type": "string" },
+              "chartIntentId": { "type": "string" },
+              "chartTitle": { "type": "string" },
+              "userPointCount": { "type": "integer", "minimum": 0 },
+              "totalPointCount": { "type": "integer", "minimum": 0 }
             },
             "additionalProperties": false
           }

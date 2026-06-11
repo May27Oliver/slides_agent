@@ -88,6 +88,25 @@ export function extractChartSeries(input: ExtractChartSeriesInput): ChartSeries 
 }
 
 function toChartPoint(fact: SourceFact): ChartPoint | null {
+  // 014: a structured metric (user-provided point) is authoritative — use it
+  // verbatim instead of re-parsing free text. The time sort key derives from
+  // the user-entered label (clarify 決議：user 點不另設排序鍵).
+  if (fact.metric) {
+    const point: ChartPoint = {
+      label: truncate(fact.metric.label),
+      displayValue: fact.metric.displayValue,
+      value: fact.metric.numericValue,
+      unit: fact.metric.unit,
+      sourceFactId: fact.id,
+      sourceText: fact.sourceText
+    };
+    const metricSortKey = detectPeriodKey(fact.metric.label);
+    if (metricSortKey !== undefined) {
+      return { ...point, sortKey: metricSortKey };
+    }
+    return point;
+  }
+
   const parsed = parseMetricValue(fact.value);
   if (!parsed) {
     return null;
@@ -105,6 +124,15 @@ function toChartPoint(fact: SourceFact): ChartPoint | null {
     return { ...point, sortKey };
   }
   return point;
+}
+
+/**
+ * 014: the same label the chart axis/legend would show for a fact — exported so
+ * the editor's data table prefills a CONSISTENT label when converting an original
+ * point into a user-provided one.
+ */
+export function deriveChartPointLabel(fact: SourceFact): string {
+  return fact.metric ? truncate(fact.metric.label) : deriveLabel(fact);
 }
 
 /**

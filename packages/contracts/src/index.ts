@@ -181,6 +181,15 @@ export interface RenderedChartSummaryContract {
   notes: Array<{ code: ChartRenderingNoteCode; message: string }>;
 }
 
+/** 014: disclosure of a chart placement whose intent contains user-provided points. */
+export interface UserDataDisclosureContract {
+  slideId: string;
+  chartIntentId: string;
+  chartTitle: string;
+  userPointCount: number;
+  totalPointCount: number;
+}
+
 export interface GenerationSummaryContract {
   slideCount: number;
   sourceFactCount: number;
@@ -192,6 +201,8 @@ export interface GenerationSummaryContract {
   renderedCharts: RenderedChartSummaryContract[];
   /** 011: per-axis theme fallback evidence; always present ([] when all applied). */
   themeSelectionWarnings: ThemeSelectionWarningContract[];
+  /** 014: user-data disclosures; always present ([] when no chart has user points). */
+  userDataDisclosures: UserDataDisclosureContract[];
 }
 
 export interface GeneratePreviewResponseContract {

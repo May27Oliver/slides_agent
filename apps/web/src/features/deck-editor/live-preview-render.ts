@@ -1,8 +1,17 @@
 import type { DeckRevisionContract } from "@slides-agent/contracts";
 import { applyDeckEdit } from "@slides-agent/domain";
-import type { ApplyDeckEditOptions, DeckRevision, SlideDeck } from "@slides-agent/domain";
+import type {
+  ApplyDeckEditOptions,
+  DeckRevision,
+  GenerationSummary,
+  SlideDeck
+} from "@slides-agent/domain";
 
-export type LivePreviewResult = { ok: true; html: string } | { ok: false; reason: string };
+export type LivePreviewResult =
+  // 014: the summary rides along so the editor UI (chart cards: rendered visual,
+  // degradation notes, user-data disclosures) reads the SAME evidence the server
+  // would store — no second rendering channel.
+  { ok: true; html: string; generationSummary: GenerationSummary } | { ok: false; reason: string };
 
 /**
  * 010 (US1, FR-005a): render the working deck locally with the EXACT same domain
@@ -28,7 +37,11 @@ export function renderLivePreview(
     if (!result.ok) {
       return { ok: false, reason: result.detail };
     }
-    return { ok: true, html: result.payload.html };
+    return {
+      ok: true,
+      html: result.payload.html,
+      generationSummary: result.payload.generationSummary
+    };
   } catch (error) {
     return { ok: false, reason: error instanceof Error ? error.message : "render failed" };
   }
