@@ -29,9 +29,7 @@ const intents: ChartIntent[] = [
 
 describe("AddChartPanel (014 US2)", () => {
   it("lists ALL intents with title, rationale and a source-fact preview", () => {
-    render(
-      <AddChartPanel intents={intents} usedPagesByIntent={{}} onAddExisting={vi.fn()} />
-    );
+    render(<AddChartPanel intents={intents} usedPagesByIntent={{}} onAddExisting={vi.fn()} />);
     expect(screen.getByText("市占比較")).toBeTruthy();
     expect(screen.getByText("季度營收")).toBeTruthy();
     expect(screen.getByText("顯示市占結構")).toBeTruthy();
@@ -58,5 +56,80 @@ describe("AddChartPanel (014 US2)", () => {
   it("shows the empty state when the deck has no chart intents", () => {
     render(<AddChartPanel intents={[]} usedPagesByIntent={{}} onAddExisting={vi.fn()} />);
     expect(screen.getByText("此簡報沒有可用的來源圖表。")).toBeTruthy();
+  });
+
+  // US4: manual-input tab.
+  describe("manual input tab", () => {
+    const openManualTab = () => fireEvent.click(screen.getByRole("tab", { name: "手動輸入" }));
+
+    it("offers title + visual + point rows behind the manual tab", () => {
+      render(
+        <AddChartPanel
+          intents={intents}
+          usedPagesByIntent={{}}
+          onAddExisting={vi.fn()}
+          onAddUserData={vi.fn()}
+        />
+      );
+      openManualTab();
+      expect(screen.getByLabelText("圖表標題")).toBeTruthy();
+      expect(screen.getByLabelText("視覺類型")).toBeTruthy();
+      expect(screen.getByLabelText("標籤")).toBeTruthy();
+    });
+
+    it("disables create until the title and at least one valid point exist", () => {
+      render(
+        <AddChartPanel
+          intents={[]}
+          usedPagesByIntent={{}}
+          onAddExisting={vi.fn()}
+          onAddUserData={vi.fn()}
+        />
+      );
+      openManualTab();
+      const create = screen.getByText("建立圖表") as HTMLButtonElement;
+      expect(create.disabled).toBe(true);
+
+      fireEvent.change(screen.getByLabelText("圖表標題"), { target: { value: "手動圖" } });
+      fireEvent.change(screen.getByLabelText("標籤"), { target: { value: "A" } });
+      fireEvent.change(screen.getByLabelText("數值"), { target: { value: "abc" } });
+      expect((screen.getByText("建立圖表") as HTMLButtonElement).disabled).toBe(true);
+
+      fireEvent.change(screen.getByLabelText("數值"), { target: { value: "42" } });
+      expect((screen.getByText("建立圖表") as HTMLButtonElement).disabled).toBe(false);
+    });
+
+    it("creates the chart with the entered title/visual/points", () => {
+      const onAddUserData = vi.fn();
+      render(
+        <AddChartPanel
+          intents={[]}
+          usedPagesByIntent={{}}
+          onAddExisting={vi.fn()}
+          onAddUserData={onAddUserData}
+        />
+      );
+      openManualTab();
+      fireEvent.change(screen.getByLabelText("圖表標題"), { target: { value: "手動圖" } });
+      fireEvent.change(screen.getByLabelText("視覺類型"), { target: { value: "bar" } });
+      fireEvent.change(screen.getByLabelText("標籤"), { target: { value: "A" } });
+      fireEvent.change(screen.getByLabelText("數值"), { target: { value: "42" } });
+      fireEvent.change(screen.getByLabelText("單位"), { target: { value: "%" } });
+      fireEvent.click(screen.getByText(/新增數據點/));
+      const labels = screen.getAllByLabelText("標籤");
+      fireEvent.change(labels[1]!, { target: { value: "B" } });
+      const values = screen.getAllByLabelText("數值");
+      fireEvent.change(values[1]!, { target: { value: "58" } });
+      fireEvent.click(screen.getByText("建立圖表"));
+
+      expect(onAddUserData).toHaveBeenCalledWith({
+        title: "手動圖",
+        visual: "bar",
+        points: [
+          { label: "A", valueText: "42", unit: "%" },
+          { label: "B", valueText: "58", unit: null }
+        ]
+      });
+    });
   });
 });

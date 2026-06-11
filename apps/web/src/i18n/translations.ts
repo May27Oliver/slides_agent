@@ -187,6 +187,7 @@ const zhTW = {
   "editor.chart.data.invalidValue": "需為數字（可含小數與負號）",
   "editor.chart.data.title": "圖表標題",
   "editor.chart.disclosure": "本圖表含使用者提供的數據點（{n}/{m}）",
+  "editor.chart.add.create": "建立圖表",
 
   "switcher.open": "切換簡報",
   "switcher.search": "搜尋標題…",
@@ -463,6 +464,7 @@ const enUS: Dictionary = {
   "editor.chart.data.invalidValue": "Must be a number (decimals and minus sign allowed)",
   "editor.chart.data.title": "Chart title",
   "editor.chart.disclosure": "This chart contains user-provided data points ({n}/{m})",
+  "editor.chart.add.create": "Create chart",
 
   "switcher.open": "Switch deck",
   "switcher.search": "Search titles…",
@@ -737,6 +739,7 @@ const jaJP: Dictionary = {
   "editor.chart.data.invalidValue": "数値で入力してください（小数・マイナス可）",
   "editor.chart.data.title": "チャートタイトル",
   "editor.chart.disclosure": "このチャートにはユーザー提供のデータポイントが含まれます（{n}/{m}）",
+  "editor.chart.add.create": "チャートを作成",
 
   "switcher.open": "スライドを切り替え",
   "switcher.search": "タイトルを検索…",

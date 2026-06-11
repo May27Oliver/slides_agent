@@ -463,6 +463,9 @@ export function DeckEditorView({
                             onAddExisting={(chartIntentId) =>
                               edit((d) => d.addChartFromIntent(selectedSlide.id, chartIntentId))
                             }
+                            onAddUserData={(source) =>
+                              edit((d) => d.addChartFromUserData(selectedSlide.id, source))
+                            }
                           />
                         )
                       }
