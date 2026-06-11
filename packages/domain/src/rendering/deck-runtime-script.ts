@@ -29,12 +29,23 @@ export function buildDeckRuntimeScript(): string {
     }
   }
 
+  // 014: tell an embedding editor preview which slide the USER navigated to, so
+  // the edit panel can follow. Only user-driven navigation broadcasts — the initial
+  // show(0) and externally-driven "deck:goToSlide" stay silent, otherwise every
+  // iframe reload would yank the editor's selection back to slide 1. Inert for a
+  // standalone deck (window.parent === window).
+  function broadcast() {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: "deck:slideChanged", index: current }, "*");
+    }
+  }
+
   if (dotsBox) {
     slides.forEach(function (_, index) {
       var dot = document.createElement("button");
       dot.type = "button";
       dot.setAttribute("aria-label", "Go to slide " + (index + 1));
-      dot.addEventListener("click", function () { show(index); });
+      dot.addEventListener("click", function () { show(index); broadcast(); });
       dotsBox.appendChild(dot);
     });
   }
@@ -56,8 +67,8 @@ export function buildDeckRuntimeScript(): string {
     if (slides[current]) { slides[current].scrollTop = 0; }
   }
 
-  function next() { show(current + 1); }
-  function prev() { show(current - 1); }
+  function next() { show(current + 1); broadcast(); }
+  function prev() { show(current - 1); broadcast(); }
 
   function scrollActiveSlide(deltaY) {
     var slide = slides[current];

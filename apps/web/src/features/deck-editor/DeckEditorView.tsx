@@ -327,7 +327,10 @@ export function DeckEditorView({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface">
+    // h-screen (not min-h-screen): the columns get a FIXED viewport-bound height, so a
+    // long edit panel scrolls internally instead of stretching the grid row — which
+    // would stretch the preview iframe and with it the slide (100vh of the iframe).
+    <div className="flex h-screen flex-col bg-surface">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-panel px-5 py-2 text-sm">
         <div className="flex min-w-0 items-center gap-3">
           <Link to="/decks" className="font-medium text-brand-700 hover:underline">
@@ -365,7 +368,7 @@ export function DeckEditorView({
         <DraftBanner kind={pendingDraft.kind} onRestore={restoreDraft} onDiscard={discardDraft} />
       ) : null}
 
-      <main className="grid min-h-0 flex-1 grid-cols-1 gap-4 p-4 md:grid-cols-2">
+      <main className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 md:grid-cols-2 md:overflow-hidden">
         {/* Left half: live preview. */}
         <div className="min-h-0 rounded-2xl border border-line bg-panel p-3 max-md:h-[58vh]">
           <LivePreview
@@ -376,6 +379,10 @@ export function DeckEditorView({
             themeCandidates={themeCandidates}
             chartOperations={draft.chartOperations}
             onSummary={setPreviewSummary}
+            onSlideChange={(index) => {
+              const slide = draft.slides[index];
+              if (slide) setSelectedId(slide.id);
+            }}
             selectedIndex={Math.max(
               0,
               draft.slides.findIndex((s) => s.id === selectedSlide.id)

@@ -24,6 +24,8 @@ interface LivePreviewProps {
   chartOperations?: readonly ChartOperation[];
   /** 014: latest local render's summary (chart notes / disclosures), null on failure. */
   onSummary?: (summary: GenerationSummary | null) => void;
+  /** 014: the user navigated INSIDE the preview (‹ › / keys / dots) — follow it. */
+  onSlideChange?: (index: number) => void;
   debounceMs?: number;
 }
 
@@ -43,6 +45,7 @@ export function LivePreview({
   themeCandidates,
   chartOperations,
   onSummary,
+  onSlideChange,
   debounceMs = 250
 }: LivePreviewProps) {
   const { t } = useI18n();
@@ -75,6 +78,22 @@ export function LivePreview({
   useEffect(() => {
     onSummaryRef.current?.(local.ok ? local.generationSummary : null);
   }, [local]);
+
+  // 014: reverse sync — the deck runtime broadcasts user navigation; only messages
+  // from OUR iframe are honoured (the sandboxed deck html is untrusted content).
+  const onSlideChangeRef = useRef(onSlideChange);
+  onSlideChangeRef.current = onSlideChange;
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.source !== iframeRef.current?.contentWindow) return;
+      const data = event.data as { type?: string; index?: number } | null;
+      if (data?.type === "deck:slideChanged" && typeof data.index === "number") {
+        onSlideChangeRef.current?.(data.index);
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, []);
 
   // Tell the deck runtime which slide to show, so the preview tracks the edited slide.
   const syncSelectedSlide = useCallback(() => {
