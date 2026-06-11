@@ -63,11 +63,12 @@ describe("buildOpenApiDocument", () => {
     const requestSchema = (
       post.requestBody as { content: Record<string, { schema: { properties: object } }> }
     ).content["application/json"]!.schema;
-    // 011 added the optional themeSelection override.
+    // 011 added the optional themeSelection override; 014 the chart operations.
     expect(Object.keys(requestSchema.properties)).toEqual([
       "baseRevision",
       "slideDeck",
-      "themeSelection"
+      "themeSelection",
+      "chartOperations"
     ]);
     expect(Object.keys(post.responses).sort()).toEqual(["201", "400", "401", "404", "409", "500"]);
   });

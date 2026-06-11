@@ -184,6 +184,19 @@ const THEME_SELECTION_WARNING_SCHEMA: OpenApiSchema = {
   }
 };
 
+// 014: disclosure of a chart placement whose intent contains user-provided points.
+const USER_DATA_DISCLOSURE_SCHEMA: OpenApiSchema = {
+  type: "object",
+  required: ["slideId", "chartIntentId", "chartTitle", "userPointCount", "totalPointCount"],
+  properties: {
+    slideId: { type: "string" },
+    chartIntentId: { type: "string" },
+    chartTitle: { type: "string" },
+    userPointCount: { type: "integer" },
+    totalPointCount: { type: "integer" }
+  }
+};
+
 const GENERATION_SUMMARY_SCHEMA: OpenApiSchema = {
   type: "object",
   required: [
@@ -193,7 +206,8 @@ const GENERATION_SUMMARY_SCHEMA: OpenApiSchema = {
     "uncertainClaimCount",
     "selectedTheme",
     "renderedCharts",
-    "themeSelectionWarnings"
+    "themeSelectionWarnings",
+    "userDataDisclosures"
   ],
   properties: {
     slideCount: { type: "integer" },
@@ -202,7 +216,8 @@ const GENERATION_SUMMARY_SCHEMA: OpenApiSchema = {
     uncertainClaimCount: { type: "integer" },
     selectedTheme: SELECTED_THEME_SUMMARY_SCHEMA,
     renderedCharts: { type: "array", items: RENDERED_CHART_SUMMARY_SCHEMA },
-    themeSelectionWarnings: { type: "array", items: THEME_SELECTION_WARNING_SCHEMA }
+    themeSelectionWarnings: { type: "array", items: THEME_SELECTION_WARNING_SCHEMA },
+    userDataDisclosures: { type: "array", items: USER_DATA_DISCLOSURE_SCHEMA }
   }
 };
 
@@ -390,6 +405,19 @@ export const AUTH_REQUIRED_SCHEMA: OpenApiSchema = errorSchema(
 
 // --- Deck edit revisions (feature 010 US1) ---
 
+// 014: one structured chart operation. The discriminated per-op field shapes are
+// validated by the shared contracts validator; OpenAPI documents the envelope.
+const CHART_OPERATION_SCHEMA: OpenApiSchema = {
+  type: "object",
+  required: ["op"],
+  properties: {
+    op: { type: "string", enum: ["set_visual", "remove_chart", "add_chart", "edit_data"] }
+  },
+  additionalProperties: true,
+  description:
+    "Structured chart edit (the only legal chart-edit channel; contentBlocks stay read-only)."
+};
+
 export const EDIT_REVISION_REQUEST_SCHEMA: OpenApiSchema = {
   type: "object",
   required: ["baseRevision", "slideDeck"],
@@ -404,7 +432,13 @@ export const EDIT_REVISION_REQUEST_SCHEMA: OpenApiSchema = {
       additionalProperties: true,
       description: "Edited deck (text + structure). Read-only blocks are re-derived server-side."
     },
-    themeSelection: THEME_SELECTION_SCHEMA
+    themeSelection: THEME_SELECTION_SCHEMA,
+    chartOperations: {
+      type: "array",
+      maxItems: 50,
+      items: CHART_OPERATION_SCHEMA,
+      description: "014: applied in array order; any violation rejects the whole request (400)."
+    }
   }
 };
 

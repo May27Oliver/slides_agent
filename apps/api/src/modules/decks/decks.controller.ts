@@ -23,7 +23,7 @@ import type {
   DeckRevisionContract
 } from "@slides-agent/contracts";
 import { validateEditRevisionRequest } from "@slides-agent/contracts";
-import type { DeckStore, SlideDeck, ThemeStore } from "@slides-agent/domain";
+import type { ChartOperation, DeckStore, SlideDeck, ThemeStore } from "@slides-agent/domain";
 import { applyDeckEdit } from "@slides-agent/domain";
 import { DECK_STORE } from "@/modules/decks/decks.tokens";
 import { THEME_STORE } from "@/modules/themes/themes.tokens";
@@ -106,7 +106,7 @@ export class DecksController {
         fields: parsed.issues
       });
     }
-    const { baseRevision, slideDeck, themeSelection } = parsed.value;
+    const { baseRevision, slideDeck, themeSelection, chartOperations } = parsed.value;
 
     const deck = await this.deckStore.findByIdForAccount(accountId, deckId);
     if (!deck) {
@@ -133,13 +133,14 @@ export class DecksController {
 
     // 011: re-theme only when the client asked to. Loading the catalogue (candidates)
     // is skipped entirely otherwise, so a plain text edit costs no extra read.
-    const applied = applyDeckEdit(
-      deck.currentRevision,
-      slideDeck as SlideDeck,
-      themeSelection && this.themeStore
+    // 014: chartOperations (shape-validated above) pass through; semantics —
+    // id existence, ownership, limits — are enforced by the domain.
+    const applied = applyDeckEdit(deck.currentRevision, slideDeck as SlideDeck, {
+      ...(themeSelection && this.themeStore
         ? { themeSelection, candidates: await this.themeStore.listBrowsable() }
-        : {}
-    );
+        : {}),
+      ...(chartOperations ? { chartOperations: chartOperations as ChartOperation[] } : {})
+    });
     if (!applied.ok) {
       this.logger.log(`edit account=${accountId} deck=${deckId} rejected=${applied.rejection}`);
       throw new BadRequestException({

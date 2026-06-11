@@ -149,6 +149,38 @@ describe("slide generation schema", () => {
     expect(summary.additionalProperties).toBe(false);
   });
 
+  it("exposes 014 chart-edit fields (visualOverride + userDataDisclosures) without weakening closure", () => {
+    const treatmentPlan = slideGenerationSchema.$defs.ChartTreatmentPlan;
+    // Optional override — old revisions without the field stay valid (zero migration).
+    expect(treatmentPlan.required).not.toContain("visualOverride");
+    expect(treatmentPlan.properties.visualOverride.enum).toEqual([
+      "auto",
+      "pie_donut",
+      "line",
+      "bar",
+      "metric_card",
+      "table"
+    ]);
+    expect(treatmentPlan.additionalProperties).toBe(false);
+
+    const summary = slideGenerationSchema.$defs.GenerationSummary;
+    expect(summary.properties).toHaveProperty("userDataDisclosures");
+    expect(summary.properties.userDataDisclosures.type).toBe("array");
+    expect(summary.properties.userDataDisclosures.items.required).toEqual([
+      "slideId",
+      "chartIntentId",
+      "chartTitle",
+      "userPointCount",
+      "totalPointCount"
+    ]);
+    expect(summary.properties.userDataDisclosures.items.additionalProperties).toBe(false);
+
+    // 011 drift fix: real summaries always carry themeSelectionWarnings; with
+    // additionalProperties:false the schema must declare it.
+    expect(summary.properties).toHaveProperty("themeSelectionWarnings");
+    expect(summary.properties.themeSelectionWarnings.type).toBe("array");
+  });
+
   it("requires reviewable slide planning fields and does not expose final speakerNotes", () => {
     const slideDefinition = slideGenerationSchema.$defs.Slide;
 
