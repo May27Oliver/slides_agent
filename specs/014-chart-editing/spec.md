@@ -44,13 +44,13 @@
 
 ### Session 2026-06-11
 
-- Q: 使用者「不滿意圖表」最常見的補救動作？編輯能力怎麼切片？ → **A: 四類結構化操作。** (1) 換呈現類型（pie/line/bar/metric/table 的 treatment override）；(2) 移除；(3) 新增（兩個來源：未放置的既有 intents／手動輸入數據）；(4) 編輯數據點（改數字、增刪點、調順序）。不做自由繪圖、不引入第三方 chart lib、不做跨 slide 搬移（移除＋新增可達成）。
+- Q: 使用者「不滿意圖表」最常見的補救動作？編輯能力怎麼切片？ → **A: 四類結構化操作。** (1) 換視覺類型；(2) 移除；(3) 新增（兩個來源：既有 intents／手動輸入數據）；(4) 編輯數據點（改數字、增刪點、調順序）。不做自由繪圖、不引入第三方 chart lib、不做跨 slide 搬移（移除＋新增可達成）。*（本條的「換類型」模型與「新增清單範圍」細節已由後續審查修正 session 定案：`ChartVisualOverride`／全部 intents 皆列出。）*
 - Q: 圖表編輯怎麼通過 010 的 contentBlocks 唯讀牆？拆牆還是繞道？ → **A: 不拆牆，走結構化操作清單。** 開放 raw contentBlocks 等於讓 client 可注入任意結構（FR-021 要防的事）。改為 edit request 新增 `chartOperations: ChartOperation[]`，server 在 merge 後套用：每個操作的 `slideId` / `chartIntentId` / 數值都被驗證，非法 → 400 `INVALID_EDIT`。client 的 contentBlocks echo 語意不變。
 - Q: 「編輯數據」editing 的對象是 fact 的自由文字還是抽取後的點？ → **A: 結構化資料點。** 現況點是渲染時從 `SourceFact.value` 文字正則解析（`parseMetricValue`），讓使用者改文字再重 parse 極脆弱（輸入 "1,200 人" 可能 parse 失敗導致點消失）。改為：`SourceFact` 增加可選結構化 `metric` 欄位（label / displayValue / numericValue / unit），extractor 對帶 `metric` 的 fact short-circuit 直接轉 `ChartPoint`。使用者輸入永遠帶 `metric` → 永遠成功；舊資料（無 `metric`）走原解析、零行為變化。
 - Q: `edit_data` 送 diff 還是完整清單？ → **A: 宣告編輯後的完整點清單（陣列序 = 顯示序）。** 每點二擇一：`{ kind: "original", sourceFactId }`（未動，lineage 原樣）或 `{ kind: "user", label, valueText, unit, replacesFactId? }`（改過/新增；數值契約見後續審查修正——domain 自 valueText 導出幾何與顯示值）。完整清單比 diff 簡單、可重放、順便免費取得排序能力（CR-012）。
 - Q: 使用者把 25% 改成 30%，原 sourceFactId 可以沿用嗎？ → **A: 不可以——必須換新 fact。** 沿用 = 偽造出處（宣稱文件支持 30%）。改過的點配全新 `user_provided` fact + 新 id；`replacesFactId` 僅稽核/還原用。這是本 feature 的忠實度紅線。
 - Q: 使用者改完數據後圓餅比例總和爆掉（>105%）怎麼辦？拒絕儲存還是降級？ → **A: 照既有降級鏈，不拒絕。** validators 照常守門：`invalid_pie_total` → 降級長條；點數 <2 → metric card；單位混搭 → table；時間排序失敗 → 降級。UI 即時顯示 notes（「比例總和 110%，已改用長條圖呈現」）。拒絕儲存會把領域知識（什麼數據能畫什麼圖）外溢到編輯流程；降級＋揭露才是既有憲章的做法（CR-007）。
-- Q: 「從來源資料新增圖表」的素材哪裡來？ → **A: 持久化 chartIntents 裡未被放置的 intents。** 已驗證 `planSlideDeck` 回傳並持久化**全部**規劃 intents（非僅已放置者）；intent 靠 sourceFact 交集對應 slide，可能有 intents 未落在任何 slide。UI 列出這些（title + rationale + 來源事實預覽）供挑選。`remove_chart` 只移除 placeholder、intent 留在集合中 → 移除後可再加回。
+- Q: 「從來源資料新增圖表」的素材哪裡來？ → **A: 持久化的 chartIntents 集合。** 已驗證 `planSlideDeck` 回傳並持久化**全部**規劃 intents（非僅已放置者）；intent 靠 sourceFact 交集對應 slide，可能有 intents 未落在任何 slide。UI 列出 intents（title + rationale + 來源事實預覽）供挑選。`remove_chart` 只移除 placeholder、intent 留在集合中 → 移除後可再加回。*（清單範圍原寫「僅未放置」，已由後續審查修正 session superseded：**全部 intents 皆列出**，已放置者標註「已用於第 N 頁」。）*
 - Q: 手動輸入數據新增圖表，與既有 intent 的關係？ → **A: 造全新 intent，sourceFacts 全為 `user_provided`。** title 由使用者輸入；treatment 由使用者選定寫入衍生 treatmentPlans；同樣過 validators（選了 pie 但數據不合格照樣降級）。
 - Q: 多個 operations 之間的順序語意？ → **A: 依陣列序依序套用，確定性。** 後面的操作看得到前面操作的效果（例：同一請求先 `add_chart` 再對它 `edit_data` 合法）。引用不存在對象 → 400。
 - Q: 對「本次編輯新增的純文字 slide」可以 add_chart 嗎？ → **A: 可以。** 010「新 slide 必須純文字」防的是 client 直接夾帶結構塊；本 feature 的圖表是 server 經驗證操作放上去的，威脅模型不同。操作在 merge 之後套用，新 slide 已在 merged deck 中可被引用。opening slide 除外（renderer 不渲染 cover 圖表 → 400 拒絕）。
@@ -105,7 +105,7 @@
 
 **Why this priority**: 兩者都是純現有資料的重組（placeholder 的增刪），共享同一套操作驗證機制；合在一起交付「調整圖表位置與有無」的完整能力。依賴 US1 建立的 operations 管線。
 
-**Independent Test**: 給一份 chartIntents 含未放置 intent 的 deck → (a) 移除某頁圖表並儲存：新 revision 該 slide 無 `chart_placeholder`、版面為無圖布局、intent 仍在 `chartIntents` 集合；(b) 將未放置 intent 加到另一頁（無圖）並儲存：該 slide 多一個 `chart_placeholder`、圖表以該 intent 的來源事實渲染；(c) 對 opening slide add_chart → 400；(d) 對已有圖表的 slide add_chart → 400（每頁上限 1）。
+**Independent Test**: 給一份 chartIntents 含未放置 intent 的 deck → (a) 移除某頁圖表並儲存：新 revision 該 slide 無 `chart_placeholder`、版面為無圖布局、intent 仍在 `chartIntents` 集合；(b) 將未放置 intent 加到另一頁（無圖）並儲存：該 slide 多一個 `chart_placeholder`、圖表以該 intent 的來源事實渲染；(c) 對 opening slide add_chart → 400；(d) 對已有圖表的 slide add_chart → 400（每頁上限 1）；(e) 將**已放置**的 intent 加到另一張無圖內容頁並儲存：兩頁各有一個指向同一 intent 的 `chart_placeholder`、各自渲染同一數據。
 
 **Independent Demo**: 移除一頁的圖表 → 預覽版面變化 → 把同一張圖加到另一頁 → 儲存後重載驗證。
 
@@ -115,6 +115,7 @@
 2. **Given** chartIntents 中存在未放置的 intent，**When** 使用者在新增圖表面板挑選它加到某內容頁並儲存，**Then** 該頁渲染出此圖表，每個點的 `sourceFactId` 都指向原始來源事實。
 3. **Given** 同一編輯請求內先移除某 slide 的圖表、再把同一 intent 加到另一 slide，**When** 儲存，**Then** 兩個操作依序生效（圖表完成搬移）。
 4. **Given** 對 opening（封面）slide 的 add_chart 操作，**When** 送出，**Then** 400 `INVALID_EDIT`、錯誤訊息明確說明封面不支援圖表。
+5. **Given** 一個已放置於第 3 頁的 intent，**When** 使用者打開另一張無圖內容頁的新增清單，**Then** 該 intent 出現且標註「已用於第 3 頁」；選定並儲存後兩頁共享同一圖表，之後對其「編輯數據」時 UI 顯示共享提示且兩頁連動更新。
 
 ---
 
@@ -142,11 +143,11 @@
 
 ### User Story 4 - 手動輸入數據新增全新圖表 (Priority: P3)
 
-使用者在「新增圖表」面板切到「手動輸入」：填圖表標題、選呈現類型、在資料表格輸入若干點（標籤／數值／單位），加到指定內容頁。系統造一個全新 intent（sourceFacts 全為 `user_provided`）、treatment 寫入衍生 plans，照常過 validators 與降級鏈。
+使用者在「新增圖表」面板切到「手動輸入」：填圖表標題、選視覺類型、在資料表格輸入若干點（標籤／數值／單位），加到指定內容頁。系統造一個全新 intent（sourceFacts 全為 `user_provided`）、所選視覺以 `visualOverride` 寫入衍生 plan，照常過 validators 與降級鏈。
 
 **Why this priority**: 與 US3 共用全部機制（user_provided fact、結構化 metric、揭露），是 US3 之上的薄組合層（`add_chart` 的 `user_data` 來源），排同批最後交付。
 
-**Independent Test**: 在某內容頁手動輸入 3 點數據新增長條圖並儲存 → 驗證：(1) 新 revision `chartIntents` 多一個 intent，其 sourceFacts 全為 `user_provided`；(2) 該頁渲染出此圖表、displayValue 原樣；(3) generationSummary 揭露「使用者提供數據 3/3 點」；(4) 數據不滿足所選類型時照降級鏈呈現＋note。
+**Independent Test**: 在某內容頁手動輸入 3 點數據新增長條圖並儲存 → 驗證：(1) 新 revision `chartIntents` 多一個 intent，其 sourceFacts 全為 `user_provided`；(2) 該頁渲染出此圖表，displayValue 為 domain 自 `valueText + unit` 導出、保留輸入精度；(3) generationSummary 揭露「使用者提供數據 3/3 點」；(4) 數據不滿足所選視覺時照降級鏈呈現＋note。
 
 **Independent Demo**: 手動建一張 3 點長條圖 → 即時預覽 → 儲存重載後圖表與揭露註記俱在。
 
@@ -194,7 +195,7 @@
 
 ### HTML Slides Agent Constitution Requirements *(mandatory for slide-generation features)*
 
-- **CR-001 Source Fidelity**: 未編輯的點保留原 fact 與 `sourceFactId` lineage、displayValue 原樣；使用者數據誠實標記 `user_provided` 且不沿用原 fact id（FR-008）；系統不改寫、不換算、不四捨五入使用者輸入的 displayValue。
+- **CR-001 Source Fidelity**: 未編輯的點保留原 fact 與 `sourceFactId` lineage、displayValue 原樣；使用者數據誠實標記 `user_provided` 且不沿用原 fact id（FR-008）；domain 自 `valueText + unit` 導出的 displayValue 保留輸入精度——不四捨五入、不換算、不改寫。
 - **CR-002 Review Report**: 含使用者數據的圖表在 generationSummary／review 揭露（FR-010）；降級決策以 `ChartRenderingNote` 留痕並呈現於 UI（FR-009）。
 - **CR-003 Web-First Output**: 輸出仍為 self-contained HTML、inline SVG；本 feature 不引入外部資源或第三方 chart lib。
 - **CR-004 Backend-Configured LLM Boundary**: 全程零 LLM（FR-012）；無新增 provider/model 設定面。
@@ -238,7 +239,7 @@
 - 使用者只輸入 `valueText`（嚴格數字格式）與 `unit`；`numericValue` 與 `displayValue` 由 domain 確定性導出（FR-006），前端無需也不得自行計算提交。
 - `@slides-agent/domain` 維持 browser-bundle-safe（010 已建立），新增的操作套用邏輯同樣零 Node-only 依賴。
 - 編輯入口沿用 010 編輯頁；本 feature 不新增路由或頁面，僅擴充 `SlideEditPanel` 與儲存請求。
-- 持久化 `chartIntents` 含未放置 intents 的行為（已驗證於 `planSlideDeck`）為本 feature「從來源資料新增」的素材來源；若特定 deck 無未放置 intents，該清單顯示空狀態（仍可手動輸入）。
+- 持久化 `chartIntents` 含全部規劃 intents 的行為（已驗證於 `planSlideDeck`）為本 feature「從來源資料新增」的素材來源；清單列出**全部** intents（已放置者標註「已用於第 N 頁」）。僅當 deck 的 `chartIntents` 集合為空時，「從來源資料」tab 顯示空狀態（仍可手動輸入）。
 - 圖表編輯不影響 010 的文字編輯與 011 的換主題——三者可在同一儲存請求並存，各走各的衍生步驟。
 
 ## Review and Safety Notes *(mandatory for generated-content features)*
