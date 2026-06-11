@@ -33,7 +33,7 @@ description: "Task list — 014 編輯頁圖表編輯（US1–US4）"
 
 ## Phase 2：Foundational — Domain 地基＋儲存通路（plan Phase A/B，阻擋所有 US）
 
-**⚠️**：US1–US4 全部依賴本階段（operations 管線是唯一編輯通道）。**不變式**：零 LLM；`operations: []` 時輸出與 010/011 逐欄位相同（data-model §10-1）；語意驗證全在 domain。
+**⚠️**：US1–US4 全部依賴本階段（operations 管線是唯一編輯通道）。**不變式**：零 LLM；`operations: []` 時輸出與 010/011 逐欄位相同——**唯一例外** `generationSummary.userDataDisclosures: []`，`reviewReport`/html 零 delta（data-model §10-1）；語意驗證全在 domain。
 
 ### 型別（先定形狀，data-model §1/§2/§3/§6）
 

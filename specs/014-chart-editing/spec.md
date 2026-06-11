@@ -73,7 +73,7 @@
 - Q:（HIGH）允許 `displayValue: "30%"` 配 `numericValue: 99` 且 server 不校驗——幾何與顯示文字矛盾，違反「不畫誤導圖」？ → **A: 改契約，讓矛盾在結構上不可能。** client 對 user 點只提交 `{ label, valueText, unit }`；`valueText` MUST 為嚴格數字格式（如 `2.3`、`1200`，可負可帶小數），domain 解析為 `numericValue`（非有限 → 400），`displayValue` 由 domain 確定性組合（`valueText + unit`，如 "2.3M"）。幾何值與顯示值同源，無不一致空間。放棄 "~30%" 等自由格式（CR-012：誠實優先於彈性）。
 - Q:（MEDIUM）`metric` short-circuit 只覆蓋 series extractor，但 table fallback／review 路徑讀 `fact.value`——user fact 數字只放 metric 會在降級 table 顯示錯值？ → **A: 鏡像規則。** user_provided fact 的 `value` MUST 等於 `metric.displayValue`（domain 建構時強制，非 client 責任）；所有讀 `.value` 的既有路徑（fact table、review、揭露）自然正確。驗收 MUST 含「user 數據降級為 table 時顯示正確值」測試。
 - Q:（MEDIUM）「新增圖表」一處說只列未放置 intents、FR-005 說任一 intent 可放、edge case 又允許一 intent 放兩頁——清單範圍到底是？ → **A: 統一為「任一 intent 皆可放置」**（限非 opening、該頁無圖）。UI 新增清單列出**全部** intents：未放置者正常列出、已放置者標註「已用於第 N 頁」（選了即多頁共享，編輯時連動提示與 clarify 決議一致）。
-- Q:（MEDIUM）輸入驗證缺長度上限、operation 數量、重複引用、fact ownership 規則？ → **A: 補齊 contract 級驗證**（見 FR-011）：label/title ≤ 120 字元、unit ≤ 16、valueText ≤ 32；單請求 `chartOperations` ≤ 50；`edit_data` 的 `original.sourceFactId` MUST 屬於**該 intent** 的 base sourceFacts 且同一清單內不得重複引用同一 fact id；`title` 提供時去空白 MUST 非空。
+- Q:（MEDIUM）輸入驗證缺長度上限、operation 數量、重複引用、fact ownership 規則？ → **A: 補齊 contract 級驗證**（見 FR-011）：label/title ≤ 120 字元、unit ≤ 16、valueText ≤ 32；單請求 `chartOperations` ≤ 50；`edit_data` 的 `original.sourceFactId` MUST 屬於**該 intent 於前序操作套用後**的 sourceFacts（後續 plan 審查 session 定案）且同一清單內不得重複引用同一 fact id；`title` 提供時去空白 MUST 非空。
 - Q:（LOW）點數上限「預設 12、plan 定案」但 FR-011 已拿它當 400 規則——不可同時是假設與驗收？ → **A: 直接定案 12**（domain 常數），自 Assumptions 移除待定狀態。
 
 ### Session 2026-06-11（plan/tasks 審查修正：回歸不變式、review 同步、original 引用範圍）
@@ -131,7 +131,7 @@
 
 **Why this priority**: 價值最高但機制最深的切片——引入 `user_provided` fact、結構化 `metric` short-circuit 與揭露機制。依賴 US1 的管線，且其忠實度設計需要最謹慎的測試覆蓋，故排最後。
 
-**Independent Test**: 給一張 5 點長條圖 → 改其中 1 點數值、新增 1 點、刪 1 點、改標題並儲存 → 驗證：(1) 新 revision 衍生 intent 共 5 點：3 點原 fact（id 與 base 相同）、2 點 `user_provided` 新 fact（id 為確定性導出、不與任何 base fact 重複，被改的那點帶 `replacesFactId`，`value` 鏡像 `metric.displayValue`）；(2) html 中各點 displayValue 為 domain 自 `valueText + unit` 組合的結果、保留使用者輸入的精度；(3) generationSummary 含「使用者提供數據 2/5 點」揭露；(4) `valueText` 非合法數字格式或 label 空白的請求 → 400；(5) `original.sourceFactId` 不屬於該 intent 的 base facts → 400；(6) 在 client 與 server 各跑一次同一編輯 → 產出的 fact id 與 html byte-for-byte 一致。
+**Independent Test**: 給一張 5 點長條圖 → 改其中 1 點數值、新增 1 點、刪 1 點、改標題並儲存 → 驗證：(1) 新 revision 衍生 intent 共 5 點：3 點原 fact（id 與 base 相同）、2 點 `user_provided` 新 fact（id 為確定性導出、不與任何 base fact 重複，被改的那點帶 `replacesFactId`，`value` 鏡像 `metric.displayValue`）；(2) html 中各點 displayValue 為 domain 自 `valueText + unit` 組合的結果、保留使用者輸入的精度；(3) generationSummary 含「使用者提供數據 2/5 點」揭露；(4) `valueText` 非合法數字格式或 label 空白的請求 → 400；(5) `original.sourceFactId` 不屬於該 intent（前序操作套用後）的 sourceFacts → 400；(6) 在 client 與 server 各跑一次同一編輯 → 產出的 fact id 與 html byte-for-byte 一致。
 
 **Independent Demo**: 改一個數字 → 徽章變「使用者提供」→ 預覽即時更新 → 單列還原回來源值 → 再改並儲存 → 重載後揭露註記可見。
 
@@ -186,7 +186,7 @@
 - **FR-003（set_visual）**: 換視覺類型 MUST 僅更新衍生 `designPlan.chartTreatmentPlans` 中對應 intent 的 `visualOverride`（immutable 衍生新物件；新增可選欄位，值域 `ChartVisualOverride = "auto" | "pie_donut" | "line" | "bar" | "metric_card" | "table"`），不動 treatment 原值、不動數據、不動其他 plans。renderer 對 `auto`（或無欄位）MUST 維持現行自動選型零變化；對具體值 MUST 優先嘗試該視覺——true-chart 類（pie/line/bar）仍 MUST 通過對應 series validator（pie 另須 part-to-whole 檢查），不合格照既有降級鏈退場＋note；`fallback` 旗標語意比照現行（要求 true chart 而未得 → fallback=true）。
 - **FR-004（remove_chart）**: 移除 MUST 僅自指定 slide 的 `contentBlocks` 移除對應 `chart_placeholder`；intent 本身 MUST 保留於衍生 `chartIntents`（成為未放置，可再放置）。
 - **FR-005（add_chart / existing_intent）**: MUST 可將 intents 集合中任一 intent（含未放置者與本請求 `remove_chart` 後者）以新 `chart_placeholder` 放置到任一非 opening slide（含本次編輯新增的純文字 slide）。
-- **FR-006（add_chart / user_data 與 edit_data 的數據契約）**: 使用者數據點 MUST 以 `{ label, valueText, unit }` 提交——`valueText` MUST 為嚴格數字格式（可負、可帶小數，不含千分位/符號/前綴），domain 解析為 `numericValue`（非有限 → 400）並確定性組合 `displayValue`（`valueText + unit`）；client MUST NOT 提交 `numericValue` 或 `displayValue`（幾何值與顯示值同源，矛盾在結構上不可能）。`edit_data` MUST 宣告編輯後完整點清單，每點為 `original`（引用 base fact id）或 `user`（上述結構化數據，可選 `replacesFactId`）；陣列序即顯示序。可選 `title` 覆寫圖表標題（提供時去空白 MUST 非空）。
+- **FR-006（add_chart / user_data 與 edit_data 的數據契約）**: 使用者數據點 MUST 以 `{ label, valueText, unit }` 提交——`valueText` MUST 為嚴格數字格式（可負、可帶小數，不含千分位/符號/前綴），domain 解析為 `numericValue`（非有限 → 400）並確定性組合 `displayValue`（`valueText + unit`）；client MUST NOT 提交 `numericValue` 或 `displayValue`（幾何值與顯示值同源，矛盾在結構上不可能）。`edit_data` MUST 宣告編輯後完整點清單，每點為 `original`（引用該 intent 於前序操作套用後既有的 fact id）或 `user`（上述結構化數據，可選 `replacesFactId`）；陣列序即顯示序。可選 `title` 覆寫圖表標題（提供時去空白 MUST 非空）。
 - **FR-007（結構化 metric short-circuit ＋ value 鏡像）**: `SourceFact` MUST 增加可選結構化 `metric` 欄位；series 抽取對帶 `metric` 的 fact MUST 直接採用其值建點（displayValue 原樣、numericValue 作幾何），跳過文字解析；無 `metric` 的 fact 行為 MUST 與現行完全一致。domain 建構 `user_provided` fact 時其 `value` MUST 等於 `metric.displayValue`（鏡像），使所有讀 `.value` 的既有路徑（fact table 降級、review、揭露）顯示正確值；驗收 MUST 含 user 數據降級為 table 的顯示正確性測試。
 - **FR-008（出處誠實 ＋ id 確定性）**: 改過或新增的點 MUST 持久化為 `kind: "user_provided"` 的**新** fact（新 id，不得沿用任何 base fact id 作為其出處）；未動的點 MUST 原樣保留 base fact（id、lineage 不變）；被取代的原 fact MUST 自衍生 intent 移除；`replacesFactId` 僅供稽核/還原，MUST NOT 作為 provenance 呈現。新 fact／新 intent 的 id MUST 由 domain 純函式自「base revision number ＋ 操作索引 ＋ 點索引」確定性導出（任何一端 MUST NOT 隨機產生），且 MUST NOT 與 base 的任何既有 id 碰撞（前綴隔離，如 `fact_user_r{N}_…`／`chart_user_r{N}_…`）。
 - **FR-009（驗證與降級不變）**: 編輯後的 intents MUST 通過與生成路徑完全相同的 series 驗證與降級鏈；系統 MUST NOT 因數據不滿足所選類型而拒絕儲存，MUST 降級並產生既有 `ChartRenderingNote`；編輯 UI MUST 即時顯示這些 notes。
@@ -225,7 +225,7 @@
 - **SourceFact.metric**（新增可選欄位）: 結構化數值（label / displayValue / numericValue / unit）；存在時 series 抽取直接採用。使用者數據點的載體；`displayValue` 與 `numericValue` 由 domain 自 `valueText + unit` 導出。
 - **user_provided SourceFact**: `kind: "user_provided"` 的事實，代表使用者於編輯器輸入的數據；id 確定性導出（FR-008）、`value` 鏡像 `metric.displayValue`（FR-007）、`sourceText` 標明來源為編輯器輸入；可帶 `replacesFactId` 稽核線索。
 - **衍生 ChartIntent / 衍生 ChartTreatmentPlan**: 操作套用後 immutable 產生的 intent 集合與 treatment plans，隨新 revision 持久化，成為後續編輯的 base。
-- **EditDataPoint**: `edit_data` 清單中的一點——`original`（引用 base fact id）或 `user`（`{ label, valueText, unit, replacesFactId? }`）。
+- **EditDataPoint**: `edit_data` 清單中的一點——`original`（引用該 intent 於前序操作套用後既有的 fact id）或 `user`（`{ label, valueText, unit, replacesFactId? }`）。
 
 ## Success Criteria *(mandatory)*
 

@@ -49,7 +49,7 @@ export interface SourceFact {
     numericValue: number;         // domain 自 valueText 解析（有限）
     unit: string | null;
   };
-  /** 014: 被此 user fact 取代的 base fact id；僅稽核/還原，非 provenance（FR-008）。 */
+  /** 014: 被此 user 點取代的既有 fact id（通常為 base fact）；僅稽核/還原，非 provenance（FR-008）。 */
   replacesFactId?: string;
 }
 ```
@@ -64,7 +64,7 @@ export interface UserPointInput {
 }
 
 export type EditDataPoint =
-  | { kind: "original"; sourceFactId: string }                       // 必屬該 intent 的 base facts；清單內不得重複
+  | { kind: "original"; sourceFactId: string }                       // 必屬該 intent（前序操作套用後）的 sourceFacts；清單內不得重複
   | { kind: "user"; point: UserPointInput; replacesFactId?: string };
 
 export type ChartOperation =
@@ -121,18 +121,21 @@ export type ApplyChartOperationsResult =
 ### §4a. user_data 新 intent 的建構
 
 ```
-intentId  = `chart_user_r{baseRevision}_{opIndex}`
-facts[i]  = { id: `fact_user_r{baseRevision}_{opIndex}_{i}`, kind: "user_provided",
-              value: displayValue, sourceText: "使用者於編輯器輸入",
-              metric: { label, displayValue: valueText + (unit ?? ""), numericValue: Number(valueText), unit } }
+intentId       = `chart_user_r{baseRevision}_{opIndex}`
+displayValue_i = points[i].valueText + (points[i].unit ?? "")        // 鏡像的單一來源
+facts[i]       = { id: `fact_user_r{baseRevision}_{opIndex}_{i}`, kind: "user_provided",
+                   value: displayValue_i, sourceText: "使用者於編輯器輸入",
+                   metric: { label: points[i].label, displayValue: displayValue_i,
+                             numericValue: Number(points[i].valueText), unit: points[i].unit } }
 recommendedVisuals = visual 反查 VisualizationType：
   pie_donut/bar/auto → ["comparison"]，line → ["timeline"]，
   metric_card → ["metric_card"]，table → ["table"]
-intent    = { id, title, sourceFacts: facts, recommendedVisuals,
-              rationale: "使用者於編輯器手動建立" }
-plan      = { chartIntentId: id, treatment: mapVisualizationTypeToTreatment(primary),
-              visualOverride: visual === "auto" ? undefined : visual,
-              labelingNotes: [], preservedContext: [] }
+primary        = recommendedVisuals[0]
+intent         = { id: intentId, title, sourceFacts: facts, recommendedVisuals,
+                   rationale: "使用者於編輯器手動建立" }
+plan           = { chartIntentId: intentId, treatment: mapVisualizationTypeToTreatment(primary),
+                   visualOverride: visual === "auto" ? undefined : visual,
+                   labelingNotes: [], preservedContext: [] }
 ```
 
 ### §4b. edit_data 的 fact 重建
