@@ -63,27 +63,17 @@ describe("SlideEditPanel (010 US1)", () => {
     expect(h.onRemoveBullet).toHaveBeenCalledWith(0);
   });
 
-  it("shows a read-only notice listing content block kinds when present", () => {
-    const h = handlers();
-    render(
-      <SlideEditPanel
-        slide={slide({ contentBlocks: [{ kind: "chart_placeholder", content: {} }] })}
-        {...h}
-      />
-    );
-    expect(screen.getByText("chart_placeholder")).toBeTruthy();
-    expect(screen.getAllByText("本期暫不可編輯").length).toBeGreaterThan(0);
-  });
-
-  // 014 US1: the chart area becomes an editor card; only NON-chart blocks stay readonly.
-  it("renders the chart editor slot and stops listing chart_placeholder as readonly", () => {
+  // 014: the read-only notice is retired — charts edit through the card; every other
+  // contentBlock kind is a planning artifact the renderer never draws (it reads ONLY
+  // chart_placeholder), so there is nothing meaningful to disclose.
+  it("renders the chart editor slot and no read-only notice", () => {
     const h = handlers();
     render(
       <SlideEditPanel
         slide={slide({
           contentBlocks: [
             { kind: "chart_placeholder", content: {}, chartIntentId: "chart-0" },
-            { kind: "table", content: {} }
+            { kind: "bullets", content: {} }
           ]
         })}
         {...h}
@@ -91,8 +81,8 @@ describe("SlideEditPanel (010 US1)", () => {
       />
     );
     expect(screen.getByTestId("chart-editor-slot")).toBeTruthy();
-    // chart_placeholder is editable through the card now; table stays readonly.
+    expect(screen.queryByText("本期暫不可編輯")).toBeNull();
+    expect(screen.queryByText("bullets")).toBeNull();
     expect(screen.queryByText("chart_placeholder")).toBeNull();
-    expect(screen.getByText("table")).toBeTruthy();
   });
 });

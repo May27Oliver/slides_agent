@@ -27,7 +27,7 @@ function slide(id: string, over: Partial<Slide> = {}): Slide {
 const noop = () => undefined;
 
 describe("SlideNavigator (010 US1)", () => {
-  it("renders a numbered text list and flags slides with read-only blocks", () => {
+  it("renders a numbered text list without the retired read-only badge (014)", () => {
     render(
       <SlideNavigator
         slides={[
@@ -43,8 +43,8 @@ describe("SlideNavigator (010 US1)", () => {
     );
     expect(screen.getByText("01")).toBeTruthy();
     expect(screen.getByText("Title s1")).toBeTruthy();
-    // The read-only badge appears once (for s2).
-    expect(screen.getAllByText("本期暫不可編輯").length).toBe(1);
+    // 014: charts are editable through the chart card, so no read-only flag.
+    expect(screen.queryByText("本期暫不可編輯")).toBeNull();
   });
 
   it("calls onSelect / onAddSlide / onRemoveSlide and exposes drag handles", () => {

@@ -142,8 +142,6 @@ const zhTW = {
   "editor.slide.remove": "刪除投影片",
   "editor.slide.up": "上移投影片",
   "editor.slide.down": "下移投影片",
-  "editor.readonly.badge": "本期暫不可編輯",
-  "editor.readonly.hint": "圖表與版面等結構塊本期唯讀，沿用原始生成結果。",
   "editor.preview.heading": "即時預覽",
   "editor.preview.fullscreenHint": "按 F 全螢幕瀏覽",
   "editor.preview.error": "預覽暫時無法顯示，儲存仍以伺服器結果為準。",
@@ -417,9 +415,6 @@ const enUS: Dictionary = {
   "editor.slide.remove": "Remove slide",
   "editor.slide.up": "Move slide up",
   "editor.slide.down": "Move slide down",
-  "editor.readonly.badge": "Read-only this release",
-  "editor.readonly.hint":
-    "Charts and layout blocks are read-only this release; they keep the original generated result.",
   "editor.preview.heading": "Live preview",
   "editor.preview.fullscreenHint": "Press F for fullscreen",
   "editor.preview.error":
@@ -692,9 +687,6 @@ const jaJP: Dictionary = {
   "editor.slide.remove": "スライドを削除",
   "editor.slide.up": "スライドを上へ",
   "editor.slide.down": "スライドを下へ",
-  "editor.readonly.badge": "今回は編集不可",
-  "editor.readonly.hint":
-    "チャートやレイアウトなどの構造ブロックは今回読み取り専用で、元の生成結果を引き継ぎます。",
   "editor.preview.heading": "ライブプレビュー",
   "editor.preview.fullscreenHint": "F キーで全画面",
   "editor.preview.error":

@@ -1,12 +1,12 @@
 import { DndContext, closestCenter } from "@dnd-kit/core";
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy
-} from "@dnd-kit/sortable";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Slide } from "@slides-agent/domain";
-import { GripIcon, dragEndIndices, useReorderSensors } from "@/features/deck-editor/sortable-helpers";
+import {
+  GripIcon,
+  dragEndIndices,
+  useReorderSensors
+} from "@/features/deck-editor/sortable-helpers";
 import { useI18n } from "@/i18n";
 
 interface SlideNavigatorProps {
@@ -97,7 +97,6 @@ function SortableSlideRow({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: slide.id
   });
-  const hasReadonly = slide.contentBlocks.length > 0;
 
   return (
     <li
@@ -121,21 +120,15 @@ function SortableSlideRow({
         className={[
           "flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors",
           "focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700",
-          selected ? "border-brand-700 bg-brand-50 text-ink" : "border-line bg-panel text-ink hover:bg-surface"
+          selected
+            ? "border-brand-700 bg-brand-50 text-ink"
+            : "border-line bg-panel text-ink hover:bg-surface"
         ].join(" ")}
       >
         <span className="shrink-0 tabular-nums text-xs text-ink-soft">
           {String(index + 1).padStart(2, "0")}
         </span>
         <span className="min-w-0 flex-1 truncate">{slide.title || "—"}</span>
-        {hasReadonly ? (
-          <span
-            title={t("editor.readonly.hint")}
-            className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700"
-          >
-            {t("editor.readonly.badge")}
-          </span>
-        ) : null}
       </button>
       <button
         type="button"
