@@ -1,0 +1,118 @@
+name: Deploy
+
+# CI/CD 做法 B: on every push to main → run the full test suite → build the two
+# images in CI (not on the 2GB EC2 box) → push to GHCR → a self-hosted runner ON
+# the EC2 pulls the new images and redeploys. Secrets (.env) stay on the box.
+on:
+  push:
+    branches: [main]
+
+# Never let two deploys overlap; queue them instead.
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write # push/pull GHCR images with the workflow token
+
+env:
+  API_IMAGE: ghcr.io/may27oliver/slides-agent-api
+  WEB_IMAGE: ghcr.io/may27oliver/slides-agent-web
+
+jobs:
+  test:
+    name: Build & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
+      - run: pnpm test
+
+  e2e:
+    name: Playwright e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @slides-agent/web exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+
+  build-push:
+    name: Build & push images (GHCR)
+    needs: [test, e2e] # only build once the suite is green
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & push api image (api/worker/migrate share it)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.api
+          platforms: linux/amd64 # EC2 is x86
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:latest
+            ${{ env.API_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Build & push web (nginx) image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.web
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.WEB_IMAGE }}:latest
+            ${{ env.WEB_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to EC2
+    needs: build-push
+    runs-on: [self-hosted] # the runner installed on the EC2 box
+    env:
+      IMAGE_TAG: ${{ github.sha }} # pin the exact build (compose reads ${IMAGE_TAG})
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Pull new images and redeploy
+        run: |
+          set -euo pipefail
+          cd ~/slides_agent
+          # Bring the box's compose / migrations up to the deployed commit. .env is
+          # gitignored, so it (and secrets) is untouched.
+          git fetch origin main
+          git reset --hard origin/main
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker compose pull
+          # Recreates api/worker (+ runs the one-shot migrate) with the new images.
+          docker compose up -d
+          # CRITICAL: nginx caches the api container IP at startup; after api is
+          # recreated it must re-resolve, or every /api/* 502s. Always restart it.
+          docker compose restart nginx
+          docker logout ghcr.io || true
+          docker compose ps
+      - name: Smoke check
+        run: |
+          set -e
+          curl -fsS --max-time 15 http://localhost/api/health
+          echo " <- /api/health OK"
