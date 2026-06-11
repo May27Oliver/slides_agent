@@ -127,6 +127,15 @@ function toChartPoint(fact: SourceFact): ChartPoint | null {
 }
 
 /**
+ * 014: the same label the chart axis/legend would show for a fact — exported so
+ * the editor's data table prefills a CONSISTENT label when converting an original
+ * point into a user-provided one.
+ */
+export function deriveChartPointLabel(fact: SourceFact): string {
+  return fact.metric ? truncate(fact.metric.label) : deriveLabel(fact);
+}
+
+/**
  * Derives a clean axis/legend label from the fact's surrounding sentence — the
  * CATEGORY name ("行動裝置") or the PERIOD ("Q1 2026"), not the leftover sentence
  * fragment. An LLM-rewritten fact reads like "行動裝置占使用者工作階段的 52%。", so

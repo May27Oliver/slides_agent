@@ -7,13 +7,29 @@ type RenderedCharts = NonNullable<
   GeneratedPreviewArtifact["previewArtifact"]["generationSummary"]["renderedCharts"]
 >;
 
-interface RenderedChartsPanelProps {
-  renderedCharts?: RenderedCharts | undefined;
+interface UserDataDisclosureItem {
+  slideId: string;
+  chartIntentId: string;
+  userPointCount: number;
+  totalPointCount: number;
 }
 
-export function RenderedChartsPanel({ renderedCharts }: RenderedChartsPanelProps) {
+interface RenderedChartsPanelProps {
+  renderedCharts?: RenderedCharts | undefined;
+  /** 014 (FR-009/FR-010): per-placement user-data disclosures from the summary. */
+  userDataDisclosures?: UserDataDisclosureItem[] | undefined;
+}
+
+export function RenderedChartsPanel({
+  renderedCharts,
+  userDataDisclosures
+}: RenderedChartsPanelProps) {
   const { t } = useI18n();
   const charts = renderedCharts ?? [];
+  const disclosureFor = (slideId: string, chartIntentId: string) =>
+    (userDataDisclosures ?? []).find(
+      (entry) => entry.slideId === slideId && entry.chartIntentId === chartIntentId
+    );
 
   return (
     <PanelCard title={t("renderedCharts.heading")}>
@@ -39,6 +55,18 @@ export function RenderedChartsPanel({ renderedCharts }: RenderedChartsPanelProps
                     {chart.notes.map((note) => note.message).join(" ")}
                   </span>
                 ) : null}
+                {/* 014: user-data disclosure rides with the chart's row. */}
+                {(() => {
+                  const disclosure = disclosureFor(chart.slideId, chart.chartIntentId);
+                  return disclosure ? (
+                    <span className="mt-0.5 block text-[11px] font-medium text-brand-700">
+                      {t("editor.chart.disclosure", {
+                        n: disclosure.userPointCount,
+                        m: disclosure.totalPointCount
+                      })}
+                    </span>
+                  ) : null;
+                })()}
               </span>
               {chart.fallback ? (
                 <span className="shrink-0 rounded-full border border-accent-400 bg-accent-500/10 px-2 py-0.5 text-[11px] font-bold text-accent-600">

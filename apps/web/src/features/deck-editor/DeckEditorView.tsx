@@ -29,6 +29,7 @@ import {
   saveDraft
 } from "@/features/deck-editor/deck-draft-storage";
 import { AddChartPanel } from "@/features/deck-editor/AddChartPanel";
+import { ChartDataTable } from "@/features/deck-editor/ChartDataTable";
 import { ChartEditorCard } from "@/features/deck-editor/ChartEditorCard";
 import { EditableSlideDraft } from "@/features/deck-editor/editable-slide-draft";
 import { LivePreview } from "@/features/deck-editor/LivePreview";
@@ -244,7 +245,11 @@ export function DeckEditorView({
     const renderedChart = previewSummary?.renderedCharts.find(
       (chart) => chart.chartIntentId === placedId && chart.slideId === selectedSlide.id
     );
-    return { chartIntentId: placedId, title, sharedPages, renderedChart };
+    // US3: the structured disclosure for THIS placement (n/m user points).
+    const disclosure = previewSummary?.userDataDisclosures.find(
+      (entry) => entry.chartIntentId === placedId && entry.slideId === selectedSlide.id
+    );
+    return { chartIntentId: placedId, title, sharedPages, renderedChart, baseIntent, disclosure };
   }, [draft, baseIntents, selectedSlide, previewSummary]);
 
   // US2 (FR-005/FR-016): the add entry shows only on a chartless, non-opening slide.
@@ -422,13 +427,31 @@ export function DeckEditorView({
                             ? { renderedChart: chartCard.renderedChart }
                             : {})}
                           sharedPages={chartCard.sharedPages}
+                          {...(chartCard.disclosure ? { disclosure: chartCard.disclosure } : {})}
                           onSetVisual={(visual) =>
                             edit((d) => d.setChartVisual(chartCard.chartIntentId, visual))
                           }
                           onRemove={() =>
                             edit((d) => d.removeChart(selectedSlide.id, chartCard.chartIntentId))
                           }
-                        />
+                        >
+                          {/* US3: data-point editing for base intents (a pending
+                              user_data chart edits through its add panel instead). */}
+                          {chartCard.baseIntent ? (
+                            <ChartDataTable
+                              intent={chartCard.baseIntent}
+                              pendingEdit={draft.chartDataOf(chartCard.chartIntentId)}
+                              onEdit={(points, dataTitle) =>
+                                edit((d) =>
+                                  d.editChartData(chartCard.chartIntentId, points, dataTitle)
+                                )
+                              }
+                              onResetAll={() =>
+                                edit((d) => d.resetChartEdits(chartCard.chartIntentId))
+                              }
+                            />
+                          ) : null}
+                        </ChartEditorCard>
                       )
                     }
                   : showAddChart

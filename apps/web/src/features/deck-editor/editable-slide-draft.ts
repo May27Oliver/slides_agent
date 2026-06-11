@@ -2,6 +2,7 @@ import type { EditRevisionRequestContract } from "@slides-agent/contracts";
 import type {
   ChartOperation,
   ChartVisualOverride,
+  EditDataPoint,
   Slide,
   SlideDeck,
   SlideOutlineItem,
@@ -247,6 +248,35 @@ export class EditableSlideDraft {
     return op.source.kind === "existing_intent"
       ? op.source.chartIntentId
       : `chart_user_r${this.baseRevision}_${opIndex}`;
+  }
+
+  /**
+   * US3: records the intent's FULL point list (array order = display order); a later
+   * edit on the same intent replaces the earlier one. `title` is included only when
+   * the user actually changed it.
+   */
+  editChartData(
+    chartIntentId: string,
+    points: EditDataPoint[],
+    title?: string
+  ): EditableSlideDraft {
+    const kept = this.chartOperations.filter(
+      (op) => !(op.op === "edit_data" && op.chartIntentId === chartIntentId)
+    );
+    return this.withOps([
+      ...kept,
+      { op: "edit_data", chartIntentId, points, ...(title !== undefined ? { title } : {}) }
+    ]);
+  }
+
+  /** The pending data edit for an intent (the table's working state), or null. */
+  chartDataOf(chartIntentId: string): { points: EditDataPoint[]; title?: string } | null {
+    const found = this.chartOperations.find(
+      (op): op is Extract<ChartOperation, { op: "edit_data" }> =>
+        op.op === "edit_data" && op.chartIntentId === chartIntentId
+    );
+    if (!found) return null;
+    return { points: found.points, ...(found.title !== undefined ? { title: found.title } : {}) };
   }
 
   /** The pending visual override for an intent; "auto" when none recorded. */

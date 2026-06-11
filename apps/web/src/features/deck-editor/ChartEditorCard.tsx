@@ -21,9 +21,13 @@ interface ChartEditorCardProps {
   renderedChart?: RenderedChartSummaryContract;
   /** Other pages (1-based) where the same intent is placed — edits affect them too. */
   sharedPages: number[];
+  /** US3 (FR-009): the chart's user-data disclosure from the preview summary. */
+  disclosure?: { userPointCount: number; totalPointCount: number };
   onSetVisual: (visual: ChartVisualOverride) => void;
   /** US2: remove button handler; null hides the button (US1 scope). */
   onRemove: (() => void) | null;
+  /** US3: the data-point editor table, composed by the page. */
+  children?: React.ReactNode;
 }
 
 /**
@@ -38,8 +42,10 @@ export function ChartEditorCard({
   selectedVisual,
   renderedChart,
   sharedPages,
+  disclosure,
   onSetVisual,
-  onRemove
+  onRemove,
+  children
 }: ChartEditorCardProps) {
   const { t } = useI18n();
   const selectId = `chart-visual-${chartIntentId}`;
@@ -115,11 +121,22 @@ export function ChartEditorCard({
         </div>
       ) : null}
 
+      {disclosure && disclosure.userPointCount > 0 ? (
+        <p className="mt-2 rounded bg-brand-50 px-2 py-1 text-xs font-medium text-brand-700">
+          {t("editor.chart.disclosure", {
+            n: disclosure.userPointCount,
+            m: disclosure.totalPointCount
+          })}
+        </p>
+      ) : null}
+
       {sharedPages.length > 0 ? (
         <p className="mt-2 text-xs text-brand-700">
           {t("editor.chart.sharedHint", { pages: sharedPages.join("、") })}
         </p>
       ) : null}
+
+      {children}
     </div>
   );
 }

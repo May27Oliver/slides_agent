@@ -56,7 +56,7 @@ export {
   MAPPED_VISUALIZATION_TYPES
 } from "@/design/chart-treatment-mapping";
 export { parseMetricValue } from "@/content-core/metric-fact-parser";
-export { extractChartSeries } from "@/rendering/chart-series-extractor";
+export { extractChartSeries, deriveChartPointLabel } from "@/rendering/chart-series-extractor";
 export type { ExtractChartSeriesInput } from "@/rendering/chart-series-extractor";
 export {
   validatePieSeries,

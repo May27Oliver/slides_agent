@@ -211,6 +211,48 @@ describe("EditableSlideDraft (010 US1)", () => {
       expect(d.placedChartId("s1")).toBe("chart_user_r2_0");
     });
 
+    it("editChartData records a full-list op; a later edit on the same intent replaces it", () => {
+      const original = draftOf([slide("s1")]);
+      const once = original.editChartData("chart-0", [
+        { kind: "original", sourceFactId: "f1" },
+        { kind: "user", point: { label: "新點", valueText: "42", unit: "%" } }
+      ]);
+      expect(once.chartDataOf("chart-0")).toEqual({
+        points: [
+          { kind: "original", sourceFactId: "f1" },
+          { kind: "user", point: { label: "新點", valueText: "42", unit: "%" } }
+        ]
+      });
+
+      const twice = once.editChartData(
+        "chart-0",
+        [{ kind: "original", sourceFactId: "f1" }],
+        "新標題"
+      );
+      expect(twice.chartOperations.filter((op) => op.op === "edit_data")).toHaveLength(1);
+      expect(twice.chartDataOf("chart-0")).toEqual({
+        points: [{ kind: "original", sourceFactId: "f1" }],
+        title: "新標題"
+      });
+      // set_visual ops on the same intent survive an edit_data (different kinds merge independently).
+      const mixed = twice.setChartVisual("chart-0", "bar");
+      expect(mixed.chartOperations).toHaveLength(2);
+      expect(mixed.chartDataOf("chart-0")).not.toBeNull();
+    });
+
+    it("chartDataOf returns null when no data edit is pending", () => {
+      expect(draftOf([slide("s1")]).chartDataOf("chart-0")).toBeNull();
+    });
+
+    it("resetChartEdits clears data edits together with visual ops for the intent", () => {
+      const d = draftOf([slide("s1")])
+        .setChartVisual("chart-0", "bar")
+        .editChartData("chart-0", [{ kind: "original", sourceFactId: "f1" }])
+        .resetChartEdits("chart-0");
+      expect(d.chartOperations).toEqual([]);
+      expect(d.chartDataOf("chart-0")).toBeNull();
+    });
+
     it("fromRevision restores persisted chart operations (localStorage draft path)", () => {
       const restored = EditableSlideDraft.fromRevision(2, deck([slide("s1")]), seq(), [
         { op: "set_visual", chartIntentId: "chart-0", visual: "bar" }

@@ -45,7 +45,10 @@ describe("ChartEditorCard (014 US1)", () => {
           fallback: true,
           notes: [
             { code: "time_sort_failed", message: "Periods could not be reliably ordered." },
-            { code: "fallback_used", message: "使用者指定的視覺類型（折線圖）資料不符，已改用其他呈現。" }
+            {
+              code: "fallback_used",
+              message: "使用者指定的視覺類型（折線圖）資料不符，已改用其他呈現。"
+            }
           ]
         }}
       />
@@ -64,5 +67,12 @@ describe("ChartEditorCard (014 US1)", () => {
     render(<ChartEditorCard {...baseProps()} />);
     expect(screen.queryByText(/也用於第/)).toBeNull();
     expect(screen.queryByText("渲染註記")).toBeNull();
+  });
+
+  it("discloses user-provided data points when present (US3, FR-009)", () => {
+    render(
+      <ChartEditorCard {...baseProps()} disclosure={{ userPointCount: 2, totalPointCount: 5 }} />
+    );
+    expect(screen.getByText("本圖表含使用者提供的數據點（2/5）")).toBeTruthy();
   });
 });

@@ -73,4 +73,20 @@ describe("RenderedChartsPanel", () => {
     render(<RenderedChartsPanel renderedCharts={[]} />);
     expect(screen.getByText("這份簡報沒有圖表。")).toBeTruthy();
   });
+
+  it("shows the user-data disclosure on the matching chart row (014)", () => {
+    const charts: RenderedCharts = [
+      { slideId: "slide_1", chartIntentId: "c1", visualKind: "bar", fallback: false, notes: [] },
+      { slideId: "slide_2", chartIntentId: "c2", visualKind: "table", fallback: false, notes: [] }
+    ];
+    render(
+      <RenderedChartsPanel
+        renderedCharts={charts}
+        userDataDisclosures={[
+          { slideId: "slide_1", chartIntentId: "c1", userPointCount: 1, totalPointCount: 3 }
+        ]}
+      />
+    );
+    expect(screen.getAllByText("本圖表含使用者提供的數據點（1/3）")).toHaveLength(1);
+  });
 });
