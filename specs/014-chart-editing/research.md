@@ -75,13 +75,18 @@ mergeEditedDeck(base.slideDeck, edited)            // 010，不動
 
 **Alternatives**：所有讀 `.value` 的路徑改讀 `metric?.displayValue ?? value`——被拒：觸點多（renderer/review/summary）、易漏；鏡像把不變式收在單一建構點。
 
-## R7. 揭露的落點：`GenerationSummary.userDataDisclosures`（009 `renderedCharts` 同模式）
+## R7. 揭露的落點：`GenerationSummary.userDataDisclosures` ＋ `reviewReport` 同步（plan 審查修正後）
 
-**Decision**：`GenerationSummary` 增加 `userDataDisclosures: Array<{ slideId, chartIntentId, chartTitle, userPointCount, totalPointCount }>`——always present，無使用者數據時 `[]`。由 `applyDeckEdit` 在套用操作後、組 summary 時計算（掃衍生 intents 的 `kind === "user_provided"` facts ＋ 放置位置）。
+**Decision**：雙軌並行（spec FR-010 的兩個承諾各有落點）——
 
-**Rationale**：009 的 `renderedCharts`（deck.types.ts:171）已立「per-chart readonly result evidence 放 GenerationSummary」的先例；011 的 `themeSelectionWarnings` 同。編輯器與 summary 面板讀同一欄位呈現（spec FR-010）。
+1. `GenerationSummary` 增加 `userDataDisclosures: Array<{ slideId, chartIntentId, chartTitle, userPointCount, totalPointCount }>`——always present，無使用者數據時 `[]`。由 `applyDeckEdit` 在套用操作後、組 summary 時計算。**結構化、供 UI 渲染**（編輯器卡片＋summary 面板）。
+2. `applyDeckEdit` 同步衍生 deck 的 `slideDeck.reviewReport`（review/types.ts:8，已驗證在 SlideDeck 內、deck.types.ts:137）：含使用者數據的圖表追加 `humanReviewNotes` 揭露行（與 UI 同文案，CR-013）；`add_chart(user_data)` 新 intent 追加 `chartingDecisions` 條目（decision/sourceFacts/rationale 結構沿用既有）。**review 輸出的人讀證據**。
 
-**Alternatives**：塞進 reviewReport 的 humanReviewNotes 字串——被拒：非結構化、前端無法區分渲染（n/m 點數要可顯示）。
+**回歸不變式例外**：`userDataDisclosures` 為 always-present 新欄位 → 「`operations: []` 與 010/011 輸出相同」的不變式改為「**除 `generationSummary.userDataDisclosures: []` 外**逐欄位相同」（009 `renderedCharts`／011 `themeSelectionWarnings` 加欄位時同一模式）；`reviewReport` 在無 user 數據時**零變化**（不加空行）。
+
+**Rationale**：009 的 `renderedCharts`（deck.types.ts:171）已立「per-chart readonly result evidence 放 GenerationSummary」先例。reviewReport 是 CR-002 的 review 輸出本體——只落 summary 會讓 spec FR-010「review 輸出同步反映」成空話（plan 審查 HIGH-2）。
+
+**Alternatives**：只塞 humanReviewNotes 字串而無結構化欄位——被拒：前端無法渲染 n/m 點數。只落 summary 不動 reviewReport——被拒：違反 FR-010 字面承諾與 CR-002。
 
 ## R8. 點數上限 12 的執行層
 

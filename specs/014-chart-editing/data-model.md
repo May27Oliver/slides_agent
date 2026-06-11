@@ -114,7 +114,7 @@ export type ApplyChartOperationsResult =
 | `remove_chart` | 自該 slide 的 `contentBlocks` 過濾掉 `chartIntentId` 相符的 `chart_placeholder`；intent／plan 保留 | slide 存在於 mergedDeck；該 slide 確有此 placeholder |
 | `add_chart` (existing) | 目標 slide append `{ kind: "chart_placeholder", content: {}, chartIntentId }` | slide 存在且 `slideKind !== "opening"`；目標 slide（前序套用後）無任何 `chart_placeholder`；intent 存在 |
 | `add_chart` (user_data) | 造新 intent（§4a）＋新 plan ＋ append placeholder | 同上 ＋ points 全數過 §3 規則、點數 ≤ 12、title trim 非空 |
-| `edit_data` | 衍生 intent：sourceFacts = 依 points 重建（§4b）；title 提供則覆寫 | intent 存在；original.sourceFactId 屬該 intent base facts 且不重複；user 點過 §3 規則；點數 ≤ 12 |
+| `edit_data` | 衍生 intent：sourceFacts = 依 points 重建（§4b）；title 提供則覆寫 | intent 存在；original.sourceFactId 屬該 intent **於前序操作套用後**的 sourceFacts（base intent 即 base facts；同請求 user_data 新 intent 即其 user facts）且不重複；user 點過 §3 規則；點數 ≤ 12 |
 
 **前置檢查**：`baseChartIntents === null` 且 `operations.length > 0` → INVALID_EDIT（FR-015）；`operations.length > 50` → INVALID_EDIT。
 
@@ -137,7 +137,7 @@ plan      = { chartIntentId: id, treatment: mapVisualizationTypeToTreatment(prim
 
 ### §4b. edit_data 的 fact 重建
 
-- `original` 點 → 自 base intent 取回該 fact **原樣**（id/lineage 不動）。
+- `original` 點 → 自該 intent（**前序操作套用後**的當前狀態）取回該 fact **原樣**（id/lineage 不動）。
 - `user` 點 → 新 fact，id = `fact_user_r{baseRevision}_{opIndex}_{pointIndex}`，建構同 §4a（含 `replacesFactId` 透傳）。
 - 衍生 intent = `{ ...baseIntent, title: title ?? baseIntent.title, sourceFacts: 重建清單 }`；被取代/刪除的 base fact 不在新清單（FR-008）。
 
@@ -169,6 +169,14 @@ export interface UserDataDisclosure {
 
 由 `applyDeckEdit` 組 summary 時自衍生 intents × placeholder 放置掃出。前端呈現格式（CR-013 一致用語）：「本圖表含使用者提供的數據點（{n}/{m}）」。
 
+### §6a. `reviewReport` 同步（FR-010 的 review 輸出承諾，R7-2）
+
+`applyDeckEdit` 對衍生 deck 的 `slideDeck.reviewReport` 同步（immutable 衍生）：
+
+- 每筆 `UserDataDisclosure` 追加一行 `humanReviewNotes`：「第 {頁碼} 頁圖表「{chartTitle}」含使用者提供的數據點（{n}/{m}），非全數來自來源文件。」（與 UI 文案同源，CR-013）
+- `add_chart(user_data)` 的新 intent 追加一筆 `chartingDecisions`（既有 `ChartingDecisionNote` 結構）：`{ chartIntentId, decision: "使用者手動建立（{visual}）", sourceFacts: points 的 displayValue, rationale: "使用者於編輯器手動建立" }`
+- **無 user 數據時 reviewReport 零變化**（不加空行——回歸不變式之外不得有 delta）。
+
 ## §7. Contracts（packages/contracts/src/deck.ts 擴充）
 
 ```ts
@@ -181,6 +189,13 @@ export interface EditRevisionRequestContract {
 ```
 
 `validateEditRevisionRequest` 增驗：`chartOperations` 若存在須為陣列、長度 ≤ 50、每項是 `op` 欄位合法的 record（四種值之一）＋各 op 必要欄位型別正確（字串/陣列/巢狀形狀）。**語意驗證（id 存在性、ownership、數值格式、上限）一律在 domain**（010 分工先例，R9）。
+
+**公開面同步（plan 審查 MEDIUM-3）**——domain 型別擴充必須鏡射到全部 contracts 公開面，否則 schema 漂移：
+
+- `packages/contracts/src/index.ts`：`GenerationSummaryContract` 增 `userDataDisclosures`；treatment plan 相關 contract 型別增 `visualOverride?`。
+- `packages/contracts/src/openapi.ts`：同步上述欄位。
+- `packages/contracts/schemas/slide-generation.schema.json`（各物件 `additionalProperties: false`，**不加即驗證失敗**）：`ChartTreatmentPlan` 增可選 `visualOverride`（enum 六值）；summary 增 `userDataDisclosures`；`SourceFact` 增可選 `metric`/`replacesFactId`、`kind` enum 增 `user_provided`。
+- `packages/contracts/test/slide-generation-schema.test.ts` 等 schema 測試同步樣本。
 
 ## §8. 渲染層（既有檔案最小擴充）
 
@@ -205,7 +220,7 @@ interface EditableSlideDraft {
 
 ## §10. 不變式（測試的骨幹）
 
-1. `operations: []`（或缺）時，`applyDeckEdit` 輸出與 010/011 現行**逐欄位完全相同**（回歸保證）。
+1. `operations: []`（或缺）時，`applyDeckEdit` 輸出與 010/011 現行逐欄位相同，**唯一例外**為新增的 always-present evidence 欄位 `generationSummary.userDataDisclosures: []`（009 `renderedCharts` 加欄位同模式）；`reviewReport` 與 html **零 delta**。
 2. 任一 op 違規 → 整請求 INVALID_EDIT，**零部分套用**。
 3. user fact 必同時滿足：`kind === "user_provided"`、有 `metric`、`value === metric.displayValue`、id 符合 `fact_user_r\d+_\d+_\d+`。
 4. 衍生 intents 中的 original facts 與 base 對應 fact 深等值。

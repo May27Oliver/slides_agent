@@ -42,7 +42,7 @@
    - 引用的 `slideId` 不在 merged deck／`chartIntentId` 不在（前序套用後）intents 集合
    - `add_chart` 對 `slideKind === "opening"`；目標 slide 已有 `chart_placeholder`（每頁上限 1）
    - `remove_chart` 該 slide 無此 placeholder
-   - `edit_data` 的 `original.sourceFactId` 不屬該 intent base facts／同清單重複引用
+   - `edit_data` 的 `original.sourceFactId` 不屬該 intent（前序操作套用後）的 sourceFacts／同清單重複引用
    - user 點：label trim 空、`valueText` 不符 `/^-?\d+(\.\d+)?$/`、解析非有限、欄位超長（label/title 120、unit 16、valueText 32）、點數 > 12、`title` trim 空
 5. HTML 生成驗證（010，不變）→ **400**。
 6. 樂觀並發（010，不變）→ **409 `REVISION_CONFLICT`**。
@@ -65,6 +65,7 @@
 
 ## 不變式（contract 測試錨點）
 
-- `chartOperations` 缺席或 `[]` → response 與 010/011 現行**逐欄位相同**（含 `userDataDisclosures: []`）。
+- `chartOperations` 缺席或 `[]` → response 與 010/011 現行逐欄位相同，**唯一例外**為新增的 always-present 欄位 `generationSummary.userDataDisclosures: []`；`reviewReport`/`html` 零 delta。
+- contracts 公開面（`GenerationSummaryContract`／`openapi.ts`／`slide-generation.schema.json`）與 domain 型別同步擴充（`visualOverride`、`userDataDisclosures`、`SourceFact.metric`/`replacesFactId`/`user_provided`）——schema 各物件 `additionalProperties: false`，漏加即測試失敗。
 - 同一 body 在 client（`renderLivePreview`）與 server 各跑一次 → `html` 與所有衍生 id **byte-for-byte 一致**。
 - 對抗性矩陣（spec SC-007 全清單）→ 100% 400 且 DB 無新 revision。

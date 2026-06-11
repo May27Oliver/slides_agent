@@ -50,20 +50,25 @@ description: "Task list — 014 編輯頁圖表編輯（US1–US4）"
 
 - [ ] T007 新檔 `packages/domain/test/deck-edit/apply-chart-operations.test.ts`——先寫失敗測試（§4 規則矩陣＋§10 不變式）：
   - 四操作各自的成功效果（immutable：輸入物件不被改動）
-  - 驗證矩陣（每條 → INVALID_EDIT＋detail 指明 op index）：legacy null＋非空 ops；slideId/chartIntentId 不存在；opening slide 放圖；已有圖頁放圖；remove 無此 placeholder；original fact 不屬該 intent／清單內重複；valueText 非法（"abc"/""/"1/3"/Infinity 字面）；label/title 空白；各長度上限；點數 >12；operations >50
+  - 驗證矩陣（每條 → INVALID_EDIT＋detail 指明 op index）：legacy null＋非空 ops；slideId/chartIntentId 不存在；opening slide 放圖；已有圖頁放圖；remove 無此 placeholder；original fact 不屬該 intent**（前序操作套用後）**的 sourceFacts／清單內重複；valueText 非法（"abc"/""/"1/3"/Infinity 字面）；label/title 空白；各長度上限；點數 >12；operations >50
   - 確定性 id：同輸入兩次呼叫 byte-for-byte 相同；id 符合 `fact_user_r\d+_\d+_\d+`／`chart_user_r\d+_\d+`；與 base id 零碰撞
   - 鏡像：user fact `value === metric.displayValue`；displayValue = valueText+unit 保留精度
-  - 陣列序語意：add→edit 同請求合法；錯序引用 → 400
+  - 陣列序語意：`add_chart(user_data)`→同請求 `edit_data` 該新 intent（original 引用其 user facts、追加新點）合法且 id 不碰撞；錯序引用 → 400
   - 零部分套用：第 3 個 op 違規時前 2 個不生效
 - [ ] T008 實作 `packages/domain/src/deck-edit/apply-chart-operations.ts` 使 T007 轉綠（§4/§4a/§4b 規則）。
 
 ### applyDeckEdit 整合（TDD，data-model §5/§6）
 
-- [ ] T009 `packages/domain/test/deck-edit/` 既有 apply-deck-edit 測試擴充——先寫失敗測試：(a) `chartOperations` 缺/`[]` → payload 與現行逐欄位深等值（回歸不變式 §10-1）；(b) 有 operations → payload 的 `chartIntents`/`designPlan` 為衍生值、html 含新視覺；(c) `userDataDisclosures` 計算正確（含多頁共享每頁一筆、無 user 數據時 `[]`）；(d) 繼承封閉性：衍生 revision 作為新 base 再編輯，行為一致（§10-6）；(e) 與 011 themeSelection 同請求並存。再實作 `apply-deck-edit.ts` 整合。
+- [ ] T009 `packages/domain/test/deck-edit/` 既有 apply-deck-edit 測試擴充——先寫失敗測試：(a) `chartOperations` 缺/`[]` → payload 與現行逐欄位深等值，**唯一例外** `generationSummary.userDataDisclosures: []`，`reviewReport`/html 零 delta（回歸不變式 §10-1）；(b) 有 operations → payload 的 `chartIntents`/`designPlan` 為衍生值、html 含新視覺；(c) `userDataDisclosures` 計算正確（含多頁共享每頁一筆、無 user 數據時 `[]`）；(d) **reviewReport 同步（§6a，FR-010／spec US3 場景 5）**：含 user 數據 → `humanReviewNotes` 揭露行＋`add_chart(user_data)` 的 `chartingDecisions` 條目；無 user 數據 → reviewReport 零變化；(e) 繼承封閉性：衍生 revision 作為新 base 再編輯，行為一致（§10-6）；(f) 與 011 themeSelection 同請求並存。再實作 `apply-deck-edit.ts` 整合。
 
 ### Contracts ＋ API（plan Phase B）
 
-- [ ] T010 [P] `packages/contracts/test/` 既有 deck 測試擴充——先寫失敗測試：`chartOperations` 形狀驗證（四 op 種類、欄位型別、陣列 ≤ 50、巢狀 points 形狀）＋對抗性形狀（非陣列、未知 op、缺欄位）。再實作 `packages/contracts/src/deck.ts` 的 `EditRevisionRequestContract.chartOperations` ＋ validator 擴充（§7）。
+- [ ] T010 [P] contracts **全公開面**更新（§7「公開面同步」，plan 審查 MEDIUM-3）——先寫失敗測試再實作：
+  - `packages/contracts/src/deck.ts`：`EditRevisionRequestContract.chartOperations` ＋ validator（四 op 種類、欄位型別、陣列 ≤ 50、巢狀 points 形狀）＋對抗性形狀測試（非陣列、未知 op、缺欄位）
+  - `packages/contracts/src/index.ts`：`GenerationSummaryContract.userDataDisclosures`、treatment plan contract 的 `visualOverride?`
+  - `packages/contracts/src/openapi.ts`：同步上述欄位
+  - `packages/contracts/schemas/slide-generation.schema.json`：`ChartTreatmentPlan.visualOverride`（enum 六值）、summary `userDataDisclosures`、`SourceFact` 的 `metric`/`replacesFactId`/`kind` enum 加 `user_provided`（各物件 `additionalProperties: false`，漏加即既有 schema 測試失敗）
+  - `packages/contracts/test/slide-generation-schema.test.ts` 等 schema 測試樣本同步
 - [ ] T011 `apps/api/test/` decks controller 既有測試擴充——先寫失敗測試：透傳 `chartOperations` 至 `applyDeckEdit`；201 response 含 `userDataDisclosures`；SC-007 對抗性矩陣 → 400 且 DB 零新 revision；409 並發不變。再實作 `decks.controller.ts`/`deck-request.parser.ts` 透傳。
 
 **Checkpoint**：`pnpm test:domain && pnpm test:contracts && pnpm test:api` 全綠——US 前端可開工。

@@ -6,7 +6,7 @@
 
 ## Summary
 
-在 010 編輯頁開放圖表的結構化編輯：edit request 新增 `chartOperations`（`set_visual`／`remove_chart`／`add_chart`／`edit_data`），由 `applyDeckEdit` 在白名單合併後、確定性重渲染前以新純函式 `applyChartOperations` 套用——衍生 `chartIntents`／`designPlan`（含新 `visualOverride` 欄位）隨 `origin="edit"` revision 寫入既有 jsonb 欄位。使用者數據以 `{ label, valueText, unit }` 提交，domain 確定性導出 `numericValue`／`displayValue` 並建構 `user_provided` fact（確定性 id、`value` 鏡像）；series validators 守門與降級鏈一行不改；`GenerationSummary.userDataDisclosures` 揭露使用者數據。**零 LLM、零 DB migration、零新端點**；live preview 走同一 pure function，byte-for-byte parity 含衍生 id。
+在 010 編輯頁開放圖表的結構化編輯：edit request 新增 `chartOperations`（`set_visual`／`remove_chart`／`add_chart`／`edit_data`），由 `applyDeckEdit` 在白名單合併後、確定性重渲染前以新純函式 `applyChartOperations` 套用——衍生 `chartIntents`／`designPlan`（含新 `visualOverride` 欄位）隨 `origin="edit"` revision 寫入既有 jsonb 欄位。使用者數據以 `{ label, valueText, unit }` 提交，domain 確定性導出 `numericValue`／`displayValue` 並建構 `user_provided` fact（確定性 id、`value` 鏡像）；series validators 守門與降級鏈一行不改；揭露雙軌——`GenerationSummary.userDataDisclosures`（結構化，UI 用）＋ `slideDeck.reviewReport` 同步（`humanReviewNotes` 揭露行、user_data intent 的 `chartingDecisions` 條目）。**零 LLM、零 DB migration、零新端點**；live preview 走同一 pure function，byte-for-byte parity 含衍生 id。
 
 **Artifact Language**: 本 plan 與相關 Spec Kit 文件以繁體中文撰寫。
 
@@ -28,14 +28,14 @@
 
 **Constraints**: 全程零 LLM（FR-012）；`@slides-agent/domain` 維持 browser-bundle-safe（live preview 前提）；無隨機/時鐘（確定性 id，FR-008）。
 
-**Scale/Scope**: domain 新模組 2 檔＋既有 4 檔擴充；contracts 1 檔擴充；api 透傳；web 新元件 3 個＋draft/save 擴充。上限常數：每頁 1 圖、每圖 12 點、單請求 50 operations。
+**Scale/Scope**: domain 新模組 2 檔＋既有 4 檔擴充；contracts 全公開面同步（deck.ts／index.ts／openapi.ts／slide-generation.schema.json＋schema 測試，data-model §7）；api 透傳；web 新元件 3 個＋draft/save 擴充。上限常數：每頁 1 圖、每圖 12 點、單請求 50 operations。
 
 ## Constitution Check
 
 - **Specification First**: [spec.md](./spec.md) 已接受——兩輪審查（7 findings＋4 殘留）全數修正，Clarifications 記錄完整決策軌跡。無未解問題：點數上限已定案 12（FR-011）。
 - **Behavior-Driven User Value**: US1–US4 各自獨立可測可示範（spec 各 US 的 Independent Test/Demo），G/W/T 場景共 17 條；US1 單獨即為可交付 MVP。
 - **Source Fidelity**: 未編輯的點原 fact 原樣（id/lineage/displayValue 不動，data-model §4b）；使用者數據 = `user_provided` 新 fact、不沿用原 id（FR-008）、`value` 鏡像 `metric.displayValue`（R6）；displayValue 自 `valueText + unit` 導出、保留輸入精度不換算（FR-006）。
-- **Reviewable Generation**: `GenerationSummary.userDataDisclosures`（n/m 點，data-model §6）＋既有 `renderedCharts` notes（降級原因）＋`replacesFactId` 稽核線索；revision 鏈不可變可回溯。
+- **Reviewable Generation**: `GenerationSummary.userDataDisclosures`（n/m 點，data-model §6）＋ `reviewReport` 同步（§6a：humanReviewNotes 揭露行、chartingDecisions 條目——FR-010 的 review 輸出承諾）＋既有 `renderedCharts` notes（降級原因）＋`replacesFactId` 稽核線索；revision 鏈不可變可回溯。
 - **Web-First Deliverable**: 輸出仍為 self-contained HTML＋inline SVG；零外部資源、零第三方 chart lib。
 - **Backend-Configured LLM Boundary**: 本 feature 全程零 LLM 呼叫（FR-012），無 provider/model 面；使用者數據不離開自有 DB。
 - **Coherent Deck Design System**: 圖表用色/字型/間距仍由 theme styleKit（accentHues）統御；`visualOverride` 只選視覺形狀、不開樣式；011 換主題後使用者編輯的圖表隨主題一致重渲染。
@@ -83,6 +83,9 @@ packages/domain/test/
 └── rendering/chart-visual-override.test.ts     # 新（＋extractor 既有測試擴充）
 
 packages/contracts/src/deck.ts          # 改：chartOperations 形狀驗證（§7）
+packages/contracts/src/index.ts         # 改：GenerationSummaryContract.userDataDisclosures、visualOverride
+packages/contracts/src/openapi.ts       # 改：同步上述欄位
+packages/contracts/schemas/slide-generation.schema.json  # 改：visualOverride/userDataDisclosures/SourceFact 擴充
 
 apps/api/src/modules/decks/
 ├── decks.controller.ts                 # 改：透傳 chartOperations
@@ -110,11 +113,11 @@ apps/web/src/features/decks/…           # 改：summary 面板呈現 userDataD
 2. `toChartPoint` metric short-circuit（§8）——先寫「無 metric 零變化」回歸測試。
 3. `selectVisual` 接 `visualOverride` ＋ `isChartFallback` 擴充——override 矩陣測試（每值 × 合格/不合格 series）。
 4. `applyChartOperations`（§4）——規則矩陣＋不變式 §10（確定性 id、零部分套用、`[]` 回歸）。
-5. `applyDeckEdit` 整合（§5）＋ `userDataDisclosures` 計算（§6）——繼承封閉性測試（衍生結果再編輯）。
+5. `applyDeckEdit` 整合（§5）＋ `userDataDisclosures` 計算（§6）＋ `reviewReport` 同步（§6a）——繼承封閉性測試（衍生結果再編輯）、回歸不變式（唯一例外 = 空 disclosures 欄位）。
 
 ### Phase B — Contracts ＋ API（US1 儲存通路）
 
-6. `EditRevisionRequestContract.chartOperations` 形狀驗證（§7）＋對抗性形狀測試。
+6. contracts 全公開面（§7）：`EditRevisionRequestContract.chartOperations` 形狀驗證＋`GenerationSummaryContract`/openapi/JSON schema 的 `userDataDisclosures`／`visualOverride`／`SourceFact` 擴充＋對抗性形狀與 schema 測試。
 7. controller/parser 透傳＋整合測試（201 含 disclosures、400/409、SC-007 矩陣）。
 
 ### Phase C — US1 前端（P1，可交付）

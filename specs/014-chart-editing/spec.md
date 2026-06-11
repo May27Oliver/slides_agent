@@ -76,6 +76,12 @@
 - Q:（MEDIUM）輸入驗證缺長度上限、operation 數量、重複引用、fact ownership 規則？ → **A: 補齊 contract 級驗證**（見 FR-011）：label/title ≤ 120 字元、unit ≤ 16、valueText ≤ 32；單請求 `chartOperations` ≤ 50；`edit_data` 的 `original.sourceFactId` MUST 屬於**該 intent** 的 base sourceFacts 且同一清單內不得重複引用同一 fact id；`title` 提供時去空白 MUST 非空。
 - Q:（LOW）點數上限「預設 12、plan 定案」但 FR-011 已拿它當 400 規則——不可同時是假設與驗收？ → **A: 直接定案 12**（domain 常數），自 Assumptions 移除待定狀態。
 
+### Session 2026-06-11（plan/tasks 審查修正：回歸不變式、review 同步、original 引用範圍）
+
+- Q:（HIGH）`userDataDisclosures` 為 always-present 欄位，與「`chartOperations` 缺席時輸出與 010/011 逐欄位相同」的回歸不變式矛盾？ → **A: 不變式改為「除新增的 always-present evidence 欄位（`userDataDisclosures: []`）外逐欄位相同」。** 比照 009 `renderedCharts`／011 `themeSelectionWarnings` 加欄位時的同一模式；contracts/OpenAPI/JSON schema 同步擴充。
+- Q:（HIGH）FR-010 要求「review 輸出同步反映」，但設計只落了 `GenerationSummary.userDataDisclosures`？ → **A: 兩者並行。** 結構化揭露在 `userDataDisclosures`（UI 渲染用）；同時 `applyDeckEdit` MUST 同步衍生 deck 的 `slideDeck.reviewReport`——含使用者數據的圖表追加 `humanReviewNotes` 揭露行（同一文案），`add_chart(user_data)` 新 intent 追加對應 `chartingDecisions` 條目。FR-010 字面承諾不變。
+- Q:（MEDIUM）`add_chart(user_data)` → 同請求 `edit_data`：original 點要求「屬 base intent facts」但新 intent 無 base？ → **A: 驗證對象統一為「前序操作套用後的 current intent facts」**（FR-011 已更新）。新建 intent 的 facts 即其 user facts，可被後續 edit_data 以 original 引用（保留）。
+
 ---
 
 ## User Scenarios & Testing *(mandatory)*
@@ -185,7 +191,7 @@
 - **FR-008（出處誠實 ＋ id 確定性）**: 改過或新增的點 MUST 持久化為 `kind: "user_provided"` 的**新** fact（新 id，不得沿用任何 base fact id 作為其出處）；未動的點 MUST 原樣保留 base fact（id、lineage 不變）；被取代的原 fact MUST 自衍生 intent 移除；`replacesFactId` 僅供稽核/還原，MUST NOT 作為 provenance 呈現。新 fact／新 intent 的 id MUST 由 domain 純函式自「base revision number ＋ 操作索引 ＋ 點索引」確定性導出（任何一端 MUST NOT 隨機產生），且 MUST NOT 與 base 的任何既有 id 碰撞（前綴隔離，如 `fact_user_r{N}_…`／`chart_user_r{N}_…`）。
 - **FR-009（驗證與降級不變）**: 編輯後的 intents MUST 通過與生成路徑完全相同的 series 驗證與降級鏈；系統 MUST NOT 因數據不滿足所選類型而拒絕儲存，MUST 降級並產生既有 `ChartRenderingNote`；編輯 UI MUST 即時顯示這些 notes。
 - **FR-010（揭露）**: 任何含 `user_provided` fact 的圖表，新 revision 的 generationSummary MUST 含可讀標註（圖表所在 slide、使用者數據點數 n/m）；review 輸出同步反映（CR-002）。
-- **FR-011（輸入驗證）**: user 點的 label 去空白後 MUST 非空、`valueText` MUST 為嚴格數字格式且解析為有限數字。上限（皆 domain 常數）：單一 slide 圖表數 **1**（clarify 定案）、單一圖表點數 **12**、label/title ≤ **120** 字元、unit ≤ **16** 字元、valueText ≤ **32** 字元、單請求 `chartOperations` ≤ **50**。`edit_data` 的 `original.sourceFactId` MUST 屬於**該 intent** 的 base sourceFacts，且同一清單內 MUST NOT 重複引用同一 fact id。任一違反 → 400。所有驗證 MUST 在 server（domain 層）強制，前端驗證僅為 UX。
+- **FR-011（輸入驗證）**: user 點的 label 去空白後 MUST 非空、`valueText` MUST 為嚴格數字格式且解析為有限數字。上限（皆 domain 常數）：單一 slide 圖表數 **1**（clarify 定案）、單一圖表點數 **12**、label/title ≤ **120** 字元、unit ≤ **16** 字元、valueText ≤ **32** 字元、單請求 `chartOperations` ≤ **50**。`edit_data` 的 `original.sourceFactId` MUST 屬於**該 intent 於前序操作套用後**的 sourceFacts（對 base intent 即其 base facts；對同請求 `add_chart(user_data)` 新建的 intent 即其 user facts），且同一清單內 MUST NOT 重複引用同一 fact id。任一違反 → 400。所有驗證 MUST 在 server（domain 層）強制，前端驗證僅為 UX。
 - **FR-012（零 LLM）**: 圖表編輯的套用與重渲染全程 MUST NOT 呼叫 LLM（CR-004）。
 - **FR-013（持久化、零 migration）**: 衍生 `chartIntents` 與衍生 `designPlan` MUST 隨新 revision（`origin="edit"`）寫入既有 jsonb 欄位；MUST NOT 需要 DB schema migration；下次編輯以新 revision 為 base 時，先前的圖表編輯（含 user_provided facts）MUST 完整繼承。
 - **FR-014（live preview parity）**: client live preview MUST 以同一份 domain use-case + 同一 `chartOperations` 本地重渲染，與 server 儲存結果 byte-for-byte parity（沿用 010 FR-005a 機制），**含確定性導出的新 fact/intent id 完全一致**（FR-008）；操作變動觸發的 preview 更新維持 debounced、零網路。
