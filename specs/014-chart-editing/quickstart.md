@@ -61,5 +61,13 @@ pnpm lint && pnpm format
 
 ## 手動驗證（無法自動化，spec CR-015）
 
-- 圖表視覺可讀性：split 版面下 label 不重疊、降級視覺對比足夠 → 編輯頁 preview 抽查 ＋ 下載 self-contained HTML 開檔目視。
-- 鍵盤導覽（左右鍵翻頁）與 16:9 縮放在編輯後的 deck 不退化。
+- [ ] 圖表視覺可讀性：split 版面下 label 不重疊、降級視覺對比足夠 → 編輯頁 preview 抽查 ＋ 下載 self-contained HTML 開檔目視。
+- [ ] 鍵盤導覽（左右鍵翻頁）與 16:9 縮放在編輯後的 deck 不退化。
+
+## 驗證紀錄（implement 完成時，2026-06-11）
+
+- [x] **自動化全綠**：domain 314 ／ contracts 59 ／ api 227 ／ web 163 ／ Playwright e2e 12（含 `chart-editing.spec.ts` 2 條：US1 happy path 換視覺→preview 即時→儲存帶 operations；line override 降級＋note）。
+- [x] **零 migration**：`pnpm db:generate` 無 schema 變更、drizzle 目錄零 diff。
+- [x] **parity**：`live-preview-render` 測試證明 client/server html byte 一致、衍生 id 與揭露相同（含 chartOperations 路徑）。
+- [x] **lint**：014 觸碰範圍零錯誤（repo 殘留 6 errors ＋ 1 warning 皆為既有檔案：`rate-limit.guard.test`、`slides-preview-jobs.contract.test`、`ThemePicker`、`death-inventory`，與本 feature 無關）。
+- [ ] 上方兩項目視走查（split 可讀性／降級對比／鍵盤導覽／16:9）待人工於瀏覽器確認。

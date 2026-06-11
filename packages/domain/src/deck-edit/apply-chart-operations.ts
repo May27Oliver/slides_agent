@@ -58,9 +58,7 @@ interface WorkingState {
  * `edit_data` on the new intent in the same request is legal). Any violation
  * rejects the WHOLE request (zero partial application). Never mutates inputs.
  */
-export function applyChartOperations(
-  input: ApplyChartOperationsInput
-): ApplyChartOperationsResult {
+export function applyChartOperations(input: ApplyChartOperationsInput): ApplyChartOperationsResult {
   const { operations, baseRevision } = input;
   if (operations.length === 0) {
     return {
@@ -169,7 +167,8 @@ function applySetVisual(
 }
 
 function withoutOverride(plan: ChartTreatmentPlan): ChartTreatmentPlan {
-  const { visualOverride: _removed, ...rest } = plan;
+  const rest = { ...plan };
+  delete rest.visualOverride;
   return rest;
 }
 
@@ -226,7 +225,10 @@ function applyAddChart(
     if (!state.intents.some((candidate) => candidate.id === chartIntentId)) {
       return fail(index, `chartIntentId "${chartIntentId}" 不存在`);
     }
-    return { ok: true, state: { ...state, deck: appendPlaceholder(state.deck, slide.id, chartIntentId) } };
+    return {
+      ok: true,
+      state: { ...state, deck: appendPlaceholder(state.deck, slide.id, chartIntentId) }
+    };
   }
 
   const { title, visual, points } = operation.source;
@@ -321,9 +323,7 @@ function applyEditData(
     if (problem) {
       return fail(index, `points[${pointIndex}] ${problem}`);
     }
-    rebuilt.push(
-      buildUserFact(baseRevision, index, pointIndex, point.point, point.replacesFactId)
-    );
+    rebuilt.push(buildUserFact(baseRevision, index, pointIndex, point.point, point.replacesFactId));
   }
 
   const intents = state.intents.map((candidate) =>
@@ -349,7 +349,9 @@ function fail(index: number, message: string): StepResult {
 function updateSlide(deck: SlideDeck, slideId: string, update: (slide: Slide) => Slide): SlideDeck {
   return {
     ...deck,
-    slides: deck.slides.map((candidate) => (candidate.id === slideId ? update(candidate) : candidate))
+    slides: deck.slides.map((candidate) =>
+      candidate.id === slideId ? update(candidate) : candidate
+    )
   };
 }
 

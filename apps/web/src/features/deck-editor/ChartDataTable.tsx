@@ -126,7 +126,6 @@ export function ChartDataTable({ intent, pendingEdit, onEdit, onResetAll }: Char
               <SortablePointRow
                 key={rowIds[index]}
                 id={rowIds[index]!}
-                row={row}
                 display={displayOf(row, factsById)}
                 onField={(field, value) => updateRow(index, field, value)}
                 onRemove={() => emit(rows.filter((_, i) => i !== index))}
@@ -196,14 +195,12 @@ function prefillFrom(fact: SourceFact | undefined): UserPointInput {
 
 function SortablePointRow({
   id,
-  row,
   display,
   onField,
   onRemove,
   onRestore
 }: {
   id: string;
-  row: EditDataPoint;
   display: RowDisplay;
   onField: (field: keyof UserPointInput, value: string | null) => void;
   onRemove: () => void;

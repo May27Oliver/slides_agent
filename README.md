@@ -16,6 +16,7 @@ Paste or upload content, pick a presentation style, and the app plans the deck, 
 - **Manual theme browsing** (feature 011): browse the full theme catalogue (font / palette / style swatches) and hand-pick one at generation or edit time — deterministic, zero extra LLM calls.
 - **Deck library & persistence** (feature 006): generated decks are saved per-account and listed in "My Decks"; the structured `SlideDeck` is the source of truth and HTML is a derived cache.
 - **In-app deck editing** (feature 010): restructure a saved deck (reorder / edit / remove slides, re-theme), deterministically re-rendered and persisted as a new revision under optimistic concurrency.
+- **Chart editing in the editor** (feature 014): switch a chart's visual (pie/line/bar/metric card/table, validators still gate), remove/add charts from source intents or manual input, and edit data points — user-provided values are mirrored, disclosed (「本圖表含使用者提供的數據點（n/m）」), and never reuse source-fact provenance.
 - **Async preview jobs**: submit a job, poll for progress, get the result — with timeouts, failure reporting, and a cancellable polling UI.
 - **Self-contained output**: one HTML file, inline CSS/JS, keyboard navigation, the only external resource being Google Fonts.
 - **Source-faithful**: validators guard slide order, content fidelity, and number fidelity; nothing fabricates facts.
