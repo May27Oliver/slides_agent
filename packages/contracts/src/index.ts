@@ -181,15 +181,6 @@ export interface RenderedChartSummaryContract {
   notes: Array<{ code: ChartRenderingNoteCode; message: string }>;
 }
 
-/** 014: the user-selectable chart visual override vocabulary (mirrors domain). */
-export type ChartVisualOverrideContract =
-  | "auto"
-  | "pie_donut"
-  | "line"
-  | "bar"
-  | "metric_card"
-  | "table";
-
 /** 014: disclosure of a chart placement whose intent contains user-provided points. */
 export interface UserDataDisclosureContract {
   slideId: string;

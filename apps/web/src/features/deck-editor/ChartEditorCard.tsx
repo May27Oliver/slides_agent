@@ -1,15 +1,7 @@
 import type { RenderedChartSummaryContract } from "@slides-agent/contracts";
 import type { ChartVisualOverride } from "@slides-agent/domain";
+import { SELECTABLE_VISUALS } from "@/features/deck-editor/chart-visual-options";
 import { useI18n, type TranslationKey } from "@/i18n";
-
-const SELECTABLE_VISUALS: ChartVisualOverride[] = [
-  "auto",
-  "pie_donut",
-  "line",
-  "bar",
-  "metric_card",
-  "table"
-];
 
 interface ChartEditorCardProps {
   chartIntentId: string;

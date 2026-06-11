@@ -187,6 +187,10 @@ export function validateEditRevisionRequest(
     : invalid(issues);
 }
 
+// contracts is dependency-free by design, so these two mirror the domain values
+// verbatim — keep in sync with `CHART_EDIT_LIMITS.maxOperations` and
+// `ChartVisualOverride` (packages/domain/src/deck-edit + design). The schema json
+// and openapi enums carry the same values; drift breaks their tests.
 const MAX_CHART_OPERATIONS = 50;
 const CHART_VISUAL_OVERRIDES = new Set([
   "auto",

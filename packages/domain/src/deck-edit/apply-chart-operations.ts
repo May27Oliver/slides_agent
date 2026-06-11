@@ -7,6 +7,7 @@ import type { ChartTreatmentPlan, ChartVisualOverride } from "@/design/design.ty
 import type { Slide, SlideDeck, SourceFact } from "@/deck/deck.types";
 import {
   CHART_EDIT_LIMITS,
+  USER_POINT_VALUE_PATTERN,
   type ChartOperation,
   type UserPointInput
 } from "@/deck-edit/chart-operation.types";
@@ -32,8 +33,6 @@ export type ApplyChartOperationsResult =
   | { ok: false; rejection: "INVALID_EDIT"; detail: string };
 
 const USER_FACT_SOURCE_TEXT = "使用者於編輯器輸入";
-/** 字面數字（負號/小數可選）——拒絕 "1e5"、"1/3"、"Infinity"、"12." 等非字面形式。 */
-const VALUE_TEXT_PATTERN = /^-?\d+(\.\d+)?$/;
 
 /** 每個 override 目標對應的 content-core 語意（user_data intent 的 recommendedVisuals）。 */
 const VISUAL_TO_VISUALIZATION: Record<ChartVisualOverride, VisualizationType> = {
@@ -422,7 +421,7 @@ function validateUserPoint(point: UserPointInput): string | null {
   if (point.valueText.length > CHART_EDIT_LIMITS.maxValueTextLength) {
     return `valueText 長度超過上限 ${CHART_EDIT_LIMITS.maxValueTextLength}`;
   }
-  if (!VALUE_TEXT_PATTERN.test(point.valueText)) {
+  if (!USER_POINT_VALUE_PATTERN.test(point.valueText)) {
     return `valueText "${point.valueText}" 不是合法的數字字面`;
   }
   if (!Number.isFinite(Number(point.valueText))) {

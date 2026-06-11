@@ -124,7 +124,7 @@ export type {
   EditDataPoint,
   ChartOperation
 } from "@/deck-edit/chart-operation.types";
-export { CHART_EDIT_LIMITS } from "@/deck-edit/chart-operation.types";
+export { CHART_EDIT_LIMITS, USER_POINT_VALUE_PATTERN } from "@/deck-edit/chart-operation.types";
 export { applyChartOperations } from "@/deck-edit/apply-chart-operations";
 export type {
   ApplyChartOperationsInput,

@@ -53,17 +53,17 @@ export function applyDeckEdit(
   // 014: structured chart operations apply on TOP of the merged deck (merge keeps
   // contentBlocks read-only; operations are the only legal chart-edit channel).
   // With no operations this is a passthrough and the base values are reused verbatim.
-  const baseDesignPlanEarly = base.designPlan as DesignPlanningResult;
+  const baseDesignPlan = base.designPlan as DesignPlanningResult;
   const baseChartIntents = (base.chartIntents as ChartIntent[] | null) ?? null;
   const operations = options.chartOperations ?? [];
   let workingDeck = merge.slideDeck;
   let chartIntents = baseChartIntents;
-  let chartTreatmentPlans = baseDesignPlanEarly.chartTreatmentPlans;
+  let chartTreatmentPlans = baseDesignPlan.chartTreatmentPlans;
   if (operations.length > 0) {
     const opsResult = applyChartOperations({
       mergedDeck: merge.slideDeck,
       baseChartIntents,
-      baseTreatmentPlans: baseDesignPlanEarly.chartTreatmentPlans,
+      baseTreatmentPlans: baseDesignPlan.chartTreatmentPlans,
       baseRevision: base.revision,
       operations
     });
@@ -91,7 +91,6 @@ export function applyDeckEdit(
     };
   }
 
-  const baseDesignPlan = baseDesignPlanEarly;
   const survivingIds = new Set(workingDeck.slides.map((slide) => slide.id));
 
   // 011: optionally re-theme. With no (or an EMPTY) themeSelection this is exactly 010

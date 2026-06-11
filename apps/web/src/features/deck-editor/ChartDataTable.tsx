@@ -2,16 +2,18 @@ import { DndContext, closestCenter } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { ChartIntent, EditDataPoint, SourceFact, UserPointInput } from "@slides-agent/domain";
-import { deriveChartPointLabel, parseMetricValue } from "@slides-agent/domain";
+import {
+  CHART_EDIT_LIMITS,
+  USER_POINT_VALUE_PATTERN,
+  deriveChartPointLabel,
+  parseMetricValue
+} from "@slides-agent/domain";
 import {
   GripIcon,
   dragEndIndices,
   useReorderSensors
 } from "@/features/deck-editor/sortable-helpers";
 import { useI18n } from "@/i18n";
-
-/** Client-side mirror of the domain's valueText rule — UX hint only (server authoritative). */
-const VALUE_TEXT_PATTERN = /^-?\d+(\.\d+)?$/;
 
 const cellBox =
   "w-full rounded-lg border border-line bg-panel px-2 py-1.5 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700";
@@ -76,6 +78,7 @@ export function ChartDataTable({ intent, pendingEdit, onEdit, onResetAll }: Char
         <input
           id={`chart-title-${intent.id}`}
           className={cellBox}
+          maxLength={CHART_EDIT_LIMITS.maxLabelLength}
           value={title ?? intent.title}
           onChange={(event) => emit(rows, event.target.value)}
         />
@@ -165,7 +168,8 @@ function displayOf(row: EditDataPoint, factsById: Map<string, SourceFact>): RowD
       valueText: row.point.valueText,
       unit: row.point.unit ?? "",
       isUser: true,
-      invalidValue: row.point.valueText.length > 0 && !VALUE_TEXT_PATTERN.test(row.point.valueText)
+      invalidValue:
+        row.point.valueText.length > 0 && !USER_POINT_VALUE_PATTERN.test(row.point.valueText)
     };
   }
   const prefill = prefillFrom(factsById.get(row.sourceFactId));
@@ -230,6 +234,7 @@ function SortablePointRow({
         <input
           aria-label={t("editor.chart.data.label")}
           placeholder={t("editor.chart.data.label.placeholder")}
+          maxLength={CHART_EDIT_LIMITS.maxLabelLength}
           className={cellBox}
           value={display.label}
           onChange={(event) => onField("label", event.target.value)}
@@ -237,6 +242,7 @@ function SortablePointRow({
         <input
           aria-label={t("editor.chart.data.value")}
           placeholder={t("editor.chart.data.value.placeholder")}
+          maxLength={CHART_EDIT_LIMITS.maxValueTextLength}
           className={`${cellBox} max-w-24 ${display.invalidValue ? "border-red-400" : ""}`}
           value={display.valueText}
           onChange={(event) => onField("valueText", event.target.value)}
@@ -244,6 +250,7 @@ function SortablePointRow({
         <input
           aria-label={t("editor.chart.data.unit")}
           placeholder={t("editor.chart.data.unit.placeholder")}
+          maxLength={CHART_EDIT_LIMITS.maxUnitLength}
           className={`${cellBox} max-w-16`}
           value={display.unit}
           onChange={(event) =>

@@ -1,21 +1,11 @@
 import { useState } from "react";
 import type { ChartIntent, ChartVisualOverride, UserPointInput } from "@slides-agent/domain";
+import { CHART_EDIT_LIMITS, USER_POINT_VALUE_PATTERN } from "@slides-agent/domain";
+import { SELECTABLE_VISUALS } from "@/features/deck-editor/chart-visual-options";
 import { useI18n, type TranslationKey } from "@/i18n";
 
 /** How many source-fact values to preview per intent before truncating. */
 const FACT_PREVIEW_LIMIT = 3;
-
-/** Client-side mirror of the domain's valueText rule — gating UX only. */
-const VALUE_TEXT_PATTERN = /^-?\d+(\.\d+)?$/;
-
-const SELECTABLE_VISUALS: ChartVisualOverride[] = [
-  "auto",
-  "pie_donut",
-  "line",
-  "bar",
-  "metric_card",
-  "table"
-];
 
 const fieldBox =
   "w-full rounded-lg border border-line bg-panel px-2 py-1.5 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700";
@@ -162,7 +152,7 @@ function ManualChartForm({
   ]);
 
   const validPoint = (point: UserPointInput) =>
-    point.label.trim().length > 0 && VALUE_TEXT_PATTERN.test(point.valueText);
+    point.label.trim().length > 0 && USER_POINT_VALUE_PATTERN.test(point.valueText);
   const canCreate = title.trim().length > 0 && points.length > 0 && points.every(validPoint);
 
   const updatePoint = (index: number, patch: Partial<UserPointInput>) =>
@@ -182,6 +172,7 @@ function ManualChartForm({
         <input
           id="manual-chart-title"
           className={fieldBox}
+          maxLength={CHART_EDIT_LIMITS.maxLabelLength}
           value={title}
           onChange={(event) => setTitle(event.target.value)}
         />
@@ -229,6 +220,7 @@ function ManualChartForm({
             <input
               aria-label={t("editor.chart.data.label")}
               placeholder={t("editor.chart.data.label.placeholder")}
+              maxLength={CHART_EDIT_LIMITS.maxLabelLength}
               className={fieldBox}
               value={point.label}
               onChange={(event) => updatePoint(index, { label: event.target.value })}
@@ -236,8 +228,9 @@ function ManualChartForm({
             <input
               aria-label={t("editor.chart.data.value")}
               placeholder={t("editor.chart.data.value.placeholder")}
+              maxLength={CHART_EDIT_LIMITS.maxValueTextLength}
               className={`${fieldBox} max-w-24 ${
-                point.valueText.length > 0 && !VALUE_TEXT_PATTERN.test(point.valueText)
+                point.valueText.length > 0 && !USER_POINT_VALUE_PATTERN.test(point.valueText)
                   ? "border-red-400"
                   : ""
               }`}
@@ -247,6 +240,7 @@ function ManualChartForm({
             <input
               aria-label={t("editor.chart.data.unit")}
               placeholder={t("editor.chart.data.unit.placeholder")}
+              maxLength={CHART_EDIT_LIMITS.maxUnitLength}
               className={`${fieldBox} max-w-16`}
               value={point.unit ?? ""}
               onChange={(event) =>

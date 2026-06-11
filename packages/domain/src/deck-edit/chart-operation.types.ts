@@ -46,6 +46,13 @@ export type ChartOperation =
       title?: string;
     };
 
+/**
+ * 014: the valueText literal rule（負號/小數可選的數字字面）— single source shared by
+ * the authoritative domain validator and the web UX mirrors (red-border hints,
+ * create-button gating). Rejects "1e5"、"1/3"、"Infinity"、"12." etc.
+ */
+export const USER_POINT_VALUE_PATTERN = /^-?\d+(\.\d+)?$/;
+
 export const CHART_EDIT_LIMITS = {
   maxPointsPerChart: 12,
   maxChartsPerSlide: 1,
@@ -53,5 +60,5 @@ export const CHART_EDIT_LIMITS = {
   /** label 與 title 共用。 */
   maxLabelLength: 120,
   maxUnitLength: 16,
-  maxValueTextLength: 32,
+  maxValueTextLength: 32
 } as const;
