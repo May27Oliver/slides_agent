@@ -45,7 +45,9 @@ describe("SlideEditPanel (010 US1)", () => {
     fireEvent.change(screen.getByDisplayValue("World"), { target: { value: "New message" } });
     expect(h.onMessage).toHaveBeenCalledWith("New message");
 
-    fireEvent.change(screen.getByDisplayValue("bullet one"), { target: { value: "edited bullet" } });
+    fireEvent.change(screen.getByDisplayValue("bullet one"), {
+      target: { value: "edited bullet" }
+    });
     expect(h.onOutlineText).toHaveBeenCalledWith(0, "edited bullet");
 
     fireEvent.change(screen.getByDisplayValue("notes"), { target: { value: "new notes" } });
@@ -71,5 +73,26 @@ describe("SlideEditPanel (010 US1)", () => {
     );
     expect(screen.getByText("chart_placeholder")).toBeTruthy();
     expect(screen.getAllByText("本期暫不可編輯").length).toBeGreaterThan(0);
+  });
+
+  // 014 US1: the chart area becomes an editor card; only NON-chart blocks stay readonly.
+  it("renders the chart editor slot and stops listing chart_placeholder as readonly", () => {
+    const h = handlers();
+    render(
+      <SlideEditPanel
+        slide={slide({
+          contentBlocks: [
+            { kind: "chart_placeholder", content: {}, chartIntentId: "chart-0" },
+            { kind: "table", content: {} }
+          ]
+        })}
+        {...h}
+        chartEditor={<div data-testid="chart-editor-slot">card</div>}
+      />
+    );
+    expect(screen.getByTestId("chart-editor-slot")).toBeTruthy();
+    // chart_placeholder is editable through the card now; table stays readonly.
+    expect(screen.queryByText("chart_placeholder")).toBeNull();
+    expect(screen.getByText("table")).toBeTruthy();
   });
 });

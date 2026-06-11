@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DeckRevisionContract } from "@slides-agent/contracts";
-import type { ManualThemeSelection, SelectableTheme, SlideDeck } from "@slides-agent/domain";
+import type {
+  ChartOperation,
+  GenerationSummary,
+  ManualThemeSelection,
+  SelectableTheme,
+  SlideDeck
+} from "@slides-agent/domain";
 import { useI18n } from "@/i18n";
 import { renderLivePreview } from "@/features/deck-editor/live-preview-render";
 
@@ -14,6 +20,10 @@ interface LivePreviewProps {
   /** 011: manual theme override + catalogue, so the live preview re-themes with parity. */
   themeSelection?: ManualThemeSelection;
   themeCandidates?: SelectableTheme[];
+  /** 014: pending chart operations — rendered with the same domain pipeline (parity). */
+  chartOperations?: readonly ChartOperation[];
+  /** 014: latest local render's summary (chart notes / disclosures), null on failure. */
+  onSummary?: (summary: GenerationSummary | null) => void;
   debounceMs?: number;
 }
 
@@ -31,6 +41,8 @@ export function LivePreview({
   authoritativeHtml,
   themeSelection,
   themeCandidates,
+  chartOperations,
+  onSummary,
   debounceMs = 250
 }: LivePreviewProps) {
   const { t } = useI18n();
@@ -47,11 +59,22 @@ export function LivePreview({
     () =>
       renderLivePreview(base, debounced, {
         ...(themeSelection ? { themeSelection } : {}),
-        ...(themeCandidates ? { candidates: themeCandidates } : {})
+        ...(themeCandidates ? { candidates: themeCandidates } : {}),
+        ...(chartOperations && chartOperations.length > 0
+          ? { chartOperations: [...chartOperations] }
+          : {})
       }),
-    [base, debounced, themeSelection, themeCandidates]
+    [base, debounced, themeSelection, themeCandidates, chartOperations]
   );
   const html = authoritativeHtml ?? (local.ok ? local.html : null);
+
+  // 014: surface the local render's summary so the edit panel's chart cards show
+  // the same notes/disclosures the server would store.
+  const onSummaryRef = useRef(onSummary);
+  onSummaryRef.current = onSummary;
+  useEffect(() => {
+    onSummaryRef.current?.(local.ok ? local.generationSummary : null);
+  }, [local]);
 
   // Tell the deck runtime which slide to show, so the preview tracks the edited slide.
   const syncSelectedSlide = useCallback(() => {

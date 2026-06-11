@@ -1,5 +1,11 @@
 import type { EditRevisionRequestContract } from "@slides-agent/contracts";
-import type { Slide, SlideDeck, SlideOutlineItem } from "@slides-agent/domain";
+import type {
+  ChartOperation,
+  ChartVisualOverride,
+  Slide,
+  SlideDeck,
+  SlideOutlineItem
+} from "@slides-agent/domain";
 
 /**
  * 010 (US1, data-model §7): the editor's immutable working model. Every mutator
@@ -52,15 +58,18 @@ export class EditableSlideDraft {
   private constructor(
     readonly baseRevision: number,
     readonly deck: SlideDeck,
-    private readonly newId: () => string
+    private readonly newId: () => string,
+    /** 014: pending structured chart edits, submitted with the save body. */
+    readonly chartOperations: readonly ChartOperation[] = []
   ) {}
 
   static fromRevision(
     baseRevision: number,
     slideDeck: SlideDeck,
-    newId: () => string = defaultNewId
+    newId: () => string = defaultNewId,
+    chartOperations: readonly ChartOperation[] = []
   ): EditableSlideDraft {
-    return new EditableSlideDraft(baseRevision, slideDeck, newId);
+    return new EditableSlideDraft(baseRevision, slideDeck, newId, chartOperations);
   }
 
   get slides(): readonly Slide[] {
@@ -72,7 +81,11 @@ export class EditableSlideDraft {
   }
 
   private withDeck(deck: SlideDeck): EditableSlideDraft {
-    return new EditableSlideDraft(this.baseRevision, deck, this.newId);
+    return new EditableSlideDraft(this.baseRevision, deck, this.newId, this.chartOperations);
+  }
+
+  private withOps(chartOperations: readonly ChartOperation[]): EditableSlideDraft {
+    return new EditableSlideDraft(this.baseRevision, this.deck, this.newId, chartOperations);
   }
 
   private mapSlide(slideId: string, fn: (slide: Slide) => Slide): EditableSlideDraft {
@@ -141,7 +154,52 @@ export class EditableSlideDraft {
     return this.withDeck({ ...this.deck, slides: reorder(this.deck.slides, from, to) });
   }
 
+  // --- 014: structured chart edits (the only legal chart channel, FR-021) ---
+
+  /**
+   * Records a visual override for an intent; a later call on the same intent
+   * replaces the earlier one (the operation list stays minimal, R10).
+   */
+  setChartVisual(chartIntentId: string, visual: ChartVisualOverride): EditableSlideDraft {
+    const kept = this.chartOperations.filter(
+      (op) => !(op.op === "set_visual" && op.chartIntentId === chartIntentId)
+    );
+    return this.withOps([...kept, { op: "set_visual", chartIntentId, visual }]);
+  }
+
+  /** Drops every pending operation for the intent (back to the base render). */
+  resetChartEdits(chartIntentId: string): EditableSlideDraft {
+    return this.withOps(
+      this.chartOperations.filter((op) => operationIntentId(op) !== chartIntentId)
+    );
+  }
+
+  /** The pending visual override for an intent; "auto" when none recorded. */
+  chartVisualOf(chartIntentId: string): ChartVisualOverride {
+    const found = this.chartOperations.find(
+      (op): op is Extract<ChartOperation, { op: "set_visual" }> =>
+        op.op === "set_visual" && op.chartIntentId === chartIntentId
+    );
+    return found?.visual ?? "auto";
+  }
+
   toRequest(): EditRevisionRequestContract {
-    return { baseRevision: this.baseRevision, slideDeck: this.deck };
+    return {
+      baseRevision: this.baseRevision,
+      slideDeck: this.deck,
+      ...(this.chartOperations.length > 0 ? { chartOperations: [...this.chartOperations] } : {})
+    };
+  }
+}
+
+/** The intent a chart operation targets (add_chart user_data has none yet → null). */
+function operationIntentId(op: ChartOperation): string | null {
+  switch (op.op) {
+    case "set_visual":
+    case "remove_chart":
+    case "edit_data":
+      return op.chartIntentId;
+    case "add_chart":
+      return op.source.kind === "existing_intent" ? op.source.chartIntentId : null;
   }
 }

@@ -76,4 +76,99 @@ describe("renderLivePreview (010 US1, FR-005a parity)", () => {
     // Same use-case + same theme options ⇒ identical re-themed html (parity).
     expect(client.html).toBe(server.payload.html);
   });
+
+  // 014 (FR-014): chart operations flow through the SAME use-case → byte parity,
+  // including the deterministic derived ids.
+  describe("014 chartOperations parity", () => {
+    const chartIntents = [
+      {
+        id: "chart_goal_metrics",
+        title: "Goal metrics",
+        sourceFacts: [
+          {
+            id: "fact_conversion",
+            kind: "metric" as const,
+            value: "25%",
+            sourceText: "Onboarding conversion 從 18% 提升到 25%"
+          }
+        ],
+        recommendedVisuals: ["metric_card" as const],
+        rationale: "headline"
+      }
+    ];
+    const chartDeck: SlideDeck = {
+      ...fixtureSlideDeck,
+      slides: fixtureSlideDeck.slides.map((slide) => ({
+        ...slide,
+        contentBlocks: [
+          { kind: "chart_placeholder" as const, content: {}, chartIntentId: "chart_goal_metrics" }
+        ]
+      }))
+    };
+    const chartRevision = {
+      ...fixtureRevision,
+      slideDeck: chartDeck,
+      chartIntents
+    };
+
+    it("renders the overridden visual and exposes the generation summary", () => {
+      const options: ApplyDeckEditOptions = {
+        chartOperations: [
+          { op: "set_visual", chartIntentId: "chart_goal_metrics", visual: "table" }
+        ]
+      };
+      const client = renderLivePreview(chartRevision, chartDeck, options);
+      const server = applyDeckEdit(chartRevision as unknown as DeckRevision, chartDeck, options);
+
+      expect(client.ok).toBe(true);
+      expect(server.ok).toBe(true);
+      if (!client.ok || !server.ok) return;
+      expect(client.html).toBe(server.payload.html);
+      expect(client.html).toContain('data-chart-visual="table"');
+      // The preview exposes the same summary the server stores (notes/disclosures feed UI).
+      expect(JSON.stringify(client.generationSummary)).toBe(
+        JSON.stringify(server.payload.generationSummary)
+      );
+    });
+
+    it("derived ids match the server byte-for-byte (deterministic minting)", () => {
+      const options: ApplyDeckEditOptions = {
+        chartOperations: [
+          {
+            op: "edit_data",
+            chartIntentId: "chart_goal_metrics",
+            points: [
+              { kind: "original", sourceFactId: "fact_conversion" },
+              { kind: "user", point: { label: "新指標", valueText: "42", unit: "%" } }
+            ]
+          }
+        ]
+      };
+      const client = renderLivePreview(chartRevision, chartDeck, options);
+      const server = applyDeckEdit(chartRevision as unknown as DeckRevision, chartDeck, options);
+
+      expect(client.ok).toBe(true);
+      expect(server.ok).toBe(true);
+      if (!client.ok || !server.ok) return;
+      expect(client.html).toBe(server.payload.html);
+      expect(client.generationSummary?.userDataDisclosures).toEqual([
+        {
+          slideId: "slide_001",
+          chartIntentId: "chart_goal_metrics",
+          chartTitle: "Goal metrics",
+          userPointCount: 1,
+          totalPointCount: 2
+        }
+      ]);
+    });
+
+    it("an invalid operation degrades softly with the domain detail", () => {
+      const result = renderLivePreview(chartRevision, chartDeck, {
+        chartOperations: [{ op: "set_visual", chartIntentId: "nope", visual: "bar" }]
+      });
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.reason).toContain("operations[0]");
+    });
+  });
 });

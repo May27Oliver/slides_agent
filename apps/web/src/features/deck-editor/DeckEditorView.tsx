@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import type { DeckRevisionContract } from "@slides-agent/contracts";
 import type {
+  ChartIntent,
+  GenerationSummary,
   ManualThemeSelection,
   SelectableTheme,
   SlideDeck,
@@ -26,6 +28,7 @@ import {
   loadDraft,
   saveDraft
 } from "@/features/deck-editor/deck-draft-storage";
+import { ChartEditorCard } from "@/features/deck-editor/ChartEditorCard";
 import { EditableSlideDraft } from "@/features/deck-editor/editable-slide-draft";
 import { LivePreview } from "@/features/deck-editor/LivePreview";
 import { SlideEditPanel } from "@/features/deck-editor/SlideEditPanel";
@@ -75,6 +78,8 @@ export function DeckEditorView({
   const [themeSelection, setThemeSelection] = useState<ManualThemeSelection>({});
   const [themeCandidates, setThemeCandidates] = useState<SelectableTheme[]>([]);
   const [themeWarnings, setThemeWarnings] = useState<ThemeSelectionWarning[]>([]);
+  // 014: the live preview's summary — chart cards read render evidence from it.
+  const [previewSummary, setPreviewSummary] = useState<GenerationSummary | null>(null);
 
   const adopt = useCallback((title: string, revision: DeckRevisionContract) => {
     const slideDeck = revision.slideDeck as SlideDeck;
@@ -139,7 +144,8 @@ export function DeckEditorView({
           deckId: id,
           baseRevision: current.baseRevision,
           slideDeck: current.deck,
-          savedAt: new Date().toISOString()
+          savedAt: new Date().toISOString(),
+          chartOperations: [...current.chartOperations]
         });
       }
     }, autosaveIntervalMs);
@@ -161,7 +167,14 @@ export function DeckEditorView({
     setPendingDraft((pending) => {
       if (!pending) return null;
       const restored = pending.draft.slideDeck;
-      setDraft(EditableSlideDraft.fromRevision(pending.draft.baseRevision, restored));
+      setDraft(
+        EditableSlideDraft.fromRevision(
+          pending.draft.baseRevision,
+          restored,
+          undefined,
+          pending.draft.chartOperations ?? []
+        )
+      );
       setSelectedId(restored.slides[0]?.id ?? null);
       setDirty(true);
       setSavedHtml(null);
@@ -198,6 +211,33 @@ export function DeckEditorView({
     [draft, selectedId]
   );
 
+  // 014 (US1): the selected slide's chart card model — placeholder × base intents ×
+  // preview render evidence × shared placements (derived live from the draft, R10).
+  const chartCard = useMemo(() => {
+    if (!draft || !base || !selectedSlide) return null;
+    const placeholder = selectedSlide.contentBlocks.find(
+      (block) => block.kind === "chart_placeholder" && block.chartIntentId
+    );
+    if (!placeholder?.chartIntentId) return null;
+    const intents = (base.chartIntents as ChartIntent[] | null) ?? [];
+    const intent = intents.find((candidate) => candidate.id === placeholder.chartIntentId);
+    if (!intent) return null;
+    const sharedPages = draft.deck.slides
+      .map((slide, index) => ({ slide, page: index + 1 }))
+      .filter(
+        ({ slide }) =>
+          slide.id !== selectedSlide.id &&
+          slide.contentBlocks.some(
+            (block) => block.kind === "chart_placeholder" && block.chartIntentId === intent.id
+          )
+      )
+      .map(({ page }) => page);
+    const renderedChart = previewSummary?.renderedCharts.find(
+      (chart) => chart.chartIntentId === intent.id && chart.slideId === selectedSlide.id
+    );
+    return { intent, sharedPages, renderedChart };
+  }, [draft, base, selectedSlide, previewSummary]);
+
   const onSave = useCallback(async () => {
     if (!draft) return;
     setSaveState({ kind: "saving" });
@@ -225,7 +265,8 @@ export function DeckEditorView({
           deckId: id,
           baseRevision: draft.baseRevision,
           slideDeck: draft.deck,
-          savedAt: new Date().toISOString()
+          savedAt: new Date().toISOString(),
+          chartOperations: [...draft.chartOperations]
         });
         load(); // reload + show the latest revision (FR-020)
         setSaveState({ kind: "conflict", revision: error.currentRevision });
@@ -298,6 +339,8 @@ export function DeckEditorView({
             authoritativeHtml={savedHtml}
             {...(hasThemeSelection(themeSelection) ? { themeSelection } : {})}
             themeCandidates={themeCandidates}
+            chartOperations={draft.chartOperations}
+            onSummary={setPreviewSummary}
             selectedIndex={Math.max(
               0,
               draft.slides.findIndex((s) => s.id === selectedSlide.id)
@@ -338,6 +381,25 @@ export function DeckEditorView({
                 onAddBullet={() => edit((d) => d.addBullet(selectedSlide.id))}
                 onRemoveBullet={(i) => edit((d) => d.removeBullet(selectedSlide.id, i))}
                 onMoveBullet={(from, to) => edit((d) => d.moveBullet(selectedSlide.id, from, to))}
+                {...(chartCard
+                  ? {
+                      chartEditor: (
+                        <ChartEditorCard
+                          chartIntentId={chartCard.intent.id}
+                          title={chartCard.intent.title}
+                          selectedVisual={draft.chartVisualOf(chartCard.intent.id)}
+                          {...(chartCard.renderedChart
+                            ? { renderedChart: chartCard.renderedChart }
+                            : {})}
+                          sharedPages={chartCard.sharedPages}
+                          onSetVisual={(visual) =>
+                            edit((d) => d.setChartVisual(chartCard.intent.id, visual))
+                          }
+                          onRemove={null}
+                        />
+                      )
+                    }
+                  : {})}
               />
             ) : (
               <SlideNavigator

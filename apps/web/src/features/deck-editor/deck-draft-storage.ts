@@ -1,4 +1,4 @@
-import type { SlideDeck } from "@slides-agent/domain";
+import type { ChartOperation, SlideDeck } from "@slides-agent/domain";
 
 /**
  * 010 (US3, data-model §7): a localStorage autosave draft. Never touches the DB and
@@ -10,6 +10,8 @@ export interface DeckDraft {
   baseRevision: number;
   slideDeck: SlideDeck;
   savedAt: string;
+  /** 014: pending chart operations, restored together with the text edits. */
+  chartOperations?: ChartOperation[];
 }
 
 /** Autosave cadence (FR-013). Injectable in the component for tests. */
@@ -63,6 +65,7 @@ function isValidDraftShape(value: unknown, deckId: string): value is DeckDraft {
   if (d.deckId !== deckId) return false;
   if (typeof d.baseRevision !== "number") return false;
   if (typeof d.savedAt !== "string") return false;
+  if (d.chartOperations !== undefined && !Array.isArray(d.chartOperations)) return false;
   const deck = d.slideDeck;
   if (typeof deck !== "object" || deck === null) return false;
   const slides = (deck as Record<string, unknown>).slides;

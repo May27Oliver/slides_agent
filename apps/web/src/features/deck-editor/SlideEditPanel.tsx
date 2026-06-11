@@ -18,6 +18,12 @@ interface SlideEditPanelProps {
   onAddBullet: () => void;
   onRemoveBullet: (index: number) => void;
   onMoveBullet: (from: number, to: number) => void;
+  /**
+   * 014: the chart editor card (or add-chart entry) composed by the page. When
+   * provided, chart_placeholder blocks are editable through it and leave the
+   * read-only notice; other structural blocks stay read-only.
+   */
+  chartEditor?: React.ReactNode;
 }
 
 const fieldLabel = "mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-soft";
@@ -38,13 +44,18 @@ export function SlideEditPanel({
   onOutlineText,
   onAddBullet,
   onRemoveBullet,
-  onMoveBullet
+  onMoveBullet,
+  chartEditor
 }: SlideEditPanelProps) {
   const { t } = useI18n();
   const sensors = useReorderSensors();
   // Bullets have no stable id — index-based sortable ids are fine for a controlled
   // list that fully re-renders after each reorder.
   const bulletIds = slide.outline.map((_, index) => `bullet-${index}`);
+  // 014: with a chart editor present, chart blocks are no longer "read-only".
+  const readonlyBlocks = chartEditor
+    ? slide.contentBlocks.filter((block) => block.kind !== "chart_placeholder")
+    : slide.contentBlocks;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto pr-1">
@@ -124,12 +135,14 @@ export function SlideEditPanel({
         />
       </div>
 
-      {slide.contentBlocks.length > 0 ? (
+      {chartEditor}
+
+      {readonlyBlocks.length > 0 ? (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
           <p className="text-xs font-semibold text-amber-700">{t("editor.readonly.badge")}</p>
           <p className="mt-0.5 text-xs text-amber-700/80">{t("editor.readonly.hint")}</p>
           <ul className="mt-1 flex flex-wrap gap-1">
-            {slide.contentBlocks.map((block, index) => (
+            {readonlyBlocks.map((block, index) => (
               <li
                 key={index}
                 className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700"

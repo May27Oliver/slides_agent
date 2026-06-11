@@ -57,16 +57,22 @@ describe("EditableSlideDraft (010 US1)", () => {
   });
 
   it("adds, removes and reorders bullets", () => {
-    const d = draftOf([slide("s1")]).addBullet("s1").addBullet("s1", 0);
+    const d = draftOf([slide("s1")])
+      .addBullet("s1")
+      .addBullet("s1", 0);
     expect(d.slide("s1")!.outline.map((o) => o.text)).toEqual(["", "b1", ""]);
 
     const removed = d.removeBullet("s1", 1);
     expect(removed.slide("s1")!.outline.length).toBe(2);
 
-    const moved = draftOf([slide("s1", { outline: [
-      { text: "a", sourceTrace: [], emphasis: "context" },
-      { text: "b", sourceTrace: [], emphasis: "context" }
-    ] })]).moveBullet("s1", 0, 1);
+    const moved = draftOf([
+      slide("s1", {
+        outline: [
+          { text: "a", sourceTrace: [], emphasis: "context" },
+          { text: "b", sourceTrace: [], emphasis: "context" }
+        ]
+      })
+    ]).moveBullet("s1", 0, 1);
     expect(moved.slide("s1")!.outline.map((o) => o.text)).toEqual(["b", "a"]);
   });
 
@@ -89,5 +95,66 @@ describe("EditableSlideDraft (010 US1)", () => {
     const req = d.toRequest();
     expect(req.baseRevision).toBe(2);
     expect((req.slideDeck as SlideDeck).slides[0]!.title).toBe("X");
+    // No chart edits → the field is absent (existing requests stay byte-identical).
+    expect("chartOperations" in req).toBe(false);
+  });
+
+  // 014 US1: chart visual operations on the draft.
+  describe("chart operations (014)", () => {
+    it("setChartVisual records a set_visual op; later calls on the same intent replace it", () => {
+      const original = draftOf([slide("s1")]);
+      const once = original.setChartVisual("chart-0", "line");
+      expect(once.chartOperations).toEqual([
+        { op: "set_visual", chartIntentId: "chart-0", visual: "line" }
+      ]);
+
+      const twice = once.setChartVisual("chart-0", "bar");
+      expect(twice.chartOperations).toEqual([
+        { op: "set_visual", chartIntentId: "chart-0", visual: "bar" }
+      ]);
+
+      const other = twice.setChartVisual("chart-1", "table");
+      expect(other.chartOperations).toHaveLength(2);
+
+      // immutability: the originals are untouched.
+      expect(original.chartOperations).toEqual([]);
+      expect(once.chartOperations).toHaveLength(1);
+    });
+
+    it("resetChartEdits removes every op for that intent only", () => {
+      const d = draftOf([slide("s1")])
+        .setChartVisual("chart-0", "line")
+        .setChartVisual("chart-1", "table")
+        .resetChartEdits("chart-0");
+      expect(d.chartOperations).toEqual([
+        { op: "set_visual", chartIntentId: "chart-1", visual: "table" }
+      ]);
+    });
+
+    it("chartVisualOf reads the pending override (auto when none)", () => {
+      const d = draftOf([slide("s1")]).setChartVisual("chart-0", "metric_card");
+      expect(d.chartVisualOf("chart-0")).toBe("metric_card");
+      expect(d.chartVisualOf("chart-9")).toBe("auto");
+    });
+
+    it("chart ops survive unrelated text edits and serialise into the request", () => {
+      const d = draftOf([slide("s1")])
+        .setChartVisual("chart-0", "pie_donut")
+        .setTitle("s1", "Edited")
+        .addBullet("s1");
+      expect(d.chartOperations).toHaveLength(1);
+      const req = d.toRequest();
+      expect(req.chartOperations).toEqual([
+        { op: "set_visual", chartIntentId: "chart-0", visual: "pie_donut" }
+      ]);
+    });
+
+    it("fromRevision restores persisted chart operations (localStorage draft path)", () => {
+      const restored = EditableSlideDraft.fromRevision(2, deck([slide("s1")]), seq(), [
+        { op: "set_visual", chartIntentId: "chart-0", visual: "bar" }
+      ]);
+      expect(restored.chartOperations).toHaveLength(1);
+      expect(restored.chartVisualOf("chart-0")).toBe("bar");
+    });
   });
 });
