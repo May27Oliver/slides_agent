@@ -25,6 +25,12 @@ const PREVIEW_JOB_STAGES = [
   "completed",
   "failed"
 ];
+const CHART_VISUAL_OVERRIDES = ["auto", "pie_donut", "line", "bar", "metric_card", "table"];
+const MAX_CHART_POINTS = 12;
+const MAX_CHART_OPERATIONS = 50;
+const MAX_CHART_LABEL_CHARS = 120;
+const MAX_CHART_UNIT_CHARS = 16;
+const MAX_CHART_VALUE_TEXT_CHARS = 32;
 
 const briefField = (): OpenApiSchema => ({ type: "string", maxLength: MAX_DECK_BRIEF_FIELD_CHARS });
 
@@ -405,15 +411,114 @@ export const AUTH_REQUIRED_SCHEMA: OpenApiSchema = errorSchema(
 
 // --- Deck edit revisions (feature 010 US1) ---
 
-// 014: one structured chart operation. The discriminated per-op field shapes are
-// validated by the shared contracts validator; OpenAPI documents the envelope.
-const CHART_OPERATION_SCHEMA: OpenApiSchema = {
+const USER_POINT_INPUT_SCHEMA: OpenApiSchema = {
   type: "object",
-  required: ["op"],
+  required: ["label", "valueText", "unit"],
+  additionalProperties: false,
   properties: {
-    op: { type: "string", enum: ["set_visual", "remove_chart", "add_chart", "edit_data"] }
-  },
-  additionalProperties: true,
+    label: { type: "string", maxLength: MAX_CHART_LABEL_CHARS },
+    valueText: {
+      type: "string",
+      maxLength: MAX_CHART_VALUE_TEXT_CHARS,
+      pattern: "^-?\\d+(\\.\\d+)?$"
+    },
+    unit: { type: "string", nullable: true, maxLength: MAX_CHART_UNIT_CHARS }
+  }
+};
+
+const EDIT_DATA_POINT_SCHEMA: OpenApiSchema = {
+  oneOf: [
+    {
+      type: "object",
+      required: ["kind", "sourceFactId"],
+      additionalProperties: false,
+      properties: {
+        kind: { type: "string", enum: ["original"] },
+        sourceFactId: { type: "string" }
+      }
+    },
+    {
+      type: "object",
+      required: ["kind", "point"],
+      additionalProperties: false,
+      properties: {
+        kind: { type: "string", enum: ["user"] },
+        point: USER_POINT_INPUT_SCHEMA,
+        replacesFactId: { type: "string" }
+      }
+    }
+  ]
+};
+
+// 014: one structured chart operation. OpenAPI mirrors the runtime validator's
+// discriminated shapes so API docs do not accept payloads the server rejects.
+const CHART_OPERATION_SCHEMA: OpenApiSchema = {
+  oneOf: [
+    {
+      type: "object",
+      required: ["op", "chartIntentId", "visual"],
+      additionalProperties: false,
+      properties: {
+        op: { type: "string", enum: ["set_visual"] },
+        chartIntentId: { type: "string" },
+        visual: { type: "string", enum: CHART_VISUAL_OVERRIDES }
+      }
+    },
+    {
+      type: "object",
+      required: ["op", "slideId", "chartIntentId"],
+      additionalProperties: false,
+      properties: {
+        op: { type: "string", enum: ["remove_chart"] },
+        slideId: { type: "string" },
+        chartIntentId: { type: "string" }
+      }
+    },
+    {
+      type: "object",
+      required: ["op", "slideId", "source"],
+      additionalProperties: false,
+      properties: {
+        op: { type: "string", enum: ["add_chart"] },
+        slideId: { type: "string" },
+        source: {
+          oneOf: [
+            {
+              type: "object",
+              required: ["kind", "chartIntentId"],
+              additionalProperties: false,
+              properties: {
+                kind: { type: "string", enum: ["existing_intent"] },
+                chartIntentId: { type: "string" }
+              }
+            },
+            {
+              type: "object",
+              required: ["kind", "title", "visual", "points"],
+              additionalProperties: false,
+              properties: {
+                kind: { type: "string", enum: ["user_data"] },
+                title: { type: "string", maxLength: MAX_CHART_LABEL_CHARS },
+                visual: { type: "string", enum: CHART_VISUAL_OVERRIDES },
+                points: { type: "array", maxItems: MAX_CHART_POINTS, items: USER_POINT_INPUT_SCHEMA }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      type: "object",
+      required: ["op", "chartIntentId", "points"],
+      additionalProperties: false,
+      properties: {
+        op: { type: "string", enum: ["edit_data"] },
+        chartIntentId: { type: "string" },
+        title: { type: "string", maxLength: MAX_CHART_LABEL_CHARS },
+        points: { type: "array", maxItems: MAX_CHART_POINTS, items: EDIT_DATA_POINT_SCHEMA }
+      }
+    }
+  ],
   description:
     "Structured chart edit (the only legal chart-edit channel; contentBlocks stay read-only)."
 };
@@ -435,7 +540,7 @@ export const EDIT_REVISION_REQUEST_SCHEMA: OpenApiSchema = {
     themeSelection: THEME_SELECTION_SCHEMA,
     chartOperations: {
       type: "array",
-      maxItems: 50,
+      maxItems: MAX_CHART_OPERATIONS,
       items: CHART_OPERATION_SCHEMA,
       description: "014: applied in array order; any violation rejects the whole request (400)."
     }

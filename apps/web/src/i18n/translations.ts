@@ -167,6 +167,8 @@ const zhTW = {
   "editor.chart.notes": "渲染註記",
   "editor.chart.reset": "還原圖表編輯",
   "editor.chart.remove": "移除圖表",
+  "editor.chart.legacy.heading": "舊版圖表",
+  "editor.chart.legacy.body": "此版本沒有持久化的圖表輸入，圖表無法在編輯器中修改。",
   "editor.chart.add.heading": "新增圖表",
   "editor.chart.add.fromSource": "從來源資料",
   "editor.chart.add.manual": "手動輸入",
@@ -444,6 +446,9 @@ const enUS: Dictionary = {
   "editor.chart.notes": "Rendering notes",
   "editor.chart.reset": "Reset chart edits",
   "editor.chart.remove": "Remove chart",
+  "editor.chart.legacy.heading": "Legacy chart",
+  "editor.chart.legacy.body":
+    "This revision has no persisted chart inputs, so the chart cannot be edited here.",
   "editor.chart.add.heading": "Add chart",
   "editor.chart.add.fromSource": "From source data",
   "editor.chart.add.manual": "Manual input",
@@ -719,6 +724,9 @@ const jaJP: Dictionary = {
   "editor.chart.notes": "レンダリングノート",
   "editor.chart.reset": "チャート編集をリセット",
   "editor.chart.remove": "チャートを削除",
+  "editor.chart.legacy.heading": "レガシーチャート",
+  "editor.chart.legacy.body":
+    "このバージョンには永続化されたチャート入力がないため、ここでは編集できません。",
   "editor.chart.add.heading": "チャートを追加",
   "editor.chart.add.fromSource": "ソースデータから",
   "editor.chart.add.manual": "手動入力",

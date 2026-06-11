@@ -68,8 +68,8 @@ describe("edit revision contract (010 US1)", () => {
     expect(bad.issues).toContain("themeSelection.paletteId");
   });
 
-  // 014: chartOperations — contracts validate SHAPE only; semantics (ids, limits
-  // beyond the array cap, ownership) live in the domain (010 分工先例).
+  // 014: chartOperations — contracts validate shape and cheap request-size caps;
+  // deeper semantics (ids, ownership, numeric meaning) live in the domain.
   describe("chartOperations (014)", () => {
     const body = (chartOperations: unknown) => ({
       baseRevision: 2,
@@ -139,6 +139,42 @@ describe("edit revision contract (010 US1)", () => {
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.issues.some((issue) => issue.includes("50"))).toBe(true);
+    });
+
+    it("rejects oversized nested point arrays before walking every item", () => {
+      const points = Array.from({ length: 13 }, (_, index) => ({
+        label: `p${index}`,
+        valueText: `${index}`,
+        unit: null
+      }));
+
+      const add = validateEditRevisionRequest(
+        body([
+          {
+            op: "add_chart",
+            slideId: "s1",
+            source: { kind: "user_data", title: "手動圖", visual: "bar", points }
+          }
+        ])
+      );
+      expect(add.ok).toBe(false);
+      if (!add.ok) {
+        expect(add.issues).toContain("chartOperations[0].source.points exceeds 12");
+      }
+
+      const edit = validateEditRevisionRequest(
+        body([
+          {
+            op: "edit_data",
+            chartIntentId: "chart-0",
+            points: points.map((point) => ({ kind: "user", point }))
+          }
+        ])
+      );
+      expect(edit.ok).toBe(false);
+      if (!edit.ok) {
+        expect(edit.issues).toContain("chartOperations[0].points exceeds 12");
+      }
     });
 
     it("rejects an unknown op kind and a non-object item", () => {

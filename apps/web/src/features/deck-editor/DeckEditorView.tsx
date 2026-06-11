@@ -221,9 +221,10 @@ export function DeckEditorView({
     () => ((base?.chartIntents as ChartIntent[] | null) ?? []) as ChartIntent[],
     [base]
   );
+  const canEditCharts = base !== null && base.chartIntents !== null;
 
   const chartCard = useMemo(() => {
-    if (!draft || !selectedSlide) return null;
+    if (!draft || !selectedSlide || !canEditCharts) return null;
     const placedId = draft.placedChartId(selectedSlide.id);
     if (!placedId) return null;
     const baseIntent = baseIntents.find((candidate) => candidate.id === placedId);
@@ -250,7 +251,7 @@ export function DeckEditorView({
       (entry) => entry.chartIntentId === placedId && entry.slideId === selectedSlide.id
     );
     return { chartIntentId: placedId, title, sharedPages, renderedChart, baseIntent, disclosure };
-  }, [draft, baseIntents, selectedSlide, previewSummary]);
+  }, [draft, baseIntents, selectedSlide, previewSummary, canEditCharts]);
 
   // US2 (FR-005/FR-016): the add entry shows only on a chartless, non-opening slide.
   const showAddChart = Boolean(
@@ -258,7 +259,12 @@ export function DeckEditorView({
     selectedSlide &&
     !chartCard &&
     selectedSlide.slideKind !== "opening" &&
-    base?.chartIntents !== null
+    canEditCharts
+  );
+
+  const showLegacyChartNotice = Boolean(
+    !canEditCharts &&
+      selectedSlide?.contentBlocks.some((block) => block.kind === "chart_placeholder")
   );
 
   const usedPagesByIntent = useMemo(() => {
@@ -476,7 +482,9 @@ export function DeckEditorView({
                           />
                         )
                       }
-                    : {})}
+                    : showLegacyChartNotice
+                      ? { chartEditor: <LegacyChartNotice /> }
+                      : {})}
               />
             ) : (
               <SlideNavigator
@@ -525,6 +533,16 @@ function SaveStatus({ saveState }: { saveState: SaveState }) {
     return <span className="text-xs text-red-600">{t("editor.saveError")}</span>;
   }
   return null;
+}
+
+function LegacyChartNotice() {
+  const { t } = useI18n();
+  return (
+    <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+      <p className="font-semibold">{t("editor.chart.legacy.heading")}</p>
+      <p className="mt-1 text-amber-700">{t("editor.chart.legacy.body")}</p>
+    </div>
+  );
 }
 
 function TabButton({

@@ -146,10 +146,15 @@ export class EditableSlideDraft {
   }
 
   removeSlide(slideId: string): EditableSlideDraft {
-    return this.withDeck({
-      ...this.deck,
-      slides: this.deck.slides.filter((s) => s.id !== slideId)
-    });
+    return new EditableSlideDraft(
+      this.baseRevision,
+      {
+        ...this.deck,
+        slides: this.deck.slides.filter((s) => s.id !== slideId)
+      },
+      this.newId,
+      pruneOperationsForRemovedSlide(this.chartOperations, slideId, this.baseRevision)
+    );
   }
 
   moveSlide(from: number, to: number): EditableSlideDraft {
@@ -247,7 +252,7 @@ export class EditableSlideDraft {
   private addedIntentId(op: Extract<ChartOperation, { op: "add_chart" }>, opIndex: number): string {
     return op.source.kind === "existing_intent"
       ? op.source.chartIntentId
-      : `chart_user_r${this.baseRevision}_${opIndex}`;
+      : syntheticUserIntentId(this.baseRevision, opIndex);
   }
 
   /**
@@ -294,6 +299,61 @@ export class EditableSlideDraft {
       slideDeck: this.deck,
       ...(this.chartOperations.length > 0 ? { chartOperations: [...this.chartOperations] } : {})
     };
+  }
+}
+
+function pruneOperationsForRemovedSlide(
+  operations: readonly ChartOperation[],
+  slideId: string,
+  baseRevision: number
+): ChartOperation[] {
+  const removedSyntheticIds = new Set<string>();
+  operations.forEach((op, index) => {
+    if (op.op === "add_chart" && op.slideId === slideId && op.source.kind === "user_data") {
+      removedSyntheticIds.add(syntheticUserIntentId(baseRevision, index));
+    }
+  });
+
+  const provisional = operations.filter((op) => {
+    if ((op.op === "add_chart" || op.op === "remove_chart") && op.slideId === slideId) {
+      return false;
+    }
+    const target = operationIntentId(op);
+    return !target || !removedSyntheticIds.has(target);
+  });
+
+  const remap = new Map<string, string>();
+  provisional.forEach((op, newIndex) => {
+    if (op.op !== "add_chart" || op.source.kind !== "user_data") return;
+    const oldIndex = operations.indexOf(op);
+    remap.set(
+      syntheticUserIntentId(baseRevision, oldIndex),
+      syntheticUserIntentId(baseRevision, newIndex)
+    );
+  });
+
+  return provisional.map((op) => remapOperationIntent(op, remap));
+}
+
+function syntheticUserIntentId(baseRevision: number, opIndex: number): string {
+  return `chart_user_r${baseRevision}_${opIndex}`;
+}
+
+function remapOperationIntent(op: ChartOperation, remap: Map<string, string>): ChartOperation {
+  switch (op.op) {
+    case "set_visual":
+    case "remove_chart":
+    case "edit_data": {
+      const chartIntentId = remap.get(op.chartIntentId);
+      return chartIntentId ? { ...op, chartIntentId } : op;
+    }
+    case "add_chart":
+      if (op.source.kind !== "existing_intent") {
+        return op;
+      }
+      return remap.has(op.source.chartIntentId)
+        ? { ...op, source: { ...op.source, chartIntentId: remap.get(op.source.chartIntentId)! } }
+        : op;
   }
 }
 

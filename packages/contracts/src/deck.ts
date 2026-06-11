@@ -187,11 +187,15 @@ export function validateEditRevisionRequest(
     : invalid(issues);
 }
 
-// contracts is dependency-free by design, so these two mirror the domain values
-// verbatim — keep in sync with `CHART_EDIT_LIMITS.maxOperations` and
-// `ChartVisualOverride` (packages/domain/src/deck-edit + design). The schema json
-// and openapi enums carry the same values; drift breaks their tests.
+// contracts is dependency-free by design, so these mirror the domain values
+// verbatim — keep in sync with `CHART_EDIT_LIMITS` and `ChartVisualOverride`
+// (packages/domain/src/deck-edit + design). The schema json and openapi enums
+// carry the same values; drift breaks their tests.
 const MAX_CHART_OPERATIONS = 50;
+// DoS guard: reject oversized point lists BEFORE iterating them, so a single
+// request cannot amplify CPU/memory with a huge nested array (the domain would
+// reject it anyway, but only after the shape pass walked every entry).
+const MAX_POINTS_PER_CHART = 12;
 const CHART_VISUAL_OVERRIDES = new Set([
   "auto",
   "pie_donut",
@@ -265,6 +269,10 @@ function validateAddChartSource(source: unknown, path: string, issues: string[])
       issues.push(`${path}.points must be an array`);
       return;
     }
+    if (source.points.length > MAX_POINTS_PER_CHART) {
+      issues.push(`${path}.points exceeds ${MAX_POINTS_PER_CHART}`);
+      return;
+    }
     source.points.forEach((point, index) =>
       validateUserPointShape(point, `${path}.points[${index}]`, issues)
     );
@@ -276,6 +284,10 @@ function validateAddChartSource(source: unknown, path: string, issues: string[])
 function validateEditDataPoints(points: unknown, path: string, issues: string[]): void {
   if (!Array.isArray(points)) {
     issues.push(`${path} must be an array`);
+    return;
+  }
+  if (points.length > MAX_POINTS_PER_CHART) {
+    issues.push(`${path} exceeds ${MAX_POINTS_PER_CHART}`);
     return;
   }
   points.forEach((point, index) => {

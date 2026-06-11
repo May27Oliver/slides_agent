@@ -31,6 +31,8 @@ export interface ApplyDeckEditOptions {
 /** Honest disclosure when a legacy base has no persisted chart inputs to redraw. */
 const LEGACY_CHART_NOTE =
   "圖表未重現：此版本無持久化的圖表輸入（chartIntents），確定性重渲染無法畫回原圖。";
+const LEGACY_CHART_NOTE_PATTERN =
+  /^圖表未重現：此版本無持久化的圖表輸入（chartIntents），確定性重渲染無法畫回原圖。$/u;
 
 /**
  * 010 (US1, data-model §5): pure domain use-case. Merge the client's edit onto the
@@ -327,7 +329,12 @@ function withLegacyChartDisclosure(deck: SlideDeck, chartIntents: ChartIntent[] 
     ...deck,
     reviewReport: {
       ...baseReport,
-      humanReviewNotes: [...(baseReport.humanReviewNotes ?? []), LEGACY_CHART_NOTE]
+      humanReviewNotes: [
+        ...(baseReport.humanReviewNotes ?? []).filter(
+          (line) => !LEGACY_CHART_NOTE_PATTERN.test(line)
+        ),
+        LEGACY_CHART_NOTE
+      ]
     }
   };
 }

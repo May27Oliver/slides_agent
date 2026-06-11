@@ -201,6 +201,39 @@ describe("EditableSlideDraft (010 US1)", () => {
       expect(d.placedChartId("s2")).toBe("chart-0");
     });
 
+    it("removing a slide prunes stale chart ops and remaps pending user_data ids", () => {
+      const d = draftOf([slide("s1"), slide("s2")])
+        .addChartFromUserData("s1", {
+          title: "刪除的圖",
+          visual: "bar",
+          points: [{ label: "A", valueText: "1", unit: null }]
+        })
+        .addChartFromUserData("s2", {
+          title: "保留的圖",
+          visual: "line",
+          points: [{ label: "B", valueText: "2", unit: null }]
+        })
+        .setChartVisual("chart_user_r2_1", "table");
+
+      const removed = d.removeSlide("s1");
+
+      expect(removed.slides.map((s) => s.id)).toEqual(["s2"]);
+      expect(removed.chartOperations).toEqual([
+        {
+          op: "add_chart",
+          slideId: "s2",
+          source: {
+            kind: "user_data",
+            title: "保留的圖",
+            visual: "line",
+            points: [{ label: "B", valueText: "2", unit: null }]
+          }
+        },
+        { op: "set_visual", chartIntentId: "chart_user_r2_0", visual: "table" }
+      ]);
+      expect(removed.placedChartId("s2")).toBe("chart_user_r2_0");
+    });
+
     it("predicts the deterministic id for a pending user_data add", () => {
       const d = draftOf([slide("s1")]).addChartFromUserData("s1", {
         title: "手動圖",

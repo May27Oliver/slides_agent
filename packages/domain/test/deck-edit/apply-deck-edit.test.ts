@@ -139,6 +139,31 @@ describe("applyDeckEdit (010 US1)", () => {
         "圖表未重現"
       );
     });
+
+    it("legacy chart disclosure is synced, not duplicated on repeated edits", () => {
+      const base = baseRevision({ slideDeck: chartDeck, chartIntents: null });
+      const first = applyDeckEdit(base, editTitle(chartDeck, "Legacy edit 1"));
+      expect(first.ok).toBe(true);
+      if (!first.ok) return;
+
+      const secondBase = baseRevision({
+        revision: 4,
+        slideDeck: first.payload.slideDeck,
+        designPlan: first.payload.designPlan,
+        chartIntents: null,
+        generationSummary: first.payload.generationSummary,
+        origin: "edit",
+        sourceJobId: null
+      });
+      const second = applyDeckEdit(secondBase, editTitle(first.payload.slideDeck, "Legacy edit 2"));
+      expect(second.ok).toBe(true);
+      if (!second.ok) return;
+
+      const legacyNotes = second.payload.slideDeck.reviewReport.humanReviewNotes.filter((line) =>
+        line.includes("圖表未重現")
+      );
+      expect(legacyNotes).toHaveLength(1);
+    });
   });
 
   // T008 — 011 deterministic re-theme during an edit.
