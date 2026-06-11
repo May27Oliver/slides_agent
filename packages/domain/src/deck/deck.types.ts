@@ -4,7 +4,14 @@ import type { RenderedChartSummary } from "@/rendering/chart-rendering.types";
 import type { SelectedThemeSummary } from "@/design/selected-theme-summary.types";
 import type { ThemeSelectionWarning } from "@/design/theme-selection.types";
 
-export type SourceFactKind = "metric" | "date" | "decision" | "risk" | "constraint" | "claim";
+export type SourceFactKind =
+  | "metric"
+  | "date"
+  | "decision"
+  | "risk"
+  | "constraint"
+  | "claim"
+  | "user_provided";
 
 export interface SourceContent {
   rawText: string;
@@ -22,9 +29,23 @@ export interface SourceSection {
 export interface SourceFact {
   id: string;
   kind: SourceFactKind;
+  /** user_provided 時 MUST === metric.displayValue（鏡像，014 FR-007）。 */
   value: string;
+  /** user_provided 時固定 "使用者於編輯器輸入"。 */
   sourceText: string;
   sourceSectionId?: string;
+  /** 014: 結構化數值；存在時 series 抽取 short-circuit 直接採用。 */
+  metric?: SourceFactMetric;
+  /** 014: 被此 user 點取代的既有 fact id；僅稽核/還原用，非 provenance。 */
+  replacesFactId?: string;
+}
+
+/** 014: user_provided fact 的結構化數值，domain 自 valueText + unit 導出。 */
+export interface SourceFactMetric {
+  label: string;
+  displayValue: string;
+  numericValue: number;
+  unit: string | null;
 }
 
 export interface DeckBrief {
@@ -175,4 +196,20 @@ export interface GenerationSummary extends PreRenderSummary {
    * requested. The front end surfaces it as "你選的主題已無法使用，該軸已改用預設主題".
    */
   themeSelectionWarnings: ThemeSelectionWarning[];
+  /**
+   * 014: structured disclosure of charts containing user-provided data points.
+   * Always present; `[]` when no chart contains user data (multi-placement
+   * shared intents emit one entry per placement slide). The front end surfaces
+   * it as 「本圖表含使用者提供的數據點（{n}/{m}）」.
+   */
+  userDataDisclosures: UserDataDisclosure[];
+}
+
+/** 014: 單一圖表放置處的使用者數據揭露（FR-009/FR-010）。 */
+export interface UserDataDisclosure {
+  slideId: string;
+  chartIntentId: string;
+  chartTitle: string;
+  userPointCount: number;
+  totalPointCount: number;
 }

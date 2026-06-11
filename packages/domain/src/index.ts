@@ -119,6 +119,17 @@ export type { ApplyDeckEditOptions } from "@/deck-edit/apply-deck-edit";
 export { mergeEditedDeck } from "@/deck-edit/slide-merge";
 export type { EditRevisionPayload, ApplyDeckEditResult } from "@/deck-edit/apply-deck-edit.types";
 export type { SlideMergeResult } from "@/deck-edit/slide-merge";
+export type {
+  UserPointInput,
+  EditDataPoint,
+  ChartOperation
+} from "@/deck-edit/chart-operation.types";
+export { CHART_EDIT_LIMITS } from "@/deck-edit/chart-operation.types";
+export { applyChartOperations } from "@/deck-edit/apply-chart-operations";
+export type {
+  ApplyChartOperationsInput,
+  ApplyChartOperationsResult
+} from "@/deck-edit/apply-chart-operations";
 
 export type {
   UserAccount,

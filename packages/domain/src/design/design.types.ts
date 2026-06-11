@@ -71,9 +71,17 @@ export type ChartTreatment =
   | "fallback_text"
   | "review_note";
 
+/**
+ * 014: 使用者可指定的視覺覆寫目標。值域 = ChartVisualKind 扣掉降級產物
+ * （metric_group / fallback_text）再加 "auto"（= 現行自動選型，等同缺欄位）。
+ */
+export type ChartVisualOverride = "auto" | "pie_donut" | "line" | "bar" | "metric_card" | "table";
+
 export interface ChartTreatmentPlan {
   chartIntentId: string;
   treatment: ChartTreatment;
+  /** 014: 使用者指定的視覺覆寫；缺/auto = 現行自動選型。validator 守門不外移。 */
+  visualOverride?: ChartVisualOverride;
   labelingNotes: string[];
   preservedContext: string[];
   fallbackRationale?: string;

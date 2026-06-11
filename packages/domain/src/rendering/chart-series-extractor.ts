@@ -88,6 +88,25 @@ export function extractChartSeries(input: ExtractChartSeriesInput): ChartSeries 
 }
 
 function toChartPoint(fact: SourceFact): ChartPoint | null {
+  // 014: a structured metric (user-provided point) is authoritative — use it
+  // verbatim instead of re-parsing free text. The time sort key derives from
+  // the user-entered label (clarify 決議：user 點不另設排序鍵).
+  if (fact.metric) {
+    const point: ChartPoint = {
+      label: truncate(fact.metric.label),
+      displayValue: fact.metric.displayValue,
+      value: fact.metric.numericValue,
+      unit: fact.metric.unit,
+      sourceFactId: fact.id,
+      sourceText: fact.sourceText
+    };
+    const metricSortKey = detectPeriodKey(fact.metric.label);
+    if (metricSortKey !== undefined) {
+      return { ...point, sortKey: metricSortKey };
+    }
+    return point;
+  }
+
   const parsed = parseMetricValue(fact.value);
   if (!parsed) {
     return null;

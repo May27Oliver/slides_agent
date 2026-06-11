@@ -17,7 +17,9 @@ export function fact(partial: Partial<SourceFact> & { value: string }): SourceFa
     kind: partial.kind ?? "metric",
     value: partial.value,
     sourceText: partial.sourceText ?? partial.value,
-    ...(partial.sourceSectionId ? { sourceSectionId: partial.sourceSectionId } : {})
+    ...(partial.sourceSectionId ? { sourceSectionId: partial.sourceSectionId } : {}),
+    ...(partial.metric ? { metric: partial.metric } : {}),
+    ...(partial.replacesFactId ? { replacesFactId: partial.replacesFactId } : {})
   };
 }
 

@@ -1,4 +1,4 @@
-import type { GenerationSummary, SlideDeck } from "@/deck/deck.types";
+import type { GenerationSummary, SlideDeck, UserDataDisclosure } from "@/deck/deck.types";
 import type { ThemeSelectionWarning } from "@/design/theme-selection.types";
 import type { RenderedChartSummary } from "@/rendering/chart-rendering.types";
 
@@ -8,7 +8,10 @@ export function buildGenerationSummary(
   selectedTheme: GenerationSummary["selectedTheme"],
   // 011: per-axis fallback evidence. Defaults to [] (no manual selection / all
   // axes applied); the generation + edit paths pass applyThemeSelection's warnings.
-  themeSelectionWarnings: ThemeSelectionWarning[] = []
+  themeSelectionWarnings: ThemeSelectionWarning[] = [],
+  // 014: charts containing user-provided data points. Defaults to [] (the
+  // generation pipeline has none); the edit path passes computed disclosures.
+  userDataDisclosures: UserDataDisclosure[] = []
 ): GenerationSummary {
   const sourceTraceIds = new Set(deck.slides.flatMap((slide) => slide.sourceTrace));
   const chartIntentIds = new Set(
@@ -24,6 +27,7 @@ export function buildGenerationSummary(
     uncertainClaimCount: deck.reviewReport.uncertainClaims.length,
     renderedCharts,
     selectedTheme,
-    themeSelectionWarnings
+    themeSelectionWarnings,
+    userDataDisclosures
   };
 }
