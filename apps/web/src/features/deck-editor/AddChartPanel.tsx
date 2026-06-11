@@ -163,8 +163,7 @@ function ManualChartForm({
 
   const validPoint = (point: UserPointInput) =>
     point.label.trim().length > 0 && VALUE_TEXT_PATTERN.test(point.valueText);
-  const canCreate =
-    title.trim().length > 0 && points.length > 0 && points.every(validPoint);
+  const canCreate = title.trim().length > 0 && points.length > 0 && points.every(validPoint);
 
   const updatePoint = (index: number, patch: Partial<UserPointInput>) =>
     setPoints((current) =>
@@ -229,12 +228,14 @@ function ManualChartForm({
           <li key={index} className="flex items-center gap-1">
             <input
               aria-label={t("editor.chart.data.label")}
+              placeholder={t("editor.chart.data.label.placeholder")}
               className={fieldBox}
               value={point.label}
               onChange={(event) => updatePoint(index, { label: event.target.value })}
             />
             <input
               aria-label={t("editor.chart.data.value")}
+              placeholder={t("editor.chart.data.value.placeholder")}
               className={`${fieldBox} max-w-24 ${
                 point.valueText.length > 0 && !VALUE_TEXT_PATTERN.test(point.valueText)
                   ? "border-red-400"
@@ -245,6 +246,7 @@ function ManualChartForm({
             />
             <input
               aria-label={t("editor.chart.data.unit")}
+              placeholder={t("editor.chart.data.unit.placeholder")}
               className={`${fieldBox} max-w-16`}
               value={point.unit ?? ""}
               onChange={(event) =>

@@ -75,6 +75,10 @@ describe("AddChartPanel (014 US2)", () => {
       expect(screen.getByLabelText("圖表標題")).toBeTruthy();
       expect(screen.getByLabelText("視覺類型")).toBeTruthy();
       expect(screen.getByLabelText("標籤")).toBeTruthy();
+      // Each empty cell guides what to fill in (UX hint with an example).
+      expect(screen.getByPlaceholderText("標籤（例：北美）")).toBeTruthy();
+      expect(screen.getByPlaceholderText("數值")).toBeTruthy();
+      expect(screen.getByPlaceholderText("單位")).toBeTruthy();
     });
 
     it("disables create until the title and at least one valid point exist", () => {

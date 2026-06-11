@@ -229,18 +229,21 @@ function SortablePointRow({
         </button>
         <input
           aria-label={t("editor.chart.data.label")}
+          placeholder={t("editor.chart.data.label.placeholder")}
           className={cellBox}
           value={display.label}
           onChange={(event) => onField("label", event.target.value)}
         />
         <input
           aria-label={t("editor.chart.data.value")}
+          placeholder={t("editor.chart.data.value.placeholder")}
           className={`${cellBox} max-w-24 ${display.invalidValue ? "border-red-400" : ""}`}
           value={display.valueText}
           onChange={(event) => onField("valueText", event.target.value)}
         />
         <input
           aria-label={t("editor.chart.data.unit")}
+          placeholder={t("editor.chart.data.unit.placeholder")}
           className={`${cellBox} max-w-16`}
           value={display.unit}
           onChange={(event) =>

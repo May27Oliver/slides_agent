@@ -20,7 +20,9 @@ const intent: ChartIntent = {
 
 describe("ChartDataTable (014 US3)", () => {
   it("derives the base rows from the intent's facts with source badges", () => {
-    render(<ChartDataTable intent={intent} pendingEdit={null} onEdit={vi.fn()} onResetAll={null} />);
+    render(
+      <ChartDataTable intent={intent} pendingEdit={null} onEdit={vi.fn()} onResetAll={null} />
+    );
     // Parsed label/value/unit from the fact's free text.
     expect(screen.getByDisplayValue("產品A")).toBeTruthy();
     expect(screen.getByDisplayValue("45")).toBeTruthy();
@@ -89,6 +91,8 @@ describe("ChartDataTable (014 US3)", () => {
       ],
       undefined
     );
+    // Empty cells carry field-guidance placeholders.
+    expect(screen.getAllByPlaceholderText("標籤（例：北美）").length).toBeGreaterThan(0);
 
     onEdit.mockClear();
     fireEvent.click(screen.getAllByLabelText("刪除此點")[0]!);
