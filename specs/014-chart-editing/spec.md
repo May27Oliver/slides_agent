@@ -20,11 +20,12 @@
 
 問題是：**生成後使用者完全不能動圖表。** 自動選型不滿意（想把長條換成折線）、來源數字想修正或補幾個點、某頁想拿掉圖表、或想在某頁放上一張圖——目前都只能整份重新生成。盤點現況還發現一個機會：`planSlideDeck` 持久化的 `chartIntents` 是**全部**規劃出的 intents（intent 靠 sourceFact 交集對應到 slide），可能存在**已規劃但未被任何 slide 放置**的 intents——這些是現成的、有來源依據的圖表素材，可直接供「新增圖表」挑選，零 LLM。
 
-014 的範圍：**在編輯頁開放圖表的結構化編輯**，涵蓋四類操作——換呈現類型（treatment override）、移除、從未放置的來源圖表新增、編輯數據點／手動輸入數據新增。全部走**結構化 `ChartOperation` 操作清單**（不開放 raw `contentBlocks` 編輯，FR-021 的牆不動），由 server（與 client live preview 的同一份 pure function）在白名單合併後、確定性重渲染前套用。**零 LLM、零 DB schema migration**（`chart_intents` / `design_plan` jsonb 欄位已存在，僅內容擴充）。
+014 的範圍：**在編輯頁開放圖表的結構化編輯**，涵蓋四類操作——換視覺類型（`ChartVisualOverride`，見決策 1a）、移除、從來源規劃的圖表新增（任一 intent，已放置者標註）、編輯數據點／手動輸入數據新增。全部走**結構化 `ChartOperation` 操作清單**（不開放 raw `contentBlocks` 編輯，FR-021 的牆不動），由 server（與 client live preview 的同一份 pure function）在白名單合併後、確定性重渲染前套用。**零 LLM、零 DB schema migration**（`chart_intents` / `design_plan` jsonb 欄位已存在，僅內容擴充）。
 
 **已鎖定的範圍決策（2026-06-11，見 Clarifications）**：
 
-1. **編輯通道 = 結構化 `ChartOperation` 清單，不開放 raw contentBlocks。** client 對保留 slide 仍 MUST 原樣 echo `contentBlocks`（010 唯讀牆與防竄改語意完全不變）；圖表變更只能以型別化操作（`set_treatment` / `remove_chart` / `add_chart` / `edit_data`）表達，server 驗證每個操作的引用合法性後套用，非法引用整筆 400 拒絕。
+1. **編輯通道 = 結構化 `ChartOperation` 清單，不開放 raw contentBlocks。** client 對保留 slide 仍 MUST 原樣 echo `contentBlocks`（010 唯讀牆與防竄改語意完全不變）；圖表變更只能以型別化操作（`set_visual` / `remove_chart` / `add_chart` / `edit_data`）表達，server 驗證每個操作的引用合法性後套用，非法引用整筆 400 拒絕。
+1a. **「換類型」的模型 = `ChartVisualOverride`，不是 `ChartTreatment`。** 現行 `ChartTreatment` 詞彙（`chart`/`timeline`/`metric_card`/`table`…）表達的是「視覺策略」，具體的圓餅/長條/折線是 renderer 依 series 驗證**自動**選的（`selectComparison`/`selectTimeline`），沒有「指定折線」的 contract。014 新增 `ChartVisualOverride = "auto" | "pie_donut" | "line" | "bar" | "metric_card" | "table"`，持久化為衍生 `ChartTreatmentPlan` 的可選 `visualOverride` 欄位：`auto`（或無欄位）= 現行自動選型、行為零變化；具體值 = renderer 優先嘗試該視覺，true-chart 類仍 MUST 通過對應 series validator（pie 另須 part-to-whole），不合格照既有降級鏈退場＋note（override 是「請求」，不是「命令」——守門權不外移）。
 2. **編輯的單位 = 結構化「資料點」，不是事實文字。** UI 把抽取出的 `ChartPoint[]` 攤成表格（標籤／數值／單位）編輯；存回時 `SourceFact` 以新增的結構化 `metric` 欄位攜帶數據，series extractor 對帶 `metric` 的 fact **short-circuit 直接採用、跳過文字解析**——使用者輸入的點永遠解析成功，不受 `parseMetricValue` 正則能力限制。無 `metric` 的既有 fact 行為完全不變。
 3. **出處誠實是紅線：改過數字的點 = 全新 `user_provided` fact、配新 id。** 原始 fact 說 25%、使用者改成 30%——沿用原 `sourceFactId` 等於偽造「文件支持 30%」。改過或新增的點一律造新 `SourceFact { kind: "user_provided" }`，原 fact 自衍生 intent 移除；`replacesFactId` 僅作稽核與還原線索，不作 provenance。未動過的點原 fact 原樣保留、lineage 不變。比照 010 outline merge 先例（人工內容不宣稱原始出處，CR-001）。
 4. **既有驗證守門員一行不改、照常上班。** 使用者編輯後的數據照走 `chart-series-validator` 的全部檢查與降級鏈；降級是「被告知的結果」——`ChartRenderingNote` MUST 即時顯示於編輯 UI（live preview 同 code 同 notes），不是驚嚇。
@@ -46,7 +47,7 @@
 - Q: 使用者「不滿意圖表」最常見的補救動作？編輯能力怎麼切片？ → **A: 四類結構化操作。** (1) 換呈現類型（pie/line/bar/metric/table 的 treatment override）；(2) 移除；(3) 新增（兩個來源：未放置的既有 intents／手動輸入數據）；(4) 編輯數據點（改數字、增刪點、調順序）。不做自由繪圖、不引入第三方 chart lib、不做跨 slide 搬移（移除＋新增可達成）。
 - Q: 圖表編輯怎麼通過 010 的 contentBlocks 唯讀牆？拆牆還是繞道？ → **A: 不拆牆，走結構化操作清單。** 開放 raw contentBlocks 等於讓 client 可注入任意結構（FR-021 要防的事）。改為 edit request 新增 `chartOperations: ChartOperation[]`，server 在 merge 後套用：每個操作的 `slideId` / `chartIntentId` / 數值都被驗證，非法 → 400 `INVALID_EDIT`。client 的 contentBlocks echo 語意不變。
 - Q: 「編輯數據」editing 的對象是 fact 的自由文字還是抽取後的點？ → **A: 結構化資料點。** 現況點是渲染時從 `SourceFact.value` 文字正則解析（`parseMetricValue`），讓使用者改文字再重 parse 極脆弱（輸入 "1,200 人" 可能 parse 失敗導致點消失）。改為：`SourceFact` 增加可選結構化 `metric` 欄位（label / displayValue / numericValue / unit），extractor 對帶 `metric` 的 fact short-circuit 直接轉 `ChartPoint`。使用者輸入永遠帶 `metric` → 永遠成功；舊資料（無 `metric`）走原解析、零行為變化。
-- Q: `edit_data` 送 diff 還是完整清單？ → **A: 宣告編輯後的完整點清單（陣列序 = 顯示序）。** 每點二擇一：`{ kind: "original", sourceFactId }`（未動，lineage 原樣）或 `{ kind: "user", label, displayValue, numericValue, unit, replacesFactId? }`（改過/新增）。完整清單比 diff 簡單、可重放、順便免費取得排序能力（CR-012）。
+- Q: `edit_data` 送 diff 還是完整清單？ → **A: 宣告編輯後的完整點清單（陣列序 = 顯示序）。** 每點二擇一：`{ kind: "original", sourceFactId }`（未動，lineage 原樣）或 `{ kind: "user", label, valueText, unit, replacesFactId? }`（改過/新增；數值契約見後續審查修正——domain 自 valueText 導出幾何與顯示值）。完整清單比 diff 簡單、可重放、順便免費取得排序能力（CR-012）。
 - Q: 使用者把 25% 改成 30%，原 sourceFactId 可以沿用嗎？ → **A: 不可以——必須換新 fact。** 沿用 = 偽造出處（宣稱文件支持 30%）。改過的點配全新 `user_provided` fact + 新 id；`replacesFactId` 僅稽核/還原用。這是本 feature 的忠實度紅線。
 - Q: 使用者改完數據後圓餅比例總和爆掉（>105%）怎麼辦？拒絕儲存還是降級？ → **A: 照既有降級鏈，不拒絕。** validators 照常守門：`invalid_pie_total` → 降級長條；點數 <2 → metric card；單位混搭 → table；時間排序失敗 → 降級。UI 即時顯示 notes（「比例總和 110%，已改用長條圖呈現」）。拒絕儲存會把領域知識（什麼數據能畫什麼圖）外溢到編輯流程；降級＋揭露才是既有憲章的做法（CR-007）。
 - Q: 「從來源資料新增圖表」的素材哪裡來？ → **A: 持久化 chartIntents 裡未被放置的 intents。** 已驗證 `planSlideDeck` 回傳並持久化**全部**規劃 intents（非僅已放置者）；intent 靠 sourceFact 交集對應 slide，可能有 intents 未落在任何 slide。UI 列出這些（title + rationale + 來源事實預覽）供挑選。`remove_chart` 只移除 placeholder、intent 留在集合中 → 移除後可再加回。
@@ -65,17 +66,27 @@
 - Q: 交付批次？ → **A: 維持 spec 現排序。** 第一批 US1（換類型）→ US2（移除/從來源新增）；第二批 US3/US4（數據編輯，user_provided 機制）。風險遞增、每批獨立可交付。
 - Q: 每張 slide 的圖表數量上限？ → **A: 1 個（定案，不再是 plan 假設）。** 16:9 投影片單圖最可讀，chart split 版面即為單圖設計。對已有圖表的 slide `add_chart` → 400；UI 對已有圖的頁不顯示「新增」入口（顯示既有圖表卡片的編輯/移除）。
 
+### Session 2026-06-11（spec 審查回饋修正：visual override 模型、id 確定性、數值契約、鏡像、清單範圍、驗證強化）
+
+- Q:（HIGH）US1 要求可選圓餅/折線/長條，但 `ChartTreatment` 沒有這些值——renderer 是自動選型，「沿用既有 ChartTreatment」與需求矛盾？ → **A: 引入 `ChartVisualOverride`。** `"auto" | "pie_donut" | "line" | "bar" | "metric_card" | "table"`，持久化為衍生 `ChartTreatmentPlan` 的可選 `visualOverride`；`auto` = 現行自動選型；具體值 = 優先嘗試、validator 照常守門、不合格照降級鏈。操作名由 `set_treatment` 改為 `set_visual`。（決策 1a）
+- Q:（HIGH）user_provided fact／新 intent 的「新 id」由誰產生？client preview 與 server save 各自 mint id 會破壞 byte-for-byte parity？ → **A: domain 純函式確定性產生，禁止任何一端隨機 mint。** id 由「base revision number + 操作索引 + 點索引」確定性導出（如 `fact_user_r{N}_{opIdx}_{ptIdx}`、`chart_user_r{N}_{opIdx}`）；preview 與 save 跑同一函式、同輸入 → 同 id 同 html。parity 驗收 MUST 涵蓋含新 id 的 html 完全一致。
+- Q:（HIGH）允許 `displayValue: "30%"` 配 `numericValue: 99` 且 server 不校驗——幾何與顯示文字矛盾，違反「不畫誤導圖」？ → **A: 改契約，讓矛盾在結構上不可能。** client 對 user 點只提交 `{ label, valueText, unit }`；`valueText` MUST 為嚴格數字格式（如 `2.3`、`1200`，可負可帶小數），domain 解析為 `numericValue`（非有限 → 400），`displayValue` 由 domain 確定性組合（`valueText + unit`，如 "2.3M"）。幾何值與顯示值同源，無不一致空間。放棄 "~30%" 等自由格式（CR-012：誠實優先於彈性）。
+- Q:（MEDIUM）`metric` short-circuit 只覆蓋 series extractor，但 table fallback／review 路徑讀 `fact.value`——user fact 數字只放 metric 會在降級 table 顯示錯值？ → **A: 鏡像規則。** user_provided fact 的 `value` MUST 等於 `metric.displayValue`（domain 建構時強制，非 client 責任）；所有讀 `.value` 的既有路徑（fact table、review、揭露）自然正確。驗收 MUST 含「user 數據降級為 table 時顯示正確值」測試。
+- Q:（MEDIUM）「新增圖表」一處說只列未放置 intents、FR-005 說任一 intent 可放、edge case 又允許一 intent 放兩頁——清單範圍到底是？ → **A: 統一為「任一 intent 皆可放置」**（限非 opening、該頁無圖）。UI 新增清單列出**全部** intents：未放置者正常列出、已放置者標註「已用於第 N 頁」（選了即多頁共享，編輯時連動提示與 clarify 決議一致）。
+- Q:（MEDIUM）輸入驗證缺長度上限、operation 數量、重複引用、fact ownership 規則？ → **A: 補齊 contract 級驗證**（見 FR-011）：label/title ≤ 120 字元、unit ≤ 16、valueText ≤ 32；單請求 `chartOperations` ≤ 50；`edit_data` 的 `original.sourceFactId` MUST 屬於**該 intent** 的 base sourceFacts 且同一清單內不得重複引用同一 fact id；`title` 提供時去空白 MUST 非空。
+- Q:（LOW）點數上限「預設 12、plan 定案」但 FR-011 已拿它當 400 規則——不可同時是假設與驗收？ → **A: 直接定案 12**（domain 常數），自 Assumptions 移除待定狀態。
+
 ---
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - 換圖表呈現類型 (Priority: P1)
 
-使用者在編輯頁選取一張帶圖表的 slide，中欄圖表卡片顯示目前的呈現類型；從類型選擇器改選另一種（例：長條 → 折線），右欄 live preview 即時（本地、零網路）重渲染。若所選類型與數據不相容（例：選圓餅但比例總和不合法），preview 直接呈現降級結果並顯示原因 note。按「儲存」後 server 以同一管線權威重渲染，存為新 revision（`origin="edit"`）。
+使用者在編輯頁選取一張帶圖表的 slide，中欄圖表卡片顯示目前實際渲染的視覺類型；從視覺選擇器改選另一種（`auto`／圓餅／折線／長條／指標卡／表格，例：長條 → 折線），右欄 live preview 即時（本地、零網路）重渲染。若所選視覺與數據不相容（例：選圓餅但比例總和不合法），preview 直接呈現降級結果並顯示原因 note。按「儲存」後 server 以同一管線權威重渲染，存為新 revision（`origin="edit"`）。
 
-**Why this priority**: 「自動選型不滿意」是最常見的不滿，而 treatment override 是純現有資料的重組——不碰數據、不碰 lineage、渲染器零修改，是風險最低、價值立現的 MVP 切片。
+**Why this priority**: 「自動選型不滿意」是最常見的不滿，而 visual override 是純現有資料的重組——不碰數據、不碰 lineage，僅在 renderer 的視覺選擇加一個優先嘗試入口，是風險最低、價值立現的 MVP 切片。
 
-**Independent Test**: 給一份含長條圖的 deck，於編輯頁把該圖表改為折線並儲存 → 驗證：(1) 新 revision 的 `designPlan.chartTreatmentPlans` 中該 intent 的 treatment 已更新，其餘 plans 原樣；(2) `html` 內該圖表以折線渲染；(3) `chartIntents` 與 base 逐欄相同（US1 不動數據）；(4) 引用不存在 `chartIntentId` 的請求 → 400、不建立 revision；(5) 零 LLM 呼叫。
+**Independent Test**: 給一份含長條圖的 deck，於編輯頁把該圖表改為折線並儲存 → 驗證：(1) 新 revision 的 `designPlan.chartTreatmentPlans` 中該 intent 的 `visualOverride` 為 `"line"`，其餘 plans 原樣；(2) `html` 內該圖表以折線渲染；(3) `chartIntents` 與 base 逐欄相同（US1 不動數據）；(4) 改回 `auto` 再儲存 → 行為與生成路徑自動選型完全一致；(5) 引用不存在 `chartIntentId` 的請求 → 400、不建立 revision；(6) 零 LLM 呼叫。
 
 **Independent Demo**: 開啟既有 deck → 換類型 → 即時預覽變化 → 儲存 → 重新載入後維持新類型。
 
@@ -90,7 +101,7 @@
 
 ### User Story 2 - 移除圖表 + 從未放置的來源圖表新增 (Priority: P2)
 
-使用者可把某頁的圖表移除（該頁版面自動回到無圖表布局）；也可在任一內容頁（含本次新增的純文字頁）點「新增圖表」，從「來源資料中已規劃但未放置的圖表」清單（顯示 title、rationale、來源事實預覽）挑一個放上去（版面自動切為圖文布局）。被移除的圖表回到「未放置」狀態，之後可再加回。
+使用者可把某頁的圖表移除（該頁版面自動回到無圖表布局）；也可在任一無圖的內容頁（含本次新增的純文字頁）點「新增圖表」，從「來源資料規劃的圖表」清單（顯示 title、rationale、來源事實預覽；**全部 intents 都列出**，已放置者標註「已用於第 N 頁」，選了即成多頁共享）挑一個放上去（版面自動切為圖文布局）。被移除的圖表回到「未放置」狀態，之後可再加回。
 
 **Why this priority**: 兩者都是純現有資料的重組（placeholder 的增刪），共享同一套操作驗證機制；合在一起交付「調整圖表位置與有無」的完整能力。依賴 US1 建立的 operations 管線。
 
@@ -113,18 +124,19 @@
 
 **Why this priority**: 價值最高但機制最深的切片——引入 `user_provided` fact、結構化 `metric` short-circuit 與揭露機制。依賴 US1 的管線，且其忠實度設計需要最謹慎的測試覆蓋，故排最後。
 
-**Independent Test**: 給一張 5 點長條圖 → 改其中 1 點數值、新增 1 點、刪 1 點、改標題並儲存 → 驗證：(1) 新 revision 衍生 intent 共 5 點：3 點原 fact（id 與 base 相同）、2 點 `user_provided` 新 fact（id 不與任何 base fact 重複，被改的那點帶 `replacesFactId`）；(2) html 中各點 displayValue 原樣呈現（含使用者輸入的格式）；(3) generationSummary 含「使用者提供數據 2/5 點」揭露；(4) `numericValue` 非有限數字或 label 空白的請求 → 400；(5) 引用不存在 sourceFactId 的 original 點 → 400。
+**Independent Test**: 給一張 5 點長條圖 → 改其中 1 點數值、新增 1 點、刪 1 點、改標題並儲存 → 驗證：(1) 新 revision 衍生 intent 共 5 點：3 點原 fact（id 與 base 相同）、2 點 `user_provided` 新 fact（id 為確定性導出、不與任何 base fact 重複，被改的那點帶 `replacesFactId`，`value` 鏡像 `metric.displayValue`）；(2) html 中各點 displayValue 為 domain 自 `valueText + unit` 組合的結果、保留使用者輸入的精度；(3) generationSummary 含「使用者提供數據 2/5 點」揭露；(4) `valueText` 非合法數字格式或 label 空白的請求 → 400；(5) `original.sourceFactId` 不屬於該 intent 的 base facts → 400；(6) 在 client 與 server 各跑一次同一編輯 → 產出的 fact id 與 html byte-for-byte 一致。
 
 **Independent Demo**: 改一個數字 → 徽章變「使用者提供」→ 預覽即時更新 → 單列還原回來源值 → 再改並儲存 → 重載後揭露註記可見。
 
 **Acceptance Scenarios**:
 
 1. **Given** 一個 5 點圖表，**When** 使用者把其中一點 25% 改為 30% 並儲存，**Then** 該點渲染為 30%、其 fact 為 `user_provided` 新 id（帶 `replacesFactId` 指向原 fact）；其餘 4 點 fact 與 base 完全相同；原 25% fact 不在衍生 intent 的 sourceFacts 中。
-2. **Given** 使用者新增一點「Q4: 4.0M」，**When** 儲存，**Then** 該點以 `user_provided` fact 持久化、displayValue 原樣渲染為「4.0M」，系統未對其做任何改寫或單位換算。
+2. **Given** 使用者新增一點（label "Q4"、valueText "4.0"、unit "M"），**When** 儲存，**Then** 該點以 `user_provided` fact 持久化、displayValue 確定性組合為「4.0M」並原樣渲染，系統未做精度改寫或單位換算；fact 的 `value` 與 `metric.displayValue` 一致。
 3. **Given** 編輯後某圓餅圖比例總和變為 112%，**When** live preview 重渲染，**Then** 即時呈現降級後視覺與「比例總和不合法已降級」note；儲存結果與 preview 一致。
 4. **Given** 使用者刪到只剩 1 點，**When** preview 重渲染，**Then** 依既有鏈降級為 metric card 並顯示 `series_insufficient` note。
 5. **Given** 含使用者數據的圖表，**When** 檢視儲存後的 generationSummary 與 review 輸出，**Then** 明確標註該圖表含使用者提供的數據點（n/m），與來源文件數據可區分。
-6. **Given** `numericValue: Infinity` 或 label 為空白的 user 點，**When** 送出儲存，**Then** 400 `INVALID_EDIT`、不建立 revision。
+6. **Given** `valueText` 非合法數字格式（如 "abc"、""、"1/3"）或 label 為空白的 user 點，**When** 送出儲存，**Then** 400 `INVALID_EDIT`、不建立 revision。
+7. **Given** 使用者數據導致圖表降級為 table，**When** 檢視渲染結果，**Then** table 各列顯示的值與使用者輸入一致（讀 `.value` 的路徑因鏡像規則正確）。
 
 ---
 
@@ -153,7 +165,8 @@
 - **legacy base（`chartIntents: null`）**：`chartOperations` 非空 → 400；UI 預先停用入口並顯示既有 legacy 說明。空操作清單的純文字編輯照 010 正常運作。
 - **點數/圖表數上限**：單一圖表超過點數上限、單一 slide 超過圖表數上限 → 400（上限見 Assumptions）。
 - **使用者輸入極長 label** → 沿用既有 `MAX_LABEL_LENGTH` 截斷顯示規則，不另設規則。
-- **displayValue 與 numericValue 不一致**（如 display "30%"、numeric 99）：server 以提交的 `numericValue` 計算幾何、`displayValue` 原樣顯示——UI MUST 由數值輸入自動帶出兩者以避免不一致；display 本就允許 "~30%" 等自由格式，幾何一律以 numericValue 為準。
+- **顯示值與幾何值矛盾**：結構上不可能——client 只提交 `valueText`，`numericValue` 與 `displayValue` 皆由 domain 自同一輸入確定性導出（見 Clarifications 審查修正）。`valueText` 非嚴格數字格式 → 400。
+- **同一編輯在 preview 與 save 產生不同 id**：結構上不可能——新 fact/intent id 由 domain 以 base revision number ＋操作索引＋點索引確定性導出，兩端同函式同輸入；parity 測試涵蓋。
 - **時間序列加點 label 解析不出排序** → 既有 `time_sort_failed` 降級＋note，不提供手動排序鍵。
 - **重複/超量放置**：對已有圖表的 slide `add_chart` → 400（每頁上限 1）；同一 intent 放到兩張不同 slide → 允許（資料共享、各自渲染），對其 `edit_data` 連動所有放置處，UI 編輯時提示「此圖表也用於第 N 頁」。
 
@@ -161,20 +174,20 @@
 
 ### Functional Requirements
 
-- **FR-001（操作通道）**: 編輯儲存請求 MUST 支援可選的 `chartOperations` 清單，操作類型限定 `set_treatment` / `remove_chart` / `add_chart` / `edit_data`。server MUST 在白名單合併（010 `mergeEditedDeck`，語意不變）之後、確定性重渲染之前依**陣列序**套用操作。client 對保留 slide 的 `contentBlocks` echo 義務與篡改即 400 的語意 MUST 維持不變。
+- **FR-001（操作通道）**: 編輯儲存請求 MUST 支援可選的 `chartOperations` 清單，操作類型限定 `set_visual` / `remove_chart` / `add_chart` / `edit_data`。server MUST 在白名單合併（010 `mergeEditedDeck`，語意不變）之後、確定性重渲染之前依**陣列序**套用操作。client 對保留 slide 的 `contentBlocks` echo 義務與篡改即 400 的語意 MUST 維持不變。
 - **FR-002（操作驗證）**: 每個操作引用的 `slideId` MUST 存在於 merged deck、`chartIntentId` MUST 存在於（套用前序操作後的）intents 集合；違反 → 400 `INVALID_EDIT`、不建立 revision、錯誤訊息指明違規操作。`add_chart` 對 opening slide → 400；對（套用前序操作後）已有圖表的 slide `add_chart` → 400（每頁上限 1）。
-- **FR-003（set_treatment）**: 換類型 MUST 僅更新衍生 `designPlan.chartTreatmentPlans` 中對應 intent 的 treatment（immutable 衍生新物件），不動數據、不動其他 plans；treatment 值域沿用既有 `ChartTreatment` 詞彙。
+- **FR-003（set_visual）**: 換視覺類型 MUST 僅更新衍生 `designPlan.chartTreatmentPlans` 中對應 intent 的 `visualOverride`（immutable 衍生新物件；新增可選欄位，值域 `ChartVisualOverride = "auto" | "pie_donut" | "line" | "bar" | "metric_card" | "table"`），不動 treatment 原值、不動數據、不動其他 plans。renderer 對 `auto`（或無欄位）MUST 維持現行自動選型零變化；對具體值 MUST 優先嘗試該視覺——true-chart 類（pie/line/bar）仍 MUST 通過對應 series validator（pie 另須 part-to-whole 檢查），不合格照既有降級鏈退場＋note；`fallback` 旗標語意比照現行（要求 true chart 而未得 → fallback=true）。
 - **FR-004（remove_chart）**: 移除 MUST 僅自指定 slide 的 `contentBlocks` 移除對應 `chart_placeholder`；intent 本身 MUST 保留於衍生 `chartIntents`（成為未放置，可再放置）。
 - **FR-005（add_chart / existing_intent）**: MUST 可將 intents 集合中任一 intent（含未放置者與本請求 `remove_chart` 後者）以新 `chart_placeholder` 放置到任一非 opening slide（含本次編輯新增的純文字 slide）。
-- **FR-006（add_chart / user_data 與 edit_data 的數據契約）**: 使用者數據點 MUST 以結構化欄位提交（label、displayValue、numericValue、unit）；`edit_data` MUST 宣告編輯後完整點清單，每點為 `original`（引用 base fact id）或 `user`（完整結構化數據，可選 `replacesFactId`）；陣列序即顯示序。可選 `title` 覆寫圖表標題。
-- **FR-007（結構化 metric short-circuit）**: `SourceFact` MUST 增加可選結構化 `metric` 欄位；series 抽取對帶 `metric` 的 fact MUST 直接採用其值建點（displayValue 原樣、numericValue 作幾何），跳過文字解析；無 `metric` 的 fact 行為 MUST 與現行完全一致。
-- **FR-008（出處誠實）**: 改過或新增的點 MUST 持久化為 `kind: "user_provided"` 的**新** fact（新 id，不得沿用任何 base fact id 作為其出處）；未動的點 MUST 原樣保留 base fact（id、lineage 不變）；被取代的原 fact MUST 自衍生 intent 移除；`replacesFactId` 僅供稽核/還原，MUST NOT 作為 provenance 呈現。
+- **FR-006（add_chart / user_data 與 edit_data 的數據契約）**: 使用者數據點 MUST 以 `{ label, valueText, unit }` 提交——`valueText` MUST 為嚴格數字格式（可負、可帶小數，不含千分位/符號/前綴），domain 解析為 `numericValue`（非有限 → 400）並確定性組合 `displayValue`（`valueText + unit`）；client MUST NOT 提交 `numericValue` 或 `displayValue`（幾何值與顯示值同源，矛盾在結構上不可能）。`edit_data` MUST 宣告編輯後完整點清單，每點為 `original`（引用 base fact id）或 `user`（上述結構化數據，可選 `replacesFactId`）；陣列序即顯示序。可選 `title` 覆寫圖表標題（提供時去空白 MUST 非空）。
+- **FR-007（結構化 metric short-circuit ＋ value 鏡像）**: `SourceFact` MUST 增加可選結構化 `metric` 欄位；series 抽取對帶 `metric` 的 fact MUST 直接採用其值建點（displayValue 原樣、numericValue 作幾何），跳過文字解析；無 `metric` 的 fact 行為 MUST 與現行完全一致。domain 建構 `user_provided` fact 時其 `value` MUST 等於 `metric.displayValue`（鏡像），使所有讀 `.value` 的既有路徑（fact table 降級、review、揭露）顯示正確值；驗收 MUST 含 user 數據降級為 table 的顯示正確性測試。
+- **FR-008（出處誠實 ＋ id 確定性）**: 改過或新增的點 MUST 持久化為 `kind: "user_provided"` 的**新** fact（新 id，不得沿用任何 base fact id 作為其出處）；未動的點 MUST 原樣保留 base fact（id、lineage 不變）；被取代的原 fact MUST 自衍生 intent 移除；`replacesFactId` 僅供稽核/還原，MUST NOT 作為 provenance 呈現。新 fact／新 intent 的 id MUST 由 domain 純函式自「base revision number ＋ 操作索引 ＋ 點索引」確定性導出（任何一端 MUST NOT 隨機產生），且 MUST NOT 與 base 的任何既有 id 碰撞（前綴隔離，如 `fact_user_r{N}_…`／`chart_user_r{N}_…`）。
 - **FR-009（驗證與降級不變）**: 編輯後的 intents MUST 通過與生成路徑完全相同的 series 驗證與降級鏈；系統 MUST NOT 因數據不滿足所選類型而拒絕儲存，MUST 降級並產生既有 `ChartRenderingNote`；編輯 UI MUST 即時顯示這些 notes。
 - **FR-010（揭露）**: 任何含 `user_provided` fact 的圖表，新 revision 的 generationSummary MUST 含可讀標註（圖表所在 slide、使用者數據點數 n/m）；review 輸出同步反映（CR-002）。
-- **FR-011（輸入驗證）**: user 點的 label 去空白後 MUST 非空、`numericValue` MUST 為有限數字；單一 slide 圖表數上限 **1**（clarify 定案）、單一圖表點數上限見 Assumptions，超出 → 400。所有驗證 MUST 在 server（domain 層）強制，前端驗證僅為 UX。
+- **FR-011（輸入驗證）**: user 點的 label 去空白後 MUST 非空、`valueText` MUST 為嚴格數字格式且解析為有限數字。上限（皆 domain 常數）：單一 slide 圖表數 **1**（clarify 定案）、單一圖表點數 **12**、label/title ≤ **120** 字元、unit ≤ **16** 字元、valueText ≤ **32** 字元、單請求 `chartOperations` ≤ **50**。`edit_data` 的 `original.sourceFactId` MUST 屬於**該 intent** 的 base sourceFacts，且同一清單內 MUST NOT 重複引用同一 fact id。任一違反 → 400。所有驗證 MUST 在 server（domain 層）強制，前端驗證僅為 UX。
 - **FR-012（零 LLM）**: 圖表編輯的套用與重渲染全程 MUST NOT 呼叫 LLM（CR-004）。
 - **FR-013（持久化、零 migration）**: 衍生 `chartIntents` 與衍生 `designPlan` MUST 隨新 revision（`origin="edit"`）寫入既有 jsonb 欄位；MUST NOT 需要 DB schema migration；下次編輯以新 revision 為 base 時，先前的圖表編輯（含 user_provided facts）MUST 完整繼承。
-- **FR-014（live preview parity）**: client live preview MUST 以同一份 domain use-case + 同一 `chartOperations` 本地重渲染，與 server 儲存結果 byte-for-byte parity（沿用 010 FR-005a 機制）；操作變動觸發的 preview 更新維持 debounced、零網路。
+- **FR-014（live preview parity）**: client live preview MUST 以同一份 domain use-case + 同一 `chartOperations` 本地重渲染，與 server 儲存結果 byte-for-byte parity（沿用 010 FR-005a 機制），**含確定性導出的新 fact/intent id 完全一致**（FR-008）；操作變動觸發的 preview 更新維持 debounced、零網路。
 - **FR-015（legacy 防護）**: base revision `chartIntents` 為 null 時，非空 `chartOperations` → 400；UI MUST 停用圖表編輯入口並沿用既有 legacy 提示。
 - **FR-016（編輯 UI）**: 編輯頁 MUST 提供：圖表卡片（現類型、類型選擇器）、數據表格（label/數值/單位、來源徽章、單列還原、增刪列、拖曳排序）、整圖還原、移除、**僅無圖頁**顯示新增入口（「從來源資料」清單含 title/rationale/來源事實預覽 ＋「手動輸入」表單）、notes 即時呈現、共享圖表編輯時的「此圖表也用於第 N 頁」提示。視覺由 `ui-ux-pro-max` 引導，落於既有 React 19 + Tailwind v4 設計語言。
 - **FR-017（並發）**: 圖表編輯儲存 MUST 沿用 010 樂觀並發（`baseRevision` 比對、409、不靜默覆蓋）。
@@ -189,7 +202,7 @@
 - **CR-006 Semantic Titles**: 圖表標題可由使用者改寫；改寫後的標題為使用者文字、不宣稱來源出處（比照 outline 改寫慣例）。
 - **CR-007 Data Visualization**: 「什麼數據能畫什麼圖」的守門權完全保留在既有 validators；編輯不能迫使系統畫出數據不支持的圖（FR-009）。
 - **CR-008 TDD Coverage**: domain（操作套用、fact 衍生、short-circuit、驗證/降級、揭露）、contracts（operations schema）、web（表格編輯器、徽章、還原、notes 呈現）、整合（儲存→新 revision→繼承）各層測試先行；驗收場景即測試藍本。
-- **CR-009 Domain Model**: 新增領域概念：`ChartOperation`（四操作的 union）、`user_provided` fact kind、`SourceFact.metric`（結構化數值）、衍生 intent（操作套用結果）。套用邏輯為純函式（無 I/O、無 LLM）。
+- **CR-009 Domain Model**: 新增領域概念：`ChartOperation`（四操作的 union）、`ChartVisualOverride`（視覺覆寫，validator 守門不外移）、`user_provided` fact kind、`SourceFact.metric`（結構化數值，value 鏡像）、衍生 intent（操作套用結果）、確定性 id 導出。套用邏輯為純函式（無 I/O、無 LLM、無隨機）。
 - **CR-010 Lean Test Scope**: 測試聚焦可觀察行為（操作 → 衍生資料 → 渲染結果 → 揭露），不重複測既有 validators 內部（僅測「編輯路徑有接上守門」）。
 - **CR-011 Behavior-Driven Value**: 每個 US 獨立可測可示範（US1 僅換類型即成 MVP）；G/W/T 場景見各 US。
 - **CR-012 Code Simplicity**: 不做 diff-based 操作、不做逐點樣式、不做手動排序鍵、不做 revision 回滾 UI、不引入 chart lib；operations 為唯一新抽象。
@@ -200,11 +213,12 @@
 
 ### Key Entities
 
-- **ChartOperation**: 圖表編輯的結構化指令（union：`set_treatment` / `remove_chart` / `add_chart` / `edit_data`），edit request 的可選欄位，server 驗證後依序套用。
-- **SourceFact.metric**（新增可選欄位）: 結構化數值（label / displayValue / numericValue / unit）；存在時 series 抽取直接採用。使用者數據點的載體。
-- **user_provided SourceFact**: `kind: "user_provided"` 的事實，代表使用者於編輯器輸入的數據；`sourceText` 標明來源為編輯器輸入；可帶 `replacesFactId` 稽核線索。
+- **ChartOperation**: 圖表編輯的結構化指令（union：`set_visual` / `remove_chart` / `add_chart` / `edit_data`），edit request 的可選欄位，server 驗證後依序套用。
+- **ChartVisualOverride**（新增）: `"auto" | "pie_donut" | "line" | "bar" | "metric_card" | "table"`——持久化為 `ChartTreatmentPlan` 的可選 `visualOverride` 欄位；`auto`/缺欄位 = 現行自動選型；具體值 = 優先嘗試、validator 照常守門。
+- **SourceFact.metric**（新增可選欄位）: 結構化數值（label / displayValue / numericValue / unit）；存在時 series 抽取直接採用。使用者數據點的載體；`displayValue` 與 `numericValue` 由 domain 自 `valueText + unit` 導出。
+- **user_provided SourceFact**: `kind: "user_provided"` 的事實，代表使用者於編輯器輸入的數據；id 確定性導出（FR-008）、`value` 鏡像 `metric.displayValue`（FR-007）、`sourceText` 標明來源為編輯器輸入；可帶 `replacesFactId` 稽核線索。
 - **衍生 ChartIntent / 衍生 ChartTreatmentPlan**: 操作套用後 immutable 產生的 intent 集合與 treatment plans，隨新 revision 持久化，成為後續編輯的 base。
-- **EditDataPoint**: `edit_data` 清單中的一點——`original`（引用 base fact）或 `user`（結構化數據）。
+- **EditDataPoint**: `edit_data` 清單中的一點——`original`（引用 base fact id）或 `user`（`{ label, valueText, unit, replacesFactId? }`）。
 
 ## Success Criteria *(mandatory)*
 
@@ -216,12 +230,12 @@
 - **SC-004**: 數據不滿足所選圖表類型的案例 100% 降級呈現且 100% 伴隨可讀 note（編輯 UI 與 review 皆可見）；0 張誤導圖表。
 - **SC-005**: 圖表編輯全流程 0 次 LLM 呼叫、0 個 DB schema migration。
 - **SC-006**: 含使用者數據的圖表 100% 在 generationSummary 帶揭露註記（n/m 點）。
-- **SC-007**: 對抗性 payload（不存在的 id、非有限數值、空 label、opening slide 放圖、重複放置、legacy base 帶操作）100% 被 400 拒絕且不建立 revision。
+- **SC-007**: 對抗性 payload（不存在的 id、非法 `valueText`、空 label、超長字串、超量 operations、`original.sourceFactId` 不屬於該 intent、同清單重複引用 fact、opening slide 放圖、對已有圖的頁放圖、legacy base 帶操作）100% 被 400 拒絕且不建立 revision。
 
 ## Assumptions
 
-- **單一圖表點數上限預設 12**——domain 常數可調，確值於 plan 階段以實際版面驗證後定案（table 既有 8 列截斷規則不變）。單一 slide 圖表數上限已於 clarify 定案為 **1**（見 Clarifications）。
-- 使用者數據的 `numericValue` 由前端自數值輸入解析帶出；前端確保 displayValue 與 numericValue 同步產生，server 不負責兩者語意一致性校驗（幾何一律以 numericValue 為準）。
+- 數值上限均已定案（FR-011）：單頁圖表 1、單圖點數 12、各欄位長度與 operations 數上限——皆為 domain 常數，調整即改常數＋測試。table 既有 8 列截斷規則不變。
+- 使用者只輸入 `valueText`（嚴格數字格式）與 `unit`；`numericValue` 與 `displayValue` 由 domain 確定性導出（FR-006），前端無需也不得自行計算提交。
 - `@slides-agent/domain` 維持 browser-bundle-safe（010 已建立），新增的操作套用邏輯同樣零 Node-only 依賴。
 - 編輯入口沿用 010 編輯頁；本 feature 不新增路由或頁面，僅擴充 `SlideEditPanel` 與儲存請求。
 - 持久化 `chartIntents` 含未放置 intents 的行為（已驗證於 `planSlideDeck`）為本 feature「從來源資料新增」的素材來源；若特定 deck 無未放置 intents，該清單顯示空狀態（仍可手動輸入）。
