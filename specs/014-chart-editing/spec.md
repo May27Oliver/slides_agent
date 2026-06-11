@@ -58,6 +58,13 @@
 - Q: 還原（undo）怎麼做？ → **A: 純前端、存檔前免費。** base revision 整個編輯期間都在 client 記憶體：單點還原靠 `replacesFactId` 撈回原 fact，整圖還原 = 重置回 base intent，整體放棄 = 既有草稿捨棄。不做存檔後的 revision 回滾 UI（版本鏈已保留歷史，回滾 UI 為 future）。
 - Q: 時間序列手動加點要讓使用者指定排序鍵嗎？ → **A: 不用。** 沿用既有 label 解析（`detectPeriodKey`）；解析不出排序照既有 `time_sort_failed` 降級＋note。不增加 UI 複雜度（CR-012）。
 
+### Session 2026-06-11（clarify：共享連動、降級策略、交付批次、圖表上限）
+
+- Q: 同一 intent 放在兩張 slide 上時，`edit_data` 的連動語意？ → **A: 連動所有放置處。** edit_data 改的是 intent 本身（單一真實來源），所有放置該圖表的 slide 一起更新；不做 per-placement 分叉（intent 膨脹、揭露複雜化，CR-012）。UI MUST 在編輯共享圖表時提示「此圖表也用於第 N 頁」。
+- Q: 編輯後數據不滿足所選類型時，儲存被擋還是降級？ → **A: 確認採自動降級＋註記（不擋儲存、不加確認對話框）。** 與生成路徑行為一致（CR-007）；UI 即時顯示降級 note 已足夠告知。
+- Q: 交付批次？ → **A: 維持 spec 現排序。** 第一批 US1（換類型）→ US2（移除/從來源新增）；第二批 US3/US4（數據編輯，user_provided 機制）。風險遞增、每批獨立可交付。
+- Q: 每張 slide 的圖表數量上限？ → **A: 1 個（定案，不再是 plan 假設）。** 16:9 投影片單圖最可讀，chart split 版面即為單圖設計。對已有圖表的 slide `add_chart` → 400；UI 對已有圖的頁不顯示「新增」入口（顯示既有圖表卡片的編輯/移除）。
+
 ---
 
 ## User Scenarios & Testing *(mandatory)*
@@ -87,7 +94,7 @@
 
 **Why this priority**: 兩者都是純現有資料的重組（placeholder 的增刪），共享同一套操作驗證機制；合在一起交付「調整圖表位置與有無」的完整能力。依賴 US1 建立的 operations 管線。
 
-**Independent Test**: 給一份 chartIntents 含未放置 intent 的 deck → (a) 移除某頁圖表並儲存：新 revision 該 slide 無 `chart_placeholder`、版面為無圖布局、intent 仍在 `chartIntents` 集合；(b) 將未放置 intent 加到另一頁並儲存：該 slide 多一個 `chart_placeholder`、圖表以該 intent 的來源事實渲染；(c) 對 opening slide add_chart → 400；(d) 同一 intent 重複加到同一 slide → 400。
+**Independent Test**: 給一份 chartIntents 含未放置 intent 的 deck → (a) 移除某頁圖表並儲存：新 revision 該 slide 無 `chart_placeholder`、版面為無圖布局、intent 仍在 `chartIntents` 集合；(b) 將未放置 intent 加到另一頁（無圖）並儲存：該 slide 多一個 `chart_placeholder`、圖表以該 intent 的來源事實渲染；(c) 對 opening slide add_chart → 400；(d) 對已有圖表的 slide add_chart → 400（每頁上限 1）。
 
 **Independent Demo**: 移除一頁的圖表 → 預覽版面變化 → 把同一張圖加到另一頁 → 儲存後重載驗證。
 
@@ -148,14 +155,14 @@
 - **使用者輸入極長 label** → 沿用既有 `MAX_LABEL_LENGTH` 截斷顯示規則，不另設規則。
 - **displayValue 與 numericValue 不一致**（如 display "30%"、numeric 99）：server 以提交的 `numericValue` 計算幾何、`displayValue` 原樣顯示——UI MUST 由數值輸入自動帶出兩者以避免不一致；display 本就允許 "~30%" 等自由格式，幾何一律以 numericValue 為準。
 - **時間序列加點 label 解析不出排序** → 既有 `time_sort_failed` 降級＋note，不提供手動排序鍵。
-- **重複放置**：同一 intent 在同一 slide 出現兩次 → 400；同一 intent 放到兩張不同 slide → 允許（資料共享、各自渲染）。
+- **重複/超量放置**：對已有圖表的 slide `add_chart` → 400（每頁上限 1）；同一 intent 放到兩張不同 slide → 允許（資料共享、各自渲染），對其 `edit_data` 連動所有放置處，UI 編輯時提示「此圖表也用於第 N 頁」。
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 - **FR-001（操作通道）**: 編輯儲存請求 MUST 支援可選的 `chartOperations` 清單，操作類型限定 `set_treatment` / `remove_chart` / `add_chart` / `edit_data`。server MUST 在白名單合併（010 `mergeEditedDeck`，語意不變）之後、確定性重渲染之前依**陣列序**套用操作。client 對保留 slide 的 `contentBlocks` echo 義務與篡改即 400 的語意 MUST 維持不變。
-- **FR-002（操作驗證）**: 每個操作引用的 `slideId` MUST 存在於 merged deck、`chartIntentId` MUST 存在於（套用前序操作後的）intents 集合；違反 → 400 `INVALID_EDIT`、不建立 revision、錯誤訊息指明違規操作。`add_chart` 對 opening slide → 400；同一 intent 於同一 slide 重複放置 → 400。
+- **FR-002（操作驗證）**: 每個操作引用的 `slideId` MUST 存在於 merged deck、`chartIntentId` MUST 存在於（套用前序操作後的）intents 集合；違反 → 400 `INVALID_EDIT`、不建立 revision、錯誤訊息指明違規操作。`add_chart` 對 opening slide → 400；對（套用前序操作後）已有圖表的 slide `add_chart` → 400（每頁上限 1）。
 - **FR-003（set_treatment）**: 換類型 MUST 僅更新衍生 `designPlan.chartTreatmentPlans` 中對應 intent 的 treatment（immutable 衍生新物件），不動數據、不動其他 plans；treatment 值域沿用既有 `ChartTreatment` 詞彙。
 - **FR-004（remove_chart）**: 移除 MUST 僅自指定 slide 的 `contentBlocks` 移除對應 `chart_placeholder`；intent 本身 MUST 保留於衍生 `chartIntents`（成為未放置，可再放置）。
 - **FR-005（add_chart / existing_intent）**: MUST 可將 intents 集合中任一 intent（含未放置者與本請求 `remove_chart` 後者）以新 `chart_placeholder` 放置到任一非 opening slide（含本次編輯新增的純文字 slide）。
@@ -164,12 +171,12 @@
 - **FR-008（出處誠實）**: 改過或新增的點 MUST 持久化為 `kind: "user_provided"` 的**新** fact（新 id，不得沿用任何 base fact id 作為其出處）；未動的點 MUST 原樣保留 base fact（id、lineage 不變）；被取代的原 fact MUST 自衍生 intent 移除；`replacesFactId` 僅供稽核/還原，MUST NOT 作為 provenance 呈現。
 - **FR-009（驗證與降級不變）**: 編輯後的 intents MUST 通過與生成路徑完全相同的 series 驗證與降級鏈；系統 MUST NOT 因數據不滿足所選類型而拒絕儲存，MUST 降級並產生既有 `ChartRenderingNote`；編輯 UI MUST 即時顯示這些 notes。
 - **FR-010（揭露）**: 任何含 `user_provided` fact 的圖表，新 revision 的 generationSummary MUST 含可讀標註（圖表所在 slide、使用者數據點數 n/m）；review 輸出同步反映（CR-002）。
-- **FR-011（輸入驗證）**: user 點的 label 去空白後 MUST 非空、`numericValue` MUST 為有限數字；單圖表點數與單 slide 圖表數 MUST 設上限（見 Assumptions），超出 → 400。所有驗證 MUST 在 server（domain 層）強制，前端驗證僅為 UX。
+- **FR-011（輸入驗證）**: user 點的 label 去空白後 MUST 非空、`numericValue` MUST 為有限數字；單一 slide 圖表數上限 **1**（clarify 定案）、單一圖表點數上限見 Assumptions，超出 → 400。所有驗證 MUST 在 server（domain 層）強制，前端驗證僅為 UX。
 - **FR-012（零 LLM）**: 圖表編輯的套用與重渲染全程 MUST NOT 呼叫 LLM（CR-004）。
 - **FR-013（持久化、零 migration）**: 衍生 `chartIntents` 與衍生 `designPlan` MUST 隨新 revision（`origin="edit"`）寫入既有 jsonb 欄位；MUST NOT 需要 DB schema migration；下次編輯以新 revision 為 base 時，先前的圖表編輯（含 user_provided facts）MUST 完整繼承。
 - **FR-014（live preview parity）**: client live preview MUST 以同一份 domain use-case + 同一 `chartOperations` 本地重渲染，與 server 儲存結果 byte-for-byte parity（沿用 010 FR-005a 機制）；操作變動觸發的 preview 更新維持 debounced、零網路。
 - **FR-015（legacy 防護）**: base revision `chartIntents` 為 null 時，非空 `chartOperations` → 400；UI MUST 停用圖表編輯入口並沿用既有 legacy 提示。
-- **FR-016（編輯 UI）**: 編輯頁 MUST 提供：圖表卡片（現類型、類型選擇器）、數據表格（label/數值/單位、來源徽章、單列還原、增刪列、拖曳排序）、整圖還原、移除、無圖頁的新增入口（「從來源資料」清單含 title/rationale/來源事實預覽 ＋「手動輸入」表單）、notes 即時呈現。視覺由 `ui-ux-pro-max` 引導，落於既有 React 19 + Tailwind v4 設計語言。
+- **FR-016（編輯 UI）**: 編輯頁 MUST 提供：圖表卡片（現類型、類型選擇器）、數據表格（label/數值/單位、來源徽章、單列還原、增刪列、拖曳排序）、整圖還原、移除、**僅無圖頁**顯示新增入口（「從來源資料」清單含 title/rationale/來源事實預覽 ＋「手動輸入」表單）、notes 即時呈現、共享圖表編輯時的「此圖表也用於第 N 頁」提示。視覺由 `ui-ux-pro-max` 引導，落於既有 React 19 + Tailwind v4 設計語言。
 - **FR-017（並發）**: 圖表編輯儲存 MUST 沿用 010 樂觀並發（`baseRevision` 比對、409、不靜默覆蓋）。
 
 ### HTML Slides Agent Constitution Requirements *(mandatory for slide-generation features)*
@@ -213,7 +220,7 @@
 
 ## Assumptions
 
-- **單一圖表點數上限預設 12、單一 slide 圖表數上限預設 2**——元件/domain 常數可調；確值於 plan 階段以實際版面驗證後定案（table 既有 8 列截斷規則不變）。
+- **單一圖表點數上限預設 12**——domain 常數可調，確值於 plan 階段以實際版面驗證後定案（table 既有 8 列截斷規則不變）。單一 slide 圖表數上限已於 clarify 定案為 **1**（見 Clarifications）。
 - 使用者數據的 `numericValue` 由前端自數值輸入解析帶出；前端確保 displayValue 與 numericValue 同步產生，server 不負責兩者語意一致性校驗（幾何一律以 numericValue 為準）。
 - `@slides-agent/domain` 維持 browser-bundle-safe（010 已建立），新增的操作套用邏輯同樣零 Node-only 依賴。
 - 編輯入口沿用 010 編輯頁；本 feature 不新增路由或頁面，僅擴充 `SlideEditPanel` 與儲存請求。
