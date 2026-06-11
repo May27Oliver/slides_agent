@@ -21,8 +21,7 @@ interface SlideNavigatorProps {
 /**
  * 010 (US1, FR-002): left/slides-tab navigator. A pure-text slide list (number +
  * title) — no thumbnails. Reordering is drag-and-drop (pointer + keyboard via
- * @dnd-kit, so it stays keyboard-operable, FR-017). Slides carrying read-only blocks
- * are flagged.
+ * @dnd-kit, so it stays keyboard-operable, FR-017).
  */
 export function SlideNavigator({
   slides,

@@ -29,8 +29,9 @@ const fieldBox =
 /**
  * 010 (US1, FR-003/FR-004): the structured edit form. Edits the grounded four fields
  * (title / message / outline bullets / speaker notes). Bullets reorder by drag (pointer
- * + keyboard via @dnd-kit, FR-017). Read-only content blocks are shown as a notice —
- * the server enforces this regardless of the UI (FR-021).
+ * + keyboard via @dnd-kit, FR-017). Charts edit through the composed `chartEditor`
+ * card (014); contentBlocks stay read-only at the server merge regardless of the UI
+ * (FR-021), so no client-side notice is needed.
  */
 export function SlideEditPanel({
   slide,
