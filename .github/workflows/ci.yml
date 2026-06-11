@@ -1,8 +1,8 @@
 name: CI
 
+# PRs run tests here. Pushes to main go through deploy.yml (test → build → deploy),
+# so the suite isn't double-run on main.
 on:
-  push:
-    branches: [main]
   pull_request:
 
 jobs:
