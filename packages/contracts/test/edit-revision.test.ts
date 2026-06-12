@@ -269,4 +269,65 @@ describe("edit revision contract (010 US1)", () => {
     expect(invalid.code).toBe("INVALID_EDIT");
     expect(invalid.fields).toEqual(["slideDeck"]);
   });
+
+  // 015 (FR-013): outline ids + textStyleOverrides ride the slideDeck — shape-checked
+  // here (enums are the DoS boundary); merge semantics stay in the domain.
+  describe("outline ids + textStyleOverrides (015)", () => {
+    function body(slide: Record<string, unknown>) {
+      return { baseRevision: 1, slideDeck: { id: "d", slides: [{ id: "s1", ...slide }] } };
+    }
+
+    it("accepts a legacy slide without ids or overrides (backward compat)", () => {
+      expect(validateEditRevisionRequest(body({ outline: [{ text: "t" }] })).ok).toBe(true);
+    });
+
+    it("accepts well-formed ids and overrides", () => {
+      const result = validateEditRevisionRequest(
+        body({
+          outline: [{ id: "b1", text: "t" }],
+          textStyleOverrides: {
+            title: { sizeLevel: "XL", colorToken: "accent" },
+            message: { colorToken: "text" },
+            outlineById: { b1: { sizeLevel: "S" } }
+          }
+        })
+      );
+      expect(result.ok).toBe(true);
+    });
+
+    it("rejects an empty-string outline id", () => {
+      expect(validateEditRevisionRequest(body({ outline: [{ id: "", text: "t" }] })).ok).toBe(
+        false
+      );
+    });
+
+    it("rejects out-of-enum sizeLevel / colorToken values", () => {
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizeLevel: "XXL" } } }))
+          .ok
+      ).toBe(false);
+      expect(
+        validateEditRevisionRequest(
+          body({ textStyleOverrides: { message: { colorToken: "#ff0000" } } })
+        ).ok
+      ).toBe(false);
+    });
+
+    it("rejects a non-object textStyleOverrides / outlineById", () => {
+      expect(validateEditRevisionRequest(body({ textStyleOverrides: "loud" })).ok).toBe(false);
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { outlineById: [] } })).ok
+      ).toBe(false);
+    });
+
+    it("rejects an oversized outlineById map (DoS boundary, same cap as bullets)", () => {
+      const big: Record<string, { sizeLevel: string }> = {};
+      for (let i = 0; i < 101; i += 1) {
+        big[`b${i}`] = { sizeLevel: "S" };
+      }
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { outlineById: big } })).ok
+      ).toBe(false);
+    });
+  });
 });

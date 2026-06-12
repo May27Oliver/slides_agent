@@ -359,7 +359,68 @@ function validateSlideShape(slide: unknown, index: number, issues: string[]): vo
       if (overLimit(text, FIELD_LIMITS.bullet)) {
         issues.push(`slides[${index}].outline[${i}].text too long`);
       }
+      // 015 (FR-015): optional stable bullet id — when present, a non-empty string.
+      const id = isRecord(item) ? item.id : undefined;
+      if (id !== undefined && (typeof id !== "string" || id.length === 0)) {
+        issues.push(`slides[${index}].outline[${i}].id must be a non-empty string`);
+      }
     });
+  }
+  validateTextStyleOverridesShape(slide.textStyleOverrides, index, issues);
+}
+
+// 015 (FR-013): enum whitelists ARE the DoS boundary — out-of-enum values reject at
+// the shape pass. Mirror the domain's TextSizeLevel/TextColorToken verbatim; the
+// schema json carries the same values (drift breaks its tests).
+const TEXT_SIZE_LEVELS = new Set(["S", "M", "L", "XL"]);
+const TEXT_COLOR_TOKENS = new Set(["text", "accent", "muted", "heading"]);
+
+function validateTextStyleOverridesShape(input: unknown, index: number, issues: string[]): void {
+  if (input === undefined) {
+    return;
+  }
+  if (!isRecord(input)) {
+    issues.push(`slides[${index}].textStyleOverrides must be an object`);
+    return;
+  }
+  validateOverrideShape(input.title, `slides[${index}].textStyleOverrides.title`, issues);
+  validateOverrideShape(input.message, `slides[${index}].textStyleOverrides.message`, issues);
+  if (input.outlineById !== undefined) {
+    if (!isRecord(input.outlineById)) {
+      issues.push(`slides[${index}].textStyleOverrides.outlineById must be an object`);
+      return;
+    }
+    const entries = Object.entries(input.outlineById);
+    // Same cap as the outline itself — the map can never outgrow its bullets.
+    if (entries.length > MAX_BULLETS_PER_SLIDE) {
+      issues.push(
+        `slides[${index}].textStyleOverrides.outlineById exceeds ${MAX_BULLETS_PER_SLIDE}`
+      );
+      return;
+    }
+    for (const [bulletId, override] of entries) {
+      validateOverrideShape(
+        override,
+        `slides[${index}].textStyleOverrides.outlineById["${bulletId}"]`,
+        issues
+      );
+    }
+  }
+}
+
+function validateOverrideShape(input: unknown, path: string, issues: string[]): void {
+  if (input === undefined) {
+    return;
+  }
+  if (!isRecord(input)) {
+    issues.push(`${path} must be an object`);
+    return;
+  }
+  if (input.sizeLevel !== undefined && !TEXT_SIZE_LEVELS.has(input.sizeLevel as string)) {
+    issues.push(`${path}.sizeLevel must be one of S/M/L/XL`);
+  }
+  if (input.colorToken !== undefined && !TEXT_COLOR_TOKENS.has(input.colorToken as string)) {
+    issues.push(`${path}.colorToken must be one of text/accent/muted/heading`);
   }
 }
 

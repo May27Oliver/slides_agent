@@ -181,6 +181,29 @@ describe("slide generation schema", () => {
     expect(summary.properties.themeSelectionWarnings.type).toBe("array");
   });
 
+  it("exposes 015 text-style fields (outline id + textStyleOverrides) without weakening closure", () => {
+    // Optional bullet id — legacy revisions without ids stay valid (zero migration).
+    const outlineItem = slideGenerationSchema.$defs.SlideOutlineItem;
+    expect(outlineItem.required).not.toContain("id");
+    expect(outlineItem.properties.id.type).toBe("string");
+    expect(outlineItem.properties.id.minLength).toBe(1);
+    expect(outlineItem.additionalProperties).toBe(false);
+
+    // Optional per-slide overrides; both axes are closed enums (the DoS boundary).
+    const slide = slideGenerationSchema.$defs.Slide;
+    expect(slide.required).not.toContain("textStyleOverrides");
+    expect(slide.properties.textStyleOverrides.$ref).toBe("#/$defs/SlideTextStyleOverrides");
+
+    const overrides = slideGenerationSchema.$defs.SlideTextStyleOverrides;
+    expect(overrides.additionalProperties).toBe(false);
+    expect(overrides.properties.outlineById.maxProperties).toBe(100);
+
+    const override = slideGenerationSchema.$defs.TextStyleOverride;
+    expect(override.properties.sizeLevel.enum).toEqual(["S", "M", "L", "XL"]);
+    expect(override.properties.colorToken.enum).toEqual(["text", "accent", "muted", "heading"]);
+    expect(override.additionalProperties).toBe(false);
+  });
+
   it("requires reviewable slide planning fields and does not expose final speakerNotes", () => {
     const slideDefinition = slideGenerationSchema.$defs.Slide;
 
