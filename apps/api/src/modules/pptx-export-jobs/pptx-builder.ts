@@ -1,5 +1,10 @@
 import PptxGenJS from "pptxgenjs";
 
+// pptxgenjs ships CJS; under the tsx/ESM runtime the default import resolves to
+// the module namespace, so unwrap the real constructor either way.
+const PptxCtor: typeof PptxGenJS =
+  (PptxGenJS as unknown as { default?: typeof PptxGenJS }).default ?? PptxGenJS;
+
 /** 16:9 PowerPoint canvas in inches (the pptxgenjs unit). */
 const LAYOUT = { name: "SLIDES_16x9", width: 13.333, height: 7.5 };
 
@@ -8,7 +13,7 @@ const LAYOUT = { name: "SLIDES_16x9", width: 13.333, height: 7.5 };
  * Pure data-in/data-out so the execution flow stays testable around it.
  */
 export async function buildPptxFromImages(pngs: readonly Buffer[]): Promise<Buffer> {
-  const pptx = new PptxGenJS();
+  const pptx = new PptxCtor();
   pptx.defineLayout(LAYOUT);
   pptx.layout = LAYOUT.name;
   for (const png of pngs) {

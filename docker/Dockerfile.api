@@ -36,6 +36,13 @@ COPY apps/api/package.json apps/api/package.json
 COPY apps/web/package.json apps/web/package.json
 RUN pnpm install --frozen-lockfile --filter "@slides-agent/api..."
 
+# 015 (US2, research R2): the worker renders PPTX screenshots with headless
+# chromium. The browser + its system deps bake into the shared image (the api
+# process never launches it — one image, no drift, DR-001). Pinned cache path so
+# the install is layer-cached until the playwright version changes.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN pnpm --filter "@slides-agent/api" exec playwright install --with-deps chromium
+
 # --- source layer: the tsx runtime needs the real sources + the shared base
 # tsconfig (apps/api/tsconfig.json extends ../../tsconfig.base.json).
 COPY tsconfig.base.json tsconfig.base.json
