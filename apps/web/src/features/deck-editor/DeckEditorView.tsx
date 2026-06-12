@@ -28,6 +28,7 @@ import {
   loadDraft,
   saveDraft
 } from "@/features/deck-editor/deck-draft-storage";
+import { buildHtmlDownload } from "@/features/slide-generation/download-html";
 import { AddChartPanel } from "@/features/deck-editor/AddChartPanel";
 import { ChartDataTable } from "@/features/deck-editor/ChartDataTable";
 import { ChartEditorCard } from "@/features/deck-editor/ChartEditorCard";
@@ -255,16 +256,12 @@ export function DeckEditorView({
 
   // US2 (FR-005/FR-016): the add entry shows only on a chartless, non-opening slide.
   const showAddChart = Boolean(
-    draft &&
-    selectedSlide &&
-    !chartCard &&
-    selectedSlide.slideKind !== "opening" &&
-    canEditCharts
+    draft && selectedSlide && !chartCard && selectedSlide.slideKind !== "opening" && canEditCharts
   );
 
   const showLegacyChartNotice = Boolean(
     !canEditCharts &&
-      selectedSlide?.contentBlocks.some((block) => block.kind === "chart_placeholder")
+    selectedSlide?.contentBlocks.some((block) => block.kind === "chart_placeholder")
   );
 
   const usedPagesByIntent = useMemo(() => {
@@ -350,6 +347,9 @@ export function DeckEditorView({
           {dirty ? <span className="text-xs text-amber-600">{t("editor.unsaved")}</span> : null}
         </div>
         <div className="flex items-center gap-3">
+          {/* 015 US1 (FR-001/FR-002): download the ADOPTED revision's html; while dirty
+              the entry is disabled — the download must match what's saved on the server. */}
+          <HtmlDownloadEntry base={base} deckTitle={deckTitle} dirty={dirty} />
           <SaveStatus saveState={saveState} />
           <button
             type="button"
@@ -508,6 +508,53 @@ export function DeckEditorView({
 
 function hasThemeSelection(selection: ManualThemeSelection): boolean {
   return Boolean(selection.fontId || selection.paletteId || selection.styleId);
+}
+
+/**
+ * 015 US1: header download entry. Renders a real download link only when the deck is
+ * clean (dirty=false) — the file is the adopted revision's server html, named
+ * `<sanitized-title>-rev<N>-<timestamp>.html` (FR-001). While dirty it degrades to a
+ * disabled hint ("save first", FR-002); with no revision html it renders nothing.
+ */
+function HtmlDownloadEntry({
+  base,
+  deckTitle,
+  dirty
+}: {
+  base: DeckRevisionContract;
+  deckTitle: string;
+  dirty: boolean;
+}) {
+  const { t } = useI18n();
+  const download = useMemo(
+    () =>
+      base.html && !dirty
+        ? buildHtmlDownload(base.html, { deckTitle, revision: base.revision })
+        : null,
+    [base, deckTitle, dirty]
+  );
+  if (!base.html) {
+    return null;
+  }
+  if (!download) {
+    return (
+      <span
+        title={t("editor.download.needSave")}
+        className="cursor-not-allowed rounded-lg border border-line px-3 py-1 font-medium text-ink-soft opacity-50"
+      >
+        {t("editor.download.html")}
+      </span>
+    );
+  }
+  return (
+    <a
+      download={download.filename}
+      href={download.href}
+      className="rounded-lg border border-line px-3 py-1 font-medium text-ink hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
+    >
+      {t("editor.download.html")}
+    </a>
+  );
 }
 
 function SaveStatus({ saveState }: { saveState: SaveState }) {

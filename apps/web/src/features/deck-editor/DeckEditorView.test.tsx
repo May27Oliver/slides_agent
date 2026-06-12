@@ -175,6 +175,36 @@ describe("DeckEditorView (010 US1)", () => {
     });
   });
 
+  // 015 US1 (FR-001/FR-002): download targets the adopted revision; dirty blocks it.
+  it("offers an HTML download for the adopted revision and disables it while dirty", async () => {
+    getDeck.mockResolvedValue(detail);
+    renderEditor();
+    await screen.findByDisplayValue(/目標: conversion/);
+
+    const download = screen.getByRole("link", { name: "下載 HTML" }) as HTMLAnchorElement;
+    expect(download.getAttribute("href")).toContain("data:text/html");
+    expect(download.getAttribute("download")).toMatch(
+      /^PM-planning-review-rev1-\d{8}-\d{6}\.html$/
+    );
+
+    // Editing makes the draft dirty → the entry is disabled with a save-first hint.
+    fireEvent.change(screen.getByDisplayValue(/目標: conversion/), { target: { value: "x" } });
+    expect(screen.queryByRole("link", { name: "下載 HTML" })).toBeNull();
+    expect(screen.getByTitle("請先儲存，下載對應已存版本")).toBeTruthy();
+  });
+
+  it("hides the HTML download entirely when the deck has no revision html", async () => {
+    getDeck.mockResolvedValue({
+      ...detail,
+      currentRevision: { ...fixtureRevision, html: null }
+    });
+    renderEditor();
+    await screen.findByDisplayValue(/目標: conversion/);
+
+    expect(screen.queryByRole("link", { name: "下載 HTML" })).toBeNull();
+    expect(screen.queryByTitle("請先儲存，下載對應已存版本")).toBeNull();
+  });
+
   it("shows a legacy chart notice instead of editable chart controls when chartIntents is null", async () => {
     getDeck.mockResolvedValue({
       ...detail,
