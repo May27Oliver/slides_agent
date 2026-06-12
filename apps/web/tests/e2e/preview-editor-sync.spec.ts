@@ -99,7 +99,7 @@ test("navigating inside the preview moves the edit panel to that slide (014)", a
   });
 
   await page.goto(`/decks/${DECK_ID}/edit`);
-  const title = page.getByLabel("標題");
+  const title = page.getByRole("textbox", { name: "標題" });
   await expect(title).toHaveValue("第一張標題");
 
   // Click the deck runtime's own › button INSIDE the preview iframe.
