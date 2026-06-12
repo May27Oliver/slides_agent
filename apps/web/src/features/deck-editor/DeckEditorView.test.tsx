@@ -187,10 +187,14 @@ describe("DeckEditorView (010 US1)", () => {
       /^PM-planning-review-rev1-\d{8}-\d{6}\.html$/
     );
 
-    // Editing makes the draft dirty → the entry is disabled with a save-first hint.
+    // Editing makes the draft dirty → BOTH download entries (HTML + PPTX) are
+    // disabled with the save-first hint.
     fireEvent.change(screen.getByDisplayValue(/目標: conversion/), { target: { value: "x" } });
     expect(screen.queryByRole("link", { name: "下載 HTML" })).toBeNull();
-    expect(screen.getByTitle("請先儲存，下載對應已存版本")).toBeTruthy();
+    const hints = screen.getAllByTitle("請先儲存，下載對應已存版本");
+    expect(hints.map((el) => el.textContent)).toEqual(
+      expect.arrayContaining(["下載 HTML", "下載 PPTX"])
+    );
   });
 
   it("hides the HTML download entirely when the deck has no revision html", async () => {

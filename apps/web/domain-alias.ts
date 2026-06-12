@@ -17,6 +17,7 @@ const DOMAIN_SUBDIRS = [
   "deck",
   "design",
   "preview-job",
+  "pptx-export-job",
   "rendering",
   "review",
   "shared"

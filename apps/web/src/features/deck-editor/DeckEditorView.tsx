@@ -30,6 +30,7 @@ import {
 } from "@/features/deck-editor/deck-draft-storage";
 import { buildHtmlDownload } from "@/features/slide-generation/download-html";
 import { AddChartPanel } from "@/features/deck-editor/AddChartPanel";
+import { PptxExportButton } from "@/features/deck-editor/PptxExportButton";
 import { ChartDataTable } from "@/features/deck-editor/ChartDataTable";
 import { ChartEditorCard } from "@/features/deck-editor/ChartEditorCard";
 import { EditableSlideDraft } from "@/features/deck-editor/editable-slide-draft";
@@ -350,6 +351,15 @@ export function DeckEditorView({
           {/* 015 US1 (FR-001/FR-002): download the ADOPTED revision's html; while dirty
               the entry is disabled — the download must match what's saved on the server. */}
           <HtmlDownloadEntry base={base} deckTitle={deckTitle} dirty={dirty} />
+          {/* 015 US2 (FR-003): async PPTX export of the SAME adopted revision. */}
+          {base.html ? (
+            <PptxExportButton
+              deckId={id}
+              revision={base.revision}
+              dirty={dirty}
+              fetchImpl={authFetch}
+            />
+          ) : null}
           <SaveStatus saveState={saveState} />
           <button
             type="button"
