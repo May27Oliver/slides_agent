@@ -96,9 +96,38 @@ export type SlideOutlineEmphasis =
   | "context";
 
 export interface SlideOutlineItem {
+  /**
+   * 015 (FR-015): stable, opaque, slide-unique bullet id — the binding key for
+   * per-bullet text style overrides. Optional: legacy revisions have none; the
+   * client backfills lazily and the id persists on the next saved revision.
+   */
+  id?: string;
   text: string;
   sourceTrace: string[];
   emphasis: SlideOutlineEmphasis;
+}
+
+/** 015 (FR-007): relative size step over the theme's base type scale. M = default. */
+export type TextSizeLevel = "S" | "M" | "L" | "XL";
+
+/** 015 (FR-008): theme palette role token — never a raw color value. */
+export type TextColorToken = "text" | "accent" | "muted" | "heading";
+
+/**
+ * 015 (FR-016): presentation-only override for one text field. Both properties are
+ * optional; an absent property means the theme default (size M / role color). The
+ * default values themselves are never stored (normalization strips them).
+ */
+export interface TextStyleOverride {
+  sizeLevel?: TextSizeLevel;
+  colorToken?: TextColorToken;
+}
+
+/** 015 (FR-016): a slide's per-field text style overrides; outline binds by bullet id. */
+export interface SlideTextStyleOverrides {
+  title?: TextStyleOverride;
+  message?: TextStyleOverride;
+  outlineById?: Record<string, TextStyleOverride>;
 }
 
 export interface LayoutIntent {
@@ -146,6 +175,8 @@ export interface Slide {
   contentBlocks: ContentBlock[];
   sourceTrace: string[];
   speakerNotesDraft: string;
+  /** 015 (FR-016): optional per-field text style overrides; absent = theme defaults. */
+  textStyleOverrides?: SlideTextStyleOverrides;
 }
 
 export interface SlideDeck {

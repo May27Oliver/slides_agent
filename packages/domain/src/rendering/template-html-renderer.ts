@@ -9,6 +9,7 @@ import type { RenderedChartSummary } from "@/rendering/chart-rendering.types";
 import { buildDeckRuntimeScript } from "@/rendering/deck-runtime-script";
 import { buildDeckStyleCss } from "@/rendering/deck-style-css";
 import { escapeAttribute, escapeHtml } from "@/rendering/sanitize";
+import { textStyleInlineStyle } from "@/rendering/text-style-override";
 import { cleanDisplayText } from "@/shared/clean-display-text";
 
 export interface TemplateDeckInput {
@@ -131,11 +132,18 @@ function renderSlide(
   const visibleOutline = useChartSplit
     ? slide.outline.filter((item) => !bulletEchoesChart(cleanDisplayText(item.text), chartValues))
     : slide.outline;
+  // 015 (FR-009/FR-010): per-field text style overrides come from the ONE domain
+  // helper; bullets bind by outline id (never by position), so filtering/reorder
+  // can't misattach a style.
+  const styles = slide.textStyleOverrides;
   const bullets = visibleOutline
-    .map(
-      (item, itemIndex) =>
-        `          <li class="bullet anim" style="--d:${itemIndex + 2}">${escapeHtml(cleanDisplayText(item.text))}</li>`
-    )
+    .map((item, itemIndex) => {
+      const bulletStyle = appendStyle(
+        `--d:${itemIndex + 2}`,
+        textStyleInlineStyle(item.id ? styles?.outlineById?.[item.id] : undefined, "bullet")
+      );
+      return `          <li class="bullet anim" style="${bulletStyle}">${escapeHtml(cleanDisplayText(item.text))}</li>`;
+    })
     .join("\n");
   const chartRender = chartContext
     ? renderChartFragments(input, styleKit, chartContext, chartIntents, useChartSplit, slide.id)
@@ -143,19 +151,27 @@ function renderSlide(
   const chartsHtml = chartRender.html;
 
   const messageHtml = escapeHtml(cleanDisplayText(slide.message));
+  const titleStyle = appendStyle("--d:1", textStyleInlineStyle(styles?.title, "title"));
+  const messageStyle = appendStyle("--d:1", textStyleInlineStyle(styles?.message, "message"));
   // In the chart-feature split the message becomes the prominent right-side
   // takeaway, so it is NOT also shown as a header subtitle (no duplication).
   const headerMessage = useChartSplit
     ? ""
-    : `\n        <p class="message anim" style="--d:1">${messageHtml}</p>`;
+    : `\n        <p class="message anim" style="${messageStyle}">${messageHtml}</p>`;
   const body = useChartSplit
-    ? renderChartSplitBody(messageHtml, bullets, visibleOutline.length > 0, chartsHtml)
+    ? renderChartSplitBody(
+        messageHtml,
+        textStyleInlineStyle(styles?.message, "message"),
+        bullets,
+        visibleOutline.length > 0,
+        chartsHtml
+      )
     : renderStackedBody(bullets, chartsHtml);
 
   const html = `    <section class="${classes.join(" ")}" data-slide-id="${escapeAttribute(slide.id)}" data-pattern="${escapeAttribute(pattern)}" data-bg="${escapeAttribute(layout)}" aria-label="第 ${index + 1} 張：${escapeAttribute(cleanDisplayText(slide.title))}" tabindex="-1">
       <div class="slide-body">
         <span class="eyebrow anim" style="--d:0"><span class="dot"></span>${eyebrow}</span>
-        <${titleTag} class="slide-title anim" style="--d:1">${escapeHtml(cleanDisplayText(slide.title))}</${titleTag}>${headerMessage}
+        <${titleTag} class="slide-title anim" style="${titleStyle}">${escapeHtml(cleanDisplayText(slide.title))}</${titleTag}>${headerMessage}
         ${body}
       </div>
     </section>`;
@@ -180,6 +196,7 @@ ${bullets}
  */
 function renderChartSplitBody(
   messageHtml: string,
+  messageStyle: string,
   bullets: string,
   hasInsights: boolean,
   chartsHtml: string
@@ -190,12 +207,19 @@ function renderChartSplitBody(
 ${bullets}
             </ul>`
     : "";
+  // 015: the takeaway IS the slide message, so the message override applies here too.
+  const takeawayStyle = messageStyle ? ` style="${messageStyle}"` : "";
   return `<div class="chart-split anim" style="--d:2">
           <div class="chart-split-media"><div class="charts">${chartsHtml}</div></div>
           <div class="chart-split-text">
-            <p class="chart-takeaway">${messageHtml}</p>${points}
+            <p class="chart-takeaway"${takeawayStyle}>${messageHtml}</p>${points}
           </div>
         </div>`;
+}
+
+/** Joins the base animation style with an optional override fragment. */
+function appendStyle(base: string, override: string): string {
+  return override ? `${base};${override}` : base;
 }
 
 /** True when a bullet merely restates one of the chart's data values. */
