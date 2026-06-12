@@ -237,3 +237,14 @@ export {
   type PreviewJobStatusResponseContract,
   type PreviewJobUnavailableResponseContract
 } from "./preview-job";
+
+// 015 US2: PPTX export job (create / poll / download).
+export {
+  validateCreatePptxExportRequest,
+  validatePptxExportJobStatusResponse,
+  type CreatePptxExportRequestContract,
+  type CreatePptxExportResponseContract,
+  type PptxExportJobStatusContract,
+  type PptxExportJobStatusResponseContract,
+  type PptxExportValidationResult
+} from "./pptx-export-job";
