@@ -135,18 +135,30 @@ export function LivePreview({
         </span>
       </div>
       {html ? (
-        <div ref={fullscreenRef} className="min-h-0 flex-1 bg-[#0b1512]">
-          <iframe
-            ref={iframeRef}
-            onLoad={syncSelectedSlide}
-            className="h-full w-full overflow-hidden rounded-2xl border border-line bg-[#0b1512]"
-            srcDoc={html}
-            title={t("editor.preview.heading")}
-            // Untrusted deck HTML gets an opaque origin; allow-scripts keeps keyboard nav.
-            sandbox="allow-scripts"
-            allow="fullscreen"
-            referrerPolicy="no-referrer"
-          />
+        // 015 US4 (FR-012): the fullscreen target doubles as a size container; inside it
+        // the letterbox box is the LARGEST 16:9 rectangle that fits (paired max-w/max-h
+        // in container-query units), centered — so the deck (100vw×100vh in the iframe)
+        // always shows at the true slide aspect, in-page AND fullscreen.
+        <div
+          ref={fullscreenRef}
+          className="flex min-h-0 flex-1 items-center justify-center bg-[#0b1512] [container-type:size]"
+        >
+          <div
+            data-testid="preview-letterbox"
+            className="h-full max-h-[calc(100cqw*9/16)] w-full max-w-[calc(100cqh*16/9)]"
+          >
+            <iframe
+              ref={iframeRef}
+              onLoad={syncSelectedSlide}
+              className="h-full w-full overflow-hidden rounded-2xl border border-line bg-[#0b1512]"
+              srcDoc={html}
+              title={t("editor.preview.heading")}
+              // Untrusted deck HTML gets an opaque origin; allow-scripts keeps keyboard nav.
+              sandbox="allow-scripts"
+              allow="fullscreen"
+              referrerPolicy="no-referrer"
+            />
+          </div>
         </div>
       ) : (
         <p className="rounded-2xl border border-line bg-panel px-4 py-6 text-sm text-ink-soft">
