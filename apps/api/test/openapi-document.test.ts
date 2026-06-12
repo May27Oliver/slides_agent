@@ -11,6 +11,9 @@ describe("buildOpenApiDocument", () => {
       "/api/decks",
       "/api/decks/{id}",
       "/api/decks/{id}/revisions",
+      "/api/decks/{id}/pptx-exports",
+      "/api/decks/{id}/pptx-exports/{jobId}",
+      "/api/decks/{id}/pptx-exports/{jobId}/file",
       "/api/slides/preview",
       "/api/slides/preview-jobs",
       "/api/slides/preview-jobs/{jobId}",
@@ -76,18 +79,22 @@ describe("buildOpenApiDocument", () => {
   it("documents 014 chartOperations as the full discriminated public contract", () => {
     const post = doc.paths["/api/decks/{id}/revisions"]!.post!;
     const requestSchema = (
-      post.requestBody as { content: Record<string, { schema: { properties: Record<string, unknown> } }> }
+      post.requestBody as {
+        content: Record<string, { schema: { properties: Record<string, unknown> } }>;
+      }
     ).content["application/json"]!.schema;
     const chartOperations = requestSchema.properties.chartOperations as {
       maxItems: number;
-      items: { oneOf: Array<{ additionalProperties?: boolean; properties: Record<string, unknown> }> };
+      items: {
+        oneOf: Array<{ additionalProperties?: boolean; properties: Record<string, unknown> }>;
+      };
     };
 
     expect(chartOperations.maxItems).toBe(50);
     expect(chartOperations.items.oneOf).toHaveLength(4);
-    expect(chartOperations.items.oneOf.every((schema) => schema.additionalProperties === false)).toBe(
-      true
-    );
+    expect(
+      chartOperations.items.oneOf.every((schema) => schema.additionalProperties === false)
+    ).toBe(true);
     const addChart = chartOperations.items.oneOf.find((schema) => "source" in schema.properties);
     expect(addChart).toBeDefined();
     const source = addChart!.properties.source as {

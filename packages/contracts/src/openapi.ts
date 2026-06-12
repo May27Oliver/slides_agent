@@ -500,7 +500,11 @@ const CHART_OPERATION_SCHEMA: OpenApiSchema = {
                 kind: { type: "string", enum: ["user_data"] },
                 title: { type: "string", maxLength: MAX_CHART_LABEL_CHARS },
                 visual: { type: "string", enum: CHART_VISUAL_OVERRIDES },
-                points: { type: "array", maxItems: MAX_CHART_POINTS, items: USER_POINT_INPUT_SCHEMA }
+                points: {
+                  type: "array",
+                  maxItems: MAX_CHART_POINTS,
+                  items: USER_POINT_INPUT_SCHEMA
+                }
               }
             }
           ]
@@ -551,6 +555,53 @@ export const INVALID_EDIT_SCHEMA: OpenApiSchema = errorSchema(
   ["INVALID_EDIT"],
   "Edit could not be applied."
 );
+
+// 015 US2: PPTX export job (create / poll / download) on the deck resource.
+export const CREATE_PPTX_EXPORT_REQUEST_SCHEMA: OpenApiSchema = {
+  type: "object",
+  required: ["revision"],
+  properties: {
+    revision: {
+      type: "integer",
+      minimum: 0,
+      description: "The EXACT revision to export (FR-003a); must be the deck's current revision."
+    }
+  }
+};
+
+export const CREATE_PPTX_EXPORT_RESPONSE_SCHEMA: OpenApiSchema = {
+  type: "object",
+  required: ["jobId", "status", "statusUrl"],
+  properties: {
+    jobId: { type: "string", example: "pptx_job_8f1c2d3e4a5b6c7d" },
+    status: { type: "string", enum: ["queued"] },
+    statusUrl: { type: "string", example: "/api/decks/{id}/pptx-exports/{jobId}" }
+  }
+};
+
+export const PPTX_EXPORT_STATUS_RESPONSE_SCHEMA: OpenApiSchema = {
+  type: "object",
+  required: ["jobId", "status", "createdAt", "updatedAt"],
+  properties: {
+    jobId: { type: "string" },
+    status: { type: "string", enum: ["queued", "processing", "done", "failed"] },
+    pageCount: { type: "integer" },
+    downloadUrl: {
+      type: "string",
+      description: "Present only when status=done and the artifact is within its TTL."
+    },
+    failure: {
+      type: "object",
+      required: ["reason", "message"],
+      properties: {
+        reason: { type: "string", enum: ["timeout", "export"] },
+        message: { type: "string" }
+      }
+    },
+    createdAt: { type: "string", format: "date-time" },
+    updatedAt: { type: "string", format: "date-time" }
+  }
+};
 
 export const REVISION_CONFLICT_SCHEMA: OpenApiSchema = {
   type: "object",
