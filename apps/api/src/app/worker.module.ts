@@ -9,6 +9,14 @@ import {
   previewJobStoreProvider,
   queueConfigProvider
 } from "@/modules/preview-jobs/preview-jobs.providers";
+import { PlaywrightSlideScreenshotter } from "@/modules/pptx-export-jobs/playwright-slide-screenshotter";
+import { PptxExportWorkerRuntime } from "@/modules/pptx-export-jobs/pptx-export-worker.runtime";
+import { PPTX_BROWSER_FACTORY } from "@/modules/pptx-export-jobs/pptx-export-jobs.tokens";
+import {
+  pptxArtifactStoreProvider,
+  pptxExportJobStoreProvider,
+  pptxQueueConfigProvider
+} from "@/modules/pptx-export-jobs/pptx-export-jobs.providers";
 
 /**
  * The worker process: shared Redis + DB infra + the slides generation capability
@@ -23,7 +31,13 @@ import {
     queueConfigProvider,
     previewJobStoreProvider,
     { provide: DECK_STORE, useClass: DrizzleDeckStore },
-    PreviewWorkerRuntime
+    PreviewWorkerRuntime,
+    // 015 US2: the PPTX export consumer — chromium screenshots + pptx assembly.
+    pptxQueueConfigProvider,
+    pptxExportJobStoreProvider,
+    pptxArtifactStoreProvider,
+    { provide: PPTX_BROWSER_FACTORY, useClass: PlaywrightSlideScreenshotter },
+    PptxExportWorkerRuntime
   ]
 })
 export class WorkerModule {}
