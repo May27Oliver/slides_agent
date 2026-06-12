@@ -142,10 +142,7 @@ describe("mergeEditedDeck (010 US1)", () => {
 
   it("rejects a new slide that smuggles in content blocks (chart injection)", () => {
     const base = deck([slide({ id: "s1" })]);
-    const edited = deck([
-      slide({ id: "s1" }),
-      slide({ id: "new-1", contentBlocks: [chartBlock] })
-    ]);
+    const edited = deck([slide({ id: "s1" }), slide({ id: "new-1", contentBlocks: [chartBlock] })]);
     const result = mergeEditedDeck(base, edited);
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -209,5 +206,177 @@ describe("mergeEditedDeck (010 US1)", () => {
     const traces = result.slideDeck.slides[0]!.outline.map((o) => o.sourceTrace);
     // First two consume the FIFO pool; the third is a "new" duplicate → cleared.
     expect(traces).toEqual([["trace-A"], ["trace-B"], []]);
+  });
+});
+
+/**
+ * 015 US3 (FR-015/FR-016): outline ids and textStyleOverrides ride the SAME merge.
+ * Two independent tracks (R1): the bullet `id` is taken from the edited deck
+ * verbatim (the binding key the client backfilled); sourceTrace/emphasis still come
+ * from the text-FIFO fidelity match against base — a rewritten bullet keeps its id
+ * but loses its trace.
+ */
+describe("mergeEditedDeck outline ids + text style overrides (015 US3)", () => {
+  function bullet(id: string, text: string, trace: string[] = []): SlideOutlineItem {
+    return { id, text, sourceTrace: trace, emphasis: "evidence" };
+  }
+
+  it("keeps edited ids while restoring trace by text (base has no ids)", () => {
+    const base = deck([
+      slide({
+        id: "s1",
+        outline: [outlineItem("Kept bullet", ["fact-keep"]), outlineItem("Will rewrite", ["x"])]
+      })
+    ]);
+    const edited = deck([
+      slide({
+        id: "s1",
+        outline: [bullet("b1", "Kept bullet"), bullet("b2", "Rewritten now")]
+      })
+    ]);
+
+    const result = mergeEditedDeck(base, edited);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const o = result.slideDeck.slides[0]!.outline;
+    // id track: edited is authoritative. trace track: text-FIFO against base.
+    expect(o[0]).toEqual({
+      id: "b1",
+      text: "Kept bullet",
+      sourceTrace: ["fact-keep"],
+      emphasis: "evidence"
+    });
+    expect(o[1]).toEqual({ id: "b2", text: "Rewritten now", sourceTrace: [], emphasis: "context" });
+  });
+
+  it("keeps duplicate-text bullets' distinct ids intact", () => {
+    const base = deck([slide({ id: "s1", outline: [outlineItem("dup", ["trace-A"])] })]);
+    const edited = deck([slide({ id: "s1", outline: [bullet("b1", "dup"), bullet("b2", "dup")] })]);
+    const result = mergeEditedDeck(base, edited);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.slideDeck.slides[0]!.outline.map((o) => o.id)).toEqual(["b1", "b2"]);
+  });
+
+  it("whitelists textStyleOverrides on a retained slide", () => {
+    const base = deck([slide({ id: "s1", outline: [outlineItem("Base bullet")] })]);
+    const edited = deck([
+      slide({
+        id: "s1",
+        outline: [bullet("b1", "Base bullet")],
+        textStyleOverrides: {
+          title: { sizeLevel: "XL", colorToken: "accent" },
+          outlineById: { b1: { colorToken: "muted" } }
+        }
+      })
+    ]);
+    const result = mergeEditedDeck(base, edited);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.slideDeck.slides[0]!.textStyleOverrides).toEqual({
+      title: { sizeLevel: "XL", colorToken: "accent" },
+      outlineById: { b1: { colorToken: "muted" } }
+    });
+  });
+
+  it("normalizes away default-only entries and orphaned outline keys", () => {
+    const base = deck([slide({ id: "s1", outline: [outlineItem("Base bullet")] })]);
+    const edited = deck([
+      slide({
+        id: "s1",
+        outline: [bullet("b1", "Base bullet")],
+        textStyleOverrides: {
+          title: { sizeLevel: "M" }, // default-only → stripped
+          message: {}, // empty → stripped
+          outlineById: {
+            b1: { sizeLevel: "L" },
+            ghost: { sizeLevel: "XL" } // no such bullet id → orphan, dropped
+          }
+        }
+      })
+    ]);
+    const result = mergeEditedDeck(base, edited);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.slideDeck.slides[0]!.textStyleOverrides).toEqual({
+      outlineById: { b1: { sizeLevel: "L" } }
+    });
+  });
+
+  it("omits textStyleOverrides entirely when everything normalizes away", () => {
+    const base = deck([slide({ id: "s1" })]);
+    const edited = deck([
+      slide({
+        id: "s1",
+        outline: [outlineItem("Base bullet")],
+        textStyleOverrides: { title: { sizeLevel: "M" }, outlineById: {} }
+      })
+    ]);
+    const result = mergeEditedDeck(base, edited);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.slideDeck.slides[0]!.textStyleOverrides).toBeUndefined();
+  });
+
+  it("does not resurrect base overrides after a full reset (edited carries none)", () => {
+    const base = deck([
+      slide({
+        id: "s1",
+        outline: [outlineItem("Base bullet")],
+        textStyleOverrides: { title: { sizeLevel: "XL" } } // persisted by an earlier save
+      })
+    ]);
+    const edited = deck([slide({ id: "s1", outline: [outlineItem("Base bullet")] })]);
+    const result = mergeEditedDeck(base, edited);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.slideDeck.slides[0]!.textStyleOverrides).toBeUndefined();
+  });
+
+  it("keeps the read-only wall intact (overrides are NOT a tamper)", () => {
+    const base = deck([slide({ id: "s1", contentBlocks: [chartBlock] })]);
+    // textStyleOverrides + ids are editable; contentBlocks tampering still rejects.
+    const styledOk = deck([
+      slide({
+        id: "s1",
+        contentBlocks: [chartBlock],
+        textStyleOverrides: { title: { colorToken: "accent" } }
+      })
+    ]);
+    expect(mergeEditedDeck(base, styledOk).ok).toBe(true);
+
+    const tampered = deck([
+      slide({
+        id: "s1",
+        contentBlocks: [{ ...chartBlock, chartIntentId: "chart-INJECTED" }],
+        textStyleOverrides: { title: { colorToken: "accent" } }
+      })
+    ]);
+    expect(mergeEditedDeck(base, tampered).ok).toBe(false);
+  });
+
+  it("carries ids and normalized overrides on a NEW slide too", () => {
+    const base = deck([slide({ id: "s1" })]);
+    const edited = deck([
+      slide({ id: "s1" }),
+      slide({
+        id: "new-1",
+        outline: [bullet("nb1", "New bullet")],
+        contentBlocks: [],
+        textStyleOverrides: {
+          message: { sizeLevel: "S" },
+          outlineById: { nb1: { colorToken: "accent" }, ghost: { sizeLevel: "XL" } }
+        }
+      })
+    ]);
+    const result = mergeEditedDeck(base, edited);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const added = result.slideDeck.slides[1]!;
+    expect(added.outline[0]!.id).toBe("nb1");
+    expect(added.textStyleOverrides).toEqual({
+      message: { sizeLevel: "S" },
+      outlineById: { nb1: { colorToken: "accent" } }
+    });
   });
 });

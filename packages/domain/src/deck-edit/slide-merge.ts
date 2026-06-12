@@ -7,6 +7,7 @@ import type {
   SlideOutlineItem,
   SlideType
 } from "@/deck/deck.types";
+import { normalizeTextStyleOverrides } from "@/deck-edit/text-style-normalize";
 
 /**
  * 010 (US1, data-model §3/§4): merge a client-edited deck onto the server-loaded
@@ -51,36 +52,50 @@ export function mergeEditedDeck(base: SlideDeck, edited: SlideDeck): SlideMergeR
       if (tamper) {
         return reject(tamper);
       }
+      const mergedOutline = mergeOutline(baseSlide.outline, editedSlide.outline);
+      // 015 (FR-016): textStyleOverrides are user-editable (like title), normalized
+      // against the merged outline so no style outlives its bullet. The base value is
+      // dropped first — a full reset (edited carries none) must not resurrect it.
+      const textStyleOverrides = normalizeTextStyleOverrides(
+        editedSlide.textStyleOverrides,
+        mergedOutline
+      );
+      const { textStyleOverrides: _baseOverrides, ...readonlyBase } = baseSlide;
       mergedSlides.push({
         // Read-only blocks + non-editable fields are authoritative from base.
-        ...baseSlide,
+        ...readonlyBase,
         // Whitelisted, user-editable text.
         title: editedSlide.title,
         message: editedSlide.message,
         speakerNotesDraft: editedSlide.speakerNotesDraft,
-        outline: mergeOutline(baseSlide.outline, editedSlide.outline)
+        outline: mergedOutline,
+        ...(textStyleOverrides ? { textStyleOverrides } : {})
       });
     } else {
       // New slide: pure text only. Smuggling content blocks injects charts (FR-021).
       if (editedSlide.contentBlocks.length > 0) {
         return reject(`new slide "${editedSlide.id}" must not carry content blocks`);
       }
+      const newOutline = editedSlide.outline.map((item) => ({
+        ...(item.id ? { id: item.id } : {}),
+        text: item.text,
+        sourceTrace: [],
+        emphasis: DEFAULT_EMPHASIS
+      }));
+      const newOverrides = normalizeTextStyleOverrides(editedSlide.textStyleOverrides, newOutline);
       mergedSlides.push({
         id: editedSlide.id,
         slideKind: DEFAULT_SLIDE_KIND,
         type: DEFAULT_TYPE,
         title: editedSlide.title,
         message: editedSlide.message,
-        outline: editedSlide.outline.map((item) => ({
-          text: item.text,
-          sourceTrace: [],
-          emphasis: DEFAULT_EMPHASIS
-        })),
+        outline: newOutline,
         layout: DEFAULT_LAYOUT,
         layoutIntent: DEFAULT_LAYOUT_INTENT,
         contentBlocks: [],
         sourceTrace: [],
-        speakerNotesDraft: editedSlide.speakerNotesDraft
+        speakerNotesDraft: editedSlide.speakerNotesDraft,
+        ...(newOverrides ? { textStyleOverrides: newOverrides } : {})
       });
     }
   }
@@ -117,10 +132,13 @@ function detectReadonlyTamper(base: Slide, edited: Slide): string | null {
 }
 
 /**
- * Outline fidelity (FR-003a): bullets have no stable id, so match by text against a
- * FIFO pool of base bullets. An unchanged bullet reuses its base sourceTrace/emphasis;
- * a rewritten or newly-added bullet gets an empty trace + neutral emphasis (we never
- * fabricate a source for user-authored text).
+ * Outline fidelity (FR-003a) + 015 (FR-015): TWO independent tracks per bullet.
+ * - `id` track: the edited deck is authoritative — the client backfills stable ids
+ *   lazily and they persist verbatim (base rows from before 015 carry none).
+ * - trace track: sourceTrace/emphasis still match by text against a FIFO pool of
+ *   base bullets. An unchanged bullet reuses its base sourceTrace/emphasis; a
+ *   rewritten or newly-added bullet gets an empty trace + neutral emphasis (we never
+ *   fabricate a source for user-authored text) — even when its id stayed the same.
  */
 function mergeOutline(
   baseOutline: SlideOutlineItem[],
@@ -137,12 +155,17 @@ function mergeOutline(
   }
 
   return editedOutline.map((item) => {
-    const queue = pool.get(item.text);
-    const matched = queue?.shift();
+    const matched = pool.get(item.text)?.shift();
+    const id = item.id ? { id: item.id } : {};
     if (matched) {
-      return { text: item.text, sourceTrace: matched.sourceTrace, emphasis: matched.emphasis };
+      return {
+        ...id,
+        text: item.text,
+        sourceTrace: matched.sourceTrace,
+        emphasis: matched.emphasis
+      };
     }
-    return { text: item.text, sourceTrace: [], emphasis: DEFAULT_EMPHASIS };
+    return { ...id, text: item.text, sourceTrace: [], emphasis: DEFAULT_EMPHASIS };
   });
 }
 
