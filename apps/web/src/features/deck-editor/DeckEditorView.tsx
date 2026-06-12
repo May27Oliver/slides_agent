@@ -429,6 +429,22 @@ export function DeckEditorView({
                 onAddBullet={() => edit((d) => d.addBullet(selectedSlide.id))}
                 onRemoveBullet={(i) => edit((d) => d.removeBullet(selectedSlide.id, i))}
                 onMoveBullet={(from, to) => edit((d) => d.moveBullet(selectedSlide.id, from, to))}
+                onFieldStyle={(field, patch) =>
+                  edit((d) =>
+                    field === "title"
+                      ? d.setTitleStyle(selectedSlide.id, patch)
+                      : d.setMessageStyle(selectedSlide.id, patch)
+                  )
+                }
+                onFieldStyleReset={(field) =>
+                  edit((d) => d.resetFieldStyle(selectedSlide.id, field))
+                }
+                onOutlineStyle={(outlineId, patch) =>
+                  edit((d) => d.setOutlineStyle(selectedSlide.id, outlineId, patch))
+                }
+                onOutlineStyleReset={(outlineId) =>
+                  edit((d) => d.resetOutlineStyle(selectedSlide.id, outlineId))
+                }
                 {...(chartCard
                   ? {
                       chartEditor: (

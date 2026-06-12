@@ -9,7 +9,8 @@ function slide(id: string, over: Partial<Slide> = {}): Slide {
     type: "content",
     title: `Title ${id}`,
     message: `Message ${id}`,
-    outline: [{ text: "b1", sourceTrace: ["t"], emphasis: "evidence" }],
+    // Fixture bullets carry ids so the lazy backfill doesn't consume the id sequence.
+    outline: [{ id: `${id}-b1`, text: "b1", sourceTrace: ["t"], emphasis: "evidence" }],
     layout: "title-bullets",
     layoutIntent: { priority: "message_first", density: "medium", emphasis: "narrative" },
     contentBlocks: [],
@@ -292,6 +293,100 @@ describe("EditableSlideDraft (010 US1)", () => {
       ]);
       expect(restored.chartOperations).toHaveLength(1);
       expect(restored.chartVisualOf("chart-0")).toBe("bar");
+    });
+  });
+
+  // 015 US3 (FR-015/FR-016): stable bullet ids + per-field text style overrides.
+  describe("outline ids + text styles (015)", () => {
+    it("fromRevision lazily backfills missing outline ids (stable within the session, text untouched)", () => {
+      const d = draftOf([
+        slide("s1", {
+          outline: [
+            { text: "has id", sourceTrace: ["t"], emphasis: "evidence", id: "keep-me" },
+            { text: "no id", sourceTrace: ["t"], emphasis: "evidence" }
+          ]
+        })
+      ]);
+      const outline = d.slide("s1")!.outline;
+      expect(outline[0]!.id).toBe("keep-me"); // existing id untouched
+      expect(outline[1]!.id).toBeTruthy(); // backfilled
+      expect(outline[1]!.text).toBe("no id"); // text untouched
+      // Stable: reading again yields the same id (backfill happens once).
+      expect(d.slide("s1")!.outline[1]!.id).toBe(outline[1]!.id);
+    });
+
+    it("addBullet mints a fresh id; ids stay unique across duplicates", () => {
+      const d = draftOf([slide("s1")])
+        .addBullet("s1")
+        .addBullet("s1");
+      const ids = d.slide("s1")!.outline.map((o) => o.id);
+      expect(ids.every(Boolean)).toBe(true);
+      expect(new Set(ids).size).toBe(ids.length);
+    });
+
+    it("sets and merges field styles immutably", () => {
+      const d0 = draftOf([slide("s1")]);
+      const d1 = d0.setTitleStyle("s1", { sizeLevel: "XL" });
+      const d2 = d1.setTitleStyle("s1", { colorToken: "accent" }); // merges, not replaces
+      expect(d0.slide("s1")!.textStyleOverrides).toBeUndefined();
+      expect(d2.slide("s1")!.textStyleOverrides?.title).toEqual({
+        sizeLevel: "XL",
+        colorToken: "accent"
+      });
+    });
+
+    it("single-property reset clears one axis; full reset clears the field entry", () => {
+      const styled = draftOf([slide("s1")])
+        .setTitleStyle("s1", { sizeLevel: "L", colorToken: "muted" })
+        .setMessageStyle("s1", { colorToken: "accent" });
+      const sizeCleared = styled.setTitleStyle("s1", { sizeLevel: undefined });
+      expect(sizeCleared.slide("s1")!.textStyleOverrides?.title).toEqual({ colorToken: "muted" });
+      const fullReset = styled.resetFieldStyle("s1", "title");
+      expect(fullReset.slide("s1")!.textStyleOverrides?.title).toBeUndefined();
+      expect(fullReset.slide("s1")!.textStyleOverrides?.message).toEqual({
+        colorToken: "accent"
+      });
+    });
+
+    it("styles an outline bullet by its id and follows reorder", () => {
+      const d = draftOf([
+        slide("s1", {
+          outline: [
+            { id: "a", text: "first", sourceTrace: [], emphasis: "context" },
+            { id: "b", text: "second", sourceTrace: [], emphasis: "context" }
+          ]
+        })
+      ])
+        .setOutlineStyle("s1", "b", { sizeLevel: "L" })
+        .moveBullet("s1", 1, 0); // b moves to front
+      const s = d.slide("s1")!;
+      expect(s.outline[0]!.id).toBe("b");
+      expect(s.textStyleOverrides?.outlineById).toEqual({ b: { sizeLevel: "L" } });
+    });
+
+    it("removing a bullet drops its style entry (no orphans)", () => {
+      const d = draftOf([
+        slide("s1", {
+          outline: [
+            { id: "a", text: "first", sourceTrace: [], emphasis: "context" },
+            { id: "b", text: "second", sourceTrace: [], emphasis: "context" }
+          ]
+        })
+      ])
+        .setOutlineStyle("s1", "a", { colorToken: "accent" })
+        .setOutlineStyle("s1", "b", { colorToken: "muted" })
+        .removeBullet("s1", 0); // removes a
+      expect(d.slide("s1")!.textStyleOverrides?.outlineById).toEqual({
+        b: { colorToken: "muted" }
+      });
+    });
+
+    it("serialises ids and overrides into the request slideDeck", () => {
+      const d = draftOf([slide("s1")]).setTitleStyle("s1", { sizeLevel: "S" });
+      const body = d.toRequest();
+      const requestSlide = (body.slideDeck as SlideDeck).slides[0]!;
+      expect(requestSlide.textStyleOverrides?.title).toEqual({ sizeLevel: "S" });
+      expect(requestSlide.outline.every((o) => o.id)).toBe(true);
     });
   });
 });
