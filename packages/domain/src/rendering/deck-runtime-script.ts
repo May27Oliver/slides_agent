@@ -40,7 +40,13 @@ export function buildDeckRuntimeScript(): string {
     }
   }
 
-  if (dotsBox) {
+  var dots = [];
+
+  // 016: dot building extracted so a preview in-place patch (deck:patchSlides) can
+  // rebuild dots after the slide set changes. Standalone decks call it once at init.
+  function rebuildDots() {
+    if (!dotsBox) { dots = []; return; }
+    dotsBox.innerHTML = "";
     slides.forEach(function (_, index) {
       var dot = document.createElement("button");
       dot.type = "button";
@@ -48,8 +54,12 @@ export function buildDeckRuntimeScript(): string {
       dot.addEventListener("click", function () { show(index); broadcast(); });
       dotsBox.appendChild(dot);
     });
+    dots = Array.prototype.slice.call(dotsBox.querySelectorAll("button"));
   }
-  var dots = dotsBox ? Array.prototype.slice.call(dotsBox.querySelectorAll("button")) : [];
+  function refreshSlides() {
+    slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  }
+  rebuildDots();
 
   function show(index) {
     var nextIndex = Math.max(0, Math.min(index, slides.length - 1));
@@ -84,6 +94,25 @@ export function buildDeckRuntimeScript(): string {
     if (event.key === "f" || event.key === "F") { toggleFullscreen(); }
   });
 
+  // 016: keep one override-fonts <link> in sync (only updates when the href changes →
+  // no font re-fetch for edits that introduce no new family). null removes it.
+  function ensureOverrideFontLink(href) {
+    var existing = document.getElementById("override-fonts");
+    if (!href) {
+      if (existing && existing.parentNode) { existing.parentNode.removeChild(existing); }
+      return;
+    }
+    if (existing) {
+      if (existing.getAttribute("href") !== href) { existing.setAttribute("href", href); }
+      return;
+    }
+    var link = document.createElement("link");
+    link.id = "override-fonts";
+    link.rel = "stylesheet";
+    link.setAttribute("href", href);
+    document.head.appendChild(link);
+  }
+
   // 010: allow an embedding editor preview to drive which slide is shown, so the
   // left preview stays in sync with the slide being edited on the right. Additive and
   // inert for standalone decks (nobody posts to them); the rendered html is unchanged.
@@ -91,6 +120,27 @@ export function buildDeckRuntimeScript(): string {
     var data = event.data;
     if (data && data.type === "deck:goToSlide" && typeof data.index === "number") {
       show(data.index);
+      return;
+    }
+    // 016: in-place slide patch — swap the slide sections WITHOUT reloading the
+    // document (no font re-fetch / no script restart / no jump). Source-checked.
+    if (data && data.type === "deck:patchSlides" && typeof data.slidesHtml === "string") {
+      if (event.source && event.source !== window.parent) { return; }
+      if (deck) { deck.classList.add("deck-static"); }   // suppress entrance-animation replay
+      ensureOverrideFontLink(data.fontsHref || null);
+      var controls = deck ? deck.querySelector(".controls") : null;
+      slides.forEach(function (slide) {
+        if (slide.parentNode) { slide.parentNode.removeChild(slide); }
+      });
+      var tpl = document.createElement("template");
+      tpl.innerHTML = data.slidesHtml;
+      if (deck) {
+        if (controls) { deck.insertBefore(tpl.content, controls); }
+        else { deck.appendChild(tpl.content); }
+      }
+      refreshSlides();
+      rebuildDots();
+      show(typeof data.index === "number" ? data.index : current);
     }
   });
 

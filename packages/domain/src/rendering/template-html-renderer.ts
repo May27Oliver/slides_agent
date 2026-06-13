@@ -79,7 +79,7 @@ export function renderTemplateDeck(input: TemplateDeckInput): RenderedTemplateDe
   // preview iframe AND the PPTX screenshot render the chosen face (not a fallback).
   const overrideFontsHref = buildOverrideFontsHref(collectOverrideFontFamilies(input.deck));
   const overrideFontLink = overrideFontsHref
-    ? `\n  <link href="${escapeAttribute(overrideFontsHref)}" rel="stylesheet">`
+    ? `\n  <link id="override-fonts" href="${escapeAttribute(overrideFontsHref)}" rel="stylesheet">`
     : "";
 
   // 016: compose the document FROM the shared slides-region renderer so the preview's

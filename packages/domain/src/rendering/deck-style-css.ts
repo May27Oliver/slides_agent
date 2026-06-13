@@ -476,7 +476,12 @@ body{
 .sidedots button.on{background:var(--accent-grad);transform:scale(1.35)}
 .anim{opacity:0;transform:translateY(14px)}
 .slide.active .anim{animation:rise var(--e-dur) ease both;animation-delay:calc(var(--d, 0) * ${stagger}ms)}
-@keyframes rise{to{opacity:1;transform:none}}${backdropCss}${textureCss}${animationCss}${CHART_CSS}
+@keyframes rise{to{opacity:1;transform:none}}
+/* 016: editor preview adds .deck-static before an in-place slide patch so freshly
+   inserted nodes don't replay entrance animations on every edit. Inert otherwise
+   (class never added for downloads / standalone decks). */
+.deck.deck-static .anim{animation:none!important;opacity:1;transform:none}
+.deck.deck-static .chart-line,.deck.deck-static .chart-bar,.deck.deck-static .chart-pie-slice,.deck.deck-static .chart-value,.deck.deck-static .chart-dot{animation:none!important}${backdropCss}${textureCss}${animationCss}${CHART_CSS}
 @media (max-width:640px){.controls{right:16px;bottom:16px}.sidedots{display:none}}
 @media (prefers-reduced-motion: reduce){
   *{animation:none !important;transition:none !important}
