@@ -418,6 +418,7 @@ export function DeckEditorView({
         {/* Left half: live preview. */}
         <div className="min-h-0 rounded-2xl border border-line bg-panel p-3 max-md:h-[58vh]">
           <LivePreview
+            deckId={id}
             base={base}
             workingDeck={draft.deck}
             authoritativeHtml={savedHtml}

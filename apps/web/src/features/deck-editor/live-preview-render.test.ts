@@ -18,6 +18,15 @@ describe("renderLivePreview (010 US1, FR-005a parity)", () => {
     expect(result.html).toContain("<!doctype html>");
   });
 
+  // 016: slidesHtml (for the in-place preview patch) is the same markup embedded in html.
+  it("returns slidesHtml that appears verbatim inside html (parity)", () => {
+    const result = renderLivePreview(fixtureRevision, fixtureSlideDeck);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.slidesHtml.length).toBeGreaterThan(0);
+    expect(result.html).toContain(result.slidesHtml);
+  });
+
   it("is byte-identical to what the server would store (same applyDeckEdit)", () => {
     const working = EditableSlideDraft.fromRevision(1, fixtureSlideDeck)
       .setTitle("slide_001", "Edited preview title")
