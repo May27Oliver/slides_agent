@@ -180,6 +180,28 @@ Examples of foundational tasks (adjust based on your project):
 
 ---
 
+## Definition of Done & Anti-Drift (apply at every phase end + at completion)
+
+> Constitution VII gate, made operational. Prevents legacy / shims / dead code / drift
+> from accumulating across coding revisions. MANDATORY whenever a task replaces existing
+> behavior, types, paths, or contract shapes. Delete sample rows that don't apply.
+
+**At each phase that replaces something existing:**
+- [ ] Replacing behavior → REWRITE the existing test in place; do not add a parallel test, do not keep the old one.
+- [ ] `grep` confirms the replaced symbol / type / enum value / i18n key / CSS class / config key has **0 references** left (no orphans).
+- [ ] No compat shim, no "support both shapes" param, no unreachable branch; the old path is removed in the SAME change.
+
+**Anti-drift (when one fact lives in several places):**
+- [ ] Prefer DERIVING over duplicating. Where duplication is unavoidable (e.g. a JS validator + a JSON schema + an OpenAPI block, or a domain helper + a parallel renderer), add ONE test that asserts the copies stay equal.
+- [ ] List this feature's drift pairs and the test guarding each.
+
+**Final mechanical sweep (required before completion):**
+- [ ] `pnpm -r exec tsc --noEmit` is green — `noUnusedLocals` / `noUnusedParameters` are enabled, so unused imports/locals/params fail here.
+- [ ] `gitnexus_detect_changes()` — affected symbols are only the expected ones; no orphans, no unexpected blast radius.
+- [ ] (Optional, when available) workspace-aware dead-export check (knip) reports no new unused exports/files/deps.
+
+---
+
 ## Phase N: Polish & Cross-Cutting Concerns
 
 **Purpose**: Improvements that affect multiple user stories

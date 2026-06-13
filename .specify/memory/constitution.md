@@ -1,20 +1,19 @@
 <!--
 Sync Impact Report
-Version change: 3.2.0 -> 3.3.0
+Version change: 3.3.0 -> 3.3.1
 Modified principles:
-- Expanded: VII. Code Quality and Simplicity — added explicit "No dead code, shims, or
-  legacy coexistence" gate (full-replacement rule; zero unused code incl. UI/i18n;
-  manual enforcement because noUnusedLocals is off; no over-strict types)
+- VII. Code Quality and Simplicity — `noUnusedLocals` / `noUnusedParameters` are now
+  ENABLED in tsconfig.base.json, so unused imports/locals/params fail typecheck/CI
+  mechanically. Manual/knip review still covers what tsc cannot: unused exports,
+  unreferenced i18n / config / schema keys, dead UI, dead branches.
 Added sections:
 - None
 Removed sections:
 - None
 Templates requiring updates:
-- Updated: .specify/templates/plan-template.md (Code Quality and Simplicity gate)
-- Review recommended: .specify/templates/tasks-template.md (polish/cleanup tasks)
-- No update needed: .specify/templates/spec-template.md
+- Updated: .specify/templates/tasks-template.md (added Definition of Done & Anti-Drift block)
 Follow-up TODOs:
-- None
+- Optional: add workspace-aware dead-export detection (knip) with an allowlist.
 -->
 
 # HTML Slides Agent Constitution
@@ -147,8 +146,11 @@ replaced, the old one MUST be fully removed in the same change — never left co
 aliased, or hidden behind a backward-compatibility shim or optional "support both shapes"
 parameter. No unused code may remain: unused imports, variables, exports, props, type
 fields, enum values, branches, dead UI, or unreferenced i18n / config / schema keys.
-Because the toolchain does NOT enable `noUnusedLocals` / `noUnusedParameters`, this MUST be
-verified manually and in review, not assumed from a green build. Types MUST NOT encode a
+`noUnusedLocals` / `noUnusedParameters` ARE enabled in `tsconfig.base.json`, so unused
+imports, locals, and parameters fail the typecheck/CI mechanically. What tsc CANNOT catch —
+unused exports, unreferenced i18n / config / schema keys, dead UI, and dead branches — MUST
+still be verified manually and in review (and may be aided by a workspace-aware tool such as
+knip), not assumed from a green build. Types MUST NOT encode a
 constraint stricter than the code actually exercises (for example a fixed-length tuple
 where the consumer only iterates) unless that constraint is genuinely enforced and needed.
 
@@ -294,4 +296,4 @@ Compliance review is required during planning and before feature completion. If 
 deferred, the deferral MUST include a specific follow-up task and cannot be hidden in
 general prose.
 
-**Version**: 3.3.0 | **Ratified**: 2026-05-29 | **Last Amended**: 2026-06-08
+**Version**: 3.3.1 | **Ratified**: 2026-05-29 | **Last Amended**: 2026-06-13
