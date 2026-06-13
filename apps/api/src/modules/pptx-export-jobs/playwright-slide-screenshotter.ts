@@ -24,12 +24,38 @@ export class PlaywrightSlideScreenshotter implements SlideScreenshotter {
       // Web fonts change line wraps — wait for them before measuring anything.
       await page.evaluate(() => (document as { fonts?: { ready: Promise<unknown> } }).fonts?.ready);
 
+      // Freeze entrance + chart animations to their FINAL state before any shot. Charts
+      // draw over ~1–2.2s (line 1.25s, pie slices up to ~2.2s); a short per-slide settle
+      // would otherwise capture a half-drawn line / partial donut. The deck's own
+      // `.deck-static` rule sets `animation:none!important`, and a chart's non-animated
+      // base state IS its completed state (stroke-dashoffset:0), so this yields settled,
+      // timing-independent screenshots (FR-004 visual parity).
+      await page.evaluate(() => {
+        document.querySelector(".deck")?.classList.add("deck-static");
+      });
+
       const slideCount = await page.locator("section[data-slide-id]").count();
       const shots: Buffer[] = [];
       for (let index = 0; index < slideCount; index += 1) {
         await page.evaluate((slideIndex) => {
           window.postMessage({ type: "deck:goToSlide", index: slideIndex }, "*");
         }, index);
+        // Correctness over timing: wait for THIS slide's finite animations to actually
+        // finish (entrance + chart draw/sweep — pie slices run up to ~2.2s). The looping
+        // background gradient (iterations:Infinity) never finishes, so exclude it.
+        // deck-static normally neutralises these (→ resolves instantly); this is the
+        // build-/timing-independent guarantee that no half-drawn chart is captured.
+        await page.evaluate(async (capMs) => {
+          // Let the slide-change apply and any (delayed) animations register first.
+          await new Promise((r) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => r(undefined)))
+          );
+          const all = (document as { getAnimations?: () => Animation[] }).getAnimations?.() ?? [];
+          const finite = all.filter((a) => a.effect?.getComputedTiming().iterations !== Infinity);
+          const settle = Promise.all(finite.map((a) => a.finished.catch(() => undefined)));
+          const cap = new Promise((resolve) => setTimeout(resolve, capMs));
+          await Promise.race([settle, cap]); // never hang past the cap
+        }, options.settleMs * 6);
         await page.waitForTimeout(options.settleMs);
         shots.push(await page.screenshot({ type: "png" }));
       }
