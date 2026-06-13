@@ -24,6 +24,7 @@ export type { LlmDeckOutlinePlannerOptions } from "@/deck/llm-deck-outline-plann
 export { validateDeckOutlineRefinement } from "@/deck/deck-outline-refinement-validator";
 export type * from "@/deck/deck-outline-planner.port";
 export type * from "@/deck/deck.types";
+export { TEXT_SIZE_PX_MIN, TEXT_SIZE_PX_MAX } from "@/deck/deck.types";
 export { UiUxProMaxDesignPlanner } from "@/design/design-planner";
 export type * from "@/design/design-planner.port";
 export type * from "@/design/design.types";

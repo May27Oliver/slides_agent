@@ -326,25 +326,25 @@ describe("EditableSlideDraft (010 US1)", () => {
 
     it("sets and merges field styles immutably", () => {
       const d0 = draftOf([slide("s1")]);
-      const d1 = d0.setTitleStyle("s1", { sizeLevel: "XL" });
-      const d2 = d1.setTitleStyle("s1", { colorToken: "accent" }); // merges, not replaces
+      const d1 = d0.setTitleStyle("s1", { sizePx: 120 });
+      const d2 = d1.setTitleStyle("s1", { color: "#7170FF" }); // merges, not replaces
       expect(d0.slide("s1")!.textStyleOverrides).toBeUndefined();
       expect(d2.slide("s1")!.textStyleOverrides?.title).toEqual({
-        sizeLevel: "XL",
-        colorToken: "accent"
+        sizePx: 120,
+        color: "#7170FF"
       });
     });
 
     it("single-property reset clears one axis; full reset clears the field entry", () => {
       const styled = draftOf([slide("s1")])
-        .setTitleStyle("s1", { sizeLevel: "L", colorToken: "muted" })
-        .setMessageStyle("s1", { colorToken: "accent" });
-      const sizeCleared = styled.setTitleStyle("s1", { sizeLevel: undefined });
-      expect(sizeCleared.slide("s1")!.textStyleOverrides?.title).toEqual({ colorToken: "muted" });
+        .setTitleStyle("s1", { sizePx: 90, color: "#888888" })
+        .setMessageStyle("s1", { color: "#7170FF" });
+      const sizeCleared = styled.setTitleStyle("s1", { sizePx: undefined });
+      expect(sizeCleared.slide("s1")!.textStyleOverrides?.title).toEqual({ color: "#888888" });
       const fullReset = styled.resetFieldStyle("s1", "title");
       expect(fullReset.slide("s1")!.textStyleOverrides?.title).toBeUndefined();
       expect(fullReset.slide("s1")!.textStyleOverrides?.message).toEqual({
-        colorToken: "accent"
+        color: "#7170FF"
       });
     });
 
@@ -357,11 +357,11 @@ describe("EditableSlideDraft (010 US1)", () => {
           ]
         })
       ])
-        .setOutlineStyle("s1", "b", { sizeLevel: "L" })
+        .setOutlineStyle("s1", "b", { sizePx: 40 })
         .moveBullet("s1", 1, 0); // b moves to front
       const s = d.slide("s1")!;
       expect(s.outline[0]!.id).toBe("b");
-      expect(s.textStyleOverrides?.outlineById).toEqual({ b: { sizeLevel: "L" } });
+      expect(s.textStyleOverrides?.outlineById).toEqual({ b: { sizePx: 40 } });
     });
 
     it("removing a bullet drops its style entry (no orphans)", () => {
@@ -373,19 +373,19 @@ describe("EditableSlideDraft (010 US1)", () => {
           ]
         })
       ])
-        .setOutlineStyle("s1", "a", { colorToken: "accent" })
-        .setOutlineStyle("s1", "b", { colorToken: "muted" })
+        .setOutlineStyle("s1", "a", { color: "#7170FF" })
+        .setOutlineStyle("s1", "b", { color: "#888888" })
         .removeBullet("s1", 0); // removes a
       expect(d.slide("s1")!.textStyleOverrides?.outlineById).toEqual({
-        b: { colorToken: "muted" }
+        b: { color: "#888888" }
       });
     });
 
     it("serialises ids and overrides into the request slideDeck", () => {
-      const d = draftOf([slide("s1")]).setTitleStyle("s1", { sizeLevel: "S" });
+      const d = draftOf([slide("s1")]).setTitleStyle("s1", { sizePx: 64 });
       const body = d.toRequest();
       const requestSlide = (body.slideDeck as SlideDeck).slides[0]!;
-      expect(requestSlide.textStyleOverrides?.title).toEqual({ sizeLevel: "S" });
+      expect(requestSlide.textStyleOverrides?.title).toEqual({ sizePx: 64 });
       expect(requestSlide.outline.every((o) => o.id)).toBe(true);
     });
   });

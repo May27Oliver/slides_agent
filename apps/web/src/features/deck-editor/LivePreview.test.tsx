@@ -13,16 +13,17 @@ afterEach(cleanup);
  * rounded corners), matching the PPTX export.
  */
 describe("LivePreview 16:9 scaled stage (015 US4)", () => {
-  it("renders the iframe inside a fixed 1280x720 stage, centered with overflow clipped", () => {
+  it("renders the iframe inside a fixed 1920x1080 stage, centered with overflow clipped", () => {
     render(<LivePreview base={fixtureRevision} workingDeck={fixtureSlideDeck} selectedIndex={0} />);
 
     const stage = screen.getByTestId("preview-stage");
     const iframe = screen.getByTitle("即時預覽") as HTMLIFrameElement;
     expect(stage.contains(iframe)).toBe(true);
 
-    // The stage is the true presentation size; a scale() transform fits it to the box.
-    expect(stage.style.width).toBe("1280px");
-    expect(stage.style.height).toBe("720px");
+    // The stage is the true presentation size (matches the PPTX capture); a scale()
+    // transform fits it to the box.
+    expect(stage.style.width).toBe("1920px");
+    expect(stage.style.height).toBe("1080px");
     expect(stage.style.transform).toContain("scale(");
 
     // The viewport that clips/centers the scaled stage.

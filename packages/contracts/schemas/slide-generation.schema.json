@@ -545,11 +545,14 @@
     "TextStyleOverride": {
       "type": "object",
       "properties": {
-        "sizeLevel": {
-          "enum": ["S", "M", "L", "XL"]
+        "sizePx": {
+          "type": "number",
+          "minimum": 8,
+          "maximum": 240
         },
-        "colorToken": {
-          "enum": ["text", "accent", "muted", "heading"]
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
         }
       },
       "additionalProperties": false

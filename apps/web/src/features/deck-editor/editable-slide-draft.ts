@@ -7,8 +7,6 @@ import type {
   SlideDeck,
   SlideOutlineItem,
   SlideTextStyleOverrides,
-  TextColorToken,
-  TextSizeLevel,
   TextStyleOverride,
   UserPointInput
 } from "@slides-agent/domain";
@@ -232,8 +230,8 @@ export class EditableSlideDraft {
 
   resetOutlineStyle(slideId: string, outlineId: string): EditableSlideDraft {
     return this.setOutlineStyle(slideId, outlineId, {
-      sizeLevel: undefined,
-      colorToken: undefined
+      sizePx: undefined,
+      color: undefined
     });
   }
 
@@ -399,8 +397,8 @@ export class EditableSlideDraft {
  * while an absent key means "leave alone" — distinguished via `"key" in patch`.
  */
 export interface TextStylePatch {
-  sizeLevel?: TextSizeLevel | undefined;
-  colorToken?: TextColorToken | undefined;
+  sizePx?: number | undefined;
+  color?: string | undefined;
 }
 
 /** Working shape while editing: branches may be explicitly undefined (= dropped). */
@@ -415,11 +413,11 @@ function mergeOverride(
   current: TextStyleOverride | undefined,
   patch: TextStylePatch
 ): TextStyleOverride | undefined {
-  const sizeLevel = "sizeLevel" in patch ? patch.sizeLevel : current?.sizeLevel;
-  const colorToken = "colorToken" in patch ? patch.colorToken : current?.colorToken;
+  const sizePx = "sizePx" in patch ? patch.sizePx : current?.sizePx;
+  const color = "color" in patch ? patch.color : current?.color;
   const next: TextStyleOverride = {
-    ...(sizeLevel ? { sizeLevel } : {}),
-    ...(colorToken ? { colorToken } : {})
+    ...(typeof sizePx === "number" ? { sizePx } : {}),
+    ...(color ? { color } : {})
   };
   return Object.keys(next).length > 0 ? next : undefined;
 }

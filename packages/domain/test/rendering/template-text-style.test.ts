@@ -85,29 +85,27 @@ describe("renderTemplateDeck text style overrides (015 US3)", () => {
     expect(render(textSlide())).toBe(render(textSlide(undefined)));
   });
 
-  it("injects title size+color into the slide-title style", () => {
-    const html = render(textSlide({ title: { sizeLevel: "XL", colorToken: "accent" } }));
+  it("injects title size+color (absolute px + hex) into the slide-title style", () => {
+    const html = render(textSlide({ title: { sizePx: 120, color: "#7170FF" } }));
     expect(html).toContain(
-      '<h2 class="slide-title anim" style="--d:1;font-size:calc(var(--type-title) * 1.6);color:var(--accent)">標題文字</h2>'
+      '<h2 class="slide-title anim" style="--d:1;font-size:120px;color:#7170FF">標題文字</h2>'
     );
   });
 
   it("injects message color into the header message style", () => {
-    const html = render(textSlide({ message: { colorToken: "text" } }));
-    expect(html).toContain('<p class="message anim" style="--d:1;color:var(--text)">訊息文字</p>');
+    const html = render(textSlide({ message: { color: "#F7F8F8" } }));
+    expect(html).toContain('<p class="message anim" style="--d:1;color:#F7F8F8">訊息文字</p>');
   });
 
   it("binds bullet overrides by outline id, not position", () => {
-    const html = render(textSlide({ outlineById: { b2: { sizeLevel: "L" } } }));
+    const html = render(textSlide({ outlineById: { b2: { sizePx: 40 } } }));
     // b1 keeps the plain animation style; b2 carries the override.
     expect(html).toContain('<li class="bullet anim" style="--d:2">第一條</li>');
-    expect(html).toContain(
-      '<li class="bullet anim" style="--d:3;font-size:calc(var(--type-bullet) * 1.25)">第二條</li>'
-    );
+    expect(html).toContain('<li class="bullet anim" style="--d:3;font-size:40px">第二條</li>');
   });
 
   it("ignores override entries whose outline id does not exist", () => {
-    const html = render(textSlide({ outlineById: { ghost: { sizeLevel: "XL" } } }));
-    expect(html).not.toContain("font-size:calc(var(--type-bullet)");
+    const html = render(textSlide({ outlineById: { ghost: { sizePx: 40 } } }));
+    expect(html).not.toContain("font-size:40px");
   });
 });

@@ -107,21 +107,21 @@ export interface SlideOutlineItem {
   emphasis: SlideOutlineEmphasis;
 }
 
-/** 015 (FR-007): relative size step over the theme's base type scale. M = default. */
-export type TextSizeLevel = "S" | "M" | "L" | "XL";
-
-/** 015 (FR-008): theme palette role token — never a raw color value. */
-export type TextColorToken = "text" | "accent" | "muted" | "heading";
-
 /**
  * 015 (FR-016): presentation-only override for one text field. Both properties are
- * optional; an absent property means the theme default (size M / role color). The
- * default values themselves are never stored (normalization strips them).
+ * optional; an absent property means the theme default. Values are absolute so the
+ * editor's free color picker / px slider map 1:1 — `color` is a `#RRGGBB` hex,
+ * `sizePx` is a font-size in px measured in the 1920×1080 presentation space (the
+ * same space the live preview and the PPTX export both render in, so px is WYSIWYG).
  */
 export interface TextStyleOverride {
-  sizeLevel?: TextSizeLevel;
-  colorToken?: TextColorToken;
+  sizePx?: number;
+  color?: string;
 }
+
+/** 015: bounds for `sizePx` — the DoS boundary and the slider range. */
+export const TEXT_SIZE_PX_MIN = 8;
+export const TEXT_SIZE_PX_MAX = 240;
 
 /** 015 (FR-016): a slide's per-field text style overrides; outline binds by bullet id. */
 export interface SlideTextStyleOverrides {

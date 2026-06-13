@@ -372,8 +372,9 @@ function validateSlideShape(slide: unknown, index: number, issues: string[]): vo
 // 015 (FR-013): enum whitelists ARE the DoS boundary — out-of-enum values reject at
 // the shape pass. Mirror the domain's TextSizeLevel/TextColorToken verbatim; the
 // schema json carries the same values (drift breaks its tests).
-const TEXT_SIZE_LEVELS = new Set(["S", "M", "L", "XL"]);
-const TEXT_COLOR_TOKENS = new Set(["text", "accent", "muted", "heading"]);
+const TEXT_SIZE_PX_MIN = 8;
+const TEXT_SIZE_PX_MAX = 240;
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/u;
 
 function validateTextStyleOverridesShape(input: unknown, index: number, issues: string[]): void {
   if (input === undefined) {
@@ -416,11 +417,24 @@ function validateOverrideShape(input: unknown, path: string, issues: string[]): 
     issues.push(`${path} must be an object`);
     return;
   }
-  if (input.sizeLevel !== undefined && !TEXT_SIZE_LEVELS.has(input.sizeLevel as string)) {
-    issues.push(`${path}.sizeLevel must be one of S/M/L/XL`);
+  if (input.sizePx !== undefined) {
+    const px = input.sizePx;
+    if (
+      typeof px !== "number" ||
+      !Number.isFinite(px) ||
+      px < TEXT_SIZE_PX_MIN ||
+      px > TEXT_SIZE_PX_MAX
+    ) {
+      issues.push(
+        `${path}.sizePx must be a number between ${TEXT_SIZE_PX_MIN} and ${TEXT_SIZE_PX_MAX}`
+      );
+    }
   }
-  if (input.colorToken !== undefined && !TEXT_COLOR_TOKENS.has(input.colorToken as string)) {
-    issues.push(`${path}.colorToken must be one of text/accent/muted/heading`);
+  if (
+    input.color !== undefined &&
+    (typeof input.color !== "string" || !HEX_COLOR.test(input.color))
+  ) {
+    issues.push(`${path}.color must be a #RRGGBB hex string`);
   }
 }
 

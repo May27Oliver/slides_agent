@@ -112,7 +112,7 @@ test("styles the title, previews it live, and persists overrides + bullet ids on
     slideDeck: {
       slides: Array<{
         outline: Array<{ id?: string }>;
-        textStyleOverrides?: { title?: { sizeLevel?: string; colorToken?: string } };
+        textStyleOverrides?: { title?: { sizePx?: number; color?: string } };
       }>;
     };
   } | null = null;
@@ -133,16 +133,16 @@ test("styles the title, previews it live, and persists overrides + bullet ids on
   await page.goto(`/decks/${DECK_ID}/edit`);
   await expect(page.getByRole("textbox", { name: "標題" })).toHaveValue("原始標題");
 
-  // Pick XL + accent on the title's toolbar.
-  const titleToolbar = page.getByRole("group", { name: "文字樣式 標題" });
-  await titleToolbar.getByRole("button", { name: "文字大小 XL" }).click();
-  await titleToolbar.getByRole("button", { name: "文字顏色 強調" }).click();
+  // Open the title's style panel and set an absolute px size + hex color.
+  await page.getByRole("button", { name: "編輯文字樣式" }).first().click();
+  await page.getByRole("slider", { name: "文字大小" }).fill("120");
+  await page.getByLabel("文字顏色").fill("7170FF");
 
-  // The live preview (same domain renderer) shows the inline override.
+  // The live preview (same domain renderer) shows the inline override (px + hex).
   const preview = page.frameLocator('iframe[title="即時預覽"]');
   await expect(preview.locator(".slide-title")).toHaveAttribute(
     "style",
-    /font-size:calc\(var\(--type-title\) \* 1\.6\);color:var\(--accent\)/
+    /font-size:120px;color:#7170FF/i
   );
 
   // Save: the request carries the override AND backfilled ids for legacy bullets.
@@ -150,11 +150,11 @@ test("styles the title, previews it live, and persists overrides + bullet ids on
   await expect(page.getByText("已儲存版本 2")).toBeVisible();
   expect(savedBody).not.toBeNull();
   const savedSlide = savedBody!.slideDeck.slides[0]!;
-  expect(savedSlide.textStyleOverrides?.title).toEqual({ sizeLevel: "XL", colorToken: "accent" });
+  expect(savedSlide.textStyleOverrides?.title).toEqual({ sizePx: 120, color: "#7170FF" });
   expect(savedSlide.outline.map((o) => o.id).every(Boolean)).toBe(true);
 
-  // The adopted post-save state keeps the selection (persistence round-trip).
-  await expect(titleToolbar.getByRole("button", { name: "文字大小 XL" })).toHaveAttribute(
+  // The adopted post-save state keeps the override — the field's edit button stays active.
+  await expect(page.getByRole("button", { name: "編輯文字樣式" }).first()).toHaveAttribute(
     "aria-pressed",
     "true"
   );

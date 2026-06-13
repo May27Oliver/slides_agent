@@ -199,8 +199,11 @@ describe("slide generation schema", () => {
     expect(overrides.properties.outlineById.maxProperties).toBe(100);
 
     const override = slideGenerationSchema.$defs.TextStyleOverride;
-    expect(override.properties.sizeLevel.enum).toEqual(["S", "M", "L", "XL"]);
-    expect(override.properties.colorToken.enum).toEqual(["text", "accent", "muted", "heading"]);
+    expect(override.properties.sizePx).toMatchObject({ type: "number", minimum: 8, maximum: 240 });
+    expect(override.properties.color).toMatchObject({
+      type: "string",
+      pattern: "^#[0-9a-fA-F]{6}$"
+    });
     expect(override.additionalProperties).toBe(false);
   });
 

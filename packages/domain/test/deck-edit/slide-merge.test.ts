@@ -265,8 +265,8 @@ describe("mergeEditedDeck outline ids + text style overrides (015 US3)", () => {
         id: "s1",
         outline: [bullet("b1", "Base bullet")],
         textStyleOverrides: {
-          title: { sizeLevel: "XL", colorToken: "accent" },
-          outlineById: { b1: { colorToken: "muted" } }
+          title: { sizePx: 120, color: "#7170FF" },
+          outlineById: { b1: { color: "#888888" } }
         }
       })
     ]);
@@ -274,23 +274,22 @@ describe("mergeEditedDeck outline ids + text style overrides (015 US3)", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.slideDeck.slides[0]!.textStyleOverrides).toEqual({
-      title: { sizeLevel: "XL", colorToken: "accent" },
-      outlineById: { b1: { colorToken: "muted" } }
+      title: { sizePx: 120, color: "#7170FF" },
+      outlineById: { b1: { color: "#888888" } }
     });
   });
 
-  it("normalizes away default-only entries and orphaned outline keys", () => {
+  it("normalizes away empty entries and orphaned outline keys", () => {
     const base = deck([slide({ id: "s1", outline: [outlineItem("Base bullet")] })]);
     const edited = deck([
       slide({
         id: "s1",
         outline: [bullet("b1", "Base bullet")],
         textStyleOverrides: {
-          title: { sizeLevel: "M" }, // default-only → stripped
           message: {}, // empty → stripped
           outlineById: {
-            b1: { sizeLevel: "L" },
-            ghost: { sizeLevel: "XL" } // no such bullet id → orphan, dropped
+            b1: { sizePx: 40 },
+            ghost: { sizePx: 90 } // no such bullet id → orphan, dropped
           }
         }
       })
@@ -299,7 +298,7 @@ describe("mergeEditedDeck outline ids + text style overrides (015 US3)", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.slideDeck.slides[0]!.textStyleOverrides).toEqual({
-      outlineById: { b1: { sizeLevel: "L" } }
+      outlineById: { b1: { sizePx: 40 } }
     });
   });
 
@@ -309,7 +308,7 @@ describe("mergeEditedDeck outline ids + text style overrides (015 US3)", () => {
       slide({
         id: "s1",
         outline: [outlineItem("Base bullet")],
-        textStyleOverrides: { title: { sizeLevel: "M" }, outlineById: {} }
+        textStyleOverrides: { title: {}, outlineById: {} }
       })
     ]);
     const result = mergeEditedDeck(base, edited);
@@ -323,7 +322,7 @@ describe("mergeEditedDeck outline ids + text style overrides (015 US3)", () => {
       slide({
         id: "s1",
         outline: [outlineItem("Base bullet")],
-        textStyleOverrides: { title: { sizeLevel: "XL" } } // persisted by an earlier save
+        textStyleOverrides: { title: { sizePx: 120 } } // persisted by an earlier save
       })
     ]);
     const edited = deck([slide({ id: "s1", outline: [outlineItem("Base bullet")] })]);
@@ -340,7 +339,7 @@ describe("mergeEditedDeck outline ids + text style overrides (015 US3)", () => {
       slide({
         id: "s1",
         contentBlocks: [chartBlock],
-        textStyleOverrides: { title: { colorToken: "accent" } }
+        textStyleOverrides: { title: { color: "#7170FF" } }
       })
     ]);
     expect(mergeEditedDeck(base, styledOk).ok).toBe(true);
@@ -349,7 +348,7 @@ describe("mergeEditedDeck outline ids + text style overrides (015 US3)", () => {
       slide({
         id: "s1",
         contentBlocks: [{ ...chartBlock, chartIntentId: "chart-INJECTED" }],
-        textStyleOverrides: { title: { colorToken: "accent" } }
+        textStyleOverrides: { title: { color: "#7170FF" } }
       })
     ]);
     expect(mergeEditedDeck(base, tampered).ok).toBe(false);
@@ -364,8 +363,8 @@ describe("mergeEditedDeck outline ids + text style overrides (015 US3)", () => {
         outline: [bullet("nb1", "New bullet")],
         contentBlocks: [],
         textStyleOverrides: {
-          message: { sizeLevel: "S" },
-          outlineById: { nb1: { colorToken: "accent" }, ghost: { sizeLevel: "XL" } }
+          message: { sizePx: 24 },
+          outlineById: { nb1: { color: "#7170FF" }, ghost: { sizePx: 90 } }
         }
       })
     ]);
@@ -375,8 +374,8 @@ describe("mergeEditedDeck outline ids + text style overrides (015 US3)", () => {
     const added = result.slideDeck.slides[1]!;
     expect(added.outline[0]!.id).toBe("nb1");
     expect(added.textStyleOverrides).toEqual({
-      message: { sizeLevel: "S" },
-      outlineById: { nb1: { colorToken: "accent" } }
+      message: { sizePx: 24 },
+      outlineById: { nb1: { color: "#7170FF" } }
     });
   });
 });

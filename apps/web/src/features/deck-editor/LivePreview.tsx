@@ -11,9 +11,11 @@ import { useI18n } from "@/i18n";
 import { renderLivePreview } from "@/features/deck-editor/live-preview-render";
 
 // Fixed 16:9 presentation stage the deck renders into; the whole stage is scaled to
-// fit the available area, so the preview is a true miniature of the real slide.
-const STAGE_WIDTH = 1280;
-const STAGE_HEIGHT = 720;
+// fit the available area, so the preview is a true miniature of the real slide. 1920×1080
+// matches the PPTX screenshot capture, so an absolute-px text override (015 US3) occupies
+// the SAME fraction of the slide in the preview and the export (WYSIWYG).
+const STAGE_WIDTH = 1920;
+const STAGE_HEIGHT = 1080;
 
 interface LivePreviewProps {
   base: DeckRevisionContract;

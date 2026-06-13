@@ -6,9 +6,8 @@ import type {
 
 /**
  * 015 (FR-016): canonicalizes a slide's text style overrides before persisting.
- * - Size M is the theme default and is never stored; an override that ends up empty
- *   is dropped entirely. (A colorToken — including "text" — is always meaningful:
- *   fields differ in their default role, e.g. message defaults to muted.)
+ * - An override with neither `sizePx` nor `color` is empty and is dropped (every
+ *   present value is meaningful — these are absolute px / hex, not theme defaults).
  * - `outlineById` keys must point at an EXISTING bullet id in the merged outline;
  *   orphans (deleted bullets, unknown ids) are dropped so no style outlives its field.
  * Returns undefined when nothing survives, so the field disappears from storage.
@@ -38,17 +37,16 @@ export function normalizeTextStyleOverrides(
   return Object.keys(normalized).length > 0 ? normalized : undefined;
 }
 
-/** Strips the default size (M); drops the override when nothing remains. */
+/** Keeps only the present values; drops the override when nothing remains. */
 function normalizeOverride(override: TextStyleOverride | undefined): TextStyleOverride | undefined {
   if (!override) {
     return undefined;
   }
-  const sizeLevel = override.sizeLevel !== undefined && override.sizeLevel !== "M"
-    ? override.sizeLevel
-    : undefined;
   const normalized: TextStyleOverride = {
-    ...(sizeLevel ? { sizeLevel } : {}),
-    ...(override.colorToken ? { colorToken: override.colorToken } : {})
+    ...(typeof override.sizePx === "number" && Number.isFinite(override.sizePx)
+      ? { sizePx: override.sizePx }
+      : {}),
+    ...(override.color ? { color: override.color } : {})
   };
   return Object.keys(normalized).length > 0 ? normalized : undefined;
 }

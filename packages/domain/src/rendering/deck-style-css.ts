@@ -376,7 +376,6 @@ export function buildDeckStyleCss(styleKit: DesignStyleKit, designSystem: Design
   --text: ${textHex};
   --muted: ${mutedHex};
   --accent: ${accent};
-  --heading: ${textHex};
   --accent-grad: ${safeCssValue(effects.accentGradient, "linear-gradient(110deg, #FF6B6B, #FFC93C)")};
   --card-radius: ${safeNumber(effects.cardRadiusPx, 22)}px;
   --card-border: ${safeCssValue(effects.cardBorder, "1.5px solid rgba(0,0,0,.08)")};
@@ -426,7 +425,7 @@ body{
 }
 .eyebrow .dot{width:9px;height:9px;border-radius:50%;background:var(--accent-grad);display:inline-block}
 .slide-title{
-  margin:0;font-family:var(--font-heading);color:var(--heading);
+  margin:0;font-family:var(--font-heading);color:var(--text);
   font-size:var(--type-title);font-weight:${safeNumber(typeScale.slideTitle.weight, 800)};
   line-height:${safeNumber(typeScale.slideTitle.lineHeight, 1.1)};letter-spacing:0;
 }

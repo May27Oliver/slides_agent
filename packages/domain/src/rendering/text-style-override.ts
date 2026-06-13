@@ -1,40 +1,31 @@
 import type { TextStyleOverride } from "@/deck/deck.types";
 
-/** The three override-able text fields, each scaling its own theme type variable. */
+/** The three override-able text fields (kept for call-site clarity / future per-field rules). */
 export type TextStyleField = "title" | "message" | "bullet";
 
 /**
- * 015 (FR-007/FR-008, research R3): the SINGLE source of truth that turns a
- * TextStyleOverride into an inline style fragment. Used by the template renderer —
- * which both the server save path and the client live preview run — so style parity
- * can never drift. Sizes scale the field's own `--type-*` variable; colors are theme
- * palette role variables, so a re-theme re-resolves both automatically.
+ * 015 (FR-007/FR-008): the SINGLE source of truth that turns a TextStyleOverride into
+ * an inline style fragment. Used by the template renderer — which both the server save
+ * path and the client live preview run — so style parity can never drift.
  *
- * Size M emits nothing (it IS the theme default). An absent colorToken emits nothing;
- * `text` is a real override (e.g. message defaults to --muted, not --text).
+ * Values are absolute (free color picker + px slider): `sizePx` → `font-size:<n>px`,
+ * `color` → `color:<hex>`. Both are measured in the 1920×1080 presentation space the
+ * preview and PPTX export share, so the px is WYSIWYG. Absent fields emit nothing
+ * (the theme default applies).
  */
 export function textStyleInlineStyle(
   override: TextStyleOverride | undefined,
-  field: TextStyleField
+  _field: TextStyleField
 ): string {
   if (!override) {
     return "";
   }
   const parts: string[] = [];
-  const factor = override.sizeLevel ? SIZE_FACTORS[override.sizeLevel] : undefined;
-  if (factor !== undefined) {
-    parts.push(`font-size:calc(var(--type-${field}) * ${factor})`);
+  if (typeof override.sizePx === "number" && Number.isFinite(override.sizePx)) {
+    parts.push(`font-size:${override.sizePx}px`);
   }
-  if (override.colorToken) {
-    parts.push(`color:var(--${override.colorToken})`);
+  if (override.color) {
+    parts.push(`color:${override.color}`);
   }
   return parts.join(";");
 }
-
-/** S/M/L/XL → multiplier over the theme base size; M is the default (no override). */
-const SIZE_FACTORS: Record<string, number | undefined> = {
-  S: 0.85,
-  M: undefined,
-  L: 1.25,
-  XL: 1.6
-};

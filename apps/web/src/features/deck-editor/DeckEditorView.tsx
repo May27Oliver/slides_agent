@@ -35,7 +35,9 @@ import { ChartDataTable } from "@/features/deck-editor/ChartDataTable";
 import { ChartEditorCard } from "@/features/deck-editor/ChartEditorCard";
 import { EditableSlideDraft } from "@/features/deck-editor/editable-slide-draft";
 import { LivePreview } from "@/features/deck-editor/LivePreview";
-import { SlideEditPanel } from "@/features/deck-editor/SlideEditPanel";
+import { SlideEditPanel, type StyleField } from "@/features/deck-editor/SlideEditPanel";
+import { TextStylePanel } from "@/features/deck-editor/TextStylePanel";
+import type { TextStylePatch } from "@/features/deck-editor/editable-slide-draft";
 import { SlideNavigator } from "@/features/deck-editor/SlideNavigator";
 import { ThemePicker } from "@/features/theme-picker/ThemePicker";
 import { useI18n } from "@/i18n";
@@ -73,6 +75,8 @@ export function DeckEditorView({
   const [savedHtml, setSavedHtml] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>({ kind: "idle" });
   const [rightTab, setRightTab] = useState<"edit" | "slides">("edit");
+  // 015 US3: which field the right slide-out style editor is editing (null = closed).
+  const [styleTarget, setStyleTarget] = useState<StyleField | null>(null);
   const [pendingDraft, setPendingDraft] = useState<{
     draft: DeckDraft;
     kind: Exclude<DraftClassification, "none">;
@@ -214,6 +218,29 @@ export function DeckEditorView({
     () => draft?.slides.find((s) => s.id === selectedId) ?? draft?.slides[0] ?? null,
     [draft, selectedId]
   );
+
+  // 015 US3: switching slides closes the style panel (it edits the selected slide).
+  useEffect(() => {
+    setStyleTarget(null);
+  }, [selectedId]);
+
+  // 015 US3: resolve the open style target to the panel's { label, value } for the
+  // current slide (labels reuse the edit-form i18n keys so copy lives in one place).
+  const styleTargetView = useMemo(() => {
+    if (!styleTarget || !selectedSlide) return null;
+    const overrides = selectedSlide.textStyleOverrides;
+    if (styleTarget.kind === "title") {
+      return { label: t("editor.field.title"), value: overrides?.title };
+    }
+    if (styleTarget.kind === "message") {
+      return { label: t("editor.field.message"), value: overrides?.message };
+    }
+    const index = selectedSlide.outline.findIndex((item) => item.id === styleTarget.outlineId);
+    return {
+      label: `${t("editor.field.outline")} ${index + 1}`,
+      value: overrides?.outlineById?.[styleTarget.outlineId]
+    };
+  }, [styleTarget, selectedSlide, t]);
 
   // 014: the selected slide's chart editor model, derived from the EFFECTIVE
   // placement state (base placeholders + pending ops replayed, R10). A pending
@@ -384,7 +411,7 @@ export function DeckEditorView({
         <DraftBanner kind={pendingDraft.kind} onRestore={restoreDraft} onDiscard={discardDraft} />
       ) : null}
 
-      <main className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 md:grid-cols-2 md:overflow-hidden">
+      <main className="relative grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 md:grid-cols-2 md:overflow-hidden">
         {/* Left half: live preview. */}
         <div className="min-h-0 rounded-2xl border border-line bg-panel p-3 max-md:h-[58vh]">
           <LivePreview
@@ -439,22 +466,7 @@ export function DeckEditorView({
                 onAddBullet={() => edit((d) => d.addBullet(selectedSlide.id))}
                 onRemoveBullet={(i) => edit((d) => d.removeBullet(selectedSlide.id, i))}
                 onMoveBullet={(from, to) => edit((d) => d.moveBullet(selectedSlide.id, from, to))}
-                onFieldStyle={(field, patch) =>
-                  edit((d) =>
-                    field === "title"
-                      ? d.setTitleStyle(selectedSlide.id, patch)
-                      : d.setMessageStyle(selectedSlide.id, patch)
-                  )
-                }
-                onFieldStyleReset={(field) =>
-                  edit((d) => d.resetFieldStyle(selectedSlide.id, field))
-                }
-                onOutlineStyle={(outlineId, patch) =>
-                  edit((d) => d.setOutlineStyle(selectedSlide.id, outlineId, patch))
-                }
-                onOutlineStyleReset={(outlineId) =>
-                  edit((d) => d.resetOutlineStyle(selectedSlide.id, outlineId))
-                }
+                onOpenStyle={setStyleTarget}
                 {...(chartCard
                   ? {
                       chartEditor: (
@@ -527,6 +539,32 @@ export function DeckEditorView({
             )}
           </div>
         </div>
+
+        {/* 015 US3: right slide-out text-style editor (free color + px). Docked inside
+            <main> (absolute) so it overlays the editor body but never the header — the
+            Save / download actions stay clickable. The live preview stays visible. */}
+        <TextStylePanel
+          target={styleTargetView}
+          onPatch={(patch) => {
+            if (!styleTarget) return;
+            edit((d) =>
+              styleTarget.kind === "title"
+                ? d.setTitleStyle(selectedSlide.id, patch)
+                : styleTarget.kind === "message"
+                  ? d.setMessageStyle(selectedSlide.id, patch)
+                  : d.setOutlineStyle(selectedSlide.id, styleTarget.outlineId, patch)
+            );
+          }}
+          onReset={() => {
+            if (!styleTarget) return;
+            edit((d) =>
+              styleTarget.kind === "outline"
+                ? d.resetOutlineStyle(selectedSlide.id, styleTarget.outlineId)
+                : d.resetFieldStyle(selectedSlide.id, styleTarget.kind)
+            );
+          }}
+          onClose={() => setStyleTarget(null)}
+        />
       </main>
     </div>
   );

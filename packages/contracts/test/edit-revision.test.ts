@@ -271,7 +271,7 @@ describe("edit revision contract (010 US1)", () => {
   });
 
   // 015 (FR-013): outline ids + textStyleOverrides ride the slideDeck — shape-checked
-  // here (enums are the DoS boundary); merge semantics stay in the domain.
+  // here (bounded px + #RRGGBB hex are the DoS boundary); merge semantics in the domain.
   describe("outline ids + textStyleOverrides (015)", () => {
     function body(slide: Record<string, unknown>) {
       return { baseRevision: 1, slideDeck: { id: "d", slides: [{ id: "s1", ...slide }] } };
@@ -281,14 +281,14 @@ describe("edit revision contract (010 US1)", () => {
       expect(validateEditRevisionRequest(body({ outline: [{ text: "t" }] })).ok).toBe(true);
     });
 
-    it("accepts well-formed ids and overrides", () => {
+    it("accepts well-formed ids and overrides (px + hex)", () => {
       const result = validateEditRevisionRequest(
         body({
           outline: [{ id: "b1", text: "t" }],
           textStyleOverrides: {
-            title: { sizeLevel: "XL", colorToken: "accent" },
-            message: { colorToken: "text" },
-            outlineById: { b1: { sizeLevel: "S" } }
+            title: { sizePx: 120, color: "#7170FF" },
+            message: { color: "#F7F8F8" },
+            outlineById: { b1: { sizePx: 40 } }
           }
         })
       );
@@ -301,14 +301,28 @@ describe("edit revision contract (010 US1)", () => {
       );
     });
 
-    it("rejects out-of-enum sizeLevel / colorToken values", () => {
+    it("rejects an out-of-range sizePx", () => {
       expect(
-        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizeLevel: "XXL" } } }))
-          .ok
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizePx: 9999 } } })).ok
+      ).toBe(false);
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizePx: 2 } } })).ok
+      ).toBe(false);
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizePx: "big" } } })).ok
+      ).toBe(false);
+    });
+
+    it("rejects a malformed color (not #RRGGBB hex)", () => {
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { message: { color: "red" } } })).ok
+      ).toBe(false);
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { message: { color: "#fff" } } })).ok
       ).toBe(false);
       expect(
         validateEditRevisionRequest(
-          body({ textStyleOverrides: { message: { colorToken: "#ff0000" } } })
+          body({ textStyleOverrides: { message: { color: "rgb(1,2,3)" } } })
         ).ok
       ).toBe(false);
     });
@@ -321,9 +335,9 @@ describe("edit revision contract (010 US1)", () => {
     });
 
     it("rejects an oversized outlineById map (DoS boundary, same cap as bullets)", () => {
-      const big: Record<string, { sizeLevel: string }> = {};
+      const big: Record<string, { sizePx: number }> = {};
       for (let i = 0; i < 101; i += 1) {
-        big[`b${i}`] = { sizeLevel: "S" };
+        big[`b${i}`] = { sizePx: 40 };
       }
       expect(
         validateEditRevisionRequest(body({ textStyleOverrides: { outlineById: big } })).ok
