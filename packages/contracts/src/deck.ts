@@ -359,7 +359,93 @@ function validateSlideShape(slide: unknown, index: number, issues: string[]): vo
       if (overLimit(text, FIELD_LIMITS.bullet)) {
         issues.push(`slides[${index}].outline[${i}].text too long`);
       }
+      // 015 (FR-015): optional stable bullet id — when present, a non-empty string.
+      const id = isRecord(item) ? item.id : undefined;
+      if (id !== undefined && (typeof id !== "string" || id.length === 0)) {
+        issues.push(`slides[${index}].outline[${i}].id must be a non-empty string`);
+      }
     });
+  }
+  validateTextStyleOverridesShape(slide.textStyleOverrides, index, issues);
+}
+
+// 015 (FR-013): the DoS boundary for free-form text styles — bounded px, fixed-length
+// #RRGGBB hex, and a length-and-charset-bounded font family name (letters/digits/space/
+// hyphen only: no quotes → no style-attribute breakout). Mirror the domain's
+// TEXT_SIZE_PX_* / TEXT_FONT_FAMILY_MAX and the schema json (drift breaks its tests).
+const TEXT_SIZE_PX_MIN = 8;
+const TEXT_SIZE_PX_MAX = 240;
+const TEXT_FONT_FAMILY_MAX = 64;
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/u;
+const FONT_FAMILY = /^[A-Za-z0-9][A-Za-z0-9 -]*$/u;
+
+function validateTextStyleOverridesShape(input: unknown, index: number, issues: string[]): void {
+  if (input === undefined) {
+    return;
+  }
+  if (!isRecord(input)) {
+    issues.push(`slides[${index}].textStyleOverrides must be an object`);
+    return;
+  }
+  validateOverrideShape(input.title, `slides[${index}].textStyleOverrides.title`, issues);
+  validateOverrideShape(input.message, `slides[${index}].textStyleOverrides.message`, issues);
+  if (input.outlineById !== undefined) {
+    if (!isRecord(input.outlineById)) {
+      issues.push(`slides[${index}].textStyleOverrides.outlineById must be an object`);
+      return;
+    }
+    const entries = Object.entries(input.outlineById);
+    // Same cap as the outline itself — the map can never outgrow its bullets.
+    if (entries.length > MAX_BULLETS_PER_SLIDE) {
+      issues.push(
+        `slides[${index}].textStyleOverrides.outlineById exceeds ${MAX_BULLETS_PER_SLIDE}`
+      );
+      return;
+    }
+    for (const [bulletId, override] of entries) {
+      validateOverrideShape(
+        override,
+        `slides[${index}].textStyleOverrides.outlineById["${bulletId}"]`,
+        issues
+      );
+    }
+  }
+}
+
+function validateOverrideShape(input: unknown, path: string, issues: string[]): void {
+  if (input === undefined) {
+    return;
+  }
+  if (!isRecord(input)) {
+    issues.push(`${path} must be an object`);
+    return;
+  }
+  if (input.sizePx !== undefined) {
+    const px = input.sizePx;
+    if (
+      typeof px !== "number" ||
+      !Number.isFinite(px) ||
+      px < TEXT_SIZE_PX_MIN ||
+      px > TEXT_SIZE_PX_MAX
+    ) {
+      issues.push(
+        `${path}.sizePx must be a number between ${TEXT_SIZE_PX_MIN} and ${TEXT_SIZE_PX_MAX}`
+      );
+    }
+  }
+  if (
+    input.color !== undefined &&
+    (typeof input.color !== "string" || !HEX_COLOR.test(input.color))
+  ) {
+    issues.push(`${path}.color must be a #RRGGBB hex string`);
+  }
+  if (
+    input.fontFamily !== undefined &&
+    (typeof input.fontFamily !== "string" ||
+      input.fontFamily.length > TEXT_FONT_FAMILY_MAX ||
+      !FONT_FAMILY.test(input.fontFamily))
+  ) {
+    issues.push(`${path}.fontFamily must be a short alphanumeric family name`);
   }
 }
 

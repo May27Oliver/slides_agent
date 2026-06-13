@@ -1,17 +1,21 @@
 import type { DeckRevisionContract } from "@slides-agent/contracts";
-import { applyDeckEdit } from "@slides-agent/domain";
+import { applyDeckEdit, renderSlidesRegion } from "@slides-agent/domain";
 import type {
   ApplyDeckEditOptions,
   DeckRevision,
   GenerationSummary,
-  SlideDeck
+  SlideDeck,
+  TemplateDeckInput
 } from "@slides-agent/domain";
 
 export type LivePreviewResult =
   // 014: the summary rides along so the editor UI (chart cards: rendered visual,
   // degradation notes, user-data disclosures) reads the SAME evidence the server
   // would store — no second rendering channel.
-  { ok: true; html: string; generationSummary: GenerationSummary } | { ok: false; reason: string };
+  // 016: `slidesHtml` = the slide-region markup (same renderer as `html`), for the
+  // editor's in-place preview patch (deck:patchSlides) without an iframe reload.
+  | { ok: true; html: string; slidesHtml: string; generationSummary: GenerationSummary }
+  | { ok: false; reason: string };
 
 /**
  * 010 (US1, FR-005a): render the working deck locally with the EXACT same domain
@@ -37,9 +41,18 @@ export function renderLivePreview(
     if (!result.ok) {
       return { ok: false, reason: result.detail };
     }
+    // 016: derive the slide-region markup from the SAME merged deck via the SAME
+    // renderer renderTemplateDeck uses → byte-for-byte parity with `html`.
+    const slidesRegionInput = {
+      deck: result.payload.slideDeck,
+      designPlanningResult: result.payload.designPlan,
+      ...(result.payload.chartIntents ? { chartIntents: result.payload.chartIntents } : {})
+    } as TemplateDeckInput;
+    const { slidesHtml } = renderSlidesRegion(slidesRegionInput);
     return {
       ok: true,
       html: result.payload.html,
+      slidesHtml,
       generationSummary: result.payload.generationSummary
     };
   } catch (error) {

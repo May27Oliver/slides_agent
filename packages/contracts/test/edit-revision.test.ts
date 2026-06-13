@@ -269,4 +269,114 @@ describe("edit revision contract (010 US1)", () => {
     expect(invalid.code).toBe("INVALID_EDIT");
     expect(invalid.fields).toEqual(["slideDeck"]);
   });
+
+  // 015 (FR-013): outline ids + textStyleOverrides ride the slideDeck — shape-checked
+  // here (bounded px + #RRGGBB hex are the DoS boundary); merge semantics in the domain.
+  describe("outline ids + textStyleOverrides (015)", () => {
+    function body(slide: Record<string, unknown>) {
+      return { baseRevision: 1, slideDeck: { id: "d", slides: [{ id: "s1", ...slide }] } };
+    }
+
+    it("accepts a legacy slide without ids or overrides (backward compat)", () => {
+      expect(validateEditRevisionRequest(body({ outline: [{ text: "t" }] })).ok).toBe(true);
+    });
+
+    it("accepts well-formed ids and overrides (px + hex + font family)", () => {
+      const result = validateEditRevisionRequest(
+        body({
+          outline: [{ id: "b1", text: "t" }],
+          textStyleOverrides: {
+            title: { sizePx: 120, color: "#7170FF", fontFamily: "Playfair Display" },
+            message: { color: "#F7F8F8" },
+            outlineById: { b1: { sizePx: 40, fontFamily: "Inter" } }
+          }
+        })
+      );
+      expect(result.ok).toBe(true);
+    });
+
+    it("rejects a malformed font family (quotes / too long → breakout / DoS)", () => {
+      expect(
+        validateEditRevisionRequest(
+          body({ textStyleOverrides: { title: { fontFamily: 'Evil", x:(' } } })
+        ).ok
+      ).toBe(false);
+      expect(
+        validateEditRevisionRequest(
+          body({ textStyleOverrides: { title: { fontFamily: "A".repeat(65) } } })
+        ).ok
+      ).toBe(false);
+    });
+
+    it("rejects an empty-string outline id", () => {
+      expect(validateEditRevisionRequest(body({ outline: [{ id: "", text: "t" }] })).ok).toBe(
+        false
+      );
+    });
+
+    it("rejects an out-of-range sizePx", () => {
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizePx: 9999 } } })).ok
+      ).toBe(false);
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizePx: 2 } } })).ok
+      ).toBe(false);
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizePx: "big" } } })).ok
+      ).toBe(false);
+    });
+
+    // deep-review H3a: pin the exact bounds (8/240 px, 64-char family) so any future
+    // loosening/tightening of the validator vs the schema is caught here.
+    it("pins the exact accepted boundaries (8 & 240 px, 64-char family)", () => {
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizePx: 8 } } })).ok
+      ).toBe(true);
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizePx: 240 } } })).ok
+      ).toBe(true);
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizePx: 7 } } })).ok
+      ).toBe(false);
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizePx: 241 } } })).ok
+      ).toBe(false);
+      expect(
+        validateEditRevisionRequest(
+          body({ textStyleOverrides: { title: { fontFamily: "A".repeat(64) } } })
+        ).ok
+      ).toBe(true);
+    });
+
+    it("rejects a malformed color (not #RRGGBB hex)", () => {
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { message: { color: "red" } } })).ok
+      ).toBe(false);
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { message: { color: "#fff" } } })).ok
+      ).toBe(false);
+      expect(
+        validateEditRevisionRequest(
+          body({ textStyleOverrides: { message: { color: "rgb(1,2,3)" } } })
+        ).ok
+      ).toBe(false);
+    });
+
+    it("rejects a non-object textStyleOverrides / outlineById", () => {
+      expect(validateEditRevisionRequest(body({ textStyleOverrides: "loud" })).ok).toBe(false);
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { outlineById: [] } })).ok
+      ).toBe(false);
+    });
+
+    it("rejects an oversized outlineById map (DoS boundary, same cap as bullets)", () => {
+      const big: Record<string, { sizePx: number }> = {};
+      for (let i = 0; i < 101; i += 1) {
+        big[`b${i}`] = { sizePx: 40 };
+      }
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { outlineById: big } })).ok
+      ).toBe(false);
+    });
+  });
 });

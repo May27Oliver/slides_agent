@@ -6,6 +6,8 @@ import type {
   Slide,
   SlideDeck,
   SlideOutlineItem,
+  SlideTextStyleOverrides,
+  TextStyleOverride,
   UserPointInput
 } from "@slides-agent/domain";
 
@@ -18,7 +20,8 @@ import type {
  * placeholders; the server assigns their real type/layout on merge.
  */
 
-const NEUTRAL_BULLET = (): SlideOutlineItem => ({
+const NEUTRAL_BULLET = (id: string): SlideOutlineItem => ({
+  id,
   text: "",
   sourceTrace: [],
   emphasis: "context"
@@ -71,7 +74,21 @@ export class EditableSlideDraft {
     newId: () => string = defaultNewId,
     chartOperations: readonly ChartOperation[] = []
   ): EditableSlideDraft {
-    return new EditableSlideDraft(baseRevision, slideDeck, newId, chartOperations);
+    // 015 (FR-015): lazily backfill stable bullet ids on legacy revisions — once,
+    // at construction, so they stay stable for the whole editing session. Text is
+    // untouched; the ids persist with the NEXT save (the old revision is immutable).
+    const withIds: SlideDeck = {
+      ...slideDeck,
+      slides: slideDeck.slides.map((slide) =>
+        slide.outline.some((item) => !item.id)
+          ? {
+              ...slide,
+              outline: slide.outline.map((item) => (item.id ? item : { ...item, id: newId() }))
+            }
+          : slide
+      )
+    };
+    return new EditableSlideDraft(baseRevision, withIds, newId, chartOperations);
   }
 
   get slides(): readonly Slide[] {
@@ -120,16 +137,21 @@ export class EditableSlideDraft {
     return this.mapSlide(slideId, (s) => {
       const outline = [...s.outline];
       const at = atIndex ?? outline.length;
-      outline.splice(Math.max(0, Math.min(at, outline.length)), 0, NEUTRAL_BULLET());
+      outline.splice(Math.max(0, Math.min(at, outline.length)), 0, NEUTRAL_BULLET(this.newId()));
       return { ...s, outline };
     });
   }
 
   removeBullet(slideId: string, index: number): EditableSlideDraft {
-    return this.mapSlide(slideId, (s) => ({
-      ...s,
-      outline: s.outline.filter((_, i) => i !== index)
-    }));
+    return this.mapSlide(slideId, (s) => {
+      const removed = s.outline[index];
+      const outline = s.outline.filter((_, i) => i !== index);
+      // 015 (FR-010): the bullet's style entry leaves with it — no orphans.
+      return withSlideOverrides(
+        { ...s, outline },
+        removed?.id ? dropOutlineEntry(s.textStyleOverrides, removed.id) : s.textStyleOverrides
+      );
+    });
   }
 
   moveBullet(slideId: string, from: number, to: number): EditableSlideDraft {
@@ -159,6 +181,74 @@ export class EditableSlideDraft {
 
   moveSlide(from: number, to: number): EditableSlideDraft {
     return this.withDeck({ ...this.deck, slides: reorder(this.deck.slides, from, to) });
+  }
+
+  // --- 015 US3: per-field text style overrides (FR-007/008/010/011) ---
+
+  /**
+   * Merges a style patch into the title override. A key explicitly set to
+   * `undefined` clears that axis (single-property reset); an empty result drops
+   * the whole entry.
+   */
+  setTitleStyle(slideId: string, patch: TextStylePatch): EditableSlideDraft {
+    return this.patchFieldStyle(slideId, "title", patch);
+  }
+
+  setMessageStyle(slideId: string, patch: TextStylePatch): EditableSlideDraft {
+    return this.patchFieldStyle(slideId, "message", patch);
+  }
+
+  /** Same merge semantics, addressed by the bullet's stable id (FR-015). */
+  setOutlineStyle(slideId: string, outlineId: string, patch: TextStylePatch): EditableSlideDraft {
+    return this.mapSlide(slideId, (s) => {
+      const current = s.textStyleOverrides?.outlineById?.[outlineId];
+      const merged = mergeOverride(current, patch);
+      const entries = { ...s.textStyleOverrides?.outlineById };
+      if (merged) {
+        entries[outlineId] = merged;
+      } else {
+        delete entries[outlineId];
+      }
+      return withSlideOverrides(s, {
+        title: s.textStyleOverrides?.title,
+        message: s.textStyleOverrides?.message,
+        outlineById: Object.keys(entries).length > 0 ? entries : undefined
+      });
+    });
+  }
+
+  /** Full reset for a field: the whole override entry disappears (FR-011). */
+  resetFieldStyle(slideId: string, field: "title" | "message"): EditableSlideDraft {
+    return this.mapSlide(slideId, (s) =>
+      withSlideOverrides(s, {
+        title: field === "title" ? undefined : s.textStyleOverrides?.title,
+        message: field === "message" ? undefined : s.textStyleOverrides?.message,
+        outlineById: s.textStyleOverrides?.outlineById
+      })
+    );
+  }
+
+  resetOutlineStyle(slideId: string, outlineId: string): EditableSlideDraft {
+    return this.setOutlineStyle(slideId, outlineId, {
+      sizePx: undefined,
+      color: undefined,
+      fontFamily: undefined
+    });
+  }
+
+  private patchFieldStyle(
+    slideId: string,
+    field: "title" | "message",
+    patch: TextStylePatch
+  ): EditableSlideDraft {
+    const merged = (s: Slide) => mergeOverride(s.textStyleOverrides?.[field], patch);
+    return this.mapSlide(slideId, (s) =>
+      withSlideOverrides(s, {
+        title: field === "title" ? merged(s) : s.textStyleOverrides?.title,
+        message: field === "message" ? merged(s) : s.textStyleOverrides?.message,
+        outlineById: s.textStyleOverrides?.outlineById
+      })
+    );
   }
 
   // --- 014: structured chart edits (the only legal chart channel, FR-021) ---
@@ -300,6 +390,64 @@ export class EditableSlideDraft {
       ...(this.chartOperations.length > 0 ? { chartOperations: [...this.chartOperations] } : {})
     };
   }
+}
+
+/**
+ * 015: editing patch for one field's style. Unlike the stored TextStyleOverride, a
+ * key EXPLICITLY set to `undefined` means "clear this axis" (single-property reset),
+ * while an absent key means "leave alone" — distinguished via `"key" in patch`.
+ */
+export interface TextStylePatch {
+  sizePx?: number | undefined;
+  color?: string | undefined;
+  fontFamily?: string | undefined;
+}
+
+/** Working shape while editing: branches may be explicitly undefined (= dropped). */
+interface OverridesDraft {
+  title?: TextStyleOverride | undefined;
+  message?: TextStyleOverride | undefined;
+  outlineById?: Record<string, TextStyleOverride> | undefined;
+}
+
+/** Merges a patch over the current override; undefined when nothing remains. */
+function mergeOverride(
+  current: TextStyleOverride | undefined,
+  patch: TextStylePatch
+): TextStyleOverride | undefined {
+  const sizePx = "sizePx" in patch ? patch.sizePx : current?.sizePx;
+  const color = "color" in patch ? patch.color : current?.color;
+  const fontFamily = "fontFamily" in patch ? patch.fontFamily : current?.fontFamily;
+  const next: TextStyleOverride = {
+    ...(typeof sizePx === "number" ? { sizePx } : {}),
+    ...(color ? { color } : {}),
+    ...(fontFamily ? { fontFamily } : {})
+  };
+  return Object.keys(next).length > 0 ? next : undefined;
+}
+
+/** Rebuilds the slide with canonical overrides: empty branches and entries drop out. */
+function withSlideOverrides(slide: Slide, overrides: OverridesDraft | undefined): Slide {
+  const canonical: SlideTextStyleOverrides = {
+    ...(overrides?.title ? { title: overrides.title } : {}),
+    ...(overrides?.message ? { message: overrides.message } : {}),
+    ...(overrides?.outlineById && Object.keys(overrides.outlineById).length > 0
+      ? { outlineById: overrides.outlineById }
+      : {})
+  };
+  const { textStyleOverrides: _dropped, ...rest } = slide;
+  return Object.keys(canonical).length > 0 ? { ...rest, textStyleOverrides: canonical } : rest;
+}
+
+function dropOutlineEntry(
+  overrides: SlideTextStyleOverrides | undefined,
+  outlineId: string
+): SlideTextStyleOverrides | undefined {
+  if (!overrides?.outlineById?.[outlineId]) {
+    return overrides;
+  }
+  const { [outlineId]: _removed, ...kept } = overrides.outlineById;
+  return { ...overrides, outlineById: kept };
 }
 
 function pruneOperationsForRemovedSlide(

@@ -32,6 +32,9 @@ x-backend-env: &backend-env
   REDIS_URL: redis://redis:6379
   ALLOWED_ORIGIN: ${ALLOWED_ORIGIN}
   TRUST_PROXY: "1"
+  # 015: PPTX artifacts — the worker WRITES the .pptx here, the api STREAMS the
+  # download from the same path, so both containers mount the shared volume below.
+  PPTX_ARTIFACT_DIR: /data/pptx-artifacts
 
 services:
   postgres:
@@ -81,6 +84,8 @@ services:
     command: node --import tsx src/main.ts
     environment: *backend-env
     env_file: .env
+    volumes:
+      - pptx-artifacts:/data/pptx-artifacts
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -108,6 +113,8 @@ services:
     command: node --import tsx src/worker/worker.main.ts
     environment: *backend-env
     env_file: .env
+    volumes:
+      - pptx-artifacts:/data/pptx-artifacts
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -133,3 +140,5 @@ services:
 volumes:
   pgdata:
   redisdata:
+  # 015: PPTX export artifacts (worker writes, api reads); TTL-purged by the sweeper.
+  pptx-artifacts:

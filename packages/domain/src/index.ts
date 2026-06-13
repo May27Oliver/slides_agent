@@ -24,6 +24,7 @@ export type { LlmDeckOutlinePlannerOptions } from "@/deck/llm-deck-outline-plann
 export { validateDeckOutlineRefinement } from "@/deck/deck-outline-refinement-validator";
 export type * from "@/deck/deck-outline-planner.port";
 export type * from "@/deck/deck.types";
+export { TEXT_SIZE_PX_MIN, TEXT_SIZE_PX_MAX } from "@/deck/deck.types";
 export { UiUxProMaxDesignPlanner } from "@/design/design-planner";
 export type * from "@/design/design-planner.port";
 export type * from "@/design/design.types";
@@ -47,7 +48,11 @@ export { renderTemplateDeckArtifact } from "@/rendering/html-deck-renderer";
 export type { HtmlDeckGenerationInput } from "@/rendering/html-deck-renderer";
 export { buildDeckStyleCss } from "@/rendering/deck-style-css";
 export { buildDeckRuntimeScript } from "@/rendering/deck-runtime-script";
-export { renderTemplateDeck } from "@/rendering/template-html-renderer";
+export { renderTemplateDeck, renderSlidesRegion } from "@/rendering/template-html-renderer";
+export {
+  buildOverrideFontsHref,
+  collectOverrideFontFamilies
+} from "@/rendering/text-style-override";
 export type { RenderedTemplateDeck, TemplateDeckInput } from "@/rendering/template-html-renderer";
 export type * from "@/rendering/chart-rendering.types";
 export {
@@ -101,6 +106,27 @@ export {
   deserializePreviewJob
 } from "@/preview-job/preview-job-serialization";
 export type { SerializedPreviewJob } from "@/preview-job/preview-job-serialization";
+
+// 015 US2: PPTX export job (mirrors the preview-job model).
+export type * from "@/pptx-export-job/pptx-export-job.types";
+export { isTerminalPptxStatus } from "@/pptx-export-job/pptx-export-job.types";
+export type * from "@/pptx-export-job/pptx-export-job-store.port";
+export type * from "@/pptx-export-job/pptx-export-job-runner.port";
+export {
+  PptxExportJobService,
+  createPptxExportFailure,
+  createPptxTimeoutFailure
+} from "@/pptx-export-job/pptx-export-job.service";
+export {
+  PPTX_EXPORT_JOB_TIMEOUT_MS,
+  PPTX_MAX_PAGES,
+  hasPptxExportJobTimedOut
+} from "@/pptx-export-job/pptx-export-job-timeout";
+export {
+  serializePptxExportJob,
+  deserializePptxExportJob
+} from "@/pptx-export-job/pptx-export-job-serialization";
+export type { SerializedPptxExportJob } from "@/pptx-export-job/pptx-export-job-serialization";
 
 export type {
   Deck,

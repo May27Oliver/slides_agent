@@ -14,7 +14,7 @@ function slide(over: Partial<Slide> = {}): Slide {
     type: "content",
     title: "Hello",
     message: "World",
-    outline: [{ text: "bullet one", sourceTrace: [], emphasis: "context" }],
+    outline: [{ id: "b1", text: "bullet one", sourceTrace: [], emphasis: "context" }],
     layout: "title-bullets",
     layoutIntent: { priority: "message_first", density: "medium", emphasis: "narrative" },
     contentBlocks: [],
@@ -31,7 +31,8 @@ const handlers = () => ({
   onOutlineText: vi.fn(),
   onAddBullet: vi.fn(),
   onRemoveBullet: vi.fn(),
-  onMoveBullet: vi.fn()
+  onMoveBullet: vi.fn(),
+  onOpenStyle: vi.fn()
 });
 
 describe("SlideEditPanel (010 US1)", () => {
@@ -61,6 +62,33 @@ describe("SlideEditPanel (010 US1)", () => {
     expect(h.onAddBullet).toHaveBeenCalled();
     fireEvent.click(screen.getByLabelText("刪除此條"));
     expect(h.onRemoveBullet).toHaveBeenCalledWith(0);
+  });
+
+  // 015 US3: each field's pencil opens the right style panel for that field/bullet id.
+  it("opens the style panel for title, message and each bullet (by id)", () => {
+    const h = handlers();
+    render(<SlideEditPanel slide={slide()} {...h} />);
+
+    const editButtons = screen.getAllByRole("button", { name: /編輯文字樣式/ });
+    // title, message, one bullet → three edit affordances.
+    expect(editButtons.length).toBe(3);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "編輯文字樣式" })[0]!); // title
+    expect(h.onOpenStyle).toHaveBeenCalledWith({ kind: "title" });
+    fireEvent.click(screen.getAllByRole("button", { name: "編輯文字樣式" })[1]!); // message
+    expect(h.onOpenStyle).toHaveBeenCalledWith({ kind: "message" });
+    fireEvent.click(screen.getByRole("button", { name: "編輯文字樣式 1" })); // bullet 1
+    expect(h.onOpenStyle).toHaveBeenCalledWith({ kind: "outline", outlineId: "b1" });
+  });
+
+  it("marks a field's style button active when it has an override", () => {
+    const h = handlers();
+    render(
+      <SlideEditPanel slide={slide({ textStyleOverrides: { title: { sizePx: 120 } } })} {...h} />
+    );
+    // The title edit button reflects the override via aria-pressed.
+    const titleEdit = screen.getAllByRole("button", { name: "編輯文字樣式" })[0]!;
+    expect(titleEdit.getAttribute("aria-pressed")).toBe("true");
   });
 
   // 014: the read-only notice is retired — charts edit through the card; every other

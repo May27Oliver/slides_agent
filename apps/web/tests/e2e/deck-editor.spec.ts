@@ -109,7 +109,7 @@ test("edits a deck, saves a new revision, and reflects the version", async ({ pa
 
   await page.goto(`/decks/${DECK_ID}/edit`);
 
-  const title = page.getByLabel("標題");
+  const title = page.getByRole("textbox", { name: "標題" });
   await expect(title).toHaveValue(/目標: conversion/);
   await title.fill("Edited via e2e");
   await expect(page.getByText("有未儲存的變更")).toBeVisible();
@@ -151,5 +151,5 @@ test("switcher searches decks and routes into the editor", async ({ page }) => {
   await page.getByLabel("搜尋標題…").fill("PM planning");
   await page.getByText("PM planning review").click();
 
-  await expect(page.getByLabel("標題")).toHaveValue(/目標: conversion/);
+  await expect(page.getByRole("textbox", { name: "標題" })).toHaveValue(/目標: conversion/);
 });

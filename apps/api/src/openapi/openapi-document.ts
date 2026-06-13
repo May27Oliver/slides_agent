@@ -2,6 +2,8 @@ import type { OpenAPIObject } from "@nestjs/swagger";
 import {
   type OpenApiSchema,
   AUTH_REQUIRED_SCHEMA,
+  CREATE_PPTX_EXPORT_REQUEST_SCHEMA,
+  CREATE_PPTX_EXPORT_RESPONSE_SCHEMA,
   CREATE_PREVIEW_JOB_RESPONSE_SCHEMA,
   DECK_DETAIL_RESPONSE_SCHEMA,
   DECK_LIST_RESPONSE_SCHEMA,
@@ -14,6 +16,7 @@ import {
   INVALID_EDIT_SCHEMA,
   INVALID_JOB_ID_ERROR_SCHEMA,
   REVISION_CONFLICT_SCHEMA,
+  PPTX_EXPORT_STATUS_RESPONSE_SCHEMA,
   PREVIEW_JOB_STATUS_RESPONSE_SCHEMA,
   PREVIEW_JOB_UNAVAILABLE_SCHEMA,
   PREVIEW_QUEUE_UNAVAILABLE_SCHEMA,
@@ -204,6 +207,94 @@ export function buildOpenApiDocument(): OpenAPIObject {
               description: "Base revision is stale (edited elsewhere)",
               content: json(REVISION_CONFLICT_SCHEMA)
             },
+            "500": { description: "Unexpected server error." }
+          }
+        }
+      },
+      "/api/decks/{id}/pptx-exports": {
+        post: {
+          tags: ["decks"],
+          summary: "Create an async PPTX export of one exact revision (015 US2)",
+          description:
+            "JWT-protected; scoped to the owner. Screenshots every slide (1920×1080) with a " +
+            "headless browser in the worker and assembles a screenshot-per-slide .pptx. " +
+            "Single-flight per account; decks above 60 slides are rejected.",
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" },
+              example: "11111111-2222-3333-4444-555555555555"
+            }
+          ],
+          requestBody: { required: true, content: json(CREATE_PPTX_EXPORT_REQUEST_SCHEMA) },
+          responses: {
+            "202": {
+              description: "Export job accepted",
+              content: json(CREATE_PPTX_EXPORT_RESPONSE_SCHEMA)
+            },
+            "400": {
+              description: "Malformed body, stale revision, page limit, or unrenderable revision"
+            },
+            "401": { description: "Missing/invalid JWT", content: json(AUTH_REQUIRED_SCHEMA) },
+            "404": {
+              description: "Not found or owned by another account",
+              content: json(DECK_NOT_FOUND_SCHEMA)
+            },
+            "409": { description: "An export is already in progress for this account." },
+            "429": { description: "Rate limit exceeded for this IP." },
+            "503": { description: "Queue/Redis unavailable" },
+            "500": { description: "Unexpected server error." }
+          }
+        }
+      },
+      "/api/decks/{id}/pptx-exports/{jobId}": {
+        get: {
+          tags: ["decks"],
+          summary: "Poll a PPTX export's status (015 US2)",
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            { name: "jobId", in: "path", required: true, schema: { type: "string" } }
+          ],
+          responses: {
+            "200": {
+              description: "Current export state (downloadUrl present when done)",
+              content: json(PPTX_EXPORT_STATUS_RESPONSE_SCHEMA)
+            },
+            "400": { description: "Invalid job id" },
+            "401": { description: "Missing/invalid JWT", content: json(AUTH_REQUIRED_SCHEMA) },
+            "404": { description: "Unknown, expired, or another account's export." },
+            "503": { description: "Queue/Redis unavailable" },
+            "500": { description: "Unexpected server error." }
+          }
+        }
+      },
+      "/api/decks/{id}/pptx-exports/{jobId}/file": {
+        get: {
+          tags: ["decks"],
+          summary: "Download the finished .pptx artifact (015 US2)",
+          description:
+            "Owner-scoped; available only while the job is done and within its TTL. " +
+            "Streams application/vnd.openxmlformats-officedocument.presentationml.presentation.",
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            { name: "jobId", in: "path", required: true, schema: { type: "string" } }
+          ],
+          responses: {
+            "200": { description: "The .pptx binary (attachment)." },
+            "401": { description: "Missing/invalid JWT", content: json(AUTH_REQUIRED_SCHEMA) },
+            "404": { description: "Not done, expired/purged, or another account's export." },
             "500": { description: "Unexpected server error." }
           }
         }

@@ -10,6 +10,7 @@ import type {
   ThemeCatalog,
   ThemeSelectionWarning
 } from "@slides-agent/domain";
+import { buildOverrideFontsHref } from "@slides-agent/domain";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { AuthError } from "@/features/auth/auth-client";
 import { getDeck } from "@/features/decks/decks-client";
@@ -28,12 +29,16 @@ import {
   loadDraft,
   saveDraft
 } from "@/features/deck-editor/deck-draft-storage";
+import { buildHtmlDownload } from "@/features/slide-generation/download-html";
 import { AddChartPanel } from "@/features/deck-editor/AddChartPanel";
+import { PptxExportButton } from "@/features/deck-editor/PptxExportButton";
 import { ChartDataTable } from "@/features/deck-editor/ChartDataTable";
 import { ChartEditorCard } from "@/features/deck-editor/ChartEditorCard";
 import { EditableSlideDraft } from "@/features/deck-editor/editable-slide-draft";
 import { LivePreview } from "@/features/deck-editor/LivePreview";
-import { SlideEditPanel } from "@/features/deck-editor/SlideEditPanel";
+import { SlideEditPanel, type StyleField } from "@/features/deck-editor/SlideEditPanel";
+import { TextStylePanel } from "@/features/deck-editor/TextStylePanel";
+import { fontFamiliesFromCatalog } from "@/features/deck-editor/font-catalog";
 import { SlideNavigator } from "@/features/deck-editor/SlideNavigator";
 import { ThemePicker } from "@/features/theme-picker/ThemePicker";
 import { useI18n } from "@/i18n";
@@ -71,6 +76,8 @@ export function DeckEditorView({
   const [savedHtml, setSavedHtml] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>({ kind: "idle" });
   const [rightTab, setRightTab] = useState<"edit" | "slides">("edit");
+  // 015 US3: which field the right slide-out style editor is editing (null = closed).
+  const [styleTarget, setStyleTarget] = useState<StyleField | null>(null);
   const [pendingDraft, setPendingDraft] = useState<{
     draft: DeckDraft;
     kind: Exclude<DraftClassification, "none">;
@@ -79,6 +86,8 @@ export function DeckEditorView({
   // live preview (parity); warnings are the post-save fallback evidence to disclose.
   const [themeSelection, setThemeSelection] = useState<ManualThemeSelection>({});
   const [themeCandidates, setThemeCandidates] = useState<SelectableTheme[]>([]);
+  // 015 US3: selectable per-field font families, derived from the font catalogue.
+  const [fontFamilies, setFontFamilies] = useState<string[]>([]);
   const [themeWarnings, setThemeWarnings] = useState<ThemeSelectionWarning[]>([]);
   // 014: the live preview's summary — chart cards read render evidence from it.
   const [previewSummary, setPreviewSummary] = useState<GenerationSummary | null>(null);
@@ -213,6 +222,29 @@ export function DeckEditorView({
     [draft, selectedId]
   );
 
+  // 015 US3: switching slides closes the style panel (it edits the selected slide).
+  useEffect(() => {
+    setStyleTarget(null);
+  }, [selectedId]);
+
+  // 015 US3: resolve the open style target to the panel's { label, value } for the
+  // current slide (labels reuse the edit-form i18n keys so copy lives in one place).
+  const styleTargetView = useMemo(() => {
+    if (!styleTarget || !selectedSlide) return null;
+    const overrides = selectedSlide.textStyleOverrides;
+    if (styleTarget.kind === "title") {
+      return { label: t("editor.field.title"), value: overrides?.title };
+    }
+    if (styleTarget.kind === "message") {
+      return { label: t("editor.field.message"), value: overrides?.message };
+    }
+    const index = selectedSlide.outline.findIndex((item) => item.id === styleTarget.outlineId);
+    return {
+      label: `${t("editor.field.outline")} ${index + 1}`,
+      value: overrides?.outlineById?.[styleTarget.outlineId]
+    };
+  }, [styleTarget, selectedSlide, t]);
+
   // 014: the selected slide's chart editor model, derived from the EFFECTIVE
   // placement state (base placeholders + pending ops replayed, R10). A pending
   // user_data add resolves to its deterministic future id, so the preview's render
@@ -255,16 +287,12 @@ export function DeckEditorView({
 
   // US2 (FR-005/FR-016): the add entry shows only on a chartless, non-opening slide.
   const showAddChart = Boolean(
-    draft &&
-    selectedSlide &&
-    !chartCard &&
-    selectedSlide.slideKind !== "opening" &&
-    canEditCharts
+    draft && selectedSlide && !chartCard && selectedSlide.slideKind !== "opening" && canEditCharts
   );
 
   const showLegacyChartNotice = Boolean(
     !canEditCharts &&
-      selectedSlide?.contentBlocks.some((block) => block.kind === "chart_placeholder")
+    selectedSlide?.contentBlocks.some((block) => block.kind === "chart_placeholder")
   );
 
   const usedPagesByIntent = useMemo(() => {
@@ -350,6 +378,18 @@ export function DeckEditorView({
           {dirty ? <span className="text-xs text-amber-600">{t("editor.unsaved")}</span> : null}
         </div>
         <div className="flex items-center gap-3">
+          {/* 015 US1 (FR-001/FR-002): download the ADOPTED revision's html; while dirty
+              the entry is disabled — the download must match what's saved on the server. */}
+          <HtmlDownloadEntry base={base} deckTitle={deckTitle} dirty={dirty} />
+          {/* 015 US2 (FR-003): async PPTX export of the SAME adopted revision. */}
+          {base.html ? (
+            <PptxExportButton
+              deckId={id}
+              revision={base.revision}
+              dirty={dirty}
+              fetchImpl={authFetch}
+            />
+          ) : null}
           <SaveStatus saveState={saveState} />
           <button
             type="button"
@@ -374,10 +414,11 @@ export function DeckEditorView({
         <DraftBanner kind={pendingDraft.kind} onRestore={restoreDraft} onDiscard={discardDraft} />
       ) : null}
 
-      <main className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 md:grid-cols-2 md:overflow-hidden">
+      <main className="relative grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 md:grid-cols-2 md:overflow-hidden">
         {/* Left half: live preview. */}
         <div className="min-h-0 rounded-2xl border border-line bg-panel p-3 max-md:h-[58vh]">
           <LivePreview
+            deckId={id}
             base={base}
             workingDeck={draft.deck}
             authoritativeHtml={savedHtml}
@@ -405,9 +446,10 @@ export function DeckEditorView({
               onChange={changeTheme}
               fetchImpl={authFetch}
               warnings={themeWarnings}
-              onCatalogLoaded={(catalog: ThemeCatalog) =>
-                setThemeCandidates([...catalog.font, ...catalog.palette, ...catalog.style])
-              }
+              onCatalogLoaded={(catalog: ThemeCatalog) => {
+                setThemeCandidates([...catalog.font, ...catalog.palette, ...catalog.style]);
+                setFontFamilies(fontFamiliesFromCatalog(catalog.font));
+              }}
             />
           </div>
           <div role="tablist" className="mb-3 flex gap-1 rounded-xl bg-surface p-1">
@@ -429,6 +471,7 @@ export function DeckEditorView({
                 onAddBullet={() => edit((d) => d.addBullet(selectedSlide.id))}
                 onRemoveBullet={(i) => edit((d) => d.removeBullet(selectedSlide.id, i))}
                 onMoveBullet={(from, to) => edit((d) => d.moveBullet(selectedSlide.id, from, to))}
+                onOpenStyle={setStyleTarget}
                 {...(chartCard
                   ? {
                       chartEditor: (
@@ -501,6 +544,34 @@ export function DeckEditorView({
             )}
           </div>
         </div>
+
+        {/* 015 US3: right slide-out text-style editor (free color + px). Docked inside
+            <main> (absolute) so it overlays the editor body but never the header — the
+            Save / download actions stay clickable. The live preview stays visible. */}
+        <TextStylePanel
+          target={styleTargetView}
+          fonts={fontFamilies}
+          fontPreviewHref={buildOverrideFontsHref(fontFamilies)}
+          onPatch={(patch) => {
+            if (!styleTarget) return;
+            edit((d) =>
+              styleTarget.kind === "title"
+                ? d.setTitleStyle(selectedSlide.id, patch)
+                : styleTarget.kind === "message"
+                  ? d.setMessageStyle(selectedSlide.id, patch)
+                  : d.setOutlineStyle(selectedSlide.id, styleTarget.outlineId, patch)
+            );
+          }}
+          onReset={() => {
+            if (!styleTarget) return;
+            edit((d) =>
+              styleTarget.kind === "outline"
+                ? d.resetOutlineStyle(selectedSlide.id, styleTarget.outlineId)
+                : d.resetFieldStyle(selectedSlide.id, styleTarget.kind)
+            );
+          }}
+          onClose={() => setStyleTarget(null)}
+        />
       </main>
     </div>
   );
@@ -508,6 +579,53 @@ export function DeckEditorView({
 
 function hasThemeSelection(selection: ManualThemeSelection): boolean {
   return Boolean(selection.fontId || selection.paletteId || selection.styleId);
+}
+
+/**
+ * 015 US1: header download entry. Renders a real download link only when the deck is
+ * clean (dirty=false) — the file is the adopted revision's server html, named
+ * `<sanitized-title>-rev<N>-<timestamp>.html` (FR-001). While dirty it degrades to a
+ * disabled hint ("save first", FR-002); with no revision html it renders nothing.
+ */
+function HtmlDownloadEntry({
+  base,
+  deckTitle,
+  dirty
+}: {
+  base: DeckRevisionContract;
+  deckTitle: string;
+  dirty: boolean;
+}) {
+  const { t } = useI18n();
+  const download = useMemo(
+    () =>
+      base.html && !dirty
+        ? buildHtmlDownload(base.html, { deckTitle, revision: base.revision })
+        : null,
+    [base, deckTitle, dirty]
+  );
+  if (!base.html) {
+    return null;
+  }
+  if (!download) {
+    return (
+      <span
+        title={t("editor.download.needSave")}
+        className="cursor-not-allowed rounded-lg border border-line px-3 py-1 font-medium text-ink-soft opacity-50"
+      >
+        {t("editor.download.html")}
+      </span>
+    );
+  }
+  return (
+    <a
+      download={download.filename}
+      href={download.href}
+      className="rounded-lg border border-line px-3 py-1 font-medium text-ink hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
+    >
+      {t("editor.download.html")}
+    </a>
+  );
 }
 
 function SaveStatus({ saveState }: { saveState: SaveState }) {

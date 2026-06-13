@@ -96,9 +96,46 @@ export type SlideOutlineEmphasis =
   | "context";
 
 export interface SlideOutlineItem {
+  /**
+   * 015 (FR-015): stable, opaque, slide-unique bullet id — the binding key for
+   * per-bullet text style overrides. Optional: legacy revisions have none; the
+   * client backfills lazily and the id persists on the next saved revision.
+   */
+  id?: string;
   text: string;
   sourceTrace: string[];
   emphasis: SlideOutlineEmphasis;
+}
+
+/**
+ * 015 (FR-016): presentation-only override for one text field. Both properties are
+ * optional; an absent property means the theme default. Values are absolute so the
+ * editor's free color picker / px slider map 1:1 — `color` is a `#RRGGBB` hex,
+ * `sizePx` is a font-size in px measured in the 1920×1080 presentation space (the
+ * same space the live preview and the PPTX export both render in, so px is WYSIWYG).
+ */
+export interface TextStyleOverride {
+  sizePx?: number;
+  color?: string;
+  /**
+   * 015: font family NAME (e.g. "Playfair Display") from the builtin font catalogue.
+   * The renderer loads every used family via an added Google Fonts <link>, so the
+   * preview and the PPTX export both render it.
+   */
+  fontFamily?: string;
+}
+
+/** 015: bounds for `sizePx` — the DoS boundary and the slider range. */
+export const TEXT_SIZE_PX_MIN = 8;
+export const TEXT_SIZE_PX_MAX = 240;
+/** 015: max length for a `fontFamily` name — the DoS boundary for that field. */
+export const TEXT_FONT_FAMILY_MAX = 64;
+
+/** 015 (FR-016): a slide's per-field text style overrides; outline binds by bullet id. */
+export interface SlideTextStyleOverrides {
+  title?: TextStyleOverride;
+  message?: TextStyleOverride;
+  outlineById?: Record<string, TextStyleOverride>;
 }
 
 export interface LayoutIntent {
@@ -146,6 +183,8 @@ export interface Slide {
   contentBlocks: ContentBlock[];
   sourceTrace: string[];
   speakerNotesDraft: string;
+  /** 015 (FR-016): optional per-field text style overrides; absent = theme defaults. */
+  textStyleOverrides?: SlideTextStyleOverrides;
 }
 
 export interface SlideDeck {

@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { PreviewJobsModule } from "@/modules/preview-jobs/preview-jobs.module";
+import { PptxExportJobsModule } from "@/modules/pptx-export-jobs/pptx-export-jobs.module";
 import { AuthModule } from "@/modules/auth/auth.module";
 import { AdminModule } from "@/modules/admin/admin.module";
 import { DecksModule } from "@/modules/decks/decks.module";
@@ -15,6 +16,13 @@ import { HealthModule } from "@/modules/health/health.module";
  * healthcheck (012).
  */
 @Module({
-  imports: [AuthModule, AdminModule, PreviewJobsModule, DecksModule, HealthModule]
+  imports: [
+    AuthModule,
+    AdminModule,
+    PreviewJobsModule,
+    PptxExportJobsModule,
+    DecksModule,
+    HealthModule
+  ]
 })
 export class AppModule {}

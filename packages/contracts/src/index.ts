@@ -70,7 +70,10 @@ export {
   INVALID_EDIT_SCHEMA,
   REVISION_CONFLICT_SCHEMA,
   THEME_SELECTION_SCHEMA,
-  THEME_CATALOG_RESPONSE_SCHEMA
+  THEME_CATALOG_RESPONSE_SCHEMA,
+  CREATE_PPTX_EXPORT_REQUEST_SCHEMA,
+  CREATE_PPTX_EXPORT_RESPONSE_SCHEMA,
+  PPTX_EXPORT_STATUS_RESPONSE_SCHEMA
 } from "./openapi";
 
 export {
@@ -237,3 +240,15 @@ export {
   type PreviewJobStatusResponseContract,
   type PreviewJobUnavailableResponseContract
 } from "./preview-job";
+
+// 015 US2: PPTX export job (create / poll / download).
+export {
+  validateCreatePptxExportRequest,
+  validatePptxExportJobStatusResponse,
+  type CreatePptxExportRequestContract,
+  type CreatePptxExportResponseContract,
+  type PptxExportJobStatusContract,
+  type PptxExportFailureReason,
+  type PptxExportJobStatusResponseContract,
+  type PptxExportValidationResult
+} from "./pptx-export-job";

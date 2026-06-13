@@ -9,6 +9,11 @@ import type { RenderedChartSummary } from "@/rendering/chart-rendering.types";
 import { buildDeckRuntimeScript } from "@/rendering/deck-runtime-script";
 import { buildDeckStyleCss } from "@/rendering/deck-style-css";
 import { escapeAttribute, escapeHtml } from "@/rendering/sanitize";
+import {
+  buildOverrideFontsHref,
+  collectOverrideFontFamilies,
+  textStyleInlineStyle
+} from "@/rendering/text-style-override";
 import { cleanDisplayText } from "@/shared/clean-display-text";
 
 export interface TemplateDeckInput {
@@ -33,6 +38,30 @@ export interface RenderedTemplateDeck {
   renderedCharts: RenderedChartSummary[];
 }
 
+/** 016: the slides-region markup (the `<section class="slide">` blocks joined). */
+export interface RenderedSlidesRegion {
+  slidesHtml: string;
+  renderedCharts: RenderedChartSummary[];
+}
+
+/**
+ * 016 (FR-005): render ONLY the slide sections — the exact markup `renderTemplateDeck`
+ * embeds in its document. The editor preview uses this for in-place updates (postMessage
+ * patch) so a patched frame is byte-identical to a full render (no second renderer).
+ */
+export function renderSlidesRegion(input: TemplateDeckInput): RenderedSlidesRegion {
+  const styleKit = resolveStyleKit(input.designPlanningResult);
+  const total = input.deck.slides.length;
+  const chartContext = buildChartContext(input);
+  const rendered = input.deck.slides.map((slide, index) =>
+    renderSlide(input, styleKit, slide, index, total, chartContext)
+  );
+  return {
+    slidesHtml: rendered.map((slideRender) => slideRender.html).join("\n"),
+    renderedCharts: rendered.flatMap((slideRender) => slideRender.charts)
+  };
+}
+
 /**
  * Deterministic, reference-grade renderer. It is both the conservative fallback
  * for the LLM HTML path and the source of the house style: layered gradient
@@ -43,24 +72,26 @@ export function renderTemplateDeck(input: TemplateDeckInput): RenderedTemplateDe
   const styleKit = resolveStyleKit(input.designPlanningResult);
   const css = buildDeckStyleCss(styleKit, input.designPlanningResult.designSystem);
   const script = buildDeckRuntimeScript();
-  const total = input.deck.slides.length;
   const fontLink = styleKit.fonts.googleFontsHref
     ? `\n  <link rel="preconnect" href="https://fonts.googleapis.com">\n  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n  <link href="${escapeAttribute(styleKit.fonts.googleFontsHref)}" rel="stylesheet">`
     : "";
+  // 015: load every font family used by per-field text-style overrides, so the
+  // preview iframe AND the PPTX screenshot render the chosen face (not a fallback).
+  const overrideFontsHref = buildOverrideFontsHref(collectOverrideFontFamilies(input.deck));
+  const overrideFontLink = overrideFontsHref
+    ? `\n  <link id="override-fonts" href="${escapeAttribute(overrideFontsHref)}" rel="stylesheet">`
+    : "";
 
-  const chartContext = buildChartContext(input);
-  const rendered = input.deck.slides.map((slide, index) =>
-    renderSlide(input, styleKit, slide, index, total, chartContext)
-  );
-  const slides = rendered.map((slideRender) => slideRender.html).join("\n");
-  const renderedCharts = rendered.flatMap((slideRender) => slideRender.charts);
+  // 016: compose the document FROM the shared slides-region renderer so the preview's
+  // in-place patch markup and this full html can never drift (parity by construction).
+  const { slidesHtml: slides, renderedCharts } = renderSlidesRegion(input);
 
   const html = `<!doctype html>
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${escapeHtml(cleanDisplayText(input.deck.title))}</title>${fontLink}
+  <title>${escapeHtml(cleanDisplayText(input.deck.title))}</title>${fontLink}${overrideFontLink}
   <style>${css}</style>
 </head>
 <body>
@@ -131,11 +162,18 @@ function renderSlide(
   const visibleOutline = useChartSplit
     ? slide.outline.filter((item) => !bulletEchoesChart(cleanDisplayText(item.text), chartValues))
     : slide.outline;
+  // 015 (FR-009/FR-010): per-field text style overrides come from the ONE domain
+  // helper; bullets bind by outline id (never by position), so filtering/reorder
+  // can't misattach a style.
+  const styles = slide.textStyleOverrides;
   const bullets = visibleOutline
-    .map(
-      (item, itemIndex) =>
-        `          <li class="bullet anim" style="--d:${itemIndex + 2}">${escapeHtml(cleanDisplayText(item.text))}</li>`
-    )
+    .map((item, itemIndex) => {
+      const bulletStyle = appendStyle(
+        `--d:${itemIndex + 2}`,
+        textStyleInlineStyle(item.id ? styles?.outlineById?.[item.id] : undefined)
+      );
+      return `          <li class="bullet anim" style="${bulletStyle}">${escapeHtml(cleanDisplayText(item.text))}</li>`;
+    })
     .join("\n");
   const chartRender = chartContext
     ? renderChartFragments(input, styleKit, chartContext, chartIntents, useChartSplit, slide.id)
@@ -143,19 +181,27 @@ function renderSlide(
   const chartsHtml = chartRender.html;
 
   const messageHtml = escapeHtml(cleanDisplayText(slide.message));
+  const titleStyle = appendStyle("--d:1", textStyleInlineStyle(styles?.title));
+  const messageStyle = appendStyle("--d:1", textStyleInlineStyle(styles?.message));
   // In the chart-feature split the message becomes the prominent right-side
   // takeaway, so it is NOT also shown as a header subtitle (no duplication).
   const headerMessage = useChartSplit
     ? ""
-    : `\n        <p class="message anim" style="--d:1">${messageHtml}</p>`;
+    : `\n        <p class="message anim" style="${messageStyle}">${messageHtml}</p>`;
   const body = useChartSplit
-    ? renderChartSplitBody(messageHtml, bullets, visibleOutline.length > 0, chartsHtml)
+    ? renderChartSplitBody(
+        messageHtml,
+        textStyleInlineStyle(styles?.message),
+        bullets,
+        visibleOutline.length > 0,
+        chartsHtml
+      )
     : renderStackedBody(bullets, chartsHtml);
 
   const html = `    <section class="${classes.join(" ")}" data-slide-id="${escapeAttribute(slide.id)}" data-pattern="${escapeAttribute(pattern)}" data-bg="${escapeAttribute(layout)}" aria-label="第 ${index + 1} 張：${escapeAttribute(cleanDisplayText(slide.title))}" tabindex="-1">
       <div class="slide-body">
         <span class="eyebrow anim" style="--d:0"><span class="dot"></span>${eyebrow}</span>
-        <${titleTag} class="slide-title anim" style="--d:1">${escapeHtml(cleanDisplayText(slide.title))}</${titleTag}>${headerMessage}
+        <${titleTag} class="slide-title anim" style="${titleStyle}">${escapeHtml(cleanDisplayText(slide.title))}</${titleTag}>${headerMessage}
         ${body}
       </div>
     </section>`;
@@ -180,6 +226,7 @@ ${bullets}
  */
 function renderChartSplitBody(
   messageHtml: string,
+  messageStyle: string,
   bullets: string,
   hasInsights: boolean,
   chartsHtml: string
@@ -190,12 +237,19 @@ function renderChartSplitBody(
 ${bullets}
             </ul>`
     : "";
+  // 015: the takeaway IS the slide message, so the message override applies here too.
+  const takeawayStyle = messageStyle ? ` style="${messageStyle}"` : "";
   return `<div class="chart-split anim" style="--d:2">
           <div class="chart-split-media"><div class="charts">${chartsHtml}</div></div>
           <div class="chart-split-text">
-            <p class="chart-takeaway">${messageHtml}</p>${points}
+            <p class="chart-takeaway"${takeawayStyle}>${messageHtml}</p>${points}
           </div>
         </div>`;
+}
+
+/** Joins the base animation style with an optional override fragment. */
+function appendStyle(base: string, override: string): string {
+  return override ? `${base};${override}` : base;
 }
 
 /** True when a bullet merely restates one of the chart's data values. */
