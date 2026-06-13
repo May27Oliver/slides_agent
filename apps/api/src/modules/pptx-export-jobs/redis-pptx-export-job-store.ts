@@ -63,8 +63,18 @@ export class RedisPptxExportJobStore implements PptxExportJobStore {
         this.redis.set(this.accountLockKey(job.accountId), job.id, "PX", this.ttlFor(job), "NX")
       );
       if (acquired === "OK") {
-        await this.writeJob(job);
-        await this.guarded(() => this.redis.sadd(this.activeKey(), job.id));
+        // Lock taken — write the job and index it. If either step fails, roll back so
+        // we never leak the lock (account stuck until TTL) or leave a queued job with
+        // no active-set tracking. Best-effort cleanup, then surface the original error.
+        try {
+          await this.writeJob(job);
+          await this.guarded(() => this.redis.sadd(this.activeKey(), job.id));
+        } catch (error) {
+          await this.guarded(() =>
+            this.redis.del(this.jobKey(job.id), this.accountLockKey(job.accountId))
+          ).catch(() => undefined);
+          throw error;
+        }
         return { ok: true, job };
       }
       const active = await this.findActiveByAccount(job.accountId);

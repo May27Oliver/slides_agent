@@ -28,7 +28,7 @@ description: "Task list — 015 編輯頁匯出與文字樣式覆寫（US1–US4
 
 ## Phase 1：Setup（共享）
 
-- [ ] T001 確認分支 `015-editor-export-text-style`、`pnpm test` 基線全綠；確認 `pnpm db:generate` 無 diff（本 feature **零 migration**——id/樣式存於既有 `slideDeck` JSON 欄、PPTX job 存 Redis/檔案）。任務中若出現非預期 schema diff 即停下重審。
+- [ ] T001 確認 spec-kit 上下文指向本 feature（`.specify/feature.json` = `specs/015-editor-export-text-style`；015/016 為堆疊式開發，實際 git branch 可能為下游的 `016-…`，以 `feature.json` 為準而非 branch 名）、`pnpm test` 基線全綠；確認 `pnpm db:generate` 無 diff（本 feature **零 migration**——id/樣式存於既有 `slideDeck` JSON 欄、PPTX job 存 Redis/檔案）。任務中若出現非預期 schema diff 即停下重審。
 - [ ] T001a **編輯前 impact 分析（CLAUDE.md 要求）**：對將修改的既有 symbol 跑 `gitnexus_impact({target, direction:"upstream"})` 並回報 blast radius：`mergeEditedDeck`／`mergeOutline`、`applyDeckEdit`、`template-html-renderer`（renderSlide / 標題/bullet 渲染）、`buildHtmlDownload`、`EditableSlideDraft`、`SlideEditPanel`、`LivePreview`、`DeckEditorView`、`validateEditRevisionRequest`、`DecksController`（revisions handler）、`SlideOutlineItem`/`Slide` 型別消費端。**任一 HIGH/CRITICAL 先向使用者警示再動工**；後續 phase 臨時新增受影響 symbol 比照補跑。
 - [ ] T002 [P] 新增依賴：`nanoid`（domain，outline id；或既有等價短碼工具）、`pptxgenjs`（api/worker）、`playwright`（api/worker，chromium）。記錄到對應 package.json；worker 容器化的 chromium 安裝留待 D5（research R2）。
 

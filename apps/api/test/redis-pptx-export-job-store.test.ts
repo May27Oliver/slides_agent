@@ -78,6 +78,36 @@ describe("RedisPptxExportJobStore single-flight (FR-006)", () => {
     expect(next.ok).toBe(true);
   });
 
+  it("rolls back the lock and job key if indexing fails after the lock is taken", async () => {
+    // A real partial failure: lock + writeJob succeed, then sadd(active) throws.
+    let failNextSadd = true;
+    const flaky = new Proxy(redis, {
+      get(target, prop, receiver) {
+        if (prop === "sadd") {
+          return async (...args: unknown[]) => {
+            if (failNextSadd) {
+              failNextSadd = false;
+              throw new Error("redis sadd failed");
+            }
+            return (target as unknown as { sadd: (...a: unknown[]) => Promise<number> }).sadd(
+              ...args
+            );
+          };
+        }
+        return Reflect.get(target, prop, receiver);
+      }
+    });
+    const flakyStore = new RedisPptxExportJobStore({ redis: flaky as never, now: () => NOW });
+
+    await expect(flakyStore.createIfNoActive(queuedJob("pptx_job_1"))).rejects.toThrow();
+
+    // No leaked lock, no orphaned job key — the account must be free to retry.
+    expect(await redis.get("pptx-export-job:account-lock:acc-1")).toBeNull();
+    expect(await redis.get("pptx-export-job:pptx_job_1")).toBeNull();
+    const retry = await store.createIfNoActive(queuedJob("pptx_job_2"));
+    expect(retry.ok).toBe(true);
+  });
+
   // NOTE: true two-callers-at-once atomicity rests on Redis SET NX being evaluated
   // single-threaded server-side; ioredis-mock does not faithfully serialize concurrent
   // commands, so a Promise.all race here would test the mock, not the gate. The

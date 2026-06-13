@@ -15,7 +15,7 @@
 | 狀態機 | queued/running/succeeded/failed/expired（多 stage） | **queued/processing/done/failed** 四態（逾時歸 failed，`failure.reason="timeout"`） |
 | 路由 | `/api/slides/preview-jobs*` | `/api/decks/:id/pptx-exports*`（掛在 deck 資源下，**owner scope：非 owner 一律 404**） |
 | 產物 | JSON result（存 Redis） | **檔案 artifact**（`FsPptxArtifactStore`，數 MB 不塞 Redis；api 與 worker 共享 `PPTX_ARTIFACT_DIR` volume） |
-| 併發 | rate limit | rate limit + **單人併發=1**（`findActiveByAccount` 擋 409） |
+| 併發 | rate limit | rate limit + **單人併發=1**（store 原子 `createIfNoActive`：per-account `SET NX` 鎖擋既有 in-flight → 409，無 TOCTOU） |
 | 逾時 | 5 分鐘 | **3 分鐘**（`PPTX_EXPORT_JOB_TIMEOUT_MS`；≤30 頁目標 90 秒內） |
 | sweeper 額外職責 | 無 | **artifact retention purge**（mtime 超齡刪檔；失敗時 execution 也主動刪部分檔） |
 | worker 依賴 | SlidesService（LLM 生成） | **playwright chromium + pptxgenjs**（零 LLM、確定性） |

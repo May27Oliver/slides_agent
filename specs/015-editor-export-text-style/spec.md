@@ -76,7 +76,7 @@
 
 7. **US4（16:9 預覽）優先級由 P4 提升至 P2**（回答 open question 2）：低成本、高頻使用的核心編輯體驗改善，提前交付；PPTX（最重、部署風險最高）改為 build 順序最後（P4）。
 
-8. **quickstart 引用**（修正 finding 6）：本 spec 內「見 quickstart」改述為「quickstart 待 /speckit.plan 階段產出」，避免引用尚不存在的檔案。
+8. **quickstart 引用**（修正 finding 6）：原為避免引用尚不存在的檔案而暫述「待 /speckit.plan 產出」；plan 階段已產出 [quickstart.md](./quickstart.md)，本 spec 內引用已直接指向該檔。
 
 ---
 
@@ -215,7 +215,7 @@
 - **CR-012 Code Simplicity**: 範圍邊界明確——大小為任意 px（8–240）、顏色為自由 hex、字型取自內建目錄，輸入以「數值範圍＋hex regex＋字型白名單/長度」為 bounded DoS 邊界；PPTX 採截圖（不做原生形狀對映）、預覽比例為純前端 letterbox、下載只對已存 revision；避免投機抽象。
 - **CR-013 Consistent Language**: 關鍵詞需跨 UI/報告/文件一致：下載 HTML、下載 PPTX、文字樣式（大小/顏色/字型）、重設樣式、匯出工作、16:9 預覽。
 - **CR-014 Performance and Evidence**: PPTX 匯出為非同步、有逾時與並發上限；HTML 下載與樣式覆寫為即時。需保留的評審證據：匯出工作狀態紀錄、樣式覆寫經 contracts schema 驗證的測試、預覽比例的視覺/快照證據。
-- **CR-015 Manual Verification**: PPTX 在實際 PowerPoint/Keynote 開啟的視覺一致性、以及 16:9 在不同視窗大小的呈現，列為人工驗證路徑（quickstart 待 /speckit.plan 階段產出）。
+- **CR-015 Manual Verification**: PPTX 在實際 PowerPoint/Keynote 開啟的視覺一致性、以及 16:9 在不同視窗大小的呈現，列為人工驗證路徑（見 [quickstart.md](./quickstart.md)）。
 - **CR-016 Verification**: 驗收需含 slide JSON schema 對新增樣式欄位的有效性、HTML 渲染套用覆寫、既有鍵盤導覽不受影響、以及預覽的基本 responsive（比例維持）行為。
 
 ### Key Entities
@@ -227,16 +227,16 @@
 
 ### Measurable Outcomes
 
-- **SC-001**: 使用者可在編輯頁於 3 秒內下載到對應最新 saved revision 的 HTML 檔，開啟後與線上預覽一致。
+- **SC-001**: 使用者可在編輯頁於 3 秒內下載到目前 adopted 且 `dirty=false` 的 revision 的 HTML 檔，開啟後與線上預覽一致。
 - **SC-002**: 使用者可從編輯頁產生 PPTX，頁數 100% 等於投影片數，每頁為對應 slide 的 1920×1080（16:9）截圖，視覺與線上一致；常見規模（≤ 30 頁）的轉檔在 90 秒內完成並回報 `queued/processing/done/failed` 進度；超過 60 頁的請求被明確拒絕。
-- **SC-003**: 使用者可對標題/message/任一 outline 條列獨立調整大小與顏色，調整即時反映於預覽，Save 後重載 100% 保留。
+- **SC-003**: 使用者可對標題/message/任一 outline 條列獨立調整大小、顏色與字型，調整即時反映於預覽，Save 後重載 100% 保留。
 - **SC-004**: 左側預覽在常見桌面視窗寬度範圍內，slide 內容皆維持 16:9 不變形（以留邊達成）。
 - **SC-005**: 所有樣式覆寫與匯出參數皆通過 contracts 邊界的 bounded 驗證（sizePx 8–240、color hex regex、fontFamily 白名單/長度、outlineById ≤100 entries）；越界輸入 100% 被拒絕，無 DoS 放大路徑。
 
 ## Assumptions
 
 - 使用者已登入且對該 deck 有編修權限（沿用既有 auth/scope）。
-- 下載對象一律為 server 端最新 saved revision；未存編輯需先 Save（已定案決策）。
+- 下載對象一律為目前 adopted 且 `dirty=false` 的「具體 revision number」（current-only；PPTX 建立時後端再驗證它仍為 deck current，非則明確失敗要求 reload，不退而匯出他版）；未存編輯需先 Save（已定案決策）。
 - PPTX 採截圖嵌圖，pptx 內文不可編輯為可接受取捨（已定案決策）。
 - PPTX 轉檔在伺服器端以無頭瀏覽器執行，沿用既有 003/004 的 Redis/BullMQ worker 佇列基礎設施作為非同步工作載體（實作細節待 plan 階段定）。
 - 文字顏色採自由 `#RRGGBB`、大小為任意 px（8–240）、字型取自內建字型目錄為可接受表達範圍（deep-review 後改採的較豐富文字編輯器 UX）。
@@ -250,4 +250,4 @@
 - **Uncertain Claims Policy**: 不適用（無 LLM、無新宣稱）。
 - **Sensitive Content Handling**: 不送任何內容至 LLM provider；PPTX 截圖在伺服器端以無頭瀏覽器渲染既有 deck html，過程不外送第三方。需確認無頭瀏覽器以 sandbox 載入既有受信任的 server 渲染 html（與前端 iframe sandbox 政策一致的安全考量）。
 - **Evidence and Traceability**: 匯出工作的狀態紀錄、樣式覆寫經 schema 驗證的單元測試、預覽比例快照，皆可在不重跑 demo 的情況下供評審檢視。
-- **Manual Verification Path**: (1) 下載 PPTX 後以 PowerPoint/Keynote 開啟逐頁比對視覺；(2) 不同視窗寬度下檢視左側 16:9 預覽；(3) 設定樣式覆寫後下載 HTML 比對呈現。（具體步驟之 quickstart 待 /speckit.plan 階段產出）
+- **Manual Verification Path**: (1) 下載 PPTX 後以 PowerPoint/Keynote 開啟逐頁比對視覺；(2) 不同視窗寬度下檢視左側 16:9 預覽；(3) 設定樣式覆寫後下載 HTML 比對呈現。具體步驟見 [quickstart.md](./quickstart.md)。
