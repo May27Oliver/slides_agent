@@ -39,7 +39,6 @@ import { LivePreview } from "@/features/deck-editor/LivePreview";
 import { SlideEditPanel, type StyleField } from "@/features/deck-editor/SlideEditPanel";
 import { TextStylePanel } from "@/features/deck-editor/TextStylePanel";
 import { fontFamiliesFromCatalog } from "@/features/deck-editor/font-catalog";
-import type { TextStylePatch } from "@/features/deck-editor/editable-slide-draft";
 import { SlideNavigator } from "@/features/deck-editor/SlideNavigator";
 import { ThemePicker } from "@/features/theme-picker/ThemePicker";
 import { useI18n } from "@/i18n";
