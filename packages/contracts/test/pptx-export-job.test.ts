@@ -57,5 +57,15 @@ describe("pptx export job contract (015 US2)", () => {
         updatedAt: "2026-06-13T00:00:00.000Z"
       }).ok
     ).toBe(false);
+    // deep-review M5: reason must be the timeout|export enum, not any string.
+    expect(
+      validatePptxExportJobStatusResponse({
+        jobId: "j",
+        status: "failed",
+        failure: { reason: "banana", message: "x" },
+        createdAt: "2026-06-13T00:00:00.000Z",
+        updatedAt: "2026-06-13T00:00:00.000Z"
+      }).ok
+    ).toBe(false);
   });
 });

@@ -117,15 +117,18 @@ export function buildDeckRuntimeScript(): string {
   // left preview stays in sync with the slide being edited on the right. Additive and
   // inert for standalone decks (nobody posts to them); the rendered html is unchanged.
   window.addEventListener("message", function (event) {
+    // 016: only the embedding editor (our direct parent) may drive the preview.
+    // Strict equality — a null source (worker/detached/opaque) is NOT trusted.
+    // Inert for a standalone deck (window.parent === window; nobody posts to it).
+    if (event.source !== window.parent) { return; }
     var data = event.data;
     if (data && data.type === "deck:goToSlide" && typeof data.index === "number") {
       show(data.index);
       return;
     }
     // 016: in-place slide patch — swap the slide sections WITHOUT reloading the
-    // document (no font re-fetch / no script restart / no jump). Source-checked.
+    // document (no font re-fetch / no script restart / no jump).
     if (data && data.type === "deck:patchSlides" && typeof data.slidesHtml === "string") {
-      if (event.source && event.source !== window.parent) { return; }
       if (deck) { deck.classList.add("deck-static"); }   // suppress entrance-animation replay
       ensureOverrideFontLink(data.fontsHref || null);
       var controls = deck ? deck.querySelector(".controls") : null;

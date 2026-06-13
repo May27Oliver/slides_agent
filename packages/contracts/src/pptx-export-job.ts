@@ -8,6 +8,9 @@
  */
 export type PptxExportJobStatusContract = "queued" | "processing" | "done" | "failed";
 
+/** Why an export failed (mirrors the domain PptxExportFailure + the OpenAPI enum). */
+export type PptxExportFailureReason = "timeout" | "export";
+
 export interface CreatePptxExportRequestContract {
   /** The EXACT revision to export (FR-003a); validated against the deck server-side. */
   revision: number;
@@ -25,12 +28,14 @@ export interface PptxExportJobStatusResponseContract {
   pageCount?: number;
   /** Present only when status = "done" and the artifact is still within its TTL. */
   downloadUrl?: string;
-  failure?: { reason: string; message: string };
+  failure?: { reason: PptxExportFailureReason; message: string };
   createdAt: string;
   updatedAt: string;
 }
 
-export type PptxExportValidationResult<T> = { ok: true; value: T } | { ok: false; issues: string[] };
+export type PptxExportValidationResult<T> =
+  | { ok: true; value: T }
+  | { ok: false; issues: string[] };
 
 const STATUSES = new Set<PptxExportJobStatusContract>(["queued", "processing", "done", "failed"]);
 
@@ -56,7 +61,10 @@ export function validatePptxExportJobStatusResponse(
   if (typeof input.jobId !== "string" || input.jobId.length === 0) {
     issues.push("jobId must be a non-empty string");
   }
-  if (typeof input.status !== "string" || !STATUSES.has(input.status as PptxExportJobStatusContract)) {
+  if (
+    typeof input.status !== "string" ||
+    !STATUSES.has(input.status as PptxExportJobStatusContract)
+  ) {
     issues.push("status must be one of queued/processing/done/failed");
   }
   if (typeof input.createdAt !== "string" || typeof input.updatedAt !== "string") {
@@ -71,10 +79,10 @@ export function validatePptxExportJobStatusResponse(
   if (input.failure !== undefined) {
     if (
       !isRecord(input.failure) ||
-      typeof input.failure.reason !== "string" ||
+      (input.failure.reason !== "timeout" && input.failure.reason !== "export") ||
       typeof input.failure.message !== "string"
     ) {
-      issues.push("failure must be { reason, message }");
+      issues.push("failure must be { reason: timeout|export, message }");
     }
   }
   return issues.length === 0

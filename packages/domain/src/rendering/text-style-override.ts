@@ -1,8 +1,5 @@
 import type { SlideDeck, TextStyleOverride } from "@/deck/deck.types";
 
-/** The three override-able text fields (kept for call-site clarity / future per-field rules). */
-export type TextStyleField = "title" | "message" | "bullet";
-
 // Fallback stack appended after an override family, matching the theme defaults so a
 // font that fails to load (or a CJK glyph the family lacks) degrades gracefully.
 // SINGLE quotes: this string lands inside a double-quoted HTML style="" attribute, so
@@ -18,10 +15,7 @@ const FONT_FALLBACK = `'Noto Sans TC', system-ui, -apple-system, sans-serif`;
  * `font-size:<n>px`, `color` → `color:<hex>`, `fontFamily` → a quoted family + the
  * theme fallback stack. Absent fields emit nothing (the theme default applies).
  */
-export function textStyleInlineStyle(
-  override: TextStyleOverride | undefined,
-  _field: TextStyleField
-): string {
+export function textStyleInlineStyle(override: TextStyleOverride | undefined): string {
   if (!override) {
     return "";
   }

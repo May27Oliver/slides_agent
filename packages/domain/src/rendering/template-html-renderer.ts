@@ -170,7 +170,7 @@ function renderSlide(
     .map((item, itemIndex) => {
       const bulletStyle = appendStyle(
         `--d:${itemIndex + 2}`,
-        textStyleInlineStyle(item.id ? styles?.outlineById?.[item.id] : undefined, "bullet")
+        textStyleInlineStyle(item.id ? styles?.outlineById?.[item.id] : undefined)
       );
       return `          <li class="bullet anim" style="${bulletStyle}">${escapeHtml(cleanDisplayText(item.text))}</li>`;
     })
@@ -181,8 +181,8 @@ function renderSlide(
   const chartsHtml = chartRender.html;
 
   const messageHtml = escapeHtml(cleanDisplayText(slide.message));
-  const titleStyle = appendStyle("--d:1", textStyleInlineStyle(styles?.title, "title"));
-  const messageStyle = appendStyle("--d:1", textStyleInlineStyle(styles?.message, "message"));
+  const titleStyle = appendStyle("--d:1", textStyleInlineStyle(styles?.title));
+  const messageStyle = appendStyle("--d:1", textStyleInlineStyle(styles?.message));
   // In the chart-feature split the message becomes the prominent right-side
   // takeaway, so it is NOT also shown as a header subtitle (no duplication).
   const headerMessage = useChartSplit
@@ -191,7 +191,7 @@ function renderSlide(
   const body = useChartSplit
     ? renderChartSplitBody(
         messageHtml,
-        textStyleInlineStyle(styles?.message, "message"),
+        textStyleInlineStyle(styles?.message),
         bullets,
         visibleOutline.length > 0,
         chartsHtml

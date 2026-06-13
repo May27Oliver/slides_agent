@@ -248,6 +248,7 @@ export {
   type CreatePptxExportRequestContract,
   type CreatePptxExportResponseContract,
   type PptxExportJobStatusContract,
+  type PptxExportFailureReason,
   type PptxExportJobStatusResponseContract,
   type PptxExportValidationResult
 } from "./pptx-export-job";

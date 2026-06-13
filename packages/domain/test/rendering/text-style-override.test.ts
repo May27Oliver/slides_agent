@@ -13,30 +13,30 @@ import {
  */
 describe("textStyleInlineStyle", () => {
   it("emits an absolute px font-size", () => {
-    expect(textStyleInlineStyle({ sizePx: 72 }, "title")).toBe("font-size:72px");
+    expect(textStyleInlineStyle({ sizePx: 72 })).toBe("font-size:72px");
   });
 
   it("emits a hex color verbatim", () => {
-    expect(textStyleInlineStyle({ color: "#7170FF" }, "bullet")).toBe("color:#7170FF");
+    expect(textStyleInlineStyle({ color: "#7170FF" })).toBe("color:#7170FF");
   });
 
   it("joins size and color with a semicolon", () => {
-    expect(textStyleInlineStyle({ sizePx: 90, color: "#ff0000" }, "title")).toBe(
+    expect(textStyleInlineStyle({ sizePx: 90, color: "#ff0000" })).toBe(
       "font-size:90px;color:#ff0000"
     );
   });
 
   it("returns an empty string for an absent or empty override (theme default applies)", () => {
-    expect(textStyleInlineStyle(undefined, "title")).toBe("");
-    expect(textStyleInlineStyle({}, "bullet")).toBe("");
+    expect(textStyleInlineStyle(undefined)).toBe("");
+    expect(textStyleInlineStyle({})).toBe("");
   });
 
   it("ignores a non-finite size", () => {
-    expect(textStyleInlineStyle({ sizePx: Number.NaN }, "title")).toBe("");
+    expect(textStyleInlineStyle({ sizePx: Number.NaN })).toBe("");
   });
 
   it("emits a single-quoted font family with the theme fallback stack", () => {
-    expect(textStyleInlineStyle({ fontFamily: "Playfair Display" }, "title")).toBe(
+    expect(textStyleInlineStyle({ fontFamily: "Playfair Display" })).toBe(
       "font-family:'Playfair Display', 'Noto Sans TC', system-ui, -apple-system, sans-serif"
     );
   });

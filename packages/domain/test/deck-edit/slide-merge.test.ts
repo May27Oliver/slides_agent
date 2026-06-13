@@ -302,6 +302,28 @@ describe("mergeEditedDeck outline ids + text style overrides (015 US3)", () => {
     });
   });
 
+  // deep-review H3: the domain re-validates persisted/edited values so a bad color or
+  // family (e.g. from an older API version) can never reach the renderer's style="".
+  it("strips invalid hex color, font family, and out-of-range px (self-defending)", () => {
+    const base = deck([slide({ id: "s1", outline: [outlineItem("Base bullet")] })]);
+    const edited = deck([
+      slide({
+        id: "s1",
+        outline: [bullet("b1", "Base bullet")],
+        textStyleOverrides: {
+          title: { color: "red", fontFamily: "Evil'; x:(", sizePx: 9999 }, // all invalid → dropped
+          message: { color: "#7170FF", sizePx: 64 } // valid → kept
+        }
+      })
+    ]);
+    const result = mergeEditedDeck(base, edited);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.slideDeck.slides[0]!.textStyleOverrides).toEqual({
+      message: { color: "#7170FF", sizePx: 64 }
+    });
+  });
+
   it("omits textStyleOverrides entirely when everything normalizes away", () => {
     const base = deck([slide({ id: "s1" })]);
     const edited = deck([

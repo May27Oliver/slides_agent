@@ -26,8 +26,13 @@ function mountDeck(sections: string[]): void {
 }
 
 function patch(message: { slidesHtml: string; index: number; fontsHref?: string | null }): void {
+  // source MUST be window.parent (=== window in jsdom top) — the runtime now strictly
+  // rejects messages whose source is not its direct parent (deep-review M1).
   window.dispatchEvent(
-    new MessageEvent("message", { data: { type: "deck:patchSlides", ...message } })
+    new MessageEvent("message", {
+      data: { type: "deck:patchSlides", ...message },
+      source: window
+    })
   );
 }
 

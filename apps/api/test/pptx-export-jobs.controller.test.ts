@@ -1,8 +1,10 @@
+import { Readable } from "node:stream";
 import { describe, expect, it } from "vitest";
 import {
   BadRequestException,
   ConflictException,
-  NotFoundException
+  NotFoundException,
+  ServiceUnavailableException
 } from "@nestjs/common";
 import type {
   DeckDetail,
@@ -144,6 +146,30 @@ describe("PptxExportJobsController.createExport (015 US2)", () => {
     );
   });
 
+  // deep-review H2: enqueue failure must free the account (mark the just-created job
+  // failed), not leave it stuck queued until the sweeper.
+  it("marks the job failed if BullMQ enqueue throws (no account lockout)", async () => {
+    let failedId: string | null = null;
+    const c = controller({
+      jobStore: makeJobStore({
+        create: async (j) => j,
+        markFailed: async (id) => {
+          failedId = id;
+          return undefined;
+        }
+      }),
+      runner: {
+        start: async () => {
+          throw new Error("redis down");
+        }
+      }
+    });
+    await expect(c.createExport(DECK_ID, { revision: 3 }, reqFor("acc-1"))).rejects.toThrow(
+      ServiceUnavailableException
+    );
+    expect(failedId).not.toBeNull();
+  });
+
   it("rejects a malformed body (revision missing)", async () => {
     await expect(controller({}).createExport(DECK_ID, {}, reqFor("acc-1"))).rejects.toThrow(
       BadRequestException
@@ -197,5 +223,33 @@ describe("PptxExportJobsController.exportStatus / downloadArtifact (015 US2)", (
     await expect(c.downloadArtifact(DECK_ID, "pptx_job_1", reqFor("acc-1"), res)).rejects.toThrow(
       NotFoundException
     );
+  });
+
+  // deep-review H1: a mid-stream read error must not crash; it ends the response.
+  it("handles a stream error on download by ending the response (no unhandled error)", async () => {
+    const stream = new Readable({ read() {} });
+    const done = job({
+      status: "done",
+      result: { artifactRef: "pptx_job_1.pptx", byteSize: 9, pageCount: 1 }
+    });
+    const c = controller({
+      jobStore: makeJobStore({ findById: async () => done }),
+      artifacts: makeArtifacts({ read: async () => stream })
+    });
+    let ended = false;
+    const res = {
+      setHeader: () => undefined,
+      on: () => undefined,
+      once: () => undefined,
+      emit: () => undefined,
+      write: () => true,
+      end: () => {
+        ended = true;
+      }
+    } as never;
+    await c.downloadArtifact(DECK_ID, "pptx_job_1", reqFor("acc-1"), res);
+    // Emitting an error on the source stream must be caught and end the response.
+    stream.emit("error", new Error("disk gone"));
+    expect(ended).toBe(true);
   });
 });

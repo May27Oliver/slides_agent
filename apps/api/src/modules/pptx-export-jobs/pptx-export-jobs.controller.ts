@@ -31,7 +31,11 @@ import type {
   PptxExportJobStore,
   SlideDeck
 } from "@slides-agent/domain";
-import { PPTX_MAX_PAGES, PptxExportJobService } from "@slides-agent/domain";
+import {
+  PPTX_MAX_PAGES,
+  PptxExportJobService,
+  createPptxExportFailure
+} from "@slides-agent/domain";
 import { DECK_STORE } from "@/modules/decks/decks.tokens";
 import type { PptxArtifactStore } from "@/modules/pptx-export-jobs/fs-pptx-artifact-store";
 import {
@@ -125,7 +129,7 @@ export class PptxExportJobsController {
       });
     }
 
-    let job: PptxExportJob;
+    let job: PptxExportJob | undefined;
     try {
       job = await this.jobStore.create(
         this.jobService.createAcceptedJob({ accountId, deckId, revision, pageCount })
@@ -133,6 +137,14 @@ export class PptxExportJobsController {
       await this.runner.start(job);
     } catch {
       this.logger.error("pptx export creation failed code=PPTX_QUEUE_UNAVAILABLE");
+      // deep-review H2: if create succeeded but enqueue failed, the job is left
+      // non-terminal and the single-flight gate would lock this account until the
+      // sweeper fires (~3 min). Mark it failed now so the account is freed immediately.
+      if (job) {
+        await this.jobStore
+          .markFailed(job.id, createPptxExportFailure(new Error("enqueue failed")), new Date())
+          .catch(() => undefined);
+      }
       throw this.serviceUnavailable();
     }
 
@@ -187,6 +199,14 @@ export class PptxExportJobsController {
     res.setHeader("Content-Type", PPTX_CONTENT_TYPE);
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     this.logger.log(`${job.id} artifact_download bytes=${job.result.byteSize}`);
+    // deep-review H1: a stream error after headers (disk/NFS I/O) would otherwise be an
+    // unhandled 'error' event (process-level crash) and leave the client a truncated
+    // .pptx. Handle it: log, and end the response (no further data) so the file is
+    // recognizably incomplete rather than crashing the worker.
+    stream.on("error", (error: Error) => {
+      this.logger.error(`${jobId} artifact_stream_error: ${error.name}`);
+      res.end();
+    });
     stream.pipe(res);
   }
 

@@ -1,8 +1,18 @@
-import type {
-  SlideOutlineItem,
-  SlideTextStyleOverrides,
-  TextStyleOverride
+import {
+  TEXT_FONT_FAMILY_MAX,
+  TEXT_SIZE_PX_MAX,
+  TEXT_SIZE_PX_MIN,
+  type SlideOutlineItem,
+  type SlideTextStyleOverrides,
+  type TextStyleOverride
 } from "@/deck/deck.types";
+
+// Self-defending domain gate (deep-review H3): re-validate every value before it can
+// reach the renderer's inline style, so a row written by an older API version or a
+// direct DB insert can NEVER inject into `style=""`. Mirrors the contract bounds; the
+// renderer interpolates these verbatim, so the domain must not trust the store.
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/u;
+const FONT_FAMILY = /^[A-Za-z0-9][A-Za-z0-9 -]*$/u;
 
 /**
  * 015 (FR-016): canonicalizes a slide's text style overrides before persisting.
@@ -42,12 +52,20 @@ function normalizeOverride(override: TextStyleOverride | undefined): TextStyleOv
   if (!override) {
     return undefined;
   }
+  const sizeOk =
+    typeof override.sizePx === "number" &&
+    Number.isFinite(override.sizePx) &&
+    override.sizePx >= TEXT_SIZE_PX_MIN &&
+    override.sizePx <= TEXT_SIZE_PX_MAX;
+  const colorOk = typeof override.color === "string" && HEX_COLOR.test(override.color);
+  const fontOk =
+    typeof override.fontFamily === "string" &&
+    override.fontFamily.length <= TEXT_FONT_FAMILY_MAX &&
+    FONT_FAMILY.test(override.fontFamily);
   const normalized: TextStyleOverride = {
-    ...(typeof override.sizePx === "number" && Number.isFinite(override.sizePx)
-      ? { sizePx: override.sizePx }
-      : {}),
-    ...(override.color ? { color: override.color } : {}),
-    ...(override.fontFamily ? { fontFamily: override.fontFamily } : {})
+    ...(sizeOk ? { sizePx: override.sizePx } : {}),
+    ...(colorOk ? { color: override.color } : {}),
+    ...(fontOk ? { fontFamily: override.fontFamily } : {})
   };
   return Object.keys(normalized).length > 0 ? normalized : undefined;
 }

@@ -326,6 +326,28 @@ describe("edit revision contract (010 US1)", () => {
       ).toBe(false);
     });
 
+    // deep-review H3a: pin the exact bounds (8/240 px, 64-char family) so any future
+    // loosening/tightening of the validator vs the schema is caught here.
+    it("pins the exact accepted boundaries (8 & 240 px, 64-char family)", () => {
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizePx: 8 } } })).ok
+      ).toBe(true);
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizePx: 240 } } })).ok
+      ).toBe(true);
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizePx: 7 } } })).ok
+      ).toBe(false);
+      expect(
+        validateEditRevisionRequest(body({ textStyleOverrides: { title: { sizePx: 241 } } })).ok
+      ).toBe(false);
+      expect(
+        validateEditRevisionRequest(
+          body({ textStyleOverrides: { title: { fontFamily: "A".repeat(64) } } })
+        ).ok
+      ).toBe(true);
+    });
+
     it("rejects a malformed color (not #RRGGBB hex)", () => {
       expect(
         validateEditRevisionRequest(body({ textStyleOverrides: { message: { color: "red" } } })).ok
