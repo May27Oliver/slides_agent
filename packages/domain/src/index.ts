@@ -48,12 +48,16 @@ export { renderTemplateDeckArtifact } from "@/rendering/html-deck-renderer";
 export type { HtmlDeckGenerationInput } from "@/rendering/html-deck-renderer";
 export { buildDeckStyleCss } from "@/rendering/deck-style-css";
 export { buildDeckRuntimeScript } from "@/rendering/deck-runtime-script";
-export { renderTemplateDeck } from "@/rendering/template-html-renderer";
+export { renderTemplateDeck, renderSlidesRegion } from "@/rendering/template-html-renderer";
 export {
   buildOverrideFontsHref,
   collectOverrideFontFamilies
 } from "@/rendering/text-style-override";
-export type { RenderedTemplateDeck, TemplateDeckInput } from "@/rendering/template-html-renderer";
+export type {
+  RenderedTemplateDeck,
+  RenderedSlidesRegion,
+  TemplateDeckInput
+} from "@/rendering/template-html-renderer";
 export type * from "@/rendering/chart-rendering.types";
 export {
   mapVisualizationTypeToTreatment,

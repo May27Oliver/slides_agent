@@ -38,6 +38,30 @@ export interface RenderedTemplateDeck {
   renderedCharts: RenderedChartSummary[];
 }
 
+/** 016: the slides-region markup (the `<section class="slide">` blocks joined). */
+export interface RenderedSlidesRegion {
+  slidesHtml: string;
+  renderedCharts: RenderedChartSummary[];
+}
+
+/**
+ * 016 (FR-005): render ONLY the slide sections — the exact markup `renderTemplateDeck`
+ * embeds in its document. The editor preview uses this for in-place updates (postMessage
+ * patch) so a patched frame is byte-identical to a full render (no second renderer).
+ */
+export function renderSlidesRegion(input: TemplateDeckInput): RenderedSlidesRegion {
+  const styleKit = resolveStyleKit(input.designPlanningResult);
+  const total = input.deck.slides.length;
+  const chartContext = buildChartContext(input);
+  const rendered = input.deck.slides.map((slide, index) =>
+    renderSlide(input, styleKit, slide, index, total, chartContext)
+  );
+  return {
+    slidesHtml: rendered.map((slideRender) => slideRender.html).join("\n"),
+    renderedCharts: rendered.flatMap((slideRender) => slideRender.charts)
+  };
+}
+
 /**
  * Deterministic, reference-grade renderer. It is both the conservative fallback
  * for the LLM HTML path and the source of the house style: layered gradient
@@ -48,7 +72,6 @@ export function renderTemplateDeck(input: TemplateDeckInput): RenderedTemplateDe
   const styleKit = resolveStyleKit(input.designPlanningResult);
   const css = buildDeckStyleCss(styleKit, input.designPlanningResult.designSystem);
   const script = buildDeckRuntimeScript();
-  const total = input.deck.slides.length;
   const fontLink = styleKit.fonts.googleFontsHref
     ? `\n  <link rel="preconnect" href="https://fonts.googleapis.com">\n  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n  <link href="${escapeAttribute(styleKit.fonts.googleFontsHref)}" rel="stylesheet">`
     : "";
@@ -59,12 +82,9 @@ export function renderTemplateDeck(input: TemplateDeckInput): RenderedTemplateDe
     ? `\n  <link href="${escapeAttribute(overrideFontsHref)}" rel="stylesheet">`
     : "";
 
-  const chartContext = buildChartContext(input);
-  const rendered = input.deck.slides.map((slide, index) =>
-    renderSlide(input, styleKit, slide, index, total, chartContext)
-  );
-  const slides = rendered.map((slideRender) => slideRender.html).join("\n");
-  const renderedCharts = rendered.flatMap((slideRender) => slideRender.charts);
+  // 016: compose the document FROM the shared slides-region renderer so the preview's
+  // in-place patch markup and this full html can never drift (parity by construction).
+  const { slidesHtml: slides, renderedCharts } = renderSlidesRegion(input);
 
   const html = `<!doctype html>
 <html lang="zh-Hant">
