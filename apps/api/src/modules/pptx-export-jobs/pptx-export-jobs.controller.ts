@@ -197,7 +197,7 @@ export class PptxExportJobsController {
     const deck = await this.deckStore.findByIdForAccount(req.user.id, deckId);
     const filename = `${sanitizeFilename(deck?.title ?? "deck")}-rev${job.revision}.pptx`;
     res.setHeader("Content-Type", PPTX_CONTENT_TYPE);
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Disposition", contentDispositionAttachment(filename));
     this.logger.log(`${job.id} artifact_download bytes=${job.result.byteSize}`);
     // deep-review H1: a stream error after headers (disk/NFS I/O) would otherwise be an
     // unhandled 'error' event (process-level crash) and leave the client a truncated
@@ -260,4 +260,21 @@ function sanitizeFilename(title: string): string {
     .replace(/^-|-$/gu, "")
     .slice(0, 60);
   return cleaned || "deck";
+}
+
+/**
+ * RFC 6266 Content-Disposition. HTTP header values are Latin-1, so a non-ASCII title
+ * (e.g. a 中文 deck name) placed in a bare `filename=` makes Node's setHeader throw
+ * ERR_INVALID_CHAR. Emit an ASCII-only `filename` fallback plus the UTF-8 `filename*`
+ * that modern browsers prefer (RFC 5987 encoding — encodeURIComponent leaves a few
+ * non-attr-chars, so percent-encode `'()*` too).
+ */
+function contentDispositionAttachment(filename: string): string {
+  const asciiFallback =
+    filename.replace(/[^\x20-\x7E]/gu, "_").replace(/["\\]/gu, "_") || "deck.pptx";
+  const utf8 = encodeURIComponent(filename).replace(
+    /['()*]/gu,
+    (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`
+  );
+  return `attachment; filename="${asciiFallback}"; filename*=UTF-8''${utf8}`;
 }

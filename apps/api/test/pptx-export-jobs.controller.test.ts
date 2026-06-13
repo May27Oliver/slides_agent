@@ -253,4 +253,44 @@ describe("PptxExportJobsController.exportStatus / downloadArtifact (015 US2)", (
     stream.emit("error", new Error("disk gone"));
     expect(ended).toBe(true);
   });
+
+  // Regression: a non-ASCII deck title (e.g. 中文) must not make setHeader throw
+  // ERR_INVALID_CHAR — HTTP header values are Latin-1, so use RFC 6266 filename*.
+  it("emits an ASCII-safe Content-Disposition for a non-ASCII deck title", async () => {
+    const stream = new Readable({ read() {} });
+    const done = job({
+      status: "done",
+      result: { artifactRef: "pptx_job_1.pptx", byteSize: 9, pageCount: 1 }
+    });
+    const c = controller({
+      deckStore: makeDeckStore({
+        findByIdForAccount: async () => ({ id: DECK_ID, title: "Q3 業績報告 🎉" }) as never
+      }),
+      jobStore: makeJobStore({ findById: async () => done }),
+      artifacts: makeArtifacts({ read: async () => stream })
+    });
+    const headers: Record<string, string> = {};
+    const res = {
+      setHeader: (name: string, value: string) => {
+        // Faithfully reject what Node's real setHeader rejects: non-Latin-1 chars.
+        if (/[^\x00-\xFF]/u.test(value)) {
+          throw new TypeError(`Invalid character in header content ["${name}"]`);
+        }
+        headers[name] = value;
+      },
+      on: () => undefined,
+      once: () => undefined,
+      emit: () => undefined,
+      write: () => true,
+      end: () => undefined
+    } as never;
+
+    await c.downloadArtifact(DECK_ID, "pptx_job_1", reqFor("acc-1"), res);
+
+    const cd = headers["Content-Disposition"];
+    expect(cd).toContain("filename*=UTF-8''");
+    expect(cd).toMatch(/filename="[\x20-\x7E]*"/u); // ASCII-only fallback
+    // The UTF-8 part round-trips back to the real (sanitized) title.
+    expect(decodeURIComponent(cd.split("filename*=UTF-8''")[1])).toContain("業績報告");
+  });
 });
