@@ -108,4 +108,18 @@ describe("renderTemplateDeck text style overrides (015 US3)", () => {
     const html = render(textSlide({ outlineById: { ghost: { sizePx: 40 } } }));
     expect(html).not.toContain("font-size:40px");
   });
+
+  it("injects the font family inline AND loads it via an added Google Fonts link", () => {
+    const html = render(textSlide({ title: { fontFamily: "Playfair Display" } }));
+    // Single-quoted inside the double-quoted style="" attribute (no breakout).
+    expect(html).toContain("font-family:'Playfair Display', 'Noto Sans TC'");
+    expect(html).toContain(
+      'href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&amp;display=swap"'
+    );
+  });
+
+  it("adds no override font link when no field sets a family", () => {
+    const html = render(textSlide({ title: { sizePx: 90 } }));
+    expect(html).not.toContain("css2?family=Playfair");
+  });
 });

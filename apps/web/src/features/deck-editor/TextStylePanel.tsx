@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { TEXT_SIZE_PX_MAX, TEXT_SIZE_PX_MIN, type TextStyleOverride } from "@slides-agent/domain";
 import type { TextStylePatch } from "@/features/deck-editor/editable-slide-draft";
@@ -6,10 +7,16 @@ import { useI18n } from "@/i18n";
 interface TextStylePanelProps {
   /** Label of the field being edited (title / message / bullet N); null = closed. */
   target: { label: string; value: TextStyleOverride | undefined } | null;
+  /** 015: selectable font families (from the builtin font catalogue). */
+  fonts: readonly string[];
+  /** Google Fonts stylesheet that loads every catalogue family, so options render in face. */
+  fontPreviewHref: string | null;
   onPatch: (patch: TextStylePatch) => void;
   onReset: () => void;
   onClose: () => void;
 }
+
+const FONT_PREVIEW_LINK_ID = "text-style-font-preview";
 
 // Sensible starting size for the slider when the field has no override yet (the live
 // preview is the source of truth; the user drags from here to take effect).
@@ -21,11 +28,34 @@ const DEFAULT_PICK_COLOR = "#7170FF";
  * hue, like the reference) and an absolute px size slider, for one text field. Stays
  * docked at the right with the live preview still visible, so edits show immediately.
  */
-export function TextStylePanel({ target, onPatch, onReset, onClose }: TextStylePanelProps) {
+export function TextStylePanel({
+  target,
+  fonts,
+  fontPreviewHref,
+  onPatch,
+  onReset,
+  onClose
+}: TextStylePanelProps) {
   const { t } = useI18n();
   const open = target !== null;
   const value = target?.value;
-  const hasStyle = Boolean(value?.sizePx || value?.color);
+  const hasStyle = Boolean(value?.sizePx || value?.color || value?.fontFamily);
+
+  // Load every catalogue family once (idempotent <link> in <head>) so the dropdown
+  // options can render in their own face. The browser lazy-downloads only painted ones.
+  useEffect(() => {
+    if (!open || !fontPreviewHref || typeof document === "undefined") {
+      return;
+    }
+    if (document.getElementById(FONT_PREVIEW_LINK_ID)) {
+      return;
+    }
+    const link = document.createElement("link");
+    link.id = FONT_PREVIEW_LINK_ID;
+    link.rel = "stylesheet";
+    link.href = fontPreviewHref;
+    document.head.appendChild(link);
+  }, [open, fontPreviewHref]);
 
   return (
     <aside
@@ -56,6 +86,33 @@ export function TextStylePanel({ target, onPatch, onReset, onClose }: TextStyleP
           </header>
 
           <div className="flex-1 space-y-6 overflow-y-auto px-4 py-4">
+            {/* FONT FAMILY */}
+            <section className="space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
+                {t("editor.textStyle.font")}
+              </span>
+              <select
+                aria-label={t("editor.textStyle.font")}
+                value={value?.fontFamily ?? ""}
+                onChange={(e) =>
+                  onPatch({ fontFamily: e.target.value === "" ? undefined : e.target.value })
+                }
+                className="w-full cursor-pointer rounded-lg border border-line bg-panel px-2 py-1.5 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700"
+                style={value?.fontFamily ? { fontFamily: `'${value.fontFamily}', sans-serif` } : {}}
+              >
+                <option value="">{t("editor.textStyle.fontDefault")}</option>
+                {fonts.map((family) => (
+                  <option
+                    key={family}
+                    value={family}
+                    style={{ fontFamily: `'${family}', sans-serif` }}
+                  >
+                    {family}
+                  </option>
+                ))}
+              </select>
+            </section>
+
             {/* COLOR */}
             <section className="space-y-3">
               <div className="flex items-center justify-between">

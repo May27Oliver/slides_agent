@@ -10,6 +10,7 @@ import type {
   ThemeCatalog,
   ThemeSelectionWarning
 } from "@slides-agent/domain";
+import { buildOverrideFontsHref } from "@slides-agent/domain";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { AuthError } from "@/features/auth/auth-client";
 import { getDeck } from "@/features/decks/decks-client";
@@ -37,6 +38,7 @@ import { EditableSlideDraft } from "@/features/deck-editor/editable-slide-draft"
 import { LivePreview } from "@/features/deck-editor/LivePreview";
 import { SlideEditPanel, type StyleField } from "@/features/deck-editor/SlideEditPanel";
 import { TextStylePanel } from "@/features/deck-editor/TextStylePanel";
+import { fontFamiliesFromCatalog } from "@/features/deck-editor/font-catalog";
 import type { TextStylePatch } from "@/features/deck-editor/editable-slide-draft";
 import { SlideNavigator } from "@/features/deck-editor/SlideNavigator";
 import { ThemePicker } from "@/features/theme-picker/ThemePicker";
@@ -85,6 +87,8 @@ export function DeckEditorView({
   // live preview (parity); warnings are the post-save fallback evidence to disclose.
   const [themeSelection, setThemeSelection] = useState<ManualThemeSelection>({});
   const [themeCandidates, setThemeCandidates] = useState<SelectableTheme[]>([]);
+  // 015 US3: selectable per-field font families, derived from the font catalogue.
+  const [fontFamilies, setFontFamilies] = useState<string[]>([]);
   const [themeWarnings, setThemeWarnings] = useState<ThemeSelectionWarning[]>([]);
   // 014: the live preview's summary — chart cards read render evidence from it.
   const [previewSummary, setPreviewSummary] = useState<GenerationSummary | null>(null);
@@ -442,9 +446,10 @@ export function DeckEditorView({
               onChange={changeTheme}
               fetchImpl={authFetch}
               warnings={themeWarnings}
-              onCatalogLoaded={(catalog: ThemeCatalog) =>
-                setThemeCandidates([...catalog.font, ...catalog.palette, ...catalog.style])
-              }
+              onCatalogLoaded={(catalog: ThemeCatalog) => {
+                setThemeCandidates([...catalog.font, ...catalog.palette, ...catalog.style]);
+                setFontFamilies(fontFamiliesFromCatalog(catalog.font));
+              }}
             />
           </div>
           <div role="tablist" className="mb-3 flex gap-1 rounded-xl bg-surface p-1">
@@ -545,6 +550,8 @@ export function DeckEditorView({
             Save / download actions stay clickable. The live preview stays visible. */}
         <TextStylePanel
           target={styleTargetView}
+          fonts={fontFamilies}
+          fontPreviewHref={buildOverrideFontsHref(fontFamilies)}
           onPatch={(patch) => {
             if (!styleTarget) return;
             edit((d) =>

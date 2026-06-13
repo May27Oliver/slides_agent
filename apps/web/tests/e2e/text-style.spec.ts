@@ -98,10 +98,29 @@ test("styles the title, previews it live, and persists overrides + bullet ids on
 }) => {
   await seedAuthenticatedSession(page);
 
+  // One font theme so the panel's font picker has a real catalogue family to choose.
   await page.route("**/api/themes", async (route) => {
     await route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify({ font: [], palette: [], style: [] })
+      body: JSON.stringify({
+        font: [
+          {
+            id: "font-10-classic-elegant",
+            kind: "font",
+            keywords: [],
+            support: "full",
+            name: "Classic Elegant",
+            styleKit: {
+              fonts: {
+                heading: '"Playfair Display", "Noto Sans TC", system-ui, sans-serif',
+                body: '"Inter", "Noto Sans TC", system-ui, sans-serif'
+              }
+            }
+          }
+        ],
+        palette: [],
+        style: []
+      })
     });
   });
   await page.route(`**/api/decks/${DECK_ID}`, async (route) => {
@@ -112,7 +131,7 @@ test("styles the title, previews it live, and persists overrides + bullet ids on
     slideDeck: {
       slides: Array<{
         outline: Array<{ id?: string }>;
-        textStyleOverrides?: { title?: { sizePx?: number; color?: string } };
+        textStyleOverrides?: { title?: { sizePx?: number; color?: string; fontFamily?: string } };
       }>;
     };
   } | null = null;
@@ -133,16 +152,17 @@ test("styles the title, previews it live, and persists overrides + bullet ids on
   await page.goto(`/decks/${DECK_ID}/edit`);
   await expect(page.getByRole("textbox", { name: "標題" })).toHaveValue("原始標題");
 
-  // Open the title's style panel and set an absolute px size + hex color.
+  // Open the title's style panel and set font + absolute px size + hex color.
   await page.getByRole("button", { name: "編輯文字樣式" }).first().click();
+  await page.getByLabel("字型").selectOption("Playfair Display");
   await page.getByRole("slider", { name: "文字大小" }).fill("120");
   await page.getByLabel("文字顏色").fill("7170FF");
 
-  // The live preview (same domain renderer) shows the inline override (px + hex).
+  // The live preview (same domain renderer) shows the inline override (px + hex + font).
   const preview = page.frameLocator('iframe[title="即時預覽"]');
   await expect(preview.locator(".slide-title")).toHaveAttribute(
     "style",
-    /font-size:120px;color:#7170FF/i
+    /font-size:120px;color:#7170FF;font-family:'Playfair Display'/i
   );
 
   // Save: the request carries the override AND backfilled ids for legacy bullets.
@@ -150,7 +170,11 @@ test("styles the title, previews it live, and persists overrides + bullet ids on
   await expect(page.getByText("已儲存版本 2")).toBeVisible();
   expect(savedBody).not.toBeNull();
   const savedSlide = savedBody!.slideDeck.slides[0]!;
-  expect(savedSlide.textStyleOverrides?.title).toEqual({ sizePx: 120, color: "#7170FF" });
+  expect(savedSlide.textStyleOverrides?.title).toEqual({
+    sizePx: 120,
+    color: "#7170FF",
+    fontFamily: "Playfair Display"
+  });
   expect(savedSlide.outline.map((o) => o.id).every(Boolean)).toBe(true);
 
   // The adopted post-save state keeps the override — the field's edit button stays active.

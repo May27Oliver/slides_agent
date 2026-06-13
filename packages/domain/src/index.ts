@@ -24,7 +24,7 @@ export type { LlmDeckOutlinePlannerOptions } from "@/deck/llm-deck-outline-plann
 export { validateDeckOutlineRefinement } from "@/deck/deck-outline-refinement-validator";
 export type * from "@/deck/deck-outline-planner.port";
 export type * from "@/deck/deck.types";
-export { TEXT_SIZE_PX_MIN, TEXT_SIZE_PX_MAX } from "@/deck/deck.types";
+export { TEXT_SIZE_PX_MIN, TEXT_SIZE_PX_MAX, TEXT_FONT_FAMILY_MAX } from "@/deck/deck.types";
 export { UiUxProMaxDesignPlanner } from "@/design/design-planner";
 export type * from "@/design/design-planner.port";
 export type * from "@/design/design.types";
@@ -49,6 +49,10 @@ export type { HtmlDeckGenerationInput } from "@/rendering/html-deck-renderer";
 export { buildDeckStyleCss } from "@/rendering/deck-style-css";
 export { buildDeckRuntimeScript } from "@/rendering/deck-runtime-script";
 export { renderTemplateDeck } from "@/rendering/template-html-renderer";
+export {
+  buildOverrideFontsHref,
+  collectOverrideFontFamilies
+} from "@/rendering/text-style-override";
 export type { RenderedTemplateDeck, TemplateDeckInput } from "@/rendering/template-html-renderer";
 export type * from "@/rendering/chart-rendering.types";
 export {

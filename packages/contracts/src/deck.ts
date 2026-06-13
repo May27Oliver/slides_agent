@@ -369,12 +369,15 @@ function validateSlideShape(slide: unknown, index: number, issues: string[]): vo
   validateTextStyleOverridesShape(slide.textStyleOverrides, index, issues);
 }
 
-// 015 (FR-013): enum whitelists ARE the DoS boundary — out-of-enum values reject at
-// the shape pass. Mirror the domain's TextSizeLevel/TextColorToken verbatim; the
-// schema json carries the same values (drift breaks its tests).
+// 015 (FR-013): the DoS boundary for free-form text styles — bounded px, fixed-length
+// #RRGGBB hex, and a length-and-charset-bounded font family name (letters/digits/space/
+// hyphen only: no quotes → no style-attribute breakout). Mirror the domain's
+// TEXT_SIZE_PX_* / TEXT_FONT_FAMILY_MAX and the schema json (drift breaks its tests).
 const TEXT_SIZE_PX_MIN = 8;
 const TEXT_SIZE_PX_MAX = 240;
+const TEXT_FONT_FAMILY_MAX = 64;
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/u;
+const FONT_FAMILY = /^[A-Za-z0-9][A-Za-z0-9 -]*$/u;
 
 function validateTextStyleOverridesShape(input: unknown, index: number, issues: string[]): void {
   if (input === undefined) {
@@ -435,6 +438,14 @@ function validateOverrideShape(input: unknown, path: string, issues: string[]): 
     (typeof input.color !== "string" || !HEX_COLOR.test(input.color))
   ) {
     issues.push(`${path}.color must be a #RRGGBB hex string`);
+  }
+  if (
+    input.fontFamily !== undefined &&
+    (typeof input.fontFamily !== "string" ||
+      input.fontFamily.length > TEXT_FONT_FAMILY_MAX ||
+      !FONT_FAMILY.test(input.fontFamily))
+  ) {
+    issues.push(`${path}.fontFamily must be a short alphanumeric family name`);
   }
 }
 

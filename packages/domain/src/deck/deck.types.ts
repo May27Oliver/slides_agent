@@ -117,11 +117,19 @@ export interface SlideOutlineItem {
 export interface TextStyleOverride {
   sizePx?: number;
   color?: string;
+  /**
+   * 015: font family NAME (e.g. "Playfair Display") from the builtin font catalogue.
+   * The renderer loads every used family via an added Google Fonts <link>, so the
+   * preview and the PPTX export both render it.
+   */
+  fontFamily?: string;
 }
 
 /** 015: bounds for `sizePx` — the DoS boundary and the slider range. */
 export const TEXT_SIZE_PX_MIN = 8;
 export const TEXT_SIZE_PX_MAX = 240;
+/** 015: max length for a `fontFamily` name — the DoS boundary for that field. */
+export const TEXT_FONT_FAMILY_MAX = 64;
 
 /** 015 (FR-016): a slide's per-field text style overrides; outline binds by bullet id. */
 export interface SlideTextStyleOverrides {

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { textStyleInlineStyle } from "@/rendering/text-style-override";
+import type { SlideDeck } from "@/deck/deck.types";
+import {
+  buildOverrideFontsHref,
+  collectOverrideFontFamilies,
+  textStyleInlineStyle
+} from "@/rendering/text-style-override";
 
 /**
  * 015 US3 (FR-007/FR-008): the ONE place that turns a TextStyleOverride into an inline
@@ -28,5 +33,61 @@ describe("textStyleInlineStyle", () => {
 
   it("ignores a non-finite size", () => {
     expect(textStyleInlineStyle({ sizePx: Number.NaN }, "title")).toBe("");
+  });
+
+  it("emits a single-quoted font family with the theme fallback stack", () => {
+    expect(textStyleInlineStyle({ fontFamily: "Playfair Display" }, "title")).toBe(
+      "font-family:'Playfair Display', 'Noto Sans TC', system-ui, -apple-system, sans-serif"
+    );
+  });
+});
+
+function deckWith(
+  overridesBySlide: Array<SlideDeck["slides"][number]["textStyleOverrides"]>
+): SlideDeck {
+  return {
+    id: "d",
+    title: "t",
+    purpose: "p",
+    audience: "a",
+    slides: overridesBySlide.map((textStyleOverrides, i) => ({
+      id: `s${i}`,
+      slideKind: "content",
+      type: "content",
+      title: "",
+      message: "",
+      outline: [],
+      layout: "title-bullets",
+      layoutIntent: { priority: "message_first", density: "medium", emphasis: "narrative" },
+      contentBlocks: [],
+      sourceTrace: [],
+      speakerNotesDraft: "",
+      ...(textStyleOverrides ? { textStyleOverrides } : {})
+    })),
+    reviewReport: {
+      assumptions: [],
+      omittedOrCompressedContent: [],
+      uncertainClaims: [],
+      chartingDecisions: [],
+      humanReviewNotes: []
+    }
+  };
+}
+
+describe("collectOverrideFontFamilies / buildOverrideFontsHref", () => {
+  it("collects the distinct families used across title/message/outline, sorted", () => {
+    const deck = deckWith([
+      { title: { fontFamily: "Poppins" }, message: { fontFamily: "Inter" } },
+      { outlineById: { b1: { fontFamily: "Inter" }, b2: { fontFamily: "Lora" } } },
+      undefined
+    ]);
+    expect(collectOverrideFontFamilies(deck)).toEqual(["Inter", "Lora", "Poppins"]);
+  });
+
+  it("builds a Google Fonts href that loads the families (spaces → +); null when none", () => {
+    expect(buildOverrideFontsHref([])).toBeNull();
+    expect(buildOverrideFontsHref(["Playfair Display", "Inter"])).toBe(
+      "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    );
   });
 });

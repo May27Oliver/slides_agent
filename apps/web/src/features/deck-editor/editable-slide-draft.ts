@@ -231,7 +231,8 @@ export class EditableSlideDraft {
   resetOutlineStyle(slideId: string, outlineId: string): EditableSlideDraft {
     return this.setOutlineStyle(slideId, outlineId, {
       sizePx: undefined,
-      color: undefined
+      color: undefined,
+      fontFamily: undefined
     });
   }
 
@@ -399,6 +400,7 @@ export class EditableSlideDraft {
 export interface TextStylePatch {
   sizePx?: number | undefined;
   color?: string | undefined;
+  fontFamily?: string | undefined;
 }
 
 /** Working shape while editing: branches may be explicitly undefined (= dropped). */
@@ -415,9 +417,11 @@ function mergeOverride(
 ): TextStyleOverride | undefined {
   const sizePx = "sizePx" in patch ? patch.sizePx : current?.sizePx;
   const color = "color" in patch ? patch.color : current?.color;
+  const fontFamily = "fontFamily" in patch ? patch.fontFamily : current?.fontFamily;
   const next: TextStyleOverride = {
     ...(typeof sizePx === "number" ? { sizePx } : {}),
-    ...(color ? { color } : {})
+    ...(color ? { color } : {}),
+    ...(fontFamily ? { fontFamily } : {})
   };
   return Object.keys(next).length > 0 ? next : undefined;
 }

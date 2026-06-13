@@ -204,6 +204,7 @@ describe("slide generation schema", () => {
       type: "string",
       pattern: "^#[0-9a-fA-F]{6}$"
     });
+    expect(override.properties.fontFamily).toMatchObject({ type: "string", maxLength: 64 });
     expect(override.additionalProperties).toBe(false);
   });
 

@@ -46,7 +46,8 @@ function normalizeOverride(override: TextStyleOverride | undefined): TextStyleOv
     ...(typeof override.sizePx === "number" && Number.isFinite(override.sizePx)
       ? { sizePx: override.sizePx }
       : {}),
-    ...(override.color ? { color: override.color } : {})
+    ...(override.color ? { color: override.color } : {}),
+    ...(override.fontFamily ? { fontFamily: override.fontFamily } : {})
   };
   return Object.keys(normalized).length > 0 ? normalized : undefined;
 }

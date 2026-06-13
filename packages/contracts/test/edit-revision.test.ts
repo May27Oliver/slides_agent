@@ -281,18 +281,31 @@ describe("edit revision contract (010 US1)", () => {
       expect(validateEditRevisionRequest(body({ outline: [{ text: "t" }] })).ok).toBe(true);
     });
 
-    it("accepts well-formed ids and overrides (px + hex)", () => {
+    it("accepts well-formed ids and overrides (px + hex + font family)", () => {
       const result = validateEditRevisionRequest(
         body({
           outline: [{ id: "b1", text: "t" }],
           textStyleOverrides: {
-            title: { sizePx: 120, color: "#7170FF" },
+            title: { sizePx: 120, color: "#7170FF", fontFamily: "Playfair Display" },
             message: { color: "#F7F8F8" },
-            outlineById: { b1: { sizePx: 40 } }
+            outlineById: { b1: { sizePx: 40, fontFamily: "Inter" } }
           }
         })
       );
       expect(result.ok).toBe(true);
+    });
+
+    it("rejects a malformed font family (quotes / too long → breakout / DoS)", () => {
+      expect(
+        validateEditRevisionRequest(
+          body({ textStyleOverrides: { title: { fontFamily: 'Evil", x:(' } } })
+        ).ok
+      ).toBe(false);
+      expect(
+        validateEditRevisionRequest(
+          body({ textStyleOverrides: { title: { fontFamily: "A".repeat(65) } } })
+        ).ok
+      ).toBe(false);
     });
 
     it("rejects an empty-string outline id", () => {

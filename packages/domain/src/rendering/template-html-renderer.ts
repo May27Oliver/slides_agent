@@ -9,7 +9,11 @@ import type { RenderedChartSummary } from "@/rendering/chart-rendering.types";
 import { buildDeckRuntimeScript } from "@/rendering/deck-runtime-script";
 import { buildDeckStyleCss } from "@/rendering/deck-style-css";
 import { escapeAttribute, escapeHtml } from "@/rendering/sanitize";
-import { textStyleInlineStyle } from "@/rendering/text-style-override";
+import {
+  buildOverrideFontsHref,
+  collectOverrideFontFamilies,
+  textStyleInlineStyle
+} from "@/rendering/text-style-override";
 import { cleanDisplayText } from "@/shared/clean-display-text";
 
 export interface TemplateDeckInput {
@@ -48,6 +52,12 @@ export function renderTemplateDeck(input: TemplateDeckInput): RenderedTemplateDe
   const fontLink = styleKit.fonts.googleFontsHref
     ? `\n  <link rel="preconnect" href="https://fonts.googleapis.com">\n  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n  <link href="${escapeAttribute(styleKit.fonts.googleFontsHref)}" rel="stylesheet">`
     : "";
+  // 015: load every font family used by per-field text-style overrides, so the
+  // preview iframe AND the PPTX screenshot render the chosen face (not a fallback).
+  const overrideFontsHref = buildOverrideFontsHref(collectOverrideFontFamilies(input.deck));
+  const overrideFontLink = overrideFontsHref
+    ? `\n  <link href="${escapeAttribute(overrideFontsHref)}" rel="stylesheet">`
+    : "";
 
   const chartContext = buildChartContext(input);
   const rendered = input.deck.slides.map((slide, index) =>
@@ -61,7 +71,7 @@ export function renderTemplateDeck(input: TemplateDeckInput): RenderedTemplateDe
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${escapeHtml(cleanDisplayText(input.deck.title))}</title>${fontLink}
+  <title>${escapeHtml(cleanDisplayText(input.deck.title))}</title>${fontLink}${overrideFontLink}
   <style>${css}</style>
 </head>
 <body>
