@@ -1,4 +1,5 @@
 import type {
+  CreatePptxExportJobResult,
   PptxExportFailure,
   PptxExportJob,
   PptxExportJobStore,
@@ -48,12 +49,33 @@ export class RedisPptxExportJobStore implements PptxExportJobStore {
     this.now = now ?? (() => new Date());
   }
 
-  async create(job: PptxExportJob): Promise<PptxExportJob> {
-    await this.writeJob(job);
-    if (!isTerminalPptxStatus(job.status)) {
-      await this.guarded(() => this.redis.sadd(this.activeKey(), job.id));
+  /**
+   * FR-006 single-flight, made atomic via a per-account NX lock. SET NX is atomic,
+   * so two concurrent creates cannot both acquire the lock — the loser reads back the
+   * winner's job as the conflict. The lock self-heals: its TTL tracks the job's, and
+   * every terminal transition / expiry releases it (see `update` / `expireOldJobs`).
+   */
+  async createIfNoActive(job: PptxExportJob): Promise<CreatePptxExportJobResult> {
+    // Two attempts at most: the first may lose to a stale orphan lock (job already
+    // gone but lock lingering after a crash); we clear it and retry exactly once.
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const acquired = await this.guarded(() =>
+        this.redis.set(this.accountLockKey(job.accountId), job.id, "PX", this.ttlFor(job), "NX")
+      );
+      if (acquired === "OK") {
+        await this.writeJob(job);
+        await this.guarded(() => this.redis.sadd(this.activeKey(), job.id));
+        return { ok: true, job };
+      }
+      const active = await this.findActiveByAccount(job.accountId);
+      if (active) {
+        return { ok: false, active };
+      }
+      // Lock held but no live job: orphaned. Clear and let the next loop re-acquire.
+      await this.guarded(() => this.redis.del(this.accountLockKey(job.accountId)));
     }
-    return job;
+    // Both attempts lost the lock yet found no live job — treat as transient.
+    throw new PptxExportJobStoreUnavailableError();
   }
 
   async findById(jobId: string): Promise<PptxExportJob | undefined> {
@@ -65,8 +87,8 @@ export class RedisPptxExportJobStore implements PptxExportJobStore {
     return this.guarded(() => this.redis.smembers(this.activeKey()));
   }
 
-  /** The single-flight gate (FR-006): the account's non-terminal job, if any. */
-  async findActiveByAccount(accountId: string): Promise<PptxExportJob | undefined> {
+  /** The conflicting in-flight job for an account (FR-006), used by createIfNoActive. */
+  private async findActiveByAccount(accountId: string): Promise<PptxExportJob | undefined> {
     for (const id of await this.listActiveJobIds()) {
       const job = await this.findById(id);
       if (job && job.accountId === accountId && !isTerminalPptxStatus(job.status)) {
@@ -106,6 +128,7 @@ export class RedisPptxExportJobStore implements PptxExportJobStore {
       }
       if (isTerminalPptxStatus(job.status)) {
         await this.guarded(() => this.redis.srem(this.activeKey(), id));
+        await this.releaseAccountLock(job);
         reconciled.push(job);
       }
     }
@@ -127,8 +150,14 @@ export class RedisPptxExportJobStore implements PptxExportJobStore {
     await this.writeJob(updated);
     if (isTerminalPptxStatus(updated.status)) {
       await this.guarded(() => this.redis.srem(this.activeKey(), updated.id));
+      await this.releaseAccountLock(updated);
     }
     return updated;
+  }
+
+  /** Frees the per-account single-flight lock so the next export can be created. */
+  private async releaseAccountLock(job: PptxExportJob): Promise<void> {
+    await this.guarded(() => this.redis.del(this.accountLockKey(job.accountId)));
   }
 
   private async guarded<T>(op: () => Promise<T>): Promise<T> {
@@ -164,5 +193,10 @@ export class RedisPptxExportJobStore implements PptxExportJobStore {
 
   private activeKey(): string {
     return `${this.prefix}:active`;
+  }
+
+  /** Per-account single-flight lock (FR-006); SET NX on this key gates concurrent creates. */
+  private accountLockKey(accountId: string): string {
+    return `${this.prefix}:account-lock:${accountId}`;
   }
 }

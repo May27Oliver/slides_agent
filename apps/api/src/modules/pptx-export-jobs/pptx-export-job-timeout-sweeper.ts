@@ -1,5 +1,8 @@
 import { createPptxTimeoutFailure, hasPptxExportJobTimedOut } from "@slides-agent/domain";
-import type { PptxArtifactStore } from "@/modules/pptx-export-jobs/fs-pptx-artifact-store";
+import {
+  pptxArtifactRef,
+  type PptxArtifactStore
+} from "@/modules/pptx-export-jobs/fs-pptx-artifact-store";
 import type { RedisPptxExportJobStore } from "@/modules/pptx-export-jobs/redis-pptx-export-job-store";
 import type { SweeperRedis } from "@/modules/preview-jobs/preview-job-timeout-sweeper";
 
@@ -87,6 +90,10 @@ export class PptxExportJobTimeoutSweeper {
       }
       if (hasPptxExportJobTimedOut(job, at)) {
         await this.store.markFailed(job.id, createPptxTimeoutFailure(), at);
+        // FR-018: a stalled/crashed worker may have left a partial artifact it never
+        // registered. Remove it so a half-finished .pptx can never be downloaded
+        // (delete is idempotent — a no-op when nothing was written).
+        await this.artifacts.delete(pptxArtifactRef(job.id)).catch(() => undefined);
         this.logger.error(`${job.id} failed code=PPTX_EXPORT_TIMEOUT`);
       }
     }

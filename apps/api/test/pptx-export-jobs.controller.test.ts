@@ -72,10 +72,9 @@ function makeDeckStore(overrides: Partial<DeckStore> = {}): DeckStore {
 
 function makeJobStore(overrides: Partial<PptxExportJobStore> = {}): PptxExportJobStore {
   return {
-    create: async (j) => j,
+    createIfNoActive: async (j) => ({ ok: true, job: j }),
     findById: async () => undefined,
     listActiveJobIds: async () => [],
-    findActiveByAccount: async () => undefined,
     markProcessing: async () => undefined,
     markDone: async () => undefined,
     markFailed: async () => undefined,
@@ -139,7 +138,9 @@ describe("PptxExportJobsController.createExport (015 US2)", () => {
 
   it("409s when the account already has an in-flight export (single-flight, FR-006)", async () => {
     const c = controller({
-      jobStore: makeJobStore({ findActiveByAccount: async () => job({ status: "processing" }) })
+      jobStore: makeJobStore({
+        createIfNoActive: async () => ({ ok: false, active: job({ status: "processing" }) })
+      })
     });
     await expect(c.createExport(DECK_ID, { revision: 3 }, reqFor("acc-1"))).rejects.toThrow(
       ConflictException
@@ -152,7 +153,7 @@ describe("PptxExportJobsController.createExport (015 US2)", () => {
     let failedId: string | null = null;
     const c = controller({
       jobStore: makeJobStore({
-        create: async (j) => j,
+        createIfNoActive: async (j) => ({ ok: true, job: j }),
         markFailed: async (id) => {
           failedId = id;
           return undefined;

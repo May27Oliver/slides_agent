@@ -34,12 +34,14 @@ export interface SlideOutlineItem {
 `packages/domain/src/deck/deck.types.ts`（或新檔 `text-style.types.ts`，由 plan 決定落點）
 
 ```ts
-export type TextSizeLevel = "S" | "M" | "L" | "XL";          // 倍率 0.85 / 1 / 1.25 / 1.6
-export type TextColorToken = "text" | "accent" | "muted" | "heading";
+export const TEXT_SIZE_PX_MIN = 8;
+export const TEXT_SIZE_PX_MAX = 240;
+export const TEXT_FONT_FAMILY_MAX = 64;
 
 export interface TextStyleOverride {
-  sizeLevel?: TextSizeLevel;     // 省略 = M（主題預設）
-  colorToken?: TextColorToken;   // 省略 = text（主題預設）
+  sizePx?: number;      // 絕對 px，範圍 8–240（量於 1920×1080 簡報空間，WYSIWYG）；省略 = 沿用主題預設字級
+  color?: string;       // 自由 hex "#RRGGBB"（regex /^#[0-9a-fA-F]{6}$/）；省略 = 沿用主題預設色
+  fontFamily?: string;  // 內建字型目錄名稱，≤64 字、charset /^[A-Za-z0-9][A-Za-z0-9 -]*$/；省略 = 沿用主題預設字型
 }
 
 export interface SlideTextStyleOverrides {
@@ -55,12 +57,12 @@ export interface Slide {
 ```
 
 **規則**：
-- **預設不儲存**：`sizeLevel=M` 且 `colorToken=text`（或未設）→ 該 `TextStyleOverride` 視為空，不寫入；某欄位空 entry 省略；`outlineById` 空物件省略；整個 `textStyleOverrides` 空則省略。（正規化函式 `normalizeTextStyleOverrides` 在 domain）
-- **reset 粒度**：單一屬性 reset（清 `sizeLevel` 或 `colorToken`）、整欄 reset（移除該欄位 entry）。
+- **未設定不儲存**：`sizePx`/`color`/`fontFamily` 任一缺 = 沿用該欄位主題預設 → 不寫入該 property；三屬性皆缺時該 `TextStyleOverride` 視為空，省略 entry；`outlineById` 空物件省略；整個 `textStyleOverrides` 空則省略。（正規化函式 `normalizeTextStyleOverrides` 在 domain）
+- **reset 粒度**：單一屬性 reset（清 `sizePx` / `color` / `fontFamily` 其一）、整欄 reset（移除該欄位 entry）。
 - **outlineById 清理**：domain 正規化時，丟棄 key 不對應任何現存 outline `id` 的 entry（防孤兒；client 刪條列時也先清，雙保險）。
-- **倍率/token 對照**：見 research R3 表。套用邏輯只在 domain renderer（R3）。
+- **邊界/重驗**：`validateOverrideShape`（contracts）以 sizePx 8–240、color hex regex、fontFamily 白名單/長度（≤64）、`outlineById` ≤100 entries 驗證；domain `normalizeTextStyleOverrides` 以相同規則重驗（不信任跨層輸入）。套用邏輯只在 domain renderer（R3）。
 
-**Schema**：`Slide` 的 `properties` 增 `textStyleOverrides`（巢狀物件，`sizeLevel`/`colorToken` 為 enum），non-required，`additionalProperties:false`。
+**Schema**：`Slide` 的 `properties` 增 `textStyleOverrides`（巢狀物件，`sizePx` 為數值（8–240）、`color` 為 hex pattern、`fontFamily` 為長度受限字串），non-required，`additionalProperties:false`。
 
 ---
 
@@ -119,19 +121,20 @@ export interface PptxExportJob {
   jobId: string;
   accountId: string;          // owner，scope 驗證用（FR-017）
   deckId: string;
-  revision: number;           // 目標版本（FR-003a 後端以此驗證並只匯出該版）
+  revision: number;           // adopted 版本（FR-003a 後端驗證它仍是 deck 的 current revision；非 current 則失敗要求 reload，current-only）
   status: PptxExportJobStatus;
   slideCount: number | null;  // 進度/驗收用
   result?: PptxExportResult;  // done 時
-  failure?: { reason: string; message: string };
+  failure?: { reason: "timeout" | "export"; message: string };
   createdAt: string;
   updatedAt: string;
   expiresAt: string;          // artifact TTL（FR-018）
 }
 
 export interface PptxExportResult {
-  // artifact 存取方式由 plan Phase 決定（檔案路徑 + 下載 endpoint，建議）
-  artifactRef: string;        // e.g. 檔名/key，下載時 scope 綁 accountId
+  // artifact 存取方式（已定案）：檔案（local disk / 容器 volume）+ TTL 清理；
+  // 以 `${jobId}.pptx` 寫入專屬目錄，API owner-scoped 串流下載（FsPptxArtifactStore.purgeOlderThan 清理）
+  artifactRef: string;        // e.g. 檔名/key（${jobId}.pptx），下載時 scope 綁 accountId
   byteSize: number;
   pageCount: number;
 }
@@ -161,6 +164,6 @@ domain (權威定義)
   │
   └─ web（匯入 domain 型別；只寫 draft，不算樣式）
         ├─ EditableSlideDraft           （惰性補 id + 寫 override + 刪條列清孤兒）
-        ├─ SlideEditPanel               （欄位樣式工具列：S/M/L/XL + 4 色 swatch + reset）
+        ├─ SlideEditPanel               （欄位樣式面板：px 滑桿 + 自由色彩選擇器 + 字型下拉 + reset）
         └─ live-preview-render.ts → applyDeckEdit（同 renderer，parity 自動）
 ```

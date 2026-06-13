@@ -20,6 +20,8 @@ import {
 export interface RedisLike {
   get(key: string): Promise<string | null>;
   set(key: string, value: string, mode: "PX", ttlMs: number): Promise<unknown>;
+  /** NX variant: only sets when the key is absent — returns "OK" on success, null if it already exists. */
+  set(key: string, value: string, mode: "PX", ttlMs: number, nx: "NX"): Promise<string | null>;
   del(...keys: string[]): Promise<number>;
   sadd(key: string, member: string): Promise<number>;
   srem(key: string, member: string): Promise<number>;

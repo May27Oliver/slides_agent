@@ -38,7 +38,7 @@ description: "Task list — 015 編輯頁匯出與文字樣式覆寫（US1–US4
 
 **說明**：本 feature 四 US 高度獨立，無重型共享地基。此階段只鎖定「跨 US 會用到的詞彙與 i18n key」，避免重工。
 
-- [ ] T003 [P] i18n 詞彙鍵（CR-013 一致性）：`apps/web/src/i18n` 增 `editor.download.html`、`editor.download.pptx`、`editor.download.needSave`、`editor.textStyle.size.{s,m,l,xl}`、`editor.textStyle.color.{text,accent,muted,heading}`、`editor.textStyle.reset`、`editor.pptx.{queued,processing,done,failed,retry}`。繁中文案，集中一處供各 US 引用。
+- [ ] T003 [P] i18n 詞彙鍵（CR-013 一致性）：`apps/web/src/i18n` 增 `editor.download.html`、`editor.download.pptx`、`editor.download.needSave`、`editor.textStyle.size`（px 字級）、`editor.textStyle.color`、`editor.textStyle.fontFamily`、`editor.textStyle.reset`、`editor.pptx.{queued,processing,done,failed,retry}`。繁中文案，集中一處供各 US 引用。
 
 **Checkpoint**：詞彙就緒，US1/US4/US3/US2 可並行開工。
 
@@ -84,16 +84,16 @@ description: "Task list — 015 編輯頁匯出與文字樣式覆寫（US1–US4
 
 ## Phase 5：User Story 3 — 文字大小與顏色覆寫（Priority: P3）
 
-**Goal**：對選定 slide 的標題/message/每條 outline 設 S/M/L/XL 大小與 4 色 token；即時預覽、Save 持久化、條列以穩定 id 綁定。
+**Goal**：對選定 slide 的標題/message/每條 outline 設 px 字級（8–240）、自由顏色（#RRGGBB）與字型家族；即時預覽、Save 持久化、條列以穩定 id 綁定。
 
 **Independent Test**：點欄位設樣式→預覽即時→重排不錯位→刪條列清樣式→Save 重載保留→下載 HTML 一致。
 
 ### C1 — domain 型別 + 套用邏輯（鎖定點 3：單一真實來源）
 
-- [ ] T010 [P] [US3] `packages/domain/src/deck/deck.types.ts`：新增 `SlideOutlineItem.id?: string`、`TextSizeLevel`/`TextColorToken`/`TextStyleOverride`/`SlideTextStyleOverrides`、`Slide.textStyleOverrides?`（data-model §1/§2）；自 `packages/domain/src/index.ts` 匯出型別。
-- [ ] T011 [US3] `packages/domain/test/rendering/text-style-override.test.ts`（先寫失敗）：純函式 `textStyleInlineStyle(override, field)` →（a）`sizeLevel` 映射 `font-size: calc(var(--type-<title|message|bullet>) * <0.85|1.25|1.6>)`，M/缺省回空（不輸出 font-size）；（b）`colorToken` 映射 `color: var(--text|--accent|--muted)` 與 heading 色，text/缺省回空；（c）兩者皆缺 → 空字串。
-- [ ] T012 [US3] 實作 `packages/domain/src/rendering/text-style-override.ts` 使 T011 轉綠（倍率/token 對照表見 research R3）。
-- [ ] T013 [US3] `packages/domain/test/rendering/template-html-renderer.*`（擴充）先寫失敗：title（L158）、message（L145）、bullet（L137 各條依 `outline[i].id` 查 `outlineById`）注入 helper 產生的 inline style，併入既有 `style` 屬性而不破壞 `--d:` 動畫變數；無覆寫時 html 與現行深等值（回歸 parity）。
+- [ ] T010 [P] [US3] `packages/domain/src/deck/deck.types.ts`：新增 `SlideOutlineItem.id?: string`、`TextStyleOverride`（`sizePx?`/`color?`/`fontFamily?`）、`SlideTextStyleOverrides`、`Slide.textStyleOverrides?`、常數 `TEXT_SIZE_PX_MIN=8`/`TEXT_SIZE_PX_MAX=240`/`TEXT_FONT_FAMILY_MAX=64`（data-model §1/§2）；自 `packages/domain/src/index.ts` 匯出型別。
+- [ ] T011 [US3] `packages/domain/test/rendering/text-style-override.test.ts`（先寫失敗）：純函式 `textStyleInlineStyle(override, field)` →（a）`sizePx` 映射 `font-size:<px>px`，缺省回空；（b）`color` 映射 `color:<#RRGGBB>`，缺省回空；（c）`fontFamily` 映射 `font-family:'<family>'`，缺省回空；（d）皆缺 → 空字串。
+- [ ] T012 [US3] 實作 `packages/domain/src/rendering/text-style-override.ts` 使 T011 轉綠（sizePx/color/fontFamily→inline style，見 research R3）。
+- [ ] T013 [US3] `packages/domain/test/rendering/template-html-renderer.*`（擴充）先寫失敗：title（L158）、message（L145）、bullet（L137 各條依 `outline[i].id` 查 `outlineById`）注入 helper 產生的 inline style，併入既有 `style` 屬性而不破壞 `--d:` 動畫變數；用到的字型家族注入 Google Fonts `<link>`；無覆寫時 html 與現行深等值（回歸 parity）。
 - [ ] T014 [US3] 實作 `packages/domain/src/rendering/template-html-renderer.ts` 三點注入使 T013 轉綠。
 
 ### C2 — 合併（鎖定點 1：outline id 雙軌 + 正規化）
@@ -102,7 +102,7 @@ description: "Task list — 015 編輯頁匯出與文字樣式覆寫（US1–US4
   - **id 雙軌**：base 無 id + edited 有 id → 合併後 outline 帶 edited id；`sourceTrace/emphasis` 仍由 text-FIFO 還原（未改字 → 保 trace；改字 → 空 trace + 中性 emphasis）。
   - 同文字重複條列各自獨立 id 不碰撞。
   - `textStyleOverrides` 納入可編輯白名單（retained slide 保留 base 其他唯讀欄）。
-  - **孤兒清理**：`outlineById` 有 key 不對應任何現存 outline id → 正規化後移除；預設值 entry（size=M & color=text）→ 移除。
+  - **孤兒清理**：`outlineById` 有 key 不對應任何現存 outline id → 正規化後移除；空 entry（無任何 property）或越界 property（sizePx 超 8–240 / color 非 hex / fontFamily 不合或過長）→ 移除/拒絕。
   - 唯讀牆不變：`contentBlocks/type/slideKind/layout/layoutIntent` 篡改仍 `INVALID_EDIT`；`textStyleOverrides`/`outline.id` 不被當篡改。
   - new slide 分支：outline 帶 edited id、`textStyleOverrides` 經正規化沿用。
 - [ ] T016 [US3] 新檔 `packages/domain/src/deck-edit/text-style-normalize.ts`：`normalizeTextStyleOverrides(overrides, mergedOutline)` 去預設值、清孤兒（data-model §2/§3）。
@@ -110,20 +110,20 @@ description: "Task list — 015 編輯頁匯出與文字樣式覆寫（US1–US4
 
 ### C3 — contracts + schema
 
-- [ ] T018 [P] [US3] `packages/contracts/test/*`（edit-revision / slide-generation-schema）先寫失敗：`validateEditRevisionRequest` 對 `slideDeck.slides[].outline[].id`（若存在為非空字串）、`textStyleOverrides`（`sizeLevel∈{S,M,L,XL}`、`colorToken∈{text,accent,muted,heading}`、`outlineById` 物件）形狀驗證，越界 → issues；缺 id/缺樣式的舊 revision 放行。
-- [ ] T019 [US3] `packages/contracts/src/deck.ts` 的 `validateEditRevisionRequest` + `packages/contracts/schemas/slide-generation.schema.json`：`SlideOutlineItem` 增 optional `id`、`Slide` 增 optional `textStyleOverrides`（enum 值），維持 `additionalProperties:false`。使 T018 轉綠。
+- [ ] T018 [P] [US3] `packages/contracts/test/*`（edit-revision / slide-generation-schema）先寫失敗：`validateEditRevisionRequest`/`validateOverrideShape` 對 `slideDeck.slides[].outline[].id`（若存在為非空字串）、`textStyleOverrides`（`sizePx∈[8,240]`、`color` 符合 `/^#[0-9a-fA-F]{6}$/`、`fontFamily` ≤64 字且符合 charset、`outlineById` 物件且 ≤100 entries）形狀驗證，越界 → issues；缺 id/缺樣式的舊 revision 放行。
+- [ ] T019 [US3] `packages/contracts/src/deck.ts` 的 `validateEditRevisionRequest`/`validateOverrideShape` + `packages/contracts/schemas/slide-generation.schema.json`：`SlideOutlineItem` 增 optional `id`、`Slide` 增 optional `textStyleOverrides`（`sizePx` 數值範圍、`color` hex pattern、`fontFamily` 長度受限字串），維持 `additionalProperties:false`。使 T018 轉綠。
 
 ### C4 — web 編輯 UI
 
 - [ ] T020 [US3] `apps/web/src/features/deck-editor/editable-slide-draft.test.ts`（擴充）先寫失敗：`fromRevision` 對缺 id 的 outline 惰性補發穩定 id（session 內穩定、不改文字）；`setTitleStyle/setMessageStyle/setOutlineStyle(id,...)`、單屬性 reset、整欄 reset 的 immutable 更新；`removeBullet` 同步刪 `outlineById[id]`（清孤兒）；`addBullet` 產生新 id。
 - [ ] T021 [US3] `apps/web/src/features/deck-editor/editable-slide-draft.ts`：實作 T020 行為（惰性補 id、寫 override、刪條列清孤兒、新條列發 id）。
-- [ ] T022 [P] [US3] 新檔 `apps/web/src/features/deck-editor/text-style-toolbar.tsx` + 測試：欄位樣式工具列（S/M/L/XL stepper + 4 色 swatch + 單屬性/整欄 reset），值與 callback 受控；只提供有限列舉、無自由 hex（FR-008）。
-- [ ] T023 [US3] `apps/web/src/features/deck-editor/SlideEditPanel.tsx`：標題、message、每條 outline 旁掛 `text-style-toolbar`，接到 draft 的 setXxxStyle；outline 以 `item.id` 為 React key/綁定（取代 index）。
+- [ ] T022 [P] [US3] 新檔 `apps/web/src/features/deck-editor/text-style-toolbar.tsx` + 測試：欄位樣式面板（px 字級滑桿 8–240 + 自由色彩選擇器 #RRGGBB + 字型家族下拉 + 單屬性/整欄 reset），值與 callback 受控；自由顏色經 hex regex 驗證、字型取自內建字型目錄（FR-007/FR-008）。
+- [ ] T023 [US3] `apps/web/src/features/deck-editor/SlideEditPanel.tsx`：標題、message、每條 outline 接 `text-style-toolbar`（右側滑出面板），接到 draft 的 setXxxStyle；outline 以 `item.id` 為 React key/綁定（取代 index）。
 - [ ] T024 [US3] `apps/web/src/features/deck-editor/DeckEditorView.tsx`：將樣式編輯接入既有 `edit(...)` 通路（與 title/outline 同走 draft → LivePreview → toRequest），確認 `live-preview-render`（`applyDeckEdit`）即時反映（parity 自動）。
 
 ### C5 — 整合/e2e
 
-- [ ] T025 [US3] `apps/web/tests/e2e/text-style.spec.ts`：設標題 XL+強調 → 預覽即時 → outline 設樣式後重排不錯位 → 刪條列樣式消失 → Save → 重載保留 → 下載 HTML 比對（quickstart US3）。
+- [ ] T025 [US3] `apps/web/tests/e2e/text-style.spec.ts`：設標題大字級 px + 顏色 + 字型 → 預覽即時 → outline 設樣式後重排不錯位 → 刪條列樣式消失 → Save → 重載保留 → 下載 HTML 比對（quickstart US3）。
 
 **Checkpoint**：US3 可獨立交付 ✅
 
@@ -131,7 +131,7 @@ description: "Task list — 015 編輯頁匯出與文字樣式覆寫（US1–US4
 
 ## Phase 6：User Story 2 — 下載 PPTX（Priority: P4，鏡射 preview-jobs）
 
-**Goal**：對指定 revision 建立非同步 PPTX 匯出工作（chromium 逐頁截圖 + pptxgenjs），前端輪詢、完成下載；owner scope、revision 驗證、TTL、單人併發=1。
+**Goal**：對目前 current revision 建立非同步 PPTX 匯出工作（chromium 逐頁截圖 + pptxgenjs），前端輪詢、完成下載；owner scope、current-only revision 驗證、檔案+TTL、單人併發=1（store 原子 `SET NX`）。
 
 **Independent Test**：dirty=false 點下載 PPTX → queued→processing→done → 下載 .pptx，頁數=投影片數、每頁 16:9 截圖、含主題/圖表/文字樣式；>60 頁拒絕；跨帳號 404。
 
@@ -142,16 +142,16 @@ description: "Task list — 015 編輯頁匯出與文字樣式覆寫（US1–US4
 
 ### D2 — API 側（鏡射 preview-jobs；建立/查狀態/下載三端點）
 
-- [ ] T028 [US2] 新增 `apps/api/src/modules/pptx-export-jobs/` 全套：`queue.config.ts`、`*.tokens.ts`、`*.providers.ts`、`redis-pptx-export-job-store.ts`（Redis key 前綴 `pptx-export-job:`、active set、TTL）、`bullmq-pptx-export-job-runner.ts`、`pptx-export-job-queue.service.ts`、`pptx-export-request.parser.ts`、`pptx-export-job-timeout-sweeper.ts`、`pptx-export-jobs-api.runtime.ts`、`pptx-export-jobs.module.ts`（鏡射 preview-jobs；Explore 對照清單）。
+- [ ] T028 [US2] 新增 `apps/api/src/modules/pptx-export-jobs/` 全套：`queue.config.ts`、`*.tokens.ts`、`*.providers.ts`、`redis-pptx-export-job-store.ts`（Redis key 前綴 `pptx-export-job:`、per-account 原子 `createIfNoActive`/`SET NX` 鎖（單人併發=1，無 TOCTOU）、TTL）、`bullmq-pptx-export-job-runner.ts`、`pptx-export-job-queue.service.ts`、`pptx-export-request.parser.ts`、`pptx-export-job-timeout-sweeper.ts`、`pptx-export-jobs-api.runtime.ts`、`FsPptxArtifactStore`（`${jobId}.pptx` 寫檔 + `purgeOlderThan` TTL 清理）、`pptx-export-jobs.module.ts`（鏡射 preview-jobs；Explore 對照清單）。
 - [ ] T029 [US2] `apps/api/src/modules/pptx-export-jobs/pptx-export-jobs.controller.ts` + `apps/api/test/pptx-export-jobs.controller.test.ts`（先寫失敗）：
-  - `POST /api/decks/:id/pptx-exports`：deck 屬 `req.user.id`（否則 404）、`revision` 為現存版本（否則 400）、頁數≤60（否則 400）、無 in-flight 工作（否則 409 單人併發=1）、rate limit。
+  - `POST /api/decks/:id/pptx-exports`：deck 屬 `req.user.id`（否則 404）、`revision` 仍為 deck 的 current 版本（否則 **400** `PPTX_REVISION_MISMATCH`，current-only，要求 reload）、頁數≤60（否則 400）、store 原子 `createIfNoActive` 擋既有 in-flight（否則 **409** `PPTX_EXPORT_IN_PROGRESS`，單人併發=1，無 TOCTOU）、rate limit。
   - `GET /api/decks/:id/pptx-exports/:jobId`：owner+deck scope（否則 404）、回四態 + downloadUrl/failure。
   - `GET /api/decks/:id/pptx-exports/:jobId/file`：scope + done + 未過 TTL → 串流，`Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation` + `Content-Disposition`（否則 404）。
 - [ ] T030 [US2] `apps/api/src/app/app.module.ts`：掛 `PptxExportJobsModule`（API 側 provider/sweeper/runtime）。
 
 ### D3 — worker 側（chromium 截圖 + pptx 組裝）
 
-- [ ] T031 [US2] 新檔 `apps/api/src/modules/pptx-export-jobs/pptx-export-job-execution.ts` + 測試（以假/注入 page 抽象測狀態流與失敗清理，不在單元測試起真 chromium）：載入該 revision html → 逐張 `section[data-slide-id]` 切頁（postMessage `deck:goToSlide` 或 DOM 顯示，畫面穩定後）→ 截圖 1920×1080 → pptxgenjs 逐頁 full-bleed 嵌圖 → artifact 寫檔（含 `byteSize/pageCount`）；失敗/逾時刪暫存與部分檔（FR-018）。
+- [ ] T031 [US2] 新檔 `apps/api/src/modules/pptx-export-jobs/pptx-export-job-execution.ts` + 測試（以假/注入 page 抽象測狀態流與失敗清理，不在單元測試起真 chromium）：載入該 revision html → 逐張 `section[data-slide-id]` 切頁（postMessage `deck:goToSlide` 或 DOM 顯示，畫面穩定後）→ 截圖 1920×1080 → pptxgenjs 逐頁 full-bleed 嵌圖 → 經 `FsPptxArtifactStore` 以 `${jobId}.pptx` 寫檔（含 `byteSize/pageCount`）；失敗/逾時 per-job 冪等刪暫存與部分檔（FR-018）。
 - [ ] T032 [US2] 新檔 `apps/api/src/modules/pptx-export-jobs/pptx-export-worker.runtime.ts`：BullMQ consumer（鏡射 `preview-worker.runtime.ts`，注入 Playwright/瀏覽器 launcher）。
 - [ ] T033 [US2] `apps/api/src/app/worker.module.ts`：掛 `PptxExportWorkerRuntime` 與 store/queue provider（worker 側）。
 
@@ -173,7 +173,7 @@ description: "Task list — 015 編輯頁匯出與文字樣式覆寫（US1–US4
 
 - [ ] T038 [P] OpenAPI 文件：`apps/api/src/openapi/*` 補 PPTX 三端點；確認 edit revision contract 文件無 drift（outline.id/textStyleOverrides 為 slideDeck 內 optional，無新 request 欄位）。
 - [ ] T039 [P] README：新增 `apps/api/src/modules/pptx-export-jobs/README.md`（鏡射 preview-jobs/README）。
-- [ ] T040 移除冗餘/重疊測試；補未覆蓋的 domain 規則單元測試（normalize 孤兒、倍率邊界）。
+- [ ] T040 移除冗餘/重疊測試；補未覆蓋的 domain 規則單元測試（normalize 孤兒、sizePx/hex/字型邊界）。
 - [ ] T041 **提交前 `gitnexus_detect_changes()`**（CLAUDE.md）核對影響面只落在預期 symbol/flow；任一非預期擴散即停下重審。
 - [ ] T042 跑 `pnpm test` 全綠 + `apps/web` e2e；執行 quickstart.md 全程人工驗證（含 16:9 縮放、PPTX 開啟、跨帳號隔離、EC2 實匯出）。
 - [ ] T043 Release 檢查（CR-016）：slide JSON schema 對新 optional 欄位有效；HTML 渲染套用覆寫；既有鍵盤導覽不受影響；預覽 responsive 維持 16:9。
@@ -200,6 +200,6 @@ description: "Task list — 015 編輯頁匯出與文字樣式覆寫（US1–US4
 
 - 每個 US 獨立可完成、可展示、可測；先確認測試失敗再實作。
 - 守 Constitution：no shim / no dead code——`buildHtmlDownload` 擴參同步改呼叫點、`mergeOutline` 直接取代、樣式套用只在 domain 一處。
-- 零 LLM、零 migration；樣式為列舉（天然 DoS 邊界）；PPTX 有 owner scope/TTL/併發=1/頁數上限。
+- 零 LLM、零 migration；樣式輸入以「數值範圍（sizePx 8–240）＋ hex regex（color）＋ 字型白名單/長度（fontFamily ≤64）＋ outlineById ≤100 entries」為 bounded DoS 邊界；PPTX 有 owner scope/TTL/併發=1（store 原子 `SET NX`）/頁數上限/current-only。
 - PPTX 部署（D5）為最高風險，務必正式機實匯出驗證。
 - 每完成一任務或邏輯群組即 commit。

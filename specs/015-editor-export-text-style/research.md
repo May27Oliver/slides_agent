@@ -52,22 +52,23 @@
 
 **決策**：
 - `TextStyleOverride` 型別與套用邏輯**只存在 domain**（新檔 `packages/domain/src/rendering/text-style-override.ts`，純函式：給定 override 與欄位種類 → 產生 inline style 片段）。
-- `template-html-renderer.ts` 在三個渲染點呼叫該 helper，把 `font-size: calc(var(--type-X) * <倍率>)` 與 `color: var(--<token>)` 併入既有 `style` 屬性。
+- `template-html-renderer.ts` 在三個渲染點呼叫該 helper，把 `font-size: <sizePx>px`、`color: <#RRGGBB>`、`font-family: '<family>'` 併入既有 `style` 屬性；px 量於 1920×1080 簡報空間，與預覽/PPTX 同一空間故 WYSIWYG。renderer 並為所有用到的字型家族注入 Google Fonts `<link>`，使預覽與 PPTX 皆能載入該字型。
 - web UI **只負責把 override 寫進 draft**（`EditableSlideDraft`），**不自己算樣式**；型別從 `@slides-agent/domain` 匯入（web 已是此模式）。contracts 只做形狀驗證，不持有套用邏輯。
 - 因 client preview 與 server 存檔共用 `applyDeckEdit`→ 同一 renderer → 同一 helper，**樣式 parity 結構上不可能漂移**（與 011 主題、014 圖表同一保證）。
 
-**倍率/token 對照**（已定案）：
+**輸入模型/邊界**（deep-review 後改採；自由 px/hex/字型，取代早先 token/級距）：
 
-| sizeLevel | 倍率 | | colorToken | CSS |
-|-----------|------|--|-----------|-----|
-| S | 0.85× | | text | `var(--text)`（預設） |
-| M | 1×（預設，不寫入） | | accent | `var(--accent)` |
-| L | 1.25× | | muted | `var(--muted)` |
-| XL | 1.6× | | heading | heading 色（標題既有色） |
+| 屬性 | 值 / 範圍 | 對應 inline style |
+|------|----------|------------------|
+| `sizePx` | 任意 px，8–240（`TEXT_SIZE_PX_MIN=8`/`TEXT_SIZE_PX_MAX=240`） | `font-size: <px>px` |
+| `color` | 自由 hex，regex `/^#[0-9a-fA-F]{6}$/` | `color: <#RRGGBB>` |
+| `fontFamily` | 內建字型目錄名稱（~90 種），≤64 字（`TEXT_FONT_FAMILY_MAX=64`），charset `/^[A-Za-z0-9][A-Za-z0-9 -]*$/` | `font-family: '<family>'` + Google Fonts `<link>` |
+
+任一缺 = 沿用該欄位主題預設（不輸出對應 style）。UI 為自由色彩選擇器 + 任意 px 滑桿 + 字型家族下拉（較豐富的文字編輯器 UX）。DoS 邊界 = 數值範圍 + hex regex + 字型白名單/長度（`validateOverrideShape`，`outlineById` ≤100 entries），domain `normalizeTextStyleOverrides` 再以相同規則重驗。
 
 **否決的替代**：
 - *web 端另寫一套 inline style 計算* → 被否決：兩條渲染通路 → parity 漂移（reviewer finding 明確要避免）。
-- *用獨立 CSS class（S/M/L/XL × 4 色 = 16 class）* → 被否決：要嘛污染 deck CSS、要嘛每欄位多包 wrapper；inline `calc()` + `var()` 最少侵入且天然跟隨主題換算。
+- *固定級距/4 色 token 列舉* → 早先 clarify 採此，deep-review 後刻意反轉為自由 px/hex/字型，提供更豐富的文字編輯器 UX；以「數值範圍 + hex regex + 字型白名單/長度」維持 bounded DoS 邊界。
 
 ---
 
@@ -88,13 +89,13 @@
 | 截圖尺寸 | 1920×1080（16:9） | worker viewport |
 | 單工作逾時 | ≤30 頁 90s 目標；硬上限沿用 sweeper 機制（可調高於 preview 的 5min） | `PPTX_EXPORT_JOB_TIMEOUT_MS` |
 | 最大頁數 | 60（超出 400 拒絕） | request parser |
-| 單人併發 | 1 | worker concurrency / 建立時檢查既有 in-flight |
+| 單人併發 | 1 | store 內 **原子 create-if-no-active**（per-account Redis `SET NX` 鎖，無 TOCTOU；非「先查 active 再 create」） |
 | 全域併發 | 沿用 queue config worker concurrency | `queue.config` |
 | artifact TTL | 與 job retention 一致（建議 10–30min），到期清理 | redis store ttl + 暫存檔刪除 |
 | 狀態 | `queued / processing / done / failed`（逾時歸 failed） | domain job status enum |
 | content-type | `application/vnd.openxmlformats-officedocument.presentationml.presentation` | 下載回應 |
 
-**artifact 儲存位置**：MVP 採「worker 產生後存於可被 API 下載的位置」。兩個候選（plan Phase 決定）：(a) 存檔在共享磁碟/容器 volume，API 串流回傳；(b) 存入 Redis（base64，較肥，僅適合小檔）。**建議 (a) 檔案 + TTL 清理**，因 pptx 可能數 MB，不宜塞 Redis。下載 endpoint scope 綁 owner（FR-017）。
+**artifact 儲存位置（已定案）**：**檔案（local disk / 容器 volume）+ TTL 清理**。worker 產生後以 `${jobId}.pptx` 寫入專屬目錄，API 在 owner-scoped 下載端點串流該檔；`FsPptxArtifactStore.purgeOlderThan` 依 TTL 清理，per-job 在失敗/逾時時冪等刪除。下載 endpoint scope 綁 owner（FR-017）。（早先評估過的 Redis base64 候選已否決——pptx 可能數 MB，不宜塞 Redis。）
 
 ---
 

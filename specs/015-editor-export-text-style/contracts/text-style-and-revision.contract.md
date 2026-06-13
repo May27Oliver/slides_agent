@@ -22,22 +22,25 @@
 ```ts
 SlideOutlineItem.id?: string                 // slide 內唯一、不透明
 Slide.textStyleOverrides?: {
-  title?:   { sizeLevel?: "S"|"M"|"L"|"XL"; colorToken?: "text"|"accent"|"muted"|"heading" }
-  message?: { sizeLevel?: ...; colorToken?: ... }
-  outlineById?: Record<outlineItemId, { sizeLevel?: ...; colorToken?: ... }>
+  title?:   { sizePx?: number; color?: string; fontFamily?: string }
+  message?: { sizePx?: number; color?: string; fontFamily?: string }
+  outlineById?: Record<outlineItemId, { sizePx?: number; color?: string; fontFamily?: string }>
 }
+//   sizePx: 絕對 px，範圍 8–240
+//   color:  自由 hex "#RRGGBB"
+//   fontFamily: 內建字型目錄名稱，≤64 字
 ```
 
 ## 驗證（依序，全在後端）
 
-1. **contracts 形狀驗證**（`validateEditRevisionRequest` / schema）：
+1. **contracts 形狀驗證**（`validateEditRevisionRequest` / schema / `validateOverrideShape`）：
    - `outline[].id` 若存在，為非空字串；
-   - `textStyleOverrides` 若存在：`sizeLevel ∈ {S,M,L,XL}`、`colorToken ∈ {text,accent,muted,heading}`，`outlineById` 為物件、值為合法 `TextStyleOverride`；
-   - 越界（非列舉值）→ **400 `INVALID_EDIT`**。（列舉天然封住 DoS）
+   - `textStyleOverrides` 若存在，每個 `TextStyleOverride`：`sizePx` 為 8–240 數值、`color` 符合 `/^#[0-9a-fA-F]{6}$/`、`fontFamily` 符合 charset `/^[A-Za-z0-9][A-Za-z0-9 -]*$/` 且 ≤64 字；`outlineById` 為物件、至多 100 entries、值為合法 `TextStyleOverride`；
+   - 越界（數值超範圍 / hex 不合 / 字型不合或過長 / entries 超量）→ **400 `INVALID_EDIT`**。（數值範圍 + hex regex + 字型白名單/長度 + entries 上限封住 DoS）
 2. deck 存在且屬 `req.user.id` → 否則 **404 `DECK_NOT_FOUND`**（010，不變）。
 3. **白名單合併**（`mergeEditedDeck`，015 擴充）：
    - `outline` 經 `mergeOutline`：**id 走 edited 權威帶入**、`sourceTrace/emphasis` 仍走 text-FIFO 還原（fidelity 不變）；
-   - `textStyleOverrides` 納入可編輯白名單，經 `normalizeTextStyleOverrides`：去除預設值 entry、丟棄不對應現存 outline id 的孤兒 key；
+   - `textStyleOverrides` 納入可編輯白名單，經 `normalizeTextStyleOverrides`（以相同 sizePx/color/fontFamily 規則重驗，不信任跨層輸入）：丟棄空 / 越界 property、丟棄不對應現存 outline id 的孤兒 key；
    - `contentBlocks/type/slideKind/layout/layoutIntent` 唯讀牆**不變**（篡改 → 400 `INVALID_EDIT`）。
 4. 圖表操作（014 `applyChartOperations`）→ 不變。
 

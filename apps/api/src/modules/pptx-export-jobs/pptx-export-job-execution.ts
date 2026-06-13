@@ -1,6 +1,9 @@
 import type { DeckStore, PptxExportJob } from "@slides-agent/domain";
 import { createPptxExportFailure } from "@slides-agent/domain";
-import type { PptxArtifactStore } from "@/modules/pptx-export-jobs/fs-pptx-artifact-store";
+import {
+  pptxArtifactRef,
+  type PptxArtifactStore
+} from "@/modules/pptx-export-jobs/fs-pptx-artifact-store";
 import { buildPptxFromImages } from "@/modules/pptx-export-jobs/pptx-builder";
 import type { RedisPptxExportJobStore } from "@/modules/pptx-export-jobs/redis-pptx-export-job-store";
 import type { SlideScreenshotter } from "@/modules/pptx-export-jobs/slide-screenshotter.port";
@@ -65,7 +68,7 @@ export async function runPptxExportJob({
     logger.log(`${job.id} done pages=${pngs.length} bytes=${byteSize}`);
   } catch (error) {
     // Failure path: sanitized failure on the job + partial artifact removal.
-    await artifacts.delete(`${job.id}.pptx`).catch(() => undefined);
+    await artifacts.delete(pptxArtifactRef(job.id)).catch(() => undefined);
     await store.markFailed(job.id, createPptxExportFailure(error), now());
     logger.error(`${job.id} failed code=PPTX_EXPORT_FAILED`);
   }

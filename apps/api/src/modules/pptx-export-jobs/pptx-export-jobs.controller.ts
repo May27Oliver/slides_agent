@@ -119,32 +119,32 @@ export class PptxExportJobsController {
       });
     }
 
-    // FR-006: single-flight per account — one running export at a time.
-    const inFlight = await this.guarded(() => this.jobStore.findActiveByAccount(accountId));
-    if (inFlight) {
+    // FR-006: single-flight per account — atomic create-if-no-active (no TOCTOU; two
+    // concurrent POSTs cannot both pass the gate, unlike a separate check-then-create).
+    const created = await this.guarded(() =>
+      this.jobStore.createIfNoActive(
+        this.jobService.createAcceptedJob({ accountId, deckId, revision, pageCount })
+      )
+    );
+    if (!created.ok) {
       throw new ConflictException({
         code: "PPTX_EXPORT_IN_PROGRESS",
         message: "A PPTX export is already in progress. Wait for it to finish.",
-        jobId: inFlight.id
+        jobId: created.active.id
       });
     }
 
-    let job: PptxExportJob | undefined;
+    const job = created.job;
     try {
-      job = await this.jobStore.create(
-        this.jobService.createAcceptedJob({ accountId, deckId, revision, pageCount })
-      );
       await this.runner.start(job);
     } catch {
       this.logger.error("pptx export creation failed code=PPTX_QUEUE_UNAVAILABLE");
-      // deep-review H2: if create succeeded but enqueue failed, the job is left
-      // non-terminal and the single-flight gate would lock this account until the
-      // sweeper fires (~3 min). Mark it failed now so the account is freed immediately.
-      if (job) {
-        await this.jobStore
-          .markFailed(job.id, createPptxExportFailure(new Error("enqueue failed")), new Date())
-          .catch(() => undefined);
-      }
+      // deep-review H2: the job was created+gated but enqueue failed — without this it
+      // stays non-terminal and the single-flight lock holds this account until the
+      // sweeper fires (~3 min). markFailed releases the lock immediately.
+      await this.jobStore
+        .markFailed(job.id, createPptxExportFailure(new Error("enqueue failed")), new Date())
+        .catch(() => undefined);
       throw this.serviceUnavailable();
     }
 

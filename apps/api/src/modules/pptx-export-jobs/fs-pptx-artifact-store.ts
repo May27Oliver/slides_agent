@@ -10,6 +10,14 @@ import type { Readable } from "node:stream";
  * control lives in the controller (owner-scoped job lookup resolves the ref);
  * the ref itself is never user-supplied, so no path traversal surface.
  */
+/**
+ * The artifact-ref convention: one `.pptx` per job id. Single source of truth so the
+ * worker (write/cleanup), the timeout sweeper, and the store all derive the same key.
+ */
+export function pptxArtifactRef(jobId: string): string {
+  return `${jobId}.pptx`;
+}
+
 export interface PptxArtifactStore {
   write(jobId: string, data: Buffer): Promise<{ artifactRef: string; byteSize: number }>;
   /** Read stream for a previously written artifact, or undefined when purged. */
@@ -24,7 +32,7 @@ export class FsPptxArtifactStore implements PptxArtifactStore {
 
   async write(jobId: string, data: Buffer): Promise<{ artifactRef: string; byteSize: number }> {
     await mkdir(this.dir, { recursive: true });
-    const artifactRef = `${jobId}.pptx`;
+    const artifactRef = pptxArtifactRef(jobId);
     await writeFile(this.path(artifactRef), data);
     return { artifactRef, byteSize: data.byteLength };
   }
