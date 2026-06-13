@@ -17,7 +17,7 @@
 1. deck 存在且屬 `req.user.id` → 否則 **404 `DECK_NOT_FOUND`**。
 2. `revision` 仍為該 deck 的 **current** revision → 否則 **400 `PPTX_REVISION_MISMATCH`**（FR-003a：current-only；被其他 tab 推進為非 current 即失敗並要求 reload，不退而匯出他版）。
 3. 該 revision 頁數 ≤ `PPTX_MAX_PAGES`(60) → 否則 **400**（FR-019）。
-4. **原子 create-if-no-active**：store 的 `createIfNoActive` 以 per-account Redis `SET NX` 鎖在建立的同一原子操作內擋既有 in-flight（queued/processing）工作 → 已有 active 則 **409**（FR-006，單人併發=1，無 TOCTOU；非「先查 active 再 create」）。
+4. **create-if-no-active（原子 gate + rollback）**：store 的 `createIfNoActive` 以 per-account Redis `SET NX` 鎖**原子取得 gate** 擋既有 in-flight（queued/processing）工作 → 已有 active 則 **409**（FR-006，單人併發=1，無 TOCTOU；非「先查 active 再 create」）。取得 gate 後才 `writeJob` + `sadd(active)`；此二步若失敗以 try/catch best-effort rollback（刪 job key + 釋放鎖）再 rethrow，避免 orphan job / 卡死的鎖（鎖 TTL 亦自癒）。
 5. 速率限制沿用既有 per-IP（鏡射 preview-jobs rate limit）。
 
 **Response 202**
