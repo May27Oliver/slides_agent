@@ -24,6 +24,16 @@ export class PlaywrightSlideScreenshotter implements SlideScreenshotter {
       // Web fonts change line wraps — wait for them before measuring anything.
       await page.evaluate(() => (document as { fonts?: { ready: Promise<unknown> } }).fonts?.ready);
 
+      // Freeze entrance + chart animations to their FINAL state before any shot. Charts
+      // draw over ~1–2.2s (line 1.25s, pie slices up to ~2.2s); a short per-slide settle
+      // would otherwise capture a half-drawn line / partial donut. The deck's own
+      // `.deck-static` rule sets `animation:none!important`, and a chart's non-animated
+      // base state IS its completed state (stroke-dashoffset:0), so this yields settled,
+      // timing-independent screenshots (FR-004 visual parity).
+      await page.evaluate(() => {
+        document.querySelector(".deck")?.classList.add("deck-static");
+      });
+
       const slideCount = await page.locator("section[data-slide-id]").count();
       const shots: Buffer[] = [];
       for (let index = 0; index < slideCount; index += 1) {
