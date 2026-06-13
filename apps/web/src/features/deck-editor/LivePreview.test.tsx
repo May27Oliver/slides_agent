@@ -8,26 +8,30 @@ import { fixtureRevision, fixtureSlideDeck } from "@/features/deck-editor/test-f
 afterEach(cleanup);
 
 /**
- * 015 US4 (FR-012): the preview iframe sits inside a 16:9 letterbox container, so the
- * deck (100vw×100vh inside the iframe) keeps the real slide aspect instead of being
- * stretched to whatever shape the editor column happens to have.
+ * 015 US4 (FR-012): the deck renders into a FIXED 16:9 stage that is scaled to fit,
+ * so the whole slide shows at true proportions — and the frame is full-bleed (no
+ * rounded corners), matching the PPTX export.
  */
-describe("LivePreview 16:9 letterbox (015 US4)", () => {
-  it("wraps the iframe in a centered 16:9-constrained box", () => {
-    render(
-      <LivePreview base={fixtureRevision} workingDeck={fixtureSlideDeck} selectedIndex={0} />
-    );
+describe("LivePreview 16:9 scaled stage (015 US4)", () => {
+  it("renders the iframe inside a fixed 1280x720 stage, centered with overflow clipped", () => {
+    render(<LivePreview base={fixtureRevision} workingDeck={fixtureSlideDeck} selectedIndex={0} />);
 
-    const letterbox = screen.getByTestId("preview-letterbox");
-    const iframe = screen.getByTitle("即時預覽");
-    expect(letterbox.contains(iframe)).toBe(true);
+    const stage = screen.getByTestId("preview-stage");
+    const iframe = screen.getByTitle("即時預覽") as HTMLIFrameElement;
+    expect(stage.contains(iframe)).toBe(true);
 
-    // The box is constrained to 16:9 by the paired max-width/max-height calcs
-    // (container-query units), with the parent centering the leftover space.
-    expect(letterbox.className).toContain("16/9");
-    expect(letterbox.className).toContain("9/16");
-    const parent = letterbox.parentElement!;
-    expect(parent.className).toContain("items-center");
-    expect(parent.className).toContain("justify-center");
+    // The stage is the true presentation size; a scale() transform fits it to the box.
+    expect(stage.style.width).toBe("1280px");
+    expect(stage.style.height).toBe("720px");
+    expect(stage.style.transform).toContain("scale(");
+
+    // The viewport that clips/centers the scaled stage.
+    const viewport = stage.parentElement!;
+    expect(viewport.className).toContain("items-center");
+    expect(viewport.className).toContain("justify-center");
+    expect(viewport.className).toContain("overflow-hidden");
+
+    // Full-bleed: a real slide has no rounded frame (the PPTX export is square too).
+    expect(iframe.className).not.toContain("rounded");
   });
 });

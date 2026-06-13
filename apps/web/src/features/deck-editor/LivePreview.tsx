@@ -10,6 +10,11 @@ import type {
 import { useI18n } from "@/i18n";
 import { renderLivePreview } from "@/features/deck-editor/live-preview-render";
 
+// Fixed 16:9 presentation stage the deck renders into; the whole stage is scaled to
+// fit the available area, so the preview is a true miniature of the real slide.
+const STAGE_WIDTH = 1280;
+const STAGE_HEIGHT = 720;
+
 interface LivePreviewProps {
   base: DeckRevisionContract;
   workingDeck: SlideDeck;
@@ -108,6 +113,31 @@ export function LivePreview({
     syncSelectedSlide();
   }, [syncSelectedSlide]);
 
+  // 015 US4 (FR-012): render the deck at a FIXED 16:9 presentation stage and scale
+  // the whole thing down to fit — a true slide thumbnail. (Resizing the iframe itself
+  // instead made the deck's clamp()/vh layout render at the small size, overflow, and
+  // clip — so the preview showed a cramped crop, not the whole slide.) A ResizeObserver
+  // recomputes the fit scale on layout/fullscreen changes.
+  const stageBoxRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0);
+  useEffect(() => {
+    const box = stageBoxRef.current;
+    if (!box) return;
+    const measure = () => {
+      const { width, height } = box.getBoundingClientRect();
+      if (width > 0 && height > 0) {
+        setScale(Math.min(width / STAGE_WIDTH, height / STAGE_HEIGHT));
+      }
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      return; // non-DOM/test env: one static measure is enough
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [html]);
+
   // F → open the preview fullscreen, unless the user is typing in a field.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -135,22 +165,25 @@ export function LivePreview({
         </span>
       </div>
       {html ? (
-        // 015 US4 (FR-012): the fullscreen target doubles as a size container; inside it
-        // the letterbox box is the LARGEST 16:9 rectangle that fits (paired max-w/max-h
-        // in container-query units), centered — so the deck (100vw×100vh in the iframe)
-        // always shows at the true slide aspect, in-page AND fullscreen.
+        // The fullscreen target centers a fixed 1280×720 stage and clips overflow; the
+        // stage is scaled to fit (above), so the FULL slide shows at true 16:9 — no
+        // letterbox-vs-content mismatch, no rounded frame (a real slide is full-bleed,
+        // matching the PPTX export).
         <div
           ref={fullscreenRef}
-          className="flex min-h-0 flex-1 items-center justify-center bg-[#0b1512] [container-type:size]"
+          className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[#0b1512]"
         >
+          <div ref={stageBoxRef} aria-hidden className="absolute inset-0" />
           <div
-            data-testid="preview-letterbox"
-            className="h-full max-h-[calc(100cqw*9/16)] w-full max-w-[calc(100cqh*16/9)]"
+            data-testid="preview-stage"
+            className="shrink-0 origin-center overflow-hidden"
+            style={{ width: STAGE_WIDTH, height: STAGE_HEIGHT, transform: `scale(${scale})` }}
           >
             <iframe
               ref={iframeRef}
               onLoad={syncSelectedSlide}
-              className="h-full w-full overflow-hidden rounded-2xl border border-line bg-[#0b1512]"
+              className="block border-0 bg-[#0b1512]"
+              style={{ width: STAGE_WIDTH, height: STAGE_HEIGHT }}
               srcDoc={html}
               title={t("editor.preview.heading")}
               // Untrusted deck HTML gets an opaque origin; allow-scripts keeps keyboard nav.
